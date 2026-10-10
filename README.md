@@ -78,14 +78,17 @@ simly-orbis/
 │   └── .env.example
 │
 ├── docs/
-│   └── visual_contract.md     3D Visual Directives & Character Animation specification
+│   ├── visual_contract.md     3D Visual Directives & Character Animation specification
+│   └── frontend_lab.md        Orbis Lab 3D client architecture & scene creation guide
 ├── scripts/
 │   └── play_demo.py           End-to-end multi-experiment automated demo runner
-└── frontend/                  Static web client (no build step required)
-    ├── index.html             Single-page application (7 screens + Under the Hood drawer)
-    ├── lab-console.html       Orbis Lab dev console (interactive experiment runner)
-    ├── style.css              Dark theme design system & animations
-    └── app.js                 State, Chart.js graphs, AI tutor typewriter & drawer
+└── frontend/                  Static web client (Three.js ES modules, no build step)
+    ├── index.html             Orbis Lab 3D client (Lobby, 3D viewport, HUD, Report)
+    ├── classic.html           Classic 2D pharmacokinetics game
+    ├── lab-console.html       Orbis Lab dev console
+    ├── lab.css                Orbis Lab 3D design system & HUD
+    ├── vendor/                Pinned Three.js & OrbitControls ES modules
+    └── lab/                   Modular client modules (world, character, render, game, demo)
 ```
 
 ---

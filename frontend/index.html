@@ -2,566 +2,253 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simly Orbis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Orbis Lab – 3D Virtual Science Platform</title>
 
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Import Map for Offline Pinned Three.js -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.js",
+      "three/addons/": "./vendor/addons/"
+    }
+  }
+  </script>
+
+  <!-- Design System & HUD Styles -->
+  <link rel="stylesheet" href="lab.css" />
 </head>
-<body>
+<body class="orbis-lab-body">
 
-<!-- ═══════════════════════════════════════════════════
-     HEADER  (hidden on nickname screen)
-════════════════════════════════════════════════════ -->
-<header class="page-header" id="appHeader" style="display:none">
-  <div class="header-left">
-    <span class="logo">⬡ Simly Orbis</span>
+  <!-- 3D WebGL Canvas Container -->
+  <div id="webgl-container">
+    <canvas id="webgl-canvas"></canvas>
   </div>
-  <nav class="header-nav">
-    <button class="nav-btn active" id="navLevels"      data-screen="levelSelect">Levels</button>
-    <button class="nav-btn"        id="navPlayground"  data-screen="playground">Free Play</button>
-    <button class="nav-btn"        id="navLeaderboard" data-screen="leaderboard">Leaderboard</button>
-    <button class="nav-btn"        id="navAbout"       data-screen="about">About</button>
-  </nav>
-  <div class="header-right">
-    <span class="nickname-chip" id="nicknameChip"></span>
-  </div>
-</header>
 
-<!-- ═══════════════════════════════════════════════════
-     SCREEN 1 · NICKNAME
-════════════════════════════════════════════════════ -->
-<div class="screen" id="screenNickname">
-  <div class="nickname-hero">
-    <div class="hero-glow"></div>
-    <div class="hero-content">
-      <div class="hero-logo">⬡</div>
-      <h1 class="hero-title">Simly Orbis</h1>
-      <p class="hero-sub">A pharmacokinetics simulation game</p>
-      <div class="nickname-form">
-        <label class="form-label" for="nicknameInput">Choose your nickname</label>
-        <input
-          type="text"
-          id="nicknameInput"
-          class="nickname-input"
-          placeholder="e.g. DrPharm99"
-          maxlength="32"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <div class="hero-btn-row">
-          <button class="btn-primary" id="btnStartGame">Start Playing →</button>
-          <button class="btn-demo" id="btnDemoStart" title="Watch an automated optimal run of Level 1">⚡ Demo Mode (Auto-play)</button>
+  <!-- Red Alarm Strobe Border (Triggered by critical safety breach) -->
+  <div id="alarm-strobe-overlay"></div>
+
+  <!-- Director Mode Running Banner -->
+  <div id="director-banner" class="director-banner">
+    <span>🎬 Director Mode Running</span>
+  </div>
+
+  <!-- Action Processing Spinner -->
+  <div id="action-spinner">
+    <div class="spin-orb"></div>
+    <span>Evaluating simulation...</span>
+  </div>
+
+  <!-- F3 Performance & Directive Debug Overlay -->
+  <div id="debug-overlay"></div>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Action Parameter Modal (Sliders / Dropdowns) -->
+  <div id="action-param-modal" class="action-param-modal" style="display:none;"></div>
+
+  <!-- WebGL Fallback Notification -->
+  <div id="webgl-fallback" style="display:none; position:fixed; inset:0; background:#0c071d; z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
+    <h2 style="color:#ec4899; font-size:1.8rem; margin-bottom:12px;">WebGL Unavailable</h2>
+    <p style="color:#94a3b8; max-width:480px; margin-bottom:20px;">Your browser or device does not support hardware-accelerated WebGL. You can still play the 2D pharmacokinetics simulation game:</p>
+    <a href="/classic.html" class="btn-primary" style="display:inline-block; padding:12px 24px; text-decoration:none;">Launch Classic 2D Game</a>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN 1: WORLD HUB / DISTRICT LOBBY
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-lobby" class="view-screen">
+    <header class="lobby-header">
+      <div class="lobby-brand">
+        <div class="logo-orb">⬡</div>
+        <div class="lobby-title-group">
+          <h1>ORBIS LAB</h1>
+          <p>A simulated world for testing before building</p>
         </div>
-        <p class="hero-disclaimer">
-          <strong>Educational simulation.</strong> Simplified model. Not medical advice.
-        </p>
       </div>
-    </div>
+      <div class="lobby-links">
+        <a href="/classic.html" class="btn-secondary">Classic 2D Game</a>
+        <a href="/lab-console.html" class="btn-secondary">Dev Console</a>
+      </div>
+    </header>
+
+    <main class="lobby-content">
+      <div class="lobby-hero">
+        <h2>Select Simulation District</h2>
+        <p>Choose an interactive district to conduct stateful laboratory experiments, test scientific hypotheses, and receive algorithmic feedback.</p>
+      </div>
+
+      <div class="districts-grid">
+        <!-- District 1: Pharma (Unlocked) -->
+        <div class="district-card pharma unlocked" id="card-district-pharma">
+          <div>
+            <span class="district-badge badge-unlocked">● Unlocked</span>
+            <div class="district-icon">💊</div>
+            <h3 class="district-title">Pharmacokinetics Ward</h3>
+            <p class="district-desc">Administer oral paracetamol to virtual patient Alex, advance clinical ward time, draw blood samples, and analyze plasma concentrations using centrifuge assays.</p>
+          </div>
+          <button type="button" class="district-action-btn btn-launch">Enter Ward <span>➔</span></button>
+        </div>
+
+        <!-- District 2: Chemistry (Unlocked) -->
+        <div class="district-card chemistry unlocked" id="card-district-chemistry">
+          <div>
+            <span class="district-badge badge-unlocked">● Unlocked</span>
+            <div class="district-icon">🧪</div>
+            <h3 class="district-title">Titration Bench</h3>
+            <p class="district-desc">Standardize your burette, pipette acid analyte into a conical flask, add pH indicators, and perform precision drop-wise neutralization with continuous color transitions.</p>
+          </div>
+          <button type="button" class="district-action-btn btn-launch">Enter Bench <span>➔</span></button>
+        </div>
+
+        <!-- District 3: Space (Locked) -->
+        <div class="district-card locked">
+          <div>
+            <span class="district-badge badge-locked">🔒 Coming Soon</span>
+            <div class="district-icon">🚀</div>
+            <h3 class="district-title">Orbital Mechanics</h3>
+            <p class="district-desc">Simulate Keplerian two-body orbital trajectories, Hohmann transfer orbits, and gravitational maneuvers in low Earth orbit.</p>
+          </div>
+          <button type="button" class="district-action-btn btn-disabled" disabled>Locked</button>
+        </div>
+
+        <!-- District 4: Market (Locked) -->
+        <div class="district-card locked">
+          <div>
+            <span class="district-badge badge-locked">🔒 Coming Soon</span>
+            <div class="district-icon">📈</div>
+            <h3 class="district-title">Market Microstructure</h3>
+            <p class="district-desc">High-frequency limit order books, automated market maker (AMM) curves, and multi-agent liquidity equilibrium testing.</p>
+          </div>
+          <button type="button" class="district-action-btn btn-disabled" disabled>Locked</button>
+        </div>
+      </div>
+    </main>
+
+    <footer style="padding:16px 36px; text-align:center; font-size:0.75rem; color:#64748b; border-top:1px solid rgba(255,255,255,0.05);">
+      Educational simulation. Simplified models. Not medical advice.
+    </footer>
   </div>
-</div>
 
-
-<!-- ═══════════════════════════════════════════════════
-     SCREEN 2 · LEVEL SELECT
-════════════════════════════════════════════════════ -->
-<div class="screen hidden" id="screenLevelSelect">
-  <div class="screen-inner">
-    <div class="screen-head">
-      <h2 class="screen-title">Select Level</h2>
-      <p class="screen-desc">Complete levels in order. Earn at least ★ to unlock the next.</p>
-    </div>
-    <div class="level-grid" id="levelGrid"></div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════
-     SCREEN 3 · GAME (simulator)
-════════════════════════════════════════════════════ -->
-<div class="screen hidden" id="screenGame">
-  <div class="main-content">
-
-    <!-- LEFT: patient card + controls -->
-    <aside class="controls-col">
-
-      <!-- Patient card -->
-      <div class="card patient-card" id="patientCard">
-        <div class="patient-icon" id="patientIcon"></div>
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN 2: EXPERIMENT BRIEF MODAL
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-brief" class="view-screen hidden" style="justify-content:center; align-items:center;">
+    <div class="brief-modal">
+      <div class="brief-header">
         <div>
-          <div class="patient-name" id="patientLevelTitle"></div>
-          <div class="patient-condition" id="patientCondition"></div>
+          <span class="brief-district" id="brief-district">District: Pharma</span>
+          <h2 class="brief-title" id="brief-title">Pharmacokinetics Ward</h2>
+        </div>
+        <button type="button" class="brief-close" id="btn-close-brief">&times;</button>
+      </div>
+
+      <p id="brief-description" style="color:#cbd5e1; font-size:0.9rem; line-height:1.5; margin-bottom:20px;"></p>
+
+      <div class="brief-section">
+        <h4>Learning Goals</h4>
+        <ul class="brief-list" id="brief-learning-goals"></ul>
+      </div>
+
+      <div class="brief-section">
+        <h4>Required Personal Protective Equipment (PPE)</h4>
+        <div class="ppe-requirements-bar" id="brief-ppe-bar"></div>
+      </div>
+
+      <div class="nickname-input-group">
+        <label for="brief-nickname-input">Researcher Nickname</label>
+        <input type="text" id="brief-nickname-input" placeholder="e.g. Dr. Curie" value="Dr. Curie" maxlength="24" />
+      </div>
+
+      <div class="brief-actions">
+        <button type="button" class="btn-primary" id="btn-start-experiment">Launch 3D Laboratory ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN 3: 3D LAB IN-GAME HUD OVERLAY
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="lab-hud" class="hidden">
+    <!-- Top Bar -->
+    <header class="hud-top-bar">
+      <div class="hud-left">
+        <span class="hud-brand">⬡ ORBIS LAB</span>
+        <span class="hud-exp-badge" id="hud-exp-badge">PK WARD</span>
+        <div class="hud-clock-chip" id="hud-clock">t=0.0 h</div>
+      </div>
+
+      <div class="hud-center-stats">
+        <div class="hud-stat-pill">
+          <span>Safety Score:</span>
+          <span class="stat-val" id="hud-safety-score">40 pts</span>
+        </div>
+        <div class="ppe-indicators">
+          <span class="ppe-badge" id="ppe-badge-goggles">Goggles</span>
+          <span class="ppe-badge" id="ppe-badge-gloves">Gloves</span>
+          <span class="ppe-badge" id="ppe-badge-coat">Coat</span>
         </div>
       </div>
 
-      <!-- Story -->
-      <div class="card story-card">
-        <p class="card-title">Mission</p>
-        <p class="story-text" id="storyText"></p>
-        <div class="goal-chip" id="goalChip"></div>
+      <div class="hud-right-controls">
+        <button type="button" class="hud-btn" id="btn-reset-view" title="Reset camera viewpoint">🎥 Reset View</button>
+        <button type="button" class="hud-btn" id="btn-toggle-skip-anim" title="Toggle animation speed">⚡ Skip Anim: OFF</button>
+        <button type="button" class="hud-btn" id="btn-director-mode" title="Press D for hands-free autoplay">🎬 Director</button>
+        <button type="button" class="hud-btn" id="btn-mistake-demo" title="Intentionally skip goggles to see safety breach">⚠️ Mistake Demo</button>
+        <button type="button" class="hud-btn btn-finish" id="btn-finish-experiment">✓ Finish Report</button>
       </div>
+    </header>
 
-      <!-- Controls -->
-      <div class="card">
-        <p class="card-title">Dosing Parameters</p>
-
-        <div class="form-group">
-          <label class="form-label" for="gameDrugInfo">Drug</label>
-          <div class="drug-name-badge" id="gameDrugBadge"></div>
-        </div>
-
-        <div class="drug-info" id="gameDrugInfo"></div>
-
-        <div class="form-group">
-          <label class="form-label" for="gameDose">
-            Dose per administration
-            <span class="value-badge" id="gameDoseVal">–</span>
-          </label>
-          <input type="range" id="gameDose" min="0" max="1000" step="50" value="500" />
-        </div>
-
-        <div class="form-group">
-          <label class="form-label" for="gameNDoses">
-            Number of doses
-            <span class="value-badge" id="gameNDosesVal">1</span>
-          </label>
-          <input type="range" id="gameNDoses" min="1" max="6" step="1" value="1" />
-        </div>
-
-        <div class="form-group" id="gameIntervalGroup" style="display:none">
-          <label class="form-label" for="gameInterval">
-            Dosing interval
-            <span class="value-badge" id="gameIntervalVal">6 h</span>
-          </label>
-          <input type="range" id="gameInterval" min="2" max="12" step="0.5" value="6" />
-        </div>
-
-        <div class="error-banner" id="gameError" role="alert"></div>
-
-        <button class="btn-run" id="gameRunBtn" type="button">
-          <span class="btn-text">▶ Run Simulation</span>
-          <span class="spinner" aria-hidden="true"></span>
-        </button>
-        <button class="btn-primary" id="gameSubmitBtn" style="width:100%;margin-top:0.75rem;display:none">
-          ✓ Submit Score
-        </button>
-        <button class="btn-demo" id="gameDemoBtn" style="width:100%;margin-top:0.75rem" title="Auto-tune optimal dosing regimen for this level">
-          ⚡ Demo Mode (Auto-play)
-        </button>
+    <!-- Left Panel: Protocol Checklist -->
+    <aside class="hud-protocol-panel">
+      <div class="protocol-header">
+        <h3>Protocol Checklist</h3>
       </div>
+      <div class="protocol-steps-list" id="protocol-steps-list"></div>
     </aside>
 
-
-    <!-- RIGHT: chart + stats -->
-    <section class="chart-col">
-      <div class="card">
-        <p class="card-title" style="margin-bottom:0.75rem">Plasma Concentration – 0 to 24 h</p>
-        <div class="legend" style="margin-bottom:1rem">
-          <span><span class="legend-dot" style="background:#e040fb"></span>Concentration</span>
-          <span><span class="legend-dot" style="background:rgba(45,212,191,0.6)"></span>Therapeutic</span>
-          <span><span class="legend-dot" style="background:rgba(248,113,113,0.6)"></span>Toxic</span>
-        </div>
-        <div class="chart-wrapper">
-          <div class="chart-empty" id="gameChartEmpty">
-            <span class="empty-icon">⬡</span>
-            <span>Set dosing and click <strong>Run Simulation</strong></span>
-          </div>
-          <canvas id="gameChart" aria-label="Plasma concentration chart" role="img"></canvas>
-        </div>
+    <!-- Center Dock: Selected Object & Interactive Action Menu -->
+    <section class="hud-center-dock">
+      <div class="selected-object-banner">
+        <span>Target Station:</span>
+        <strong id="selected-target-name">CLICK ANY APPARATUS</strong>
       </div>
-
-      <div class="stats-row hidden" id="gameStatsRow">
-        <div class="stat-card peak">
-          <div class="stat-value" id="gameStatPeak">–</div>
-          <div class="stat-label">Peak conc.</div>
-        </div>
-        <div class="stat-card tpeak">
-          <div class="stat-value" id="gameStatTPeak">–</div>
-          <div class="stat-label">Time of peak</div>
-        </div>
-        <div class="stat-card green-pct">
-          <div class="stat-value" id="gameStatGreen">–</div>
-          <div class="stat-label">Time in green</div>
-        </div>
-        <div class="stat-card red-pct">
-          <div class="stat-value" id="gameStatRed">–</div>
-          <div class="stat-label">Time in red</div>
-        </div>
-      </div>
-
-      <!-- Dr. Orbis tutor panel (game screen) -->
-      <div class="tutor-panel hidden" id="gameTutorPanel" aria-live="polite">
-        <div class="tutor-header">
-          <span class="tutor-avatar">🤖</span>
-          <span class="tutor-name">Dr. Orbis</span>
-          <span class="tutor-source" id="gameTutorSource"></span>
-        </div>
-        <div class="tutor-body">
-          <p class="tutor-text" id="gameTutorText"></p>
-          <span class="tutor-cursor" id="gameTutorCursor">▋</span>
-        </div>
-      </div>
+      <div class="action-quick-buttons" id="action-quick-buttons"></div>
     </section>
 
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════
-     SCREEN 4 · RESULT
-════════════════════════════════════════════════════ -->
-<div class="screen hidden" id="screenResult">
-  <div class="result-hero">
-    <div class="result-card">
-      <div class="result-level-title" id="resultLevelTitle"></div>
-
-      <!-- Stars -->
-      <div class="stars-row" id="starsRow">
-        <span class="star" id="star1">★</span>
-        <span class="star" id="star2">★</span>
-        <span class="star" id="star3">★</span>
+    <!-- Right Panel: Real-Time Event Log -->
+    <aside class="hud-right-panel">
+      <div class="log-header">
+        <span>Laboratory Event Log</span>
       </div>
-
-      <!-- Score -->
-      <div class="result-score-wrap">
-        <div class="result-score-label">Score</div>
-        <div class="result-score" id="resultScore">0</div>
-        <div class="result-score-max">/ 100</div>
-      </div>
-
-      <!-- Breakdown -->
-      <div class="result-breakdown" id="resultBreakdown"></div>
-
-      <!-- Dr. Orbis tutor (result screen) -->
-      <div class="tutor-panel hidden" id="resultTutorPanel" aria-live="polite">
-        <div class="tutor-header">
-          <span class="tutor-avatar">🤖</span>
-          <span class="tutor-name">Dr. Orbis</span>
-          <span class="tutor-source" id="resultTutorSource"></span>
-        </div>
-        <div class="tutor-body">
-          <p class="tutor-text" id="resultTutorText"></p>
-          <span class="tutor-cursor" id="resultTutorCursor">▋</span>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="result-actions">
-        <button class="btn-secondary" id="btnTryAgain">↩ Try Again</button>
-        <button class="btn-primary"   id="btnNextLevel" style="display:none">Next Level →</button>
-        <button class="btn-outline"   id="btnLevels">Level Select</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════
-     SCREEN 5 · FREE-PLAY PLAYGROUND
-════════════════════════════════════════════════════ -->
-<div class="screen hidden" id="screenPlayground">
-  <div class="main-content">
-
-    <aside class="card" id="controlsPanel">
-      <p class="card-title">Free Play – Simulation Parameters</p>
-
-      <div class="form-group">
-        <label class="form-label" for="drugSelect">Drug</label>
-        <select id="drugSelect" aria-label="Select drug"></select>
-      </div>
-
-      <div class="drug-info" id="drugInfo" aria-live="polite"></div>
-      <hr class="divider" />
-
-      <div class="form-group">
-        <label class="form-label" for="dose">
-          Dose per administration
-          <span class="value-badge" id="doseVal">–</span>
-        </label>
-        <input type="range" id="dose" min="0" max="1000" step="50" value="500" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="nDoses">
-          Number of doses
-          <span class="value-badge" id="nDosesVal">1</span>
-        </label>
-        <input type="range" id="nDoses" min="1" max="6" step="1" value="1" />
-      </div>
-
-      <div class="form-group" id="intervalGroup" style="display:none">
-        <label class="form-label" for="interval">
-          Dosing interval
-          <span class="value-badge" id="intervalVal">6 h</span>
-        </label>
-        <input type="range" id="interval" min="2" max="12" step="0.5" value="6" />
-      </div>
-
-      <hr class="divider" />
-
-      <div class="form-group">
-        <label class="form-label" for="weight">
-          Patient weight
-          <span class="value-badge" id="weightVal">70 kg</span>
-        </label>
-        <input type="range" id="weight" min="40" max="150" step="1" value="70" />
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="clearance">
-          Clearance multiplier
-          <span class="value-badge" id="clearanceVal">1.00</span>
-        </label>
-        <input type="range" id="clearance" min="0.1" max="2.0" step="0.05" value="1.0" />
-        <small style="color:var(--text-muted);font-size:0.72rem;margin-top:0.3rem;display:block">
-          &lt;1 = reduced clearance · &gt;1 = increased
-        </small>
-      </div>
-
-      <hr class="divider" />
-      <div class="error-banner" id="errorBanner" role="alert"></div>
-      <button class="btn-run" id="runBtn" type="button">
-        <span class="btn-text">▶ Run Simulation</span>
-        <span class="spinner" aria-hidden="true"></span>
-      </button>
+      <div class="event-log-list" id="event-log-list"></div>
     </aside>
 
-    <section class="chart-panel" aria-label="Simulation results">
-      <div class="card" style="padding-bottom:1rem">
-        <p class="card-title" style="margin-bottom:0.75rem">Plasma Concentration – 0 to 24 h</p>
-        <div class="legend" style="margin-bottom:1rem">
-          <span><span class="legend-dot" style="background:#e040fb"></span>Concentration</span>
-          <span><span class="legend-dot" style="background:rgba(45,212,191,0.6)"></span>Therapeutic</span>
-          <span><span class="legend-dot" style="background:rgba(248,113,113,0.6)"></span>Toxic</span>
-        </div>
-        <div class="chart-wrapper">
-          <div class="chart-empty" id="chartEmpty">
-            <span class="empty-icon">⬡</span>
-            <span>Set parameters and click <strong>Run Simulation</strong></span>
-          </div>
-          <canvas id="pkChart" aria-label="Plasma concentration chart" role="img"></canvas>
-        </div>
+    <!-- Footer -->
+    <footer class="hud-footer">
+      <div class="disclaimer-pill">Educational simulation. Simplified models. Not medical advice.</div>
+      <div style="font-size:0.75rem; color:#64748b; background:rgba(0,0,0,0.4); padding:4px 8px; border-radius:6px; pointer-events:auto;">
+        Shortcuts: <kbd>[D]</kbd> Director Mode · <kbd>[F3]</kbd> Debug
       </div>
-
-      <div class="stats-row hidden" id="statsRow">
-        <div class="stat-card peak">
-          <div class="stat-value" id="statPeak">–</div>
-          <div class="stat-label">Peak conc.</div>
-        </div>
-        <div class="stat-card tpeak">
-          <div class="stat-value" id="statTPeak">–</div>
-          <div class="stat-label">Time of peak</div>
-        </div>
-        <div class="stat-card green-pct">
-          <div class="stat-value" id="statGreen">–</div>
-          <div class="stat-label">Time in green</div>
-        </div>
-        <div class="stat-card red-pct">
-          <div class="stat-value" id="statRed">–</div>
-          <div class="stat-label">Time in red</div>
-        </div>
-      </div>
-    </section>
-
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════
-     SCREEN 6 · LEADERBOARD
-════════════════════════════════════════════════════ -->
-<div class="screen hidden" id="screenLeaderboard">
-  <div class="screen-inner">
-    <div class="screen-head">
-      <h2 class="screen-title">Leaderboard</h2>
-    </div>
-    <div class="lb-controls">
-      <label class="form-label" for="lbLevelFilter">Filter by level</label>
-      <select id="lbLevelFilter" class="lb-select"></select>
-      <button class="btn-outline btn-sm" id="btnRefreshLb">Refresh</button>
-    </div>
-    <div class="lb-table-wrap">
-      <table class="lb-table" id="lbTable">
-        <thead>
-          <tr>
-            <th>#</th><th>Nickname</th><th>Score</th><th>Stars</th>
-          </tr>
-        </thead>
-        <tbody id="lbBody"></tbody>
-      </table>
-      <div class="lb-empty hidden" id="lbEmpty">No scores yet for this level.</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════
-     SCREEN 7 · ABOUT
-════════════════════════════════════════════════════ -->
-<div class="screen hidden" id="screenAbout">
-  <div class="screen-inner">
-    <div class="screen-head">
-      <h2 class="screen-title">About Simly Orbis</h2>
-      <p class="screen-desc">A simulated world for testing before building.</p>
-    </div>
-
-    <div class="card about-card" style="margin-bottom:1.5rem">
-      <h3 class="about-heading">🌍 The Big Vision</h3>
-      <p class="about-paragraph">
-        Complex systems in medicine, biotechnology, engineering, and aerospace are risky and costly to test on real-world subjects. 
-        <strong>Simly Orbis</strong> is conceived as a universal simulation sandbox — a virtual playground that models biological, physical, and biochemical dynamics accurately enough to test hypotheses, strategies, and interventions <em>before</em> committing real resources or risking real lives.
-      </p>
-    </div>
-
-    <div class="card about-card" style="margin-bottom:1.5rem">
-      <h3 class="about-heading">🧪 First Sample: Pharmacokinetics (PK)</h3>
-      <p class="about-paragraph">
-        This application represents our first interactive slice: an oral pharmacokinetics simulation engine.
-        Using the classical <strong>one-compartment Bateman absorption model</strong> with linear superposition for multiple dosing, students and residents can experiment with drug kinetics, organ impairment (e.g. reduced hepatic clearance), body weight shifts, and dose scheduling in real time.
-      </p>
-      <div class="about-features-grid">
-        <div class="about-feat">
-          <span class="about-feat-icon">⚡</span>
-          <div>
-            <strong>Interactive Engine</strong>
-            <p>Real-time calculation of plasma concentration curves from 0 to 24 hours.</p>
-          </div>
-        </div>
-        <div class="about-feat">
-          <span class="about-feat-icon">🤖</span>
-          <div>
-            <strong>Dr. Orbis AI Tutor</strong>
-            <p>Tailored physiological insights and dosing advice powered by Gemini (or built-in rule heuristics).</p>
-
-          </div>
-        </div>
-        <div class="about-feat">
-          <span class="about-feat-icon">⚙</span>
-          <div>
-            <strong>Under the Hood</strong>
-            <p>Live architectural transparency showcasing real API request/responses, math formulations, and database stats.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card about-card about-disclaimer-card">
-      <h3 class="about-heading" style="color:var(--amber)">⚠️ Educational Disclaimer</h3>
-      <p class="about-paragraph" style="color:var(--text-secondary);font-size:0.88rem">
-        <strong>Simly Orbis is for educational and illustrative purposes only.</strong>
-        All pharmacokinetic parameters ($k_a$, $t_{1/2}$, $V_d$, therapeutic windows) are approximate and game-balanced.
-        This tool is strictly <strong>not</strong> for clinical, diagnostic, or therapeutic decision-making in real patients.
-      </p>
-    </div>
-  </div>
-</div>
-
-<!-- ── Persistent footer ──────────────────────────────────────── -->
-<footer class="footer-banner" id="appFooter" style="display:none" role="contentinfo">
-  <strong>Educational simulation.</strong>
-  Simplified one-compartment model. Parameters are approximate and game-balanced.
-  <strong>Not medical advice.</strong>
-</footer>
-
-
-<!-- ═══════════════════════════════════════════════════
-     UNDER THE HOOD DRAWER
-════════════════════════════════════════════════════ -->
-
-<!-- Toggle fab (fixed, bottom-right) -->
-<button class="hood-fab" id="hoodFab" aria-label="Under the hood" title="Under the Hood">
-  <span class="hood-fab-icon">⚙</span>
-</button>
-
-<!-- Drawer panel -->
-<aside class="hood-drawer" id="hoodDrawer" aria-hidden="true">
-  <div class="hood-header">
-    <span class="hood-title">⚙ Under the Hood</span>
-    <button class="hood-close" id="hoodClose" aria-label="Close drawer">✕</button>
+    </footer>
   </div>
 
-  <div class="hood-body">
-
-    <!-- Backend Status & Core District Modules -->
-    <section class="hood-section">
-      <h3 class="hood-section-title">Backend Status</h3>
-      <div class="hood-status-row">
-        <span class="hood-label">Storage mode</span>
-        <span class="hood-badge" id="hoodStorageMode">–</span>
-      </div>
-      <div class="hood-status-row">
-        <span class="hood-label">Tutor engine</span>
-        <span class="hood-badge" id="hoodTutorSource" style="color:var(--text-secondary)">–</span>
-      </div>
-      <div class="hood-status-row">
-        <span class="hood-label">Runs logged</span>
-        <span class="hood-mono" id="hoodRuns">–</span>
-      </div>
-      <div class="hood-status-row">
-        <span class="hood-label">Players / Scores</span>
-        <span class="hood-mono" id="hoodPlayersScores">–</span>
-      </div>
-      <div class="hood-status-row" style="flex-direction:column;align-items:flex-start;gap:0.35rem;margin-top:0.4rem">
-        <span class="hood-label">Registered modules</span>
-        <div class="hood-chips" id="hoodModuleList"></div>
-      </div>
-      <button class="btn-outline btn-sm" id="hoodRefresh" style="margin-top:0.6rem">↻ Refresh Status</button>
-    </section>
-
-    <!-- Recent Runs Log -->
-    <section class="hood-section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-        <h3 class="hood-section-title" style="margin-bottom:0">Recent Runs Log</h3>
-        <button class="btn-outline btn-sm" id="hoodViewRunsBtn" style="padding:0.2rem 0.5rem;font-size:0.72rem">View Last 10</button>
-      </div>
-      <div class="hood-table-wrap" id="hoodRunsTableWrap" style="display:none">
-        <table class="hood-table" id="hoodRunsTable">
-          <thead>
-            <tr>
-              <th>Time</th><th>Module</th><th>Nick</th><th>Peak / Metric</th>
-            </tr>
-          </thead>
-          <tbody id="hoodRunsBody"></tbody>
-        </table>
-      </div>
-      <div class="hood-json-placeholder" id="hoodRunsEmpty" style="font-size:0.78rem">Click "View Last 10" to load run records.</div>
-    </section>
-
-
-    <!-- Bateman equation -->
-    <section class="hood-section">
-      <h3 class="hood-section-title">PK Model</h3>
-      <p class="hood-eq-label">One-compartment Bateman equation (oral absorption):</p>
-      <div class="hood-equation">
-        C(t) = <span class="eq-frac"><span class="eq-num">F · D · k<sub>a</sub></span><span class="eq-den">V<sub>d</sub> · (k<sub>a</sub> − k<sub>e</sub>)</span></span>
-        · (e<sup>−k<sub>e</sub>t</sup> − e<sup>−k<sub>a</sub>t</sup>)
-      </div>
-      <div class="hood-eq-vars">
-        <span><b>F</b> = bioavailability</span>
-        <span><b>D</b> = dose (mg)</span>
-        <span><b>k<sub>a</sub></b> = absorption rate (h⁻¹)</span>
-        <span><b>k<sub>e</sub></b> = ln 2 / t½ · clearance multiplier</span>
-        <span><b>V<sub>d</sub></b> = Vd/kg · weight (L)</span>
-      </div>
-      <p class="hood-note">Multiple doses use superposition. When k<sub>a</sub> = k<sub>e</sub> the limit form C = (F·D·k<sub>a</sub>/V<sub>d</sub>) · t · e<sup>−k<sub>e</sub>t</sup> is used.</p>
-    </section>
-
-    <!-- Last API request -->
-    <section class="hood-section">
-      <h3 class="hood-section-title">Last API Request</h3>
-      <pre class="hood-json" id="hoodLastReq"><span class="hood-json-placeholder">No request yet</span></pre>
-    </section>
-
-    <!-- Last API response -->
-    <section class="hood-section">
-      <h3 class="hood-section-title">Last API Response <span class="hood-json-small">(times &amp; concentrations truncated)</span></h3>
-      <pre class="hood-json" id="hoodLastRes"><span class="hood-json-placeholder">No response yet</span></pre>
-    </section>
-
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN 4: FINAL REPORT SCREEN
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-report" class="view-screen hidden" style="justify-content:center; align-items:center;">
+    <div class="report-modal">
+      <div id="report-content"></div>
+    </div>
   </div>
-</aside>
 
-<!-- Drawer backdrop -->
-<div class="hood-backdrop" id="hoodBackdrop"></div>
-
-<script src="app.js"></script>
+  <!-- Main JavaScript ES Module -->
+  <script type="module" src="./lab/main.js"></script>
 </body>
 </html>

@@ -1,0 +1,277 @@
+/**
+ * Particle Effects & Alarm Strobe Renderer (frontend/lab/render/effects.js)
+ * Implements directive 'effect' (splash, bubbles, smoke, spark, alarm, glow).
+ */
+
+import * as THREE from 'three';
+
+export class EffectManager {
+  constructor(scene) {
+    this.scene = scene;
+    this.activeEffects = [];
+    this.alarmStrobeEl = document.getElementById('alarm-strobe-overlay');
+  }
+
+  playEffect(apparatusGroup, directive) {
+    const name = directive.name || 'glow';
+    const durationMs = directive.duration_ms || 1500;
+
+    const origin = new THREE.Vector3();
+    if (apparatusGroup) {
+      apparatusGroup.getWorldPosition(origin);
+      origin.y += 0.2;
+    }
+
+    switch (name) {
+      case 'splash':
+        this.createSplash(origin, durationMs);
+        break;
+      case 'bubbles':
+        this.createBubbles(origin, durationMs);
+        break;
+      case 'smoke':
+        this.createSmoke(origin, durationMs);
+        break;
+      case 'spark':
+        this.createSparks(origin, durationMs);
+        break;
+      case 'alarm':
+        this.triggerAlarm(durationMs);
+        break;
+      case 'glow':
+      default:
+        this.createGlow(origin, durationMs);
+        break;
+    }
+  }
+
+  createSplash(origin, durationMs) {
+    const particleCount = 28;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const velocities = [];
+
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3] = origin.x;
+      positions[i * 3 + 1] = origin.y;
+      positions[i * 3 + 2] = origin.z;
+
+      velocities.push(
+        new THREE.Vector3(
+          (Math.random() - 0.5) * 1.8,
+          Math.random() * 2.2 + 0.5,
+          (Math.random() - 0.5) * 1.8
+        )
+      );
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0x38bdf8,
+      size: 0.04,
+      transparent: true,
+      opacity: 0.9,
+    });
+
+    const points = new THREE.Points(geo, mat);
+    this.scene.add(points);
+
+    this.activeEffects.push({
+      mesh: points,
+      velocities,
+      positions,
+      startTime: performance.now(),
+      durationMs,
+      type: 'physics',
+    });
+  }
+
+  createBubbles(origin, durationMs) {
+    const count = 16;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = origin.x + (Math.random() - 0.5) * 0.1;
+      positions[i * 3 + 1] = origin.y - 0.05 + Math.random() * 0.05;
+      positions[i * 3 + 2] = origin.z + (Math.random() - 0.5) * 0.1;
+
+      velocities.push(
+        new THREE.Vector3((Math.random() - 0.5) * 0.05, Math.random() * 0.4 + 0.2, (Math.random() - 0.5) * 0.05)
+      );
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0xf1f5f9,
+      size: 0.03,
+      transparent: true,
+      opacity: 0.7,
+    });
+
+    const points = new THREE.Points(geo, mat);
+    this.scene.add(points);
+
+    this.activeEffects.push({
+      mesh: points,
+      velocities,
+      positions,
+      startTime: performance.now(),
+      durationMs,
+      type: 'bubbles',
+    });
+  }
+
+  createSmoke(origin, durationMs) {
+    const count = 20;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = origin.x + (Math.random() - 0.5) * 0.15;
+      positions[i * 3 + 1] = origin.y + Math.random() * 0.1;
+      positions[i * 3 + 2] = origin.z + (Math.random() - 0.5) * 0.15;
+
+      velocities.push(
+        new THREE.Vector3((Math.random() - 0.5) * 0.15, Math.random() * 0.3 + 0.15, (Math.random() - 0.5) * 0.15)
+      );
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0x94a3b8,
+      size: 0.06,
+      transparent: true,
+      opacity: 0.5,
+    });
+
+    const points = new THREE.Points(geo, mat);
+    this.scene.add(points);
+
+    this.activeEffects.push({
+      mesh: points,
+      velocities,
+      positions,
+      startTime: performance.now(),
+      durationMs,
+      type: 'smoke',
+    });
+  }
+
+  createSparks(origin, durationMs) {
+    const count = 20;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = origin.x;
+      positions[i * 3 + 1] = origin.y;
+      positions[i * 3 + 2] = origin.z;
+
+      velocities.push(
+        new THREE.Vector3(
+          (Math.random() - 0.5) * 2.5,
+          Math.random() * 2.0,
+          (Math.random() - 0.5) * 2.5
+        )
+      );
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: 0xf59e0b,
+      size: 0.05,
+      transparent: true,
+      opacity: 1.0,
+    });
+
+    const points = new THREE.Points(geo, mat);
+    this.scene.add(points);
+
+    this.activeEffects.push({
+      mesh: points,
+      velocities,
+      positions,
+      startTime: performance.now(),
+      durationMs,
+      type: 'physics',
+    });
+  }
+
+  createGlow(origin, durationMs) {
+    const light = new THREE.PointLight(0x14b8a6, 2.5, 3.5);
+    light.position.copy(origin);
+    this.scene.add(light);
+
+    this.activeEffects.push({
+      light,
+      startTime: performance.now(),
+      durationMs,
+      type: 'glow',
+    });
+  }
+
+  triggerAlarm(durationMs) {
+    // 1. Red point light pulse
+    const alarmLight = this.scene.getObjectByName('alarm_point_light');
+    if (alarmLight) {
+      alarmLight.intensity = 3.5;
+    }
+
+    // 2. HUD red strobe border
+    if (this.alarmStrobeEl) {
+      this.alarmStrobeEl.classList.add('active');
+    }
+
+    setTimeout(() => {
+      if (alarmLight) alarmLight.intensity = 0;
+      if (this.alarmStrobeEl) this.alarmStrobeEl.classList.remove('active');
+    }, durationMs);
+  }
+
+  update(dt) {
+    const now = performance.now();
+
+    for (let i = this.activeEffects.length - 1; i >= 0; i--) {
+      const fx = this.activeEffects[i];
+      const elapsed = now - fx.startTime;
+
+      if (elapsed >= fx.durationMs) {
+        // Dispose
+        if (fx.mesh) {
+          this.scene.remove(fx.mesh);
+          fx.mesh.geometry.dispose();
+          fx.mesh.material.dispose();
+        }
+        if (fx.light) {
+          this.scene.remove(fx.light);
+        }
+        this.activeEffects.splice(i, 1);
+        continue;
+      }
+
+      // Physics motion
+      if (fx.type === 'physics' && fx.positions) {
+        const count = fx.velocities.length;
+        for (let j = 0; j < count; j++) {
+          fx.velocities[j].y -= 9.8 * dt * 0.6; // gravity
+          fx.positions[j * 3] += fx.velocities[j].x * dt;
+          fx.positions[j * 3 + 1] += fx.velocities[j].y * dt;
+          fx.positions[j * 3 + 2] += fx.velocities[j].z * dt;
+        }
+        fx.mesh.geometry.attributes.position.needsUpdate = true;
+      } else if ((fx.type === 'bubbles' || fx.type === 'smoke') && fx.positions) {
+        const count = fx.velocities.length;
+        for (let j = 0; j < count; j++) {
+          fx.positions[j * 3] += fx.velocities[j].x * dt;
+          fx.positions[j * 3 + 1] += fx.velocities[j].y * dt;
+          fx.positions[j * 3 + 2] += fx.velocities[j].z * dt;
+        }
+        fx.mesh.geometry.attributes.position.needsUpdate = true;
+      }
+    }
+  }
+}
