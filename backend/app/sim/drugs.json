@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Paracetamol",
+    "ka": 2.0,
+    "half_life": 2.5,
+    "vd_per_kg": 0.95,
+    "bioavailability": 0.85,
+    "green_low": 5.0,
+    "green_high": 20.0,
+    "red_threshold": 30.0,
+    "standard_dose_mg": 500.0
+  },
+  {
+    "name": "Ibuprofen",
+    "ka": 3.0,
+    "half_life": 2.0,
+    "vd_per_kg": 0.15,
+    "bioavailability": 0.95,
+    "green_low": 10.0,
+    "green_high": 40.0,
+    "red_threshold": 60.0,
+    "standard_dose_mg": 400.0
+  },
+  {
+    "name": "Caffeine",
+    "ka": 4.0,
+    "half_life": 5.0,
+    "vd_per_kg": 0.6,
+    "bioavailability": 1.0,
+    "green_low": 3.0,
+    "green_high": 8.0,
+    "red_threshold": 12.0,
+    "standard_dose_mg": 100.0
+  }
+]

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "level-01",
+    "order": 1,
+    "title": "Standard Adult",
+    "subtitle": "Paracetamol · 70 kg",
+    "icon": "💊",
+    "story": "Alex is a healthy 70 kg adult with a mild headache. Prescribe paracetamol and keep plasma levels in the therapeutic window for as long as possible.",
+    "goal": "Maximise time in the green zone. Avoid going toxic.",
+    "drug_id": "paracetamol",
+    "patient": {
+      "weight_kg": 70,
+      "clearance_multiplier": 1.0,
+      "condition": "Healthy adult"
+    },
+    "locked": false
+  },
+  {
+    "id": "level-02",
+    "order": 2,
+    "title": "Paediatric-weight Patient",
+    "subtitle": "Ibuprofen · 45 kg",
+    "icon": "🧒",
+    "story": "Sam is a 45 kg teenager with post-surgical inflammation. Smaller body, smaller volume of distribution — doses must be adjusted carefully.",
+    "goal": "Stay in the green zone without breaching the toxic threshold.",
+    "drug_id": "ibuprofen",
+    "patient": {
+      "weight_kg": 45,
+      "clearance_multiplier": 1.0,
+      "condition": "Teenager, 45 kg"
+    },
+    "locked": true
+  },
+  {
+    "id": "level-03",
+    "order": 3,
+    "title": "Reduced Liver Function",
+    "subtitle": "Paracetamol · clearance ×0.6",
+    "icon": "🫀",
+    "story": "Jordan has mild hepatic impairment. The liver clears paracetamol 40% slower than normal, so standard doses accumulate. Tread carefully.",
+    "goal": "Keep levels therapeutic despite reduced clearance.",
+    "drug_id": "paracetamol",
+    "patient": {
+      "weight_kg": 70,
+      "clearance_multiplier": 0.6,
+      "condition": "Hepatic impairment (clearance ×0.6)"
+    },
+    "locked": true
+  },
+  {
+    "id": "level-04",
+    "order": 4,
+    "title": "Night-shift Caffeine Challenge",
+    "subtitle": "Caffeine · stay alert, don't crash",
+    "icon": "☕",
+    "story": "Morgan is a night-shift nurse who needs to stay alert. Caffeine's long half-life means it lingers — too much and anxiety spikes, too little and performance drops.",
+    "goal": "Maintain caffeine in the green alertness zone for the whole 24 h shift.",
+    "drug_id": "caffeine",
+    "patient": {
+      "weight_kg": 65,
+      "clearance_multiplier": 1.0,
+      "condition": "Healthy adult, night shift"
+    },
+    "locked": true
+  },
+  {
+    "id": "level-05",
+    "order": 5,
+    "title": "Final Challenge",
+    "subtitle": "Paracetamol · impaired clearance · 55 kg",
+    "icon": "⭐",
+    "story": "Final test: elderly patient, low body weight and reduced hepatic function. Every decision matters. This is the hardest combination.",
+    "goal": "Achieve the highest possible time in green. Perfect score requires 80%+ green with 0% red.",
+    "drug_id": "paracetamol",
+    "patient": {
+      "weight_kg": 55,
+      "clearance_multiplier": 0.7,
+      "condition": "Elderly, low weight, reduced clearance"
+    },
+    "locked": true
+  }
+]
