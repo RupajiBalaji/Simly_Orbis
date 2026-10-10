@@ -112,16 +112,37 @@ function setupLobby() {
     btnStartExp.onclick = async () => {
       const nicknameInput = document.getElementById('brief-nickname-input');
       const nickname = nicknameInput?.value.trim() || 'Researcher';
-      briefScreen.classList.add('hidden');
       await startExperimentSession(currentSelectedExperimentId, nickname);
     };
   }
+}
+
+function showSessionError(title, message) {
+  const overlay = document.getElementById('session-error-overlay');
+  const titleEl = document.getElementById('session-error-title');
+  const textEl = document.getElementById('session-error-text');
+  const btnBack = document.getElementById('btn-error-back-to-brief');
+  const briefScreen = document.getElementById('screen-brief');
+
+  if (titleEl) titleEl.textContent = title;
+  if (textEl) textEl.textContent = message;
+
+  if (btnBack) {
+    btnBack.onclick = () => {
+      if (overlay) overlay.classList.add('hidden');
+      if (briefScreen) briefScreen.classList.remove('hidden');
+    };
+  }
+
+  if (overlay) overlay.classList.remove('hidden');
 }
 
 async function openExperimentBrief(experimentId) {
   currentSelectedExperimentId = experimentId;
   const lobbyScreen = document.getElementById('screen-lobby');
   const briefScreen = document.getElementById('screen-brief');
+  const errorOverlay = document.getElementById('session-error-overlay');
+  if (errorOverlay) errorOverlay.classList.add('hidden');
 
   try {
     const exp = await api.getExperiment(experimentId);
@@ -151,6 +172,10 @@ async function openExperimentBrief(experimentId) {
 }
 
 async function startExperimentSession(experimentId, nickname = 'Researcher') {
+  const briefScreen = document.getElementById('screen-brief');
+  const errorOverlay = document.getElementById('session-error-overlay');
+  if (errorOverlay) errorOverlay.classList.add('hidden');
+
   try {
     toast.showInfo(`Entering 3D Laboratory for '${experimentId}'...`, 2000);
 
@@ -168,11 +193,16 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
     const actions = await api.getAvailableActions(session.session_id);
     state.setAvailableActions(actions);
 
-    // 4. Show HUD
+    // 4. Hide brief screen and show HUD
+    if (briefScreen) briefScreen.classList.add('hidden');
     hud.show();
   } catch (err) {
-    toast.showInfo(`Failed to initialize session: ${err.message}`, 4000);
-    console.error(err);
+    console.error('Failed to initialize 3D laboratory session:', err);
+    if (briefScreen) briefScreen.classList.add('hidden');
+    showSessionError(
+      'Failed to Launch 3D Laboratory',
+      `${err.name ? err.name + ': ' : ''}${err.message}\n\n${err.stack || ''}`
+    );
   }
 }
 

@@ -172,6 +172,18 @@
     </div>
   </div>
 
+  <!-- Session Error Overlay -->
+  <div id="session-error-overlay" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:rgba(12,7,29,0.96);">
+    <div class="brief-modal" style="border-color:#ef4444; text-align:center;">
+      <div style="font-size:3rem; margin-bottom:12px;">⚠️</div>
+      <h2 id="session-error-title" style="color:#f87171; font-size:1.6rem; margin-bottom:12px;">Failed to Launch Laboratory</h2>
+      <p id="session-error-text" style="color:#fca5a5; font-family:var(--font-mono); font-size:0.9rem; margin-bottom:24px; word-break:break-word; background:rgba(0,0,0,0.5); padding:14px; border-radius:8px; border:1px solid rgba(239,68,68,0.3);"></p>
+      <div style="display:flex; justify-content:center; gap:12px;">
+        <button type="button" class="btn-primary" id="btn-error-back-to-brief" style="background:linear-gradient(135deg, #ef4444, #9333ea);">Back to Experiment Brief</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═════════════════════════════════════════════════════════════════════
        SCREEN 3: 3D LAB IN-GAME HUD OVERLAY
        ═════════════════════════════════════════════════════════════════════ -->

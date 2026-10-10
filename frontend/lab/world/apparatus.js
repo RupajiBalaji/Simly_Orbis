@@ -28,135 +28,143 @@ const metalMat = new THREE.MeshStandardMaterial({
   metalness: 0.85,
 });
 
-export function buildApparatus(apparatusList, scene) {
+/**
+ * Normalizes raw apparatus input from backend (either array of objects or object keyed by id).
+ * Always returns an array of { id, type, ...props }.
+ */
+export function normalizeApparatus(rawApparatus) {
+  if (!rawApparatus) return [];
+  if (Array.isArray(rawApparatus)) {
+    return rawApparatus.map((item) => {
+      if (!item || typeof item !== 'object') return { id: String(item), type: String(item) };
+      return {
+        id: item.id || item.name || '',
+        type: item.type || item.id || '',
+        ...item,
+      };
+    });
+  }
+  if (typeof rawApparatus === 'object') {
+    return Object.entries(rawApparatus).map(([id, val]) => {
+      const obj = val && typeof val === 'object' ? val : {};
+      return {
+        id,
+        type: obj.type || id,
+        ...obj,
+      };
+    });
+  }
+  return [];
+}
+
+export function buildApparatus(rawApparatus, scene) {
   const container = new THREE.Group();
   container.name = 'apparatus_container';
 
   const lookup = {};
+  const apparatusList = normalizeApparatus(rawApparatus);
 
   for (const item of apparatusList) {
     const id = item.id;
     const type = item.type;
     let group = null;
 
-    switch (type) {
-      case 'digital_balance':
-        group = buildDigitalBalance(id);
-        group.position.set(-4.5, 0.94, -4.2);
-        group.userData.stationPos = new THREE.Vector3(-4.5, 0, -3.2);
-        break;
-
-      case 'dosing_cup':
-        group = buildDosingCup(id);
-        group.position.set(-3.6, 0.94, -4.0);
-        group.userData.stationPos = new THREE.Vector3(-3.8, 0, -3.2);
-        break;
-
-      case 'water_jug':
-        group = buildWaterJug(id);
-        group.position.set(-5.3, 0.94, -4.3);
-        group.userData.stationPos = new THREE.Vector3(-4.5, 0, -3.2);
-        break;
-
-      case 'patient_bed':
-        group = buildPatientBed(id);
-        group.position.set(4.5, 0, -3.8);
-        group.userData.stationPos = new THREE.Vector3(3.2, 0, -3.5);
-        break;
-
-      case 'tube_rack':
-        group = buildTubeRack(id);
-        group.position.set(-3.0, 0.94, -4.3);
-        group.userData.stationPos = new THREE.Vector3(-3.2, 0, -3.2);
-        break;
-
-      case 'label_pen':
-        group = buildLabelPen(id);
-        group.position.set(-4.0, 0.94, -3.7);
-        group.userData.stationPos = new THREE.Vector3(-4.0, 0, -3.0);
-        break;
-
-      case 'assay_analyzer':
-        group = buildAssayAnalyzer(id);
-        group.position.set(-5.5, 0.94, -3.5);
-        group.userData.stationPos = new THREE.Vector3(-5.2, 0, -2.6);
-        break;
-
-      case 'biohazard_bin':
-        group = buildWasteBin(id, 'biohazard');
-        group.position.set(-2.0, 0, -5.2);
-        group.userData.stationPos = new THREE.Vector3(-2.0, 0, -4.2);
-        break;
-
-      case 'chemical_waste_bin':
-        group = buildWasteBin(id, 'chemical');
-        group.position.set(2.0, 0, -5.2);
-        group.userData.stationPos = new THREE.Vector3(2.0, 0, -4.2);
-        break;
-
-      case 'sink':
-        group = buildSink(id);
+    if (id === 'digital_balance' || type === 'balance' || type === 'digital_balance') {
+      group = buildDigitalBalance(id);
+      group.position.set(-4.5, 0.94, -4.2);
+      group.userData.stationPos = new THREE.Vector3(-4.5, 0, -3.2);
+    } else if (id === 'dosing_cup' || type === 'cup' || type === 'container' || type === 'dosing_cup') {
+      group = buildDosingCup(id);
+      group.position.set(-3.6, 0.94, -4.0);
+      group.userData.stationPos = new THREE.Vector3(-3.8, 0, -3.2);
+    } else if (id === 'water_jug' || type === 'source' || type === 'water_jug') {
+      group = buildWaterJug(id);
+      group.position.set(-5.3, 0.94, -4.3);
+      group.userData.stationPos = new THREE.Vector3(-4.5, 0, -3.2);
+    } else if (id === 'patient_bed' || type === 'patient_station' || type === 'patient_bed') {
+      group = buildPatientBed(id);
+      group.position.set(4.5, 0, -3.8);
+      group.userData.stationPos = new THREE.Vector3(3.2, 0, -3.5);
+    } else if (id.startsWith('tube_') || type === 'sample_tube' || id === 'tube_rack' || type === 'tube_rack') {
+      if (!lookup['tube_rack']) {
+        const rack = buildTubeRack('tube_rack');
+        rack.position.set(-3.0, 0.94, -4.3);
+        rack.userData.stationPos = new THREE.Vector3(-3.2, 0, -3.2);
+        rack.userData.targetId = 'tube_rack';
+        rack.userData.title = 'Sample Tube Rack';
+        rack.userData.interactive = true;
+        container.add(rack);
+        lookup['tube_rack'] = rack;
+        if (rack.userData.tubes) {
+          for (const [tId, tGroup] of Object.entries(rack.userData.tubes)) {
+            lookup[tId] = tGroup;
+          }
+        }
+      }
+      continue;
+    } else if (id === 'label_pen' || type === 'tool' || type === 'label_pen') {
+      group = buildLabelPen(id);
+      group.position.set(-4.0, 0.94, -3.7);
+      group.userData.stationPos = new THREE.Vector3(-4.0, 0, -3.0);
+    } else if (id === 'assay_analyzer' || type === 'analyzer' || type === 'assay_analyzer') {
+      group = buildAssayAnalyzer(id);
+      group.position.set(-5.5, 0.94, -3.5);
+      group.userData.stationPos = new THREE.Vector3(-5.2, 0, -2.6);
+    } else if (id === 'biohazard_bin' || (type === 'waste_bin' && id.includes('bio'))) {
+      group = buildWasteBin(id, 'biohazard');
+      group.position.set(-2.0, 0, -5.2);
+      group.userData.stationPos = new THREE.Vector3(-2.0, 0, -4.2);
+    } else if (id === 'chemical_waste_bin' || (type === 'waste_bin' && (id.includes('chem') || !id.includes('bio')))) {
+      group = buildWasteBin(id, 'chemical');
+      group.position.set(2.0, 0, -5.2);
+      group.userData.stationPos = new THREE.Vector3(2.0, 0, -4.2);
+    } else if (id === 'sink' || type === 'sink' || type === 'utility') {
+      if (id === 'sink' || !lookup['sink']) {
+        group = buildSink('sink');
         group.position.set(-7.2, 0.9, -1.0);
         group.userData.stationPos = new THREE.Vector3(-6.2, 0, -1.0);
-        break;
-
-      case 'burette':
-        group = buildBurette(id);
-        group.position.set(0, 0.94, -2.0);
-        group.userData.stationPos = new THREE.Vector3(0, 0, -1.0);
-        break;
-
-      case 'conical_flask':
-        group = buildConicalFlask(id);
-        group.position.set(0, 0.94, -1.9);
-        group.userData.stationPos = new THREE.Vector3(0, 0, -1.0);
-        break;
-
-      case 'pipette':
-        group = buildPipette(id);
-        group.position.set(-1.0, 0.94, -1.8);
-        group.userData.stationPos = new THREE.Vector3(-0.8, 0, -1.0);
-        break;
-
-      case 'indicator_bottles':
-        group = buildIndicatorBottles(id);
-        group.position.set(1.1, 0.94, -2.2);
-        group.userData.stationPos = new THREE.Vector3(0.8, 0, -1.2);
-        break;
-
-      case 'acid_bottles':
-        group = buildReagentBottles(id, 'acid');
-        group.position.set(-1.6, 0.94, -2.2);
-        group.userData.stationPos = new THREE.Vector3(-1.2, 0, -1.2);
-        break;
-
-      case 'base_bottle':
-        group = buildReagentBottles(id, 'base');
-        group.position.set(1.8, 0.94, -2.2);
-        group.userData.stationPos = new THREE.Vector3(1.2, 0, -1.2);
-        break;
-
-      case 'ph_meter':
-        group = buildPhMeter(id);
-        group.position.set(-0.8, 0.94, -2.3);
-        group.userData.stationPos = new THREE.Vector3(-0.5, 0, -1.2);
-        break;
-
-      case 'wash_bottle':
-        group = buildWashBottle(id);
-        group.position.set(1.4, 0.94, -1.7);
-        group.userData.stationPos = new THREE.Vector3(1.0, 0, -1.0);
-        break;
-
-      default:
-        console.warn(`Unknown apparatus type: ${type}`);
-        break;
+      }
+    } else if (id === 'burette' || type === 'burette') {
+      group = buildBurette(id);
+      group.position.set(0, 0.94, -2.0);
+      group.userData.stationPos = new THREE.Vector3(0, 0, -1.0);
+    } else if (id === 'conical_flask' || type === 'flask' || type === 'conical_flask') {
+      group = buildConicalFlask(id);
+      group.position.set(0, 0.94, -1.9);
+      group.userData.stationPos = new THREE.Vector3(0, 0, -1.0);
+    } else if (id === 'pipette' || type === 'pipette') {
+      group = buildPipette(id);
+      group.position.set(-1.0, 0.94, -1.8);
+      group.userData.stationPos = new THREE.Vector3(-0.8, 0, -1.0);
+    } else if (id === 'indicator_bottles' || type === 'indicator_shelf') {
+      group = buildIndicatorBottles(id);
+      group.position.set(1.1, 0.94, -2.2);
+      group.userData.stationPos = new THREE.Vector3(0.8, 0, -1.2);
+    } else if (id.includes('acid') || type === 'acid_bottles') {
+      group = buildReagentBottles(id, 'acid');
+      const posX = id.includes('acetic') ? -1.9 : -1.6;
+      group.position.set(posX, 0.94, -2.2);
+      group.userData.stationPos = new THREE.Vector3(-1.2, 0, -1.2);
+    } else if (id.includes('naoh') || id.includes('base') || type === 'base_bottle') {
+      group = buildReagentBottles(id, 'base');
+      group.position.set(1.8, 0.94, -2.2);
+      group.userData.stationPos = new THREE.Vector3(1.2, 0, -1.2);
+    } else if (id === 'ph_meter' || type === 'ph_meter') {
+      group = buildPhMeter(id);
+      group.position.set(-0.8, 0.94, -2.3);
+      group.userData.stationPos = new THREE.Vector3(-0.5, 0, -1.2);
+    } else if (id === 'wash_bottle' || type === 'wash_bottle') {
+      group = buildWashBottle(id);
+      group.position.set(1.4, 0.94, -1.7);
+      group.userData.stationPos = new THREE.Vector3(1.0, 0, -1.0);
+    } else {
+      console.warn(`Unmapped apparatus: id='${id}', type='${type}'`);
     }
 
     if (group) {
       group.userData.targetId = id;
       group.userData.apparatusType = type;
-      group.userData.title = item.name || id;
+      group.userData.title = item.name || id.replace(/_/g, ' ');
       group.userData.interactive = true;
       container.add(group);
       lookup[id] = group;
@@ -164,10 +172,12 @@ export function buildApparatus(apparatusList, scene) {
   }
 
   // Add ward clock on back wall
-  const clock = buildWardClock('ward_clock');
-  clock.position.set(0, 4.0, -6.9);
-  container.add(clock);
-  lookup['ward_clock'] = clock;
+  if (!lookup['ward_clock']) {
+    const clock = buildWardClock('ward_clock');
+    clock.position.set(0, 4.0, -6.9);
+    container.add(clock);
+    lookup['ward_clock'] = clock;
+  }
 
   scene.add(container);
   return { container, lookup };
