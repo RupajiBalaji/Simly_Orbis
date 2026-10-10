@@ -57,9 +57,24 @@ export const api = {
     });
   },
 
-  async finishSession(sessionId) {
+  async finishSession(sessionId, payload = null) {
     return await request(`/api/lab/sessions/${encodeURIComponent(sessionId)}/finish`, {
       method: 'POST',
+      body: payload ? JSON.stringify(payload) : undefined,
+    });
+  },
+
+  async runTrial(params) {
+    return await request('/api/trial/run', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+
+  async compareTrial(regimenA, regimenB = null) {
+    return await request('/api/trial/compare', {
+      method: 'POST',
+      body: JSON.stringify({ regimen_a: regimenA, regimen_b: regimenB }),
     });
   },
 

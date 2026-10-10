@@ -37,6 +37,12 @@ class CreateSessionRequest(BaseModel):
     nickname: str = Field(default="Researcher", description="Player or researcher nickname")
 
 
+class FinishSessionRequest(BaseModel):
+    """Optional payload when finishing a laboratory session."""
+
+    trial_result: dict[str, Any] | None = Field(default=None, description="Optional population trial record")
+
+
 class LabReportResponse(BaseModel):
     """Structured report returned upon finishing a lab session."""
 
@@ -49,6 +55,7 @@ class LabReportResponse(BaseModel):
     grade: str
     violations: list[Violation]
     lessons_learned: list[str]
+    trial_result: dict[str, Any] | None = None
     created_at: str
 
 
@@ -136,7 +143,7 @@ async def execute_action(session_id: str, body: ActionRequest) -> ActionResult:
 
 
 @router.post("/sessions/{session_id}/finish", response_model=LabReportResponse, summary="Finish session and compile report")
-async def finish_session(session_id: str) -> LabReportResponse:
+async def finish_session(session_id: str, body: FinishSessionRequest | None = None) -> LabReportResponse:
     """Complete lab session, calculate final scores, assign grade, and persist report."""
     doc = await _db.get_lab_session(session_id)
     if not doc:
@@ -171,6 +178,15 @@ async def finish_session(session_id: str) -> LabReportResponse:
     elif session.experiment_id == "titration_bench":
         lessons.append("Titration: Stoichiometric equivalence point occurs when moles of base equal moles of acid.")
 
+    trial_res = body.trial_result if body else None
+    if trial_res:
+        n_pts = trial_res.get("n_patients", 500)
+        pct_in = trial_res.get("pct_in_range", 0)
+        pct_tox = trial_res.get("pct_toxic", 0)
+        lessons.append(
+            f"Virtual Clinical Trial: Your regimen achieved {pct_in}% in range and {pct_tox}% toxic across {n_pts} virtual patients."
+        )
+
     report_id = str(uuid.uuid4())
     now_iso = datetime.now(timezone.utc).isoformat()
 
@@ -184,6 +200,7 @@ async def finish_session(session_id: str) -> LabReportResponse:
         "grade": grade,
         "violations": [v.model_dump() for v in session.violations],
         "lessons_learned": lessons,
+        "trial_result": trial_res,
         "created_at": now_iso,
     }
 

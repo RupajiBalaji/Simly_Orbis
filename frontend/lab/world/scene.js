@@ -10,6 +10,7 @@ import { buildLabRoom } from './room.js';
 import { buildApparatus } from './apparatus.js';
 import { applyLiquidDirective } from '../render/liquid.js';
 import { applyReadoutDirective } from '../render/readouts.js';
+import { buildViewingGalleryAndCrowd } from './trial_hall.js';
 import { state } from '../state.js';
 
 export class LabScene {
@@ -22,6 +23,7 @@ export class LabScene {
     this.roomGroup = null;
     this.apparatusLookup = {};
     this.apparatusContainer = null;
+    this.trialHall = null;
 
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2(-999, -999);
@@ -39,7 +41,8 @@ export class LabScene {
       balance: { pos: new THREE.Vector3(-3.20, 1.65, -2.40), target: new THREE.Vector3(-4.45, 1.15, -4.15) },
       patient: { pos: new THREE.Vector3(2.8, 1.65, -3.2), target: new THREE.Vector3(4.3, 1.05, -3.9) },
       analyzer: { pos: new THREE.Vector3(-4.2, 1.8, -2.2), target: new THREE.Vector3(-5.5, 1.15, -3.5) },
-      sink: { pos: new THREE.Vector3(-5.2, 1.9, 0.4), target: new THREE.Vector3(-7.2, 1.1, -1.0) }
+      sink: { pos: new THREE.Vector3(-5.2, 1.9, 0.4), target: new THREE.Vector3(-7.2, 1.1, -1.0) },
+      trial_gallery: { pos: new THREE.Vector3(0, 3.8, 1.6), target: new THREE.Vector3(0, 0.4, 7.5) },
     };
 
     this.nameTagsVisible = true;
@@ -240,10 +243,23 @@ export class LabScene {
       this.apparatusLookup = {};
     }
 
+    if (this.trialHall) {
+      this.scene.remove(this.trialHall.trialGroup);
+      this.trialHall = null;
+    }
+
     const apparatusList = experimentDef?.apparatus || [];
     const { container, lookup } = buildApparatus(apparatusList, this.scene);
     this.apparatusContainer = container;
     this.apparatusLookup = lookup;
+
+    if (experimentDef?.id === 'pk_ward') {
+      this.trialHall = buildViewingGalleryAndCrowd(this.scene);
+      this.addUpdateCallback(() => {
+        if (this.trialHall) this.trialHall.update(performance.now());
+      });
+      state.emit('trial_hall_ready', this.trialHall);
+    }
 
     this.syncApparatusState(experimentDef?.apparatus);
     this.updateNameTagVisibility();
@@ -374,6 +390,9 @@ export class LabScene {
 
     if (this.hoveredObject && this.hoveredObject.userData?.targetId) {
       const targetId = this.hoveredObject.userData.targetId;
+      if (targetId === 'virtual_trial_screen') {
+        state.emit('open_trial_panel');
+      }
       state.setSelectedTarget(targetId);
       this.selectApparatus(this.hoveredObject);
     }

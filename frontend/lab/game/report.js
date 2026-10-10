@@ -81,6 +81,26 @@ export class ReportScreen {
       `
       }
 
+      ${
+        (reportData.trial_result || state.lastTrialResult)
+          ? `
+        <div style="background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:12px 16px; margin-bottom:20px;">
+          <h4 style="font-size:0.85rem; color:#38bdf8; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span>👥 Virtual Population Clinical Trial</span>
+          </h4>
+          <p style="font-size:0.88rem; color:#f8fafc; margin-bottom:6px;">
+            <strong>Your regimen:</strong> ${(reportData.trial_result || state.lastTrialResult).pct_in_range}% in range, ${(reportData.trial_result || state.lastTrialResult).pct_toxic}% toxic across ${(reportData.trial_result || state.lastTrialResult).n_patients} virtual patients.
+          </p>
+          <div style="display:flex; gap:16px; font-size:0.8rem; font-family:var(--font-mono); color:#94a3b8;">
+            <span>Efficacy: <strong style="color:#10b981;">${(reportData.trial_result || state.lastTrialResult).pct_in_range}%</strong></span>
+            <span>Toxicity: <strong style="color:#ef4444;">${(reportData.trial_result || state.lastTrialResult).pct_toxic}%</strong></span>
+            <span>Mean Peak: <strong style="color:#38bdf8;">${(reportData.trial_result || state.lastTrialResult).mean_peak} mg/L</strong></span>
+          </div>
+        </div>
+      `
+          : ''
+      }
+
       <div style="margin-bottom:24px;">
         <h4 style="font-size:0.85rem; color:var(--text-highlight); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Pedagogical Lessons Learned</h4>
         <ul style="list-style:none; padding-left:4px;">

@@ -83,6 +83,7 @@ export class ActionMenu {
         { id: 'patient_bed', label: '🛏️ Patient Alex', pos: new THREE.Vector3(3.2, 0, -3.5), face: new THREE.Vector3(4.5, 0.94, -3.8) },
         { id: 'tube_rack', label: '🧪 Blood Samples', pos: new THREE.Vector3(-3.2, 0, -3.2), face: new THREE.Vector3(-3.0, 0.94, -4.3) },
         { id: 'assay_analyzer', label: '🔬 Centrifuge Assay', pos: new THREE.Vector3(-5.2, 0, -2.6), face: new THREE.Vector3(-5.5, 0.94, -3.5) },
+        { id: 'virtual_trial_screen', label: '👥 Virtual Trial', pos: new THREE.Vector3(3.6, 0, -5.2), face: new THREE.Vector3(4.5, 2.6, -6.9), isTrial: true },
         { id: 'sink', label: '🚰 Utility Sink', pos: new THREE.Vector3(-6.2, 0, -1.0), face: new THREE.Vector3(-7.2, 0.94, -1.0) },
         { id: 'chemical_waste_bin', label: '🗑️ Waste Disposal', pos: new THREE.Vector3(2.0, 0, -4.2), face: new THREE.Vector3(2.0, 0, -5.2) },
       ];
@@ -122,6 +123,10 @@ export class ActionMenu {
         }
         if (this.directiveQueue?.scene) {
           this.directiveQueue.scene.focusOnStation(st.id);
+        }
+
+        if (st.isTrial) {
+          state.emit('open_trial_panel');
         }
 
         state.setSelectedTarget(st.id);
@@ -217,6 +222,16 @@ export class ActionMenu {
     // 2. Populate compact primary row for active station
     if (this.stationActionsList) {
       this.stationActionsList.innerHTML = '';
+
+      if (targetId === 'virtual_trial_screen') {
+        const btnTrial = document.createElement('button');
+        btnTrial.type = 'button';
+        btnTrial.className = 'compact-action-btn primary-action';
+        btnTrial.innerHTML = '<span>👥 Run Virtual Trial & Enter Gallery</span>';
+        btnTrial.onclick = () => state.emit('open_trial_panel');
+        this.stationActionsList.appendChild(btnTrial);
+        return;
+      }
 
       const stationAffinities = {
         burette: ['rinse_burette', 'fill_burette', 'titrate'],

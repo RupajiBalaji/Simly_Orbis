@@ -22,7 +22,8 @@ from app.db import STORAGE_MODE, close_db, init_db
 import app.db as _db
 from app.modules.chem_titration import ChemTitrationModule
 from app.modules.pharma_pk import PharmaPKModule
-from app.routes import drugs, lab, levels, modules, runs, scores, simulate, tutor
+from app.modules.pharma_trial import PharmaTrialModule
+from app.routes import drugs, lab, levels, modules, runs, scores, simulate, trial, tutor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,6 +43,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN001
     # Register core simulation modules
     register(PharmaPKModule())
     register(ChemTitrationModule())
+    register(PharmaTrialModule())
     log.info("Storage mode: %s", STORAGE_MODE)
     yield
     await close_db()
@@ -103,6 +105,7 @@ app.include_router(simulate.router)
 app.include_router(scores.router)
 app.include_router(tutor.router)
 app.include_router(lab.router)
+app.include_router(trial.router)
 
 
 # ---------------------------------------------------------------------------

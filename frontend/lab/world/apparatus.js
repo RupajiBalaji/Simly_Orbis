@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three';
+import { createVirtualTrialScreen } from './trial_hall.js';
 
 // Shared materials cache
 const glassMat = new THREE.MeshStandardMaterial({
@@ -79,11 +80,13 @@ export function formatApparatusTitle(id) {
     biohazard_bin: 'Biohazard Bin',
     chemical_waste_bin: 'Chemical Waste',
     ward_clock: 'Clinical Clock',
+    virtual_trial_screen: 'Virtual Trial',
   };
   return titles[id] || (id ? id.replace(/_/g, ' ') : '');
 }
 
 export function getApparatusTagHeight(id) {
+  if (id === 'virtual_trial_screen') return 1.05;
   if (id === 'burette') return 1.7;
   if (id === 'patient_bed') return 1.1;
   if (id === 'conical_flask') return 0.55;
@@ -256,6 +259,24 @@ export function buildApparatus(rawApparatus, scene) {
     clock.position.set(0, 4.0, -6.9);
     container.add(clock);
     lookup['ward_clock'] = clock;
+  }
+
+  // Add Virtual Trial wall screen for pk_ward
+  if (lookup['patient_bed'] && !lookup['virtual_trial_screen']) {
+    const trialScreen = createVirtualTrialScreen();
+    trialScreen.position.set(4.5, 2.6, -6.9);
+    trialScreen.userData.targetId = 'virtual_trial_screen';
+    trialScreen.userData.apparatusType = 'screen';
+    trialScreen.userData.title = 'Virtual Trial Screen';
+    trialScreen.userData.interactive = true;
+    trialScreen.userData.stationPos = new THREE.Vector3(3.6, 0, -5.2);
+
+    const tag = createNameTag('Virtual Trial');
+    tag.position.set(0, getApparatusTagHeight('virtual_trial_screen'), 0);
+    trialScreen.add(tag);
+
+    container.add(trialScreen);
+    lookup['virtual_trial_screen'] = trialScreen;
   }
 
   scene.add(container);

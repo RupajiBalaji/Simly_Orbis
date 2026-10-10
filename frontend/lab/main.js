@@ -15,6 +15,7 @@ import { ActionMenu } from './game/action_menu.js';
 import { ReportScreen } from './game/report.js';
 import { DirectorRunner } from './demo/director.js';
 import { DebugOverlay } from './demo/debug_overlay.js';
+import { TrialPanel } from './game/trial_panel.js';
 import { toast } from './game/toast.js';
 
 // WebGL Support Detection
@@ -100,9 +101,19 @@ async function initOrbisLab() {
   reportScreen = new ReportScreen();
   directorRunner = new DirectorRunner(actionMenu);
   debugOverlay = new DebugOverlay();
+  const trialPanel = new TrialPanel(sceneManager.trialHall, sceneManager);
+
+  state.subscribe((event, payload) => {
+    if (event === 'trial_hall_ready') {
+      trialPanel.trialHall = payload;
+    } else if (event === 'open_trial_panel') {
+      trialPanel.open();
+    }
+  });
 
   window.reportScreen = reportScreen;
   window.directorRunner = directorRunner;
+  window.trialPanel = trialPanel;
   window.sceneManager = sceneManager;
   window.characterController = characterController;
   window.debugOverlay = debugOverlay;
@@ -146,6 +157,43 @@ function setupLobby() {
       const nickname = nicknameInput?.value.trim() || 'Researcher';
       await startExperimentSession(currentSelectedExperimentId, nickname);
     };
+  }
+
+  // Automated Proof Snapshot handler (?snap=hall_before | hall_after | hall_compare)
+  const urlParams = new URLSearchParams(window.location.search);
+  const snapMode = urlParams.get('snap');
+  if (snapMode) {
+    setTimeout(async () => {
+      try {
+        await startExperimentSession('pk_ward', 'Researcher');
+        if (debugOverlay && !state.debugOverlayActive) {
+          debugOverlay.toggle();
+        }
+        if (window.trialPanel) {
+          window.trialPanel.open();
+          if (snapMode === 'hall_after') {
+            const dInput = document.getElementById('trial-dose');
+            const dVal = document.getElementById('trial-dose-val');
+            const dsInput = document.getElementById('trial-doses');
+            const dsVal = document.getElementById('trial-doses-val');
+            if (dInput) { dInput.value = 1000; if (dVal) dVal.textContent = '1000 mg'; }
+            if (dsInput) { dsInput.value = 2; if (dsVal) dsVal.textContent = '2 doses'; }
+            await window.trialPanel.runTrialSimulation();
+          } else if (snapMode === 'hall_compare') {
+            state.skipAnimation = true;
+            const dInput = document.getElementById('trial-dose');
+            const dVal = document.getElementById('trial-dose-val');
+            const dsInput = document.getElementById('trial-doses');
+            const dsVal = document.getElementById('trial-doses-val');
+            if (dInput) { dInput.value = 1000; if (dVal) dVal.textContent = '1000 mg'; }
+            if (dsInput) { dsInput.value = 2; if (dsVal) dsVal.textContent = '2 doses'; }
+            await window.trialPanel.runTrialComparison();
+          }
+        }
+      } catch (e) {
+        console.error('Snap mode error:', e);
+      }
+    }, 500);
   }
 }
 
@@ -302,7 +350,8 @@ function setupHUDControls() {
       if (!state.session?.session_id) return;
       try {
         toast.showInfo('Compiling laboratory performance report...', 2000);
-        const report = await api.finishSession(state.session.session_id);
+        const payload = state.lastTrialResult ? { trial_result: state.lastTrialResult } : null;
+        const report = await api.finishSession(state.session.session_id, payload);
         reportScreen.show(report);
       } catch (err) {
         toast.showInfo(`Failed to finish session: ${err.message}`);

@@ -13,6 +13,8 @@ It turns complex domain dynamics into modular, verifiable simulations. The core 
 - **Multi-District Simulation Core:** Pluggable `SimModule` architecture with unified parameter schemas, execution tracking, and built-in analytical reality checks.
 - **Pharmacokinetics Engine (`pharma.pk`):** One-compartment Bateman oral absorption model with linear superposition for multi-dose regimens, handling clearance impairment, body weight scaling, and analytical reality checks.
 - **Chemistry Titration Engine (`chem.titration`):** Analytical charge-balance solver for strong acids and high-precision bisection solver (60 iterations) for weak monoprotic acids (e.g. acetic acid $pK_a=4.76$), dynamic indicator absorption spectra interpolation, and 4 verified reality checks.
+- **👥 Virtual Clinical Trial Engine (`pharma.trial`):** Vectorized NumPy population simulation across 20 to 1,000 virtual patients (< 2 seconds) with realistic demographic variability (log-normal body weight CV 18%, clearance CV 30%, ka CV 25%) and impaired liver clearance subgroups (0.6x).
+- **🏟️ 3D Virtual Trial Hall & Crowd Arena:** Interactive wall screen in the PK Ward opening an observation gallery with an `InstancedMesh` of 1,000 capsule-people (1 draw call). Color-flipping waves reveal therapeutic in-range (green), subtherapeutic (amber), and toxic (red) patients with live counters and percentile charts.
 - **🔬 Orbis Lab ("World Brain" Stateful Engine):** Full stateful laboratory session engine running interactive experiments (`pk_ward` and `titration_bench`) with action validation, protocol progression, and avatar animations.
 - **🛡️ Laboratory Safety Rules Engine:** Real-time enforcement of PPE (goggles, gloves, lab coat), balance taring, sample tube labeling, acid-into-water dilution safety, burette overfilling/rinsing, max dosing thresholds, and chemical/biohazard waste segregation. Two critical violations fail the session immediately.
 - **🎨 3D Visual Directives Contract:** Returns structured rendering instructions (`liquid`, `effect`, `readout`, `vitals`, `label`, `highlight`) for Three.js 3D rendering clients. See [docs/visual_contract.md](file:///e:/Simly%20Orbis/docs/visual_contract.md).
@@ -118,6 +120,12 @@ simly-orbis/
 | `POST` | `/api/lab/sessions/{id}/finish` | Complete session, calculate multi-factor score card, and record to leaderboard |
 | `GET` | `/api/lab/leaderboard` | View Orbis Lab leaderboard rankings (`experiment_id`, `limit`) |
 
+### Virtual Clinical Trial (Population PK)
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/trial/run` | Execute vectorized population trial for up to 1,000 patients with log-normal variability |
+| `POST` | `/api/trial/compare` | Compare custom regimen vs standard baseline, returning delta efficacy and toxicity metrics |
+
 ### Game & AI Tutor
 | Method | Endpoint | Description |
 |---|---|---|
@@ -127,6 +135,42 @@ simly-orbis/
 | `POST` | `/api/score` | Record player score |
 | `GET` | `/api/leaderboard` | Get clinical game leaderboard standings |
 | `POST` | `/api/tutor` | Request Dr. Orbis explanation (`source`: "ai" or "fallback") |
+
+---
+
+## 👥 Virtual Clinical Trial (`pharma.trial`)
+
+Simly Orbis includes a vectorized population clinical trial simulator for the Pharma district:
+- **Demographic log-normal variance:** Body weight (median 70 kg, CV 18%), clearance multiplier (median 1.0, CV 30%), and absorption constant $k_a$ (CV 25%).
+- **Impaired liver subgroup:** Clearance scaled by 0.6x for 0–50% of the virtual cohort.
+- **Performance:** Vectorized with NumPy for sub-2-second runs across 1,000 patients.
+- **3D Crowd Arena:** In `pk_ward`, clicking the wall screen or selecting the station opens the glass viewing gallery. An `InstancedMesh` renders up to 1,000 capsule-people in a single draw call. After execution, an animated wave flips colors: green (in therapeutic range $\ge 60\%$ of time), amber (subtherapeutic), and red (toxic peak $C_{max} > 30\text{ mg/L}$).
+- **Regimen Comparison:** `POST /api/trial/compare` benchmarks custom dosing against standard single 500 mg dosing, providing delta numbers and clinical verdicts.
+- **Report Tie-In:** Cohort outcomes are automatically stored and presented in the player's final laboratory performance report.
+
+### How to Run or Add a Population Trial
+1. **Via Direct Simulation API:**
+   Call `POST /api/run` with `module_id="pharma.trial"`:
+   ```json
+   {
+     "module_id": "pharma.trial",
+     "params": {
+       "drug_id": "vancomycin",
+       "dose_mg": 1000,
+       "n_doses": 2,
+       "interval_h": 6,
+       "n_patients": 500,
+       "pct_reduced_liver": 10,
+       "seed": 42
+     }
+   }
+   ```
+2. **Via Comparative Regimen Endpoint:**
+   Call `POST /api/trial/compare` with your tested regimen in `regimen_a` and optional reference regimen in `regimen_b` (defaults to 500 mg single dose).
+3. **In the 3D Virtual Lab:**
+   - In the `pk_ward` scene, click on the **Virtual Trial** wall screen or the **👥 Virtual Trial** station in the action bar.
+   - The camera pivots to the viewing gallery overlooking the 1,000-person arena.
+   - Adjust cohort size, dosing, and liver clearance sliders, then hit **⚡ Run Trial** or **⚖️ Compare vs Standard**.
 
 ---
 
