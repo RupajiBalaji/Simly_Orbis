@@ -429,7 +429,8 @@
           <span class="about-feat-icon">🤖</span>
           <div>
             <strong>Dr. Orbis AI Tutor</strong>
-            <p>Tailored physiological insights and dosing advice powered by Claude 3.5 (or built-in rule heuristics).</p>
+            <p>Tailored physiological insights and dosing advice powered by Gemini (or built-in rule heuristics).</p>
+
           </div>
         </div>
         <div class="about-feat">
@@ -479,7 +480,7 @@
 
   <div class="hood-body">
 
-    <!-- Storage mode + counts -->
+    <!-- Backend Status & Core District Modules -->
     <section class="hood-section">
       <h3 class="hood-section-title">Backend Status</h3>
       <div class="hood-status-row">
@@ -487,15 +488,43 @@
         <span class="hood-badge" id="hoodStorageMode">–</span>
       </div>
       <div class="hood-status-row">
-        <span class="hood-label">Players collection</span>
-        <span class="hood-mono" id="hoodPlayers">–</span>
+        <span class="hood-label">Tutor engine</span>
+        <span class="hood-badge" id="hoodTutorSource" style="color:var(--text-secondary)">–</span>
       </div>
       <div class="hood-status-row">
-        <span class="hood-label">Scores collection</span>
-        <span class="hood-mono" id="hoodScores">–</span>
+        <span class="hood-label">Runs logged</span>
+        <span class="hood-mono" id="hoodRuns">–</span>
       </div>
-      <button class="btn-outline btn-sm" id="hoodRefresh" style="margin-top:0.5rem">↻ Refresh</button>
+      <div class="hood-status-row">
+        <span class="hood-label">Players / Scores</span>
+        <span class="hood-mono" id="hoodPlayersScores">–</span>
+      </div>
+      <div class="hood-status-row" style="flex-direction:column;align-items:flex-start;gap:0.35rem;margin-top:0.4rem">
+        <span class="hood-label">Registered modules</span>
+        <div class="hood-chips" id="hoodModuleList"></div>
+      </div>
+      <button class="btn-outline btn-sm" id="hoodRefresh" style="margin-top:0.6rem">↻ Refresh Status</button>
     </section>
+
+    <!-- Recent Runs Log -->
+    <section class="hood-section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+        <h3 class="hood-section-title" style="margin-bottom:0">Recent Runs Log</h3>
+        <button class="btn-outline btn-sm" id="hoodViewRunsBtn" style="padding:0.2rem 0.5rem;font-size:0.72rem">View Last 10</button>
+      </div>
+      <div class="hood-table-wrap" id="hoodRunsTableWrap" style="display:none">
+        <table class="hood-table" id="hoodRunsTable">
+          <thead>
+            <tr>
+              <th>Time</th><th>Module</th><th>Nick</th><th>Peak / Metric</th>
+            </tr>
+          </thead>
+          <tbody id="hoodRunsBody"></tbody>
+        </table>
+      </div>
+      <div class="hood-json-placeholder" id="hoodRunsEmpty" style="font-size:0.78rem">Click "View Last 10" to load run records.</div>
+    </section>
+
 
     <!-- Bateman equation -->
     <section class="hood-section">

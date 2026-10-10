@@ -17,9 +17,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.core.registry import list_modules, register
 from app.db import STORAGE_MODE, close_db, init_db
 import app.db as _db
-from app.routes import drugs, levels, scores, simulate, tutor
+from app.modules.pharma_pk import PharmaPKModule
+from app.routes import drugs, levels, modules, runs, scores, simulate, tutor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,6 +38,8 @@ STATIC_DIR = Path(__file__).parent.parent.parent / "frontend"
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN001
     await init_db()
+    # Register core simulation modules
+    register(PharmaPKModule())
     log.info("Storage mode: %s", STORAGE_MODE)
     yield
     await close_db()
@@ -46,7 +50,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN001
 # ---------------------------------------------------------------------------
 app = FastAPI(
     title="Simly Orbis",
-    version="0.2.0",
+    version="0.3.0",
     lifespan=lifespan,
 )
 
@@ -66,10 +70,12 @@ app.add_middleware(
 
 @app.get("/api/health", tags=["meta"], summary="Service health")
 async def health() -> dict:
-    """Return service health, storage mode, and live collection counts."""
+    """Return service health, storage mode, live collection counts, and registered modules."""
     db = _db.database
-    players_count = await db["players"].count_documents()
-    scores_count = await db["scores"].count_documents()
+    players_count = await db["players"].count_documents({})
+    scores_count = await db["scores"].count_documents({})
+    runs_count = await db["runs"].count_documents({})
+    registered_module_ids = [m.id for m in list_modules()]
 
     return {
         "status": "ok",
@@ -77,15 +83,20 @@ async def health() -> dict:
         "collections": {
             "players": players_count,
             "scores": scores_count,
+            "runs": runs_count,
         },
+        "modules": registered_module_ids,
     }
 
 
+app.include_router(modules.router)
+app.include_router(runs.router)
 app.include_router(drugs.router)
 app.include_router(levels.router)
 app.include_router(simulate.router)
 app.include_router(scores.router)
 app.include_router(tutor.router)
+
 
 # ---------------------------------------------------------------------------
 # Static files – mounted last so the catch-all "/" doesn't shadow any route

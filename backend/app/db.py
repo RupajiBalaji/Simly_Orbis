@@ -118,7 +118,7 @@ database: Any = None        # real DB or _InMemoryDatabase
 
 
 async def create_indexes() -> None:
-    """Create indexes required for efficient leaderboard queries."""
+    """Create indexes required for efficient leaderboard and run queries."""
     import pymongo  # noqa: PLC0415 – available as Motor dependency
 
     scores = database["scores"]
@@ -127,7 +127,17 @@ async def create_indexes() -> None:
         [("level_id", pymongo.ASCENDING), ("score", pymongo.DESCENDING)],
         name="level_score_idx",
     )
+
+    runs = database["runs"]
+    # Runs indexes: created_at desc, (module_id, created_at desc), run_id unique
+    await runs.create_index([("created_at", pymongo.DESCENDING)], name="runs_created_idx")
+    await runs.create_index(
+        [("module_id", pymongo.ASCENDING), ("created_at", pymongo.DESCENDING)],
+        name="runs_module_created_idx",
+    )
+    await runs.create_index([("run_id", pymongo.ASCENDING)], unique=True, name="runs_run_id_unique_idx")
     log.info("MongoDB indexes ensured.")
+
 
 
 async def init_db() -> None:
@@ -184,7 +194,7 @@ async def seed_sample_data() -> None:
     Creates 8 realistic sample student/resident scores across levels.
     """
     scores_col = database["scores"]
-    count = await scores_col.count_documents()
+    count = await scores_col.count_documents({})
     if count > 0:
         return
 
@@ -226,3 +236,39 @@ async def close_db() -> None:
     if _mongo_client is not None:
         _mongo_client.close()
         log.info("MongoDB connection closed.")
+
+
+# ---------------------------------------------------------------------------
+# Run log helpers (Motor + In-Memory unified interface)
+# ---------------------------------------------------------------------------
+
+async def insert_run(run_doc: dict[str, Any]) -> None:
+    """Insert a simulation run record into the 'runs' collection."""
+    await database["runs"].insert_one(run_doc)
+
+
+async def list_runs(
+    module_id: str | None = None,
+    limit: int = 20,
+) -> list[dict[str, Any]]:
+    """List recent simulation runs ordered by created_at descending."""
+    filter_dict = {"module_id": module_id} if module_id else {}
+    import pymongo  # noqa: PLC0415
+    docs = await database["runs"].find(
+        filter_dict,
+        sort=[("created_at", pymongo.DESCENDING)],
+        limit=min(limit, 100),
+    )
+    # Strip MongoDB internal _id if present
+    for d in docs:
+        d.pop("_id", None)
+    return docs
+
+
+async def get_run(run_id: str) -> dict[str, Any] | None:
+    """Retrieve a single run record by its run_id string."""
+    doc = await database["runs"].find_one({"run_id": run_id})
+    if doc:
+        doc.pop("_id", None)
+    return doc
+

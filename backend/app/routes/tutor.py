@@ -54,7 +54,9 @@ class SimSummary(BaseModel):
 
 class TutorResponse(BaseModel):
     message: str
-    source: str  # "claude" | "template"
+    source: str  # "ai" | "fallback"
+    fallback_reason: str | None = None  # e.g. "no_api_key" | "api_error"
+
 
 
 # ---------------------------------------------------------------------------
@@ -107,13 +109,19 @@ def _template_response(s: SimSummary) -> str:
 @router.post("", response_model=TutorResponse, summary="Get AI tutor feedback")
 async def get_tutor_feedback(body: SimSummary) -> TutorResponse:
     """
-    Call Claude with a simulation summary and return educational feedback.
-    Falls back to a template if the API key is absent or the call fails.
+    Call Google Gemini (or Anthropic Claude) with a simulation summary and return educational feedback.
+    Falls back to a template if API keys are absent or API calls fail.
     """
-    api_key = settings.anthropic_api_key.strip()
-    if not api_key:
-        log.info("ANTHROPIC_API_KEY not set – using template fallback.")
-        return TutorResponse(message=_template_response(body), source="template")
+    gemini_key = settings.gemini_api_key.strip()
+    anthropic_key = settings.anthropic_api_key.strip()
+
+    if not gemini_key and not anthropic_key:
+        log.info("No AI API key set – using template fallback.")
+        return TutorResponse(
+            message=_template_response(body),
+            source="fallback",
+            fallback_reason="no_api_key",
+        )
 
     user_content = (
         f"Drug: {body.drug_name}\n"
@@ -126,19 +134,50 @@ async def get_tutor_feedback(body: SimSummary) -> TutorResponse:
         f"Score: {body.score}/100\n"
     )
 
-    try:
-        import anthropic  # noqa: PLC0415
+    # 1. Try Google Gemini
+    if gemini_key:
+        try:
+            from google import genai
+            from google.genai import types
 
-        client = anthropic.AsyncAnthropic(api_key=api_key)
-        response = await client.messages.create(
-            model=settings.anthropic_model,
-            max_tokens=256,
-            system=_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_content}],
-        )
-        text = response.content[0].text.strip()
-        return TutorResponse(message=text, source="claude")
+            client = genai.Client(api_key=gemini_key)
+            config = types.GenerateContentConfig(
+                system_instruction=_SYSTEM_PROMPT,
+                max_output_tokens=256,
+                temperature=0.3,
+            )
+            response = await client.aio.models.generate_content(
+                model=settings.gemini_model,
+                contents=user_content,
+                config=config,
+            )
+            text = (response.text or "").strip()
+            if text:
+                return TutorResponse(message=text, source="ai")
+        except Exception as exc:  # noqa: BLE001
+            log.warning("Gemini API call failed (%s) – checking fallback.", exc)
 
-    except Exception as exc:  # noqa: BLE001
-        log.warning("Claude API call failed (%s) – using template fallback.", exc)
-        return TutorResponse(message=_template_response(body), source="template")
+    # 2. Try Anthropic Claude if configured
+    if anthropic_key:
+        try:
+            import anthropic  # noqa: PLC0415
+
+            client = anthropic.AsyncAnthropic(api_key=anthropic_key)
+            response = await client.messages.create(
+                model=settings.anthropic_model,
+                max_tokens=256,
+                system=_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_content}],
+            )
+            text = response.content[0].text.strip()
+            return TutorResponse(message=text, source="ai")
+        except Exception as exc:  # noqa: BLE001
+            log.warning("Claude API call failed (%s) – using template fallback.", exc)
+
+    # 3. Rule-based template fallback
+    return TutorResponse(
+        message=_template_response(body),
+        source="fallback",
+        fallback_reason="api_error",
+    )
+

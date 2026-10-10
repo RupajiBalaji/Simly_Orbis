@@ -1124,4 +1124,59 @@ input[type="range"]::-moz-range-thumb {
   background: linear-gradient(135deg, rgba(30, 24, 56, 0.95), rgba(45, 25, 20, 0.4));
 }
 
+/* ══════════════════════════════════════════
+   UNDER THE HOOD MODULES & RUNS TABLE
+══════════════════════════════════════════ */
+.hood-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  width: 100%;
+}
+.hood-chip {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-focus);
+  color: var(--teal);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+.hood-table-wrap {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 0.5rem;
+}
+.hood-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+  font-family: var(--mono);
+}
+.hood-table th {
+  background: var(--bg-card);
+  padding: 0.4rem 0.5rem;
+  text-align: left;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.hood-table td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.hood-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+
 

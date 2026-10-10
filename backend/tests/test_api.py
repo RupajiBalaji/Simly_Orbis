@@ -24,6 +24,9 @@ async def test_health(client: AsyncClient):
     assert body["storage_mode"] in ("memory", "mongodb")
     assert "players" in body["collections"]
     assert "scores" in body["collections"]
+    assert "runs" in body["collections"]
+    assert "pharma.pk" in body["modules"]
+
 
 
 # ---------------------------------------------------------------------------
@@ -226,6 +229,9 @@ async def test_tutor_feedback_template_fallback(client: AsyncClient):
     body = r.json()
     assert "message" in body
     assert len(body["message"]) > 0
-    assert body["source"] in ("template", "claude")
-    assert "Paracetamol" in body["message"]
+    assert body["source"] in ("fallback", "ai")
+    if body["source"] == "fallback":
+        assert body["fallback_reason"] in ("no_api_key", "api_error")
+        assert "Paracetamol" in body["message"]
+
 

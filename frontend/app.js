@@ -285,13 +285,24 @@ async function runGameSimulation() {
     const drug = DRUGS[level.drug_id];
     renderPKChart('gameChart', gameChart, lastSimData, drug, c => { gameChart = c; });
     renderGameStats(lastSimData);
-  } catch (err) {
 
+    // Non-blocking background log to POST /api/run
+    fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        module_id: 'pharma.pk',
+        params: payload,
+        nickname: nickname || 'Guest',
+      }),
+    }).catch(() => {});
+  } catch (err) {
     errEl.textContent = `Simulation failed: ${err.message}`;
     errEl.classList.add('visible');
   } finally {
     gameSetLoading(false);
   }
+
 }
 
 function renderGameStats(data) {
@@ -770,8 +781,15 @@ async function fetchTutorFeedback(summary, targetScreen) {
 
     const data = await res.json();
     if (srcEl) {
-      srcEl.textContent = data.source === 'claude' ? 'Claude 3.5' : 'Rule-based';
+      srcEl.textContent = data.source === 'ai' ? 'Claude' : 'Rule-based';
       srcEl.className = `tutor-source ${data.source}`;
+    }
+
+    // Update hood drawer tutor source status
+    const hoodTutorEl = document.getElementById('hoodTutorSource');
+    if (hoodTutorEl) {
+      hoodTutorEl.textContent = data.source === 'ai' ? 'AI (Gemini)' : 'rule-based fallback';
+      hoodTutorEl.style.color = data.source === 'ai' ? '#c084fc' : 'var(--text-secondary)';
     }
 
     // Run typewriter animation
@@ -779,7 +797,12 @@ async function fetchTutorFeedback(summary, targetScreen) {
   } catch (err) {
     if (srcEl) {
       srcEl.textContent = 'Offline';
-      srcEl.className = 'tutor-source template';
+      srcEl.className = 'tutor-source fallback';
+    }
+    const hoodTutorEl = document.getElementById('hoodTutorSource');
+    if (hoodTutorEl) {
+      hoodTutorEl.textContent = 'rule-based fallback (offline)';
+      hoodTutorEl.style.color = 'var(--text-secondary)';
     }
     textEl.textContent = `Dr. Orbis is currently offline (${err.message}). Check your dosing parameters to keep plasma levels in the green window!`;
     if (curEl) curEl.classList.add('hidden');
@@ -808,11 +831,12 @@ function typeWriter(textEl, curEl, message, speedMs = 18) {
    UNDER THE HOOD DRAWER
 ═══════════════════════════════════════════════════ */
 function bindHoodDrawer() {
-  const fab      = document.getElementById('hoodFab');
-  const drawer   = document.getElementById('hoodDrawer');
-  const backdrop = document.getElementById('hoodBackdrop');
-  const closeBtn = document.getElementById('hoodClose');
-  const refresh  = document.getElementById('hoodRefresh');
+  const fab         = document.getElementById('hoodFab');
+  const drawer      = document.getElementById('hoodDrawer');
+  const backdrop    = document.getElementById('hoodBackdrop');
+  const closeBtn    = document.getElementById('hoodClose');
+  const refresh     = document.getElementById('hoodRefresh');
+  const viewRunsBtn = document.getElementById('hoodViewRunsBtn');
 
   if (!fab || !drawer) return;
 
@@ -831,6 +855,7 @@ function bindHoodDrawer() {
   if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
   if (backdrop) backdrop.addEventListener('click', closeDrawer);
   if (refresh) refresh.addEventListener('click', refreshHoodStatus);
+  if (viewRunsBtn) viewRunsBtn.addEventListener('click', loadRecentRuns);
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && drawer.classList.contains('open')) {
@@ -843,9 +868,15 @@ function bindHoodDrawer() {
 }
 
 async function refreshHoodStatus() {
-  const modeEl    = document.getElementById('hoodStorageMode');
-  const playersEl = document.getElementById('hoodPlayers');
-  const scoresEl  = document.getElementById('hoodScores');
+  const modeEl       = document.getElementById('hoodStorageMode');
+  const runsEl       = document.getElementById('hoodRuns');
+  const playersScoresEl = document.getElementById('hoodPlayersScores');
+  const modChipsEl   = document.getElementById('hoodModuleList');
+  const tutorEl      = document.getElementById('hoodTutorSource');
+
+  if (tutorEl && (!tutorEl.textContent || tutorEl.textContent === '–')) {
+    tutorEl.textContent = 'rule-based fallback';
+  }
 
   try {
     const res = await fetch('/api/health');
@@ -856,14 +887,73 @@ async function refreshHoodStatus() {
       modeEl.textContent = data.storage_mode === 'mongodb' ? 'MongoDB Atlas' : 'In-Memory (fallback)';
       modeEl.style.color = data.storage_mode === 'mongodb' ? 'var(--teal)' : 'var(--amber)';
     }
-    if (playersEl) playersEl.textContent = `${data.collections?.players ?? 0} docs`;
-    if (scoresEl) scoresEl.textContent   = `${data.collections?.scores ?? 0} docs`;
+    if (runsEl) {
+      runsEl.textContent = `${data.collections?.runs ?? 0} runs`;
+    }
+    if (playersScoresEl) {
+      playersScoresEl.textContent = `${data.collections?.players ?? 0} players · ${data.collections?.scores ?? 0} scores`;
+    }
+
+    // Render registered modules
+    if (modChipsEl && Array.isArray(data.modules)) {
+      modChipsEl.innerHTML = '';
+      data.modules.forEach(mId => {
+        const span = document.createElement('span');
+        span.className = 'hood-chip';
+        span.textContent = mId;
+        modChipsEl.appendChild(span);
+      });
+    }
   } catch (err) {
     if (modeEl) modeEl.textContent = 'Unavailable';
-    if (playersEl) playersEl.textContent = '–';
-    if (scoresEl) scoresEl.textContent = '–';
+    if (runsEl) runsEl.textContent = '–';
+    if (playersScoresEl) playersScoresEl.textContent = '–';
   }
 }
+
+async function loadRecentRuns() {
+  const tableWrap = document.getElementById('hoodRunsTableWrap');
+  const tbody     = document.getElementById('hoodRunsBody');
+  const emptyEl   = document.getElementById('hoodRunsEmpty');
+  if (!tbody) return;
+
+  emptyEl.textContent = 'Loading recent runs...';
+  emptyEl.style.display = '';
+  tableWrap.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/runs?limit=10');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const runs = await res.json();
+
+    if (!runs.length) {
+      emptyEl.textContent = 'No simulation runs recorded yet.';
+      return;
+    }
+
+    tbody.innerHTML = '';
+    runs.forEach(r => {
+      const tr = document.createElement('tr');
+      const timeStr = r.created_at ? r.created_at.slice(11, 19) : '–';
+      const peakVal = r.summary?.peak_concentration != null
+        ? `${Number(r.summary.peak_concentration).toFixed(1)} mg/L`
+        : '–';
+      tr.innerHTML = `
+        <td>${timeStr}</td>
+        <td style="color:var(--teal)">${escHtml(r.module_id || '–')}</td>
+        <td>${escHtml(r.nickname || 'Anon')}</td>
+        <td>${peakVal}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    emptyEl.style.display = 'none';
+    tableWrap.style.display = '';
+  } catch (err) {
+    emptyEl.textContent = `Failed to load runs: ${err.message}`;
+  }
+}
+
 
 function recordHoodApi(endpoint, reqBody, resBody) {
   const reqEl = document.getElementById('hoodLastReq');
@@ -901,29 +991,29 @@ async function runLevel1Demo() {
   const ivValEl    = document.getElementById('gameIntervalVal');
   const ivGroup    = document.getElementById('gameIntervalGroup');
 
-  // Optimal dosing settings for Level 1:
-  // Paracetamol 800mg x 5 doses every 4.0h -> 80% therapeutic, 0% toxic, 3 stars!
-  const targetDose = 800;
-  const targetN    = 5;
-  const targetIv   = 4.0;
+  // Optimal safe dosing settings for Level 1:
+  // Paracetamol 500mg x 4 doses every 6.0h -> 85.9% therapeutic, 0% toxic, 3 stars! (2.0 g/day total)
+  const targetDose = 500;
+  const targetN    = 4;
+  const targetIv   = 6.0;
 
   // Visual animation of sliders
   await new Promise(r => setTimeout(r, 200));
 
-  // Step 1: Slide dose to 800 mg
+  // Step 1: Slide dose to 500 mg
   doseEl.value = targetDose;
   doseValEl.textContent = `${targetDose} mg`;
   doseEl.dispatchEvent(new Event('input'));
   await new Promise(r => setTimeout(r, 300));
 
-  // Step 2: Set number of doses to 5
+  // Step 2: Set number of doses to 4
   nDosesEl.value = targetN;
   nDosesValEl.textContent = targetN;
   ivGroup.style.display = '';
   nDosesEl.dispatchEvent(new Event('input'));
   await new Promise(r => setTimeout(r, 300));
 
-  // Step 3: Set interval to 4.0 h
+  // Step 3: Set interval to 6.0 h
   ivEl.value = targetIv;
   ivValEl.textContent = `${targetIv} h`;
   ivEl.dispatchEvent(new Event('input'));
