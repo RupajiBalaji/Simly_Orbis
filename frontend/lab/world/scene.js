@@ -31,17 +31,26 @@ export class LabScene {
     this.selectedObject = null;
 
     this.isTransitioningCamera = false;
-    this.cameraTarget = new THREE.Vector3(0, 1.15, -1.8);
-    this.cameraDefaultPos = new THREE.Vector3(0, 2.2, 2.8);
+    this.cameraTransition = null;
+    this.isActionCameraActive = false;
+    this.savedCameraPos = null;
+    this.savedCameraTarget = null;
+    this.isGalleryMode = false;
+    this.isWhiteboardZoomed = false;
+
+    this.cameraTarget = new THREE.Vector3(0, 1.15, -1.85);
+    this.cameraDefaultPos = new THREE.Vector3(0, 2.05, 1.55);
 
     this.stationPresets = {
-      default: { pos: new THREE.Vector3(0, 2.2, 2.8), target: new THREE.Vector3(0, 1.15, -1.8) },
+      default: { pos: new THREE.Vector3(0, 2.05, 1.55), target: new THREE.Vector3(0, 1.15, -1.85) },
       burette: { pos: new THREE.Vector3(0.55, 1.70, 0.45), target: new THREE.Vector3(-0.02, 1.50, -1.85) },
       conical_flask: { pos: new THREE.Vector3(0.35, 1.55, -0.45), target: new THREE.Vector3(0.02, 1.25, -1.85) },
       balance: { pos: new THREE.Vector3(-3.20, 1.65, -2.40), target: new THREE.Vector3(-4.45, 1.15, -4.15) },
       patient: { pos: new THREE.Vector3(2.8, 1.65, -3.2), target: new THREE.Vector3(4.3, 1.05, -3.9) },
       analyzer: { pos: new THREE.Vector3(-4.2, 1.8, -2.2), target: new THREE.Vector3(-5.5, 1.15, -3.5) },
-      sink: { pos: new THREE.Vector3(-5.2, 1.9, 0.4), target: new THREE.Vector3(-7.2, 1.1, -1.0) },
+      sink: { pos: new THREE.Vector3(-5.4, 1.6, -1.0), target: new THREE.Vector3(-7.2, 1.05, -1.0) },
+      whiteboard: { pos: new THREE.Vector3(0, 2.7, -3.8), target: new THREE.Vector3(0, 2.7, -6.9) },
+      trial_screen: { pos: new THREE.Vector3(4.5, 2.6, -3.8), target: new THREE.Vector3(4.5, 2.6, -6.9) },
       trial_gallery: { pos: new THREE.Vector3(0, 3.8, 1.6), target: new THREE.Vector3(0, 0.4, 7.5) },
     };
 
@@ -311,34 +320,140 @@ export class LabScene {
   }
 
   checkCameraObstruction() {
-    if (!this.roomGroup || !this.camera || !this.cameraTarget) return;
-    const dir = new THREE.Vector3().subVectors(this.cameraTarget, this.camera.position);
-    const dist = dir.length();
-    if (dist < 0.2) return;
-    dir.normalize();
+    if (!this.camera) return;
 
-    this.raycaster.set(this.camera.position, dir);
-    this.raycaster.far = Math.max(0.1, dist - 0.2);
+    // 1. Gallery Railing collision (railing is at z = 2.15)
+    // When inside ward, never allow camera to drift into or behind the railing
+    if (!this.isGalleryMode) {
+      if (this.camera.position.z > 1.70) {
+        this.camera.position.z = 1.70;
+      }
+    }
 
-    const hits = this.raycaster.intersectObjects(this.roomGroup.children, true);
-    if (hits.length > 0) {
-      this.camera.position.y += 0.35;
-      this.camera.position.z += 0.2;
+    // 2. Room wall bounds
+    this.camera.position.x = Math.max(-7.2, Math.min(7.2, this.camera.position.x));
+    this.camera.position.z = Math.max(-6.5, this.camera.position.z);
+    this.camera.position.y = Math.max(0.70, Math.min(4.5, this.camera.position.y));
+
+    // 3. Bench collision check (benches are at y = 0.94)
+    const px = this.camera.position.x;
+    const pz = this.camera.position.z;
+    const isOverLeftBench = px >= -6.6 && px <= -2.4 && pz >= -5.0 && pz <= -3.4;
+    const isOverCenterBench = px >= -2.3 && px <= 2.3 && pz >= -2.8 && pz <= -1.2;
+    if (isOverLeftBench || isOverCenterBench) {
+      this.camera.position.y = Math.max(1.30, this.camera.position.y);
+    }
+  }
+
+  easeCameraTo(targetPos, targetLookAt, durationMs = 400, onComplete = null) {
+    if (state.skipAnimation || durationMs <= 0) {
+      this.camera.position.copy(targetPos);
+      this.cameraTarget.copy(targetLookAt);
+      this.controls.target.copy(targetLookAt);
+      this.checkCameraObstruction();
+      if (onComplete) onComplete();
+      return;
+    }
+
+    this.cameraTransition = {
+      startTime: performance.now(),
+      duration: durationMs,
+      startPos: this.camera.position.clone(),
+      endPos: targetPos.clone(),
+      startLookAt: this.controls.target.clone(),
+      endLookAt: targetLookAt.clone(),
+      onComplete,
+    };
+  }
+
+  updateCameraTransition(now) {
+    if (!this.cameraTransition) return;
+    const t = Math.min(1.0, (now - this.cameraTransition.startTime) / this.cameraTransition.duration);
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    this.camera.position.lerpVectors(this.cameraTransition.startPos, this.cameraTransition.endPos, ease);
+    const curLook = new THREE.Vector3().lerpVectors(this.cameraTransition.startLookAt, this.cameraTransition.endLookAt, ease);
+    this.cameraTarget.copy(curLook);
+    this.controls.target.copy(curLook);
+
+    if (t >= 1.0) {
+      const cb = this.cameraTransition.onComplete;
+      this.cameraTransition = null;
+      this.checkCameraObstruction();
+      if (cb) cb();
+    }
+  }
+
+  startActionCamera(apparatusPos, avatarPos, durationMs = 1800) {
+    if (state.skipAnimation) return;
+
+    if (!this.isActionCameraActive) {
+      this.savedCameraPos = this.camera.position.clone();
+      this.savedCameraTarget = this.controls.target.clone();
+      this.isActionCameraActive = true;
+    }
+
+    const appPos = apparatusPos ? apparatusPos.clone() : new THREE.Vector3(0, 1.0, -1.8);
+    const avPos = avatarPos ? avatarPos.clone() : new THREE.Vector3(appPos.x, 0, appPos.z + 1.0);
+
+    // Midpoint framing avatar chest/hands and apparatus (~1.15m height)
+    const focusTarget = new THREE.Vector3(
+      avPos.x * 0.45 + appPos.x * 0.55,
+      1.15,
+      avPos.z * 0.45 + appPos.z * 0.55
+    );
+
+    const toAvatar = new THREE.Vector3().subVectors(avPos, appPos);
+    toAvatar.y = 0;
+    if (toAvatar.lengthSq() < 0.01) toAvatar.set(0, 0, 1);
+    toAvatar.normalize();
+
+    // Side quarter angle
+    const flank = new THREE.Vector3(-toAvatar.z, 0, toAvatar.x);
+    const testDirA = toAvatar.clone().multiplyScalar(0.7).add(flank.clone().multiplyScalar(0.7)).normalize();
+    const testDirB = toAvatar.clone().multiplyScalar(0.7).sub(flank.clone().multiplyScalar(0.7)).normalize();
+    const posA = focusTarget.clone().add(testDirA.clone().multiplyScalar(1.95));
+    const posB = focusTarget.clone().add(testDirB.clone().multiplyScalar(1.95));
+
+    const chosenPos = Math.abs(posA.x) < Math.abs(posB.x) && posA.z <= 1.70 ? posA : posB;
+    chosenPos.y = 1.38; // Medium close shot framing upper body, hands & apparatus (~2m distance)
+
+    // Hard collision clamps
+    chosenPos.x = Math.max(-6.8, Math.min(6.8, chosenPos.x));
+    chosenPos.z = Math.max(-6.2, Math.min(1.70, chosenPos.z));
+    chosenPos.y = Math.max(1.10, Math.min(2.4, chosenPos.y));
+
+    this.easeCameraTo(chosenPos, focusTarget, 350);
+  }
+
+  endActionCamera() {
+    if (!this.isActionCameraActive) return;
+    this.isActionCameraActive = false;
+
+    if (state.skipAnimation) {
+      if (this.savedCameraPos && this.savedCameraTarget) {
+        this.camera.position.copy(this.savedCameraPos);
+        this.cameraTarget.copy(this.savedCameraTarget);
+        this.controls.target.copy(this.savedCameraTarget);
+      }
+      return;
+    }
+
+    if (this.savedCameraPos && this.savedCameraTarget) {
+      this.easeCameraTo(this.savedCameraPos, this.savedCameraTarget, 400);
     }
   }
 
   setStationCamera(presetKey) {
+    this.isGalleryMode = presetKey === 'trial_gallery';
     const preset = this.stationPresets[presetKey] || this.stationPresets.default;
-    this.camera.position.copy(preset.pos);
-    this.cameraTarget.copy(preset.target);
-    this.controls.target.copy(this.cameraTarget);
-    this.checkCameraObstruction();
+    this.easeCameraTo(preset.pos, preset.target, 450);
   }
 
   resetCameraView() {
-    this.cameraTarget.copy(this.stationPresets.default.target);
-    this.controls.target.copy(this.cameraTarget);
-    this.camera.position.copy(this.stationPresets.default.pos);
+    this.isGalleryMode = false;
+    this.isWhiteboardZoomed = false;
+    this.easeCameraTo(this.stationPresets.default.pos, this.stationPresets.default.target, 450);
   }
 
   onWindowResize() {
@@ -355,16 +470,19 @@ export class LabScene {
     this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    // Raycast apparatus
-    if (!this.apparatusContainer) return;
+    // Raycast apparatus and interactive fixtures
+    const candidates = [];
+    if (this.apparatusContainer) candidates.push(...this.apparatusContainer.children);
+    if (this.roomGroup) candidates.push(...this.roomGroup.children);
+    if (candidates.length === 0) return;
 
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    const intersects = this.raycaster.intersectObjects(this.apparatusContainer.children, true);
+    const intersects = this.raycaster.intersectObjects(candidates, true);
 
     if (intersects.length > 0) {
       // Find top apparatus group with userData.targetId
       let current = intersects[0].object;
-      while (current && current.parent !== this.apparatusContainer && !current.userData?.targetId) {
+      while (current && !current.userData?.targetId && current.parent && current.parent !== this.scene) {
         current = current.parent;
       }
 
@@ -392,7 +510,17 @@ export class LabScene {
       const targetId = this.hoveredObject.userData.targetId;
       if (targetId === 'virtual_trial_screen') {
         state.emit('open_trial_panel');
+      } else if (targetId === 'protocol_board') {
+        if (this.isWhiteboardZoomed) {
+          this.resetCameraView();
+          this.isWhiteboardZoomed = false;
+        } else {
+          this.setStationCamera('whiteboard');
+          this.isWhiteboardZoomed = true;
+        }
+        return;
       }
+      this.isWhiteboardZoomed = false;
       state.setSelectedTarget(targetId);
       this.selectApparatus(this.hoveredObject);
     }
@@ -449,6 +577,11 @@ export class LabScene {
       } catch (err) {
         console.error('Error in scene update callback:', err);
       }
+    }
+
+    // Smooth camera transition / Action camera easing
+    if (this.cameraTransition) {
+      this.updateCameraTransition(now);
     }
 
     // Controls update

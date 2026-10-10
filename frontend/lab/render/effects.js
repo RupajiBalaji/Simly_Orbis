@@ -26,6 +26,15 @@ export class EffectManager {
       case 'splash':
         this.createSplash(origin, durationMs);
         break;
+      case 'droplets':
+        this.createDroplets(origin, durationMs, directive.color ? parseInt(directive.color.replace('#', '0x')) : 0x38bdf8);
+        break;
+      case 'stream':
+      case 'pour': {
+        const targetPos = directive.target_pos ? new THREE.Vector3(...directive.target_pos) : origin.clone().sub(new THREE.Vector3(0, 0.35, 0));
+        this.createPourStream(origin, targetPos, durationMs, directive.color ? parseInt(directive.color.replace('#', '0x')) : 0x38bdf8);
+        break;
+      }
       case 'bubbles':
         this.createBubbles(origin, durationMs);
         break;
@@ -232,6 +241,79 @@ export class EffectManager {
     }, durationMs);
   }
 
+  createPourStream(sourcePos, targetPos, durationMs = 1200, colorHex = 0x38bdf8) {
+    const s = sourcePos.clone();
+    const e = targetPos.clone();
+    const dir = new THREE.Vector3().subVectors(e, s);
+    const len = dir.length();
+    if (len < 0.04) return;
+
+    const mid = new THREE.Vector3().addVectors(s, e).multiplyScalar(0.5);
+    const geo = new THREE.CylinderGeometry(0.010, 0.015, len, 8);
+    const mat = new THREE.MeshStandardMaterial({
+      color: colorHex,
+      transparent: true,
+      opacity: 0.8,
+      roughness: 0.1,
+      metalness: 0.1,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.copy(mid);
+
+    const up = new THREE.Vector3(0, 1, 0);
+    const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
+    mesh.quaternion.copy(quat);
+
+    this.scene.add(mesh);
+    this.activeEffects.push({
+      mesh,
+      startTime: performance.now(),
+      durationMs,
+      type: 'stream',
+    });
+  }
+
+  createDroplets(origin, durationMs = 1500, colorHex = 0x38bdf8) {
+    const count = 32;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = origin.x + (Math.random() - 0.5) * 0.05;
+      positions[i * 3 + 1] = origin.y - Math.random() * 0.06;
+      positions[i * 3 + 2] = origin.z + (Math.random() - 0.5) * 0.05;
+
+      velocities.push(
+        new THREE.Vector3(
+          (Math.random() - 0.5) * 0.08,
+          -(Math.random() * 0.8 + 0.5),
+          (Math.random() - 0.5) * 0.08
+        )
+      );
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: colorHex,
+      size: 0.035,
+      transparent: true,
+      opacity: 0.85,
+    });
+
+    const points = new THREE.Points(geo, mat);
+    this.scene.add(points);
+
+    this.activeEffects.push({
+      mesh: points,
+      velocities,
+      positions,
+      startTime: performance.now(),
+      durationMs,
+      type: 'droplets',
+    });
+  }
+
   update(dt) {
     const now = performance.now();
 
@@ -258,6 +340,15 @@ export class EffectManager {
         const count = fx.velocities.length;
         for (let j = 0; j < count; j++) {
           fx.velocities[j].y -= 9.8 * dt * 0.6; // gravity
+          fx.positions[j * 3] += fx.velocities[j].x * dt;
+          fx.positions[j * 3 + 1] += fx.velocities[j].y * dt;
+          fx.positions[j * 3 + 2] += fx.velocities[j].z * dt;
+        }
+        fx.mesh.geometry.attributes.position.needsUpdate = true;
+      } else if (fx.type === 'droplets' && fx.positions) {
+        const count = fx.velocities.length;
+        for (let j = 0; j < count; j++) {
+          fx.velocities[j].y -= 9.8 * dt * 0.4;
           fx.positions[j * 3] += fx.velocities[j].x * dt;
           fx.positions[j * 3 + 1] += fx.velocities[j].y * dt;
           fx.positions[j * 3 + 2] += fx.velocities[j].z * dt;

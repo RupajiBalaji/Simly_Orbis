@@ -3,6 +3,7 @@
  * Executes character animations, liquid updates, effects, and readouts in sequential order.
  */
 
+import * as THREE from 'three';
 import { applyLiquidDirective } from './liquid.js';
 import { applyReadoutDirective, applyVitalsDirective, applyLabelDirective, applyHighlightDirective } from './readouts.js';
 import { state } from '../state.js';
@@ -33,11 +34,53 @@ export class DirectiveQueue {
       const durationMs = animDirective.duration_ms || 1800;
 
       await new Promise((resolve) => {
+        let appWorldPos = null;
+        const avWorldPos = this.characterController.rig?.root?.position?.clone() || new THREE.Vector3();
+
         if (apparatus) {
-          this.characterController.executeActionAtStation(apparatus, clipName, durationMs, resolve);
+          appWorldPos = new THREE.Vector3();
+          apparatus.getWorldPosition(appWorldPos);
+        } else {
+          appWorldPos = avWorldPos.clone().add(new THREE.Vector3(0, 1.1, -0.6));
+        }
+
+        // Trigger Action Camera framing avatar upper body, hands & apparatus
+        if (this.sceneManager?.startActionCamera) {
+          this.sceneManager.startActionCamera(appWorldPos, avWorldPos, durationMs);
+        }
+
+        // Procedural streams and droplets effects
+        if (clipName === 'wash_hands' && apparatus) {
+          setTimeout(() => {
+            this.effectManager?.playEffect(apparatus, { name: 'droplets', duration_ms: 1400, color: '#38bdf8' });
+          }, 300);
+        } else if ((clipName === 'dissolve' || clipName === 'pour') && apparatus) {
+          setTimeout(() => {
+            this.effectManager?.playEffect(apparatus, { name: 'stream', duration_ms: 1000, color: '#38bdf8' });
+          }, 400);
+        } else if (clipName === 'titrate' && apparatus) {
+          setTimeout(() => {
+            this.effectManager?.playEffect(apparatus, { name: 'droplets', duration_ms: 1000, color: '#f8fafc' });
+          }, 400);
+        }
+
+        const onFinished = () => {
+          if (this.sceneManager?.endActionCamera) {
+            this.sceneManager.endActionCamera();
+          }
+          resolve();
+        };
+
+        if (apparatus) {
+          this.characterController.executeActionAtStation(apparatus, clipName, durationMs, onFinished);
         } else {
           // Play in place
-          this.characterController.animator.playClip(clipName, null, durationMs, resolve);
+          const prop = this.characterController.createHeldProp ? this.characterController.createHeldProp(clipName) : null;
+          if (prop) this.characterController.carryItem(prop);
+          this.characterController.animator.playClip(clipName, null, durationMs, () => {
+            if (this.characterController.dropHeldItem) this.characterController.dropHeldItem();
+            onFinished();
+          });
         }
 
         // Apply visual directives at midpoint

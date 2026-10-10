@@ -69,6 +69,25 @@ export function createHumanoidAvatar() {
   rightEye.position.set(0.06, 0.02, 0.125);
   head.add(rightEye);
 
+  // Facial features: Eyebrows, Nose, and Mouth
+  const browMat = new THREE.MeshBasicMaterial({ color: 0x334155 });
+  const leftBrow = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.012, 0.02), browMat);
+  leftBrow.position.set(-0.06, 0.055, 0.126);
+  head.add(leftBrow);
+
+  const rightBrow = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.012, 0.02), browMat);
+  rightBrow.position.set(0.06, 0.055, 0.126);
+  head.add(rightBrow);
+
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.035, 0.025), skinMat);
+  nose.position.set(0, -0.01, 0.135);
+  head.add(nose);
+
+  const mouthMat = new THREE.MeshBasicMaterial({ color: 0xf43f5e });
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.012, 0.015), mouthMat);
+  mouth.position.set(0, -0.055, 0.126);
+  head.add(mouth);
+
   // Goggles (Toggled via PPE)
   const gogglesGroup = new THREE.Group();
   gogglesGroup.visible = false;

@@ -246,52 +246,59 @@ function createWhiteboard(parent, x, y, z) {
 
   // Header Bar
   ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 64px sans-serif';
-  ctx.fillText('ORBIS LAB PROTOCOLS & FORMULAS', 80, 110);
+  ctx.font = 'bold 74px sans-serif';
+  ctx.fillText('ORBIS LAB PROTOCOLS & FORMULAS', 80, 115);
 
   // Section 1: Standard Protocols
   ctx.strokeStyle = '#9333ea';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(80, 160, 900, 800);
+  ctx.lineWidth = 8;
+  ctx.strokeRect(80, 160, 910, 780);
 
   ctx.fillStyle = '#7e22ce';
-  ctx.font = 'bold 46px sans-serif';
-  ctx.fillText('SAFETY & TECHNIQUE RULES', 110, 230);
+  ctx.font = 'bold 50px sans-serif';
+  ctx.fillText('SAFETY & TECHNIQUE RULES', 110, 235);
 
-  ctx.font = 'bold 36px monospace';
+  ctx.font = 'bold 38px monospace';
   ctx.fillStyle = '#1e293b';
-  ctx.fillText('1. WEAR PPE (Goggles, Gloves, Coat)', 110, 310);
-  ctx.fillText('2. TARE BALANCE before weighing dose', 110, 400);
-  ctx.fillText('3. ACID -> WATER dilution safety (R6)', 110, 490);
-  ctx.fillText('4. RINSE BURETTE with titrant first', 110, 580);
-  ctx.fillText('5. SORT CHEMICAL vs BIOHAZARD waste', 110, 670);
-  ctx.fillText('6. WASH HANDS before report submit', 110, 760);
+  ctx.fillText('1. WEAR PPE (Goggles, Gloves, Coat)', 110, 315);
+  ctx.fillText('2. TARE BALANCE before weighing dose', 110, 405);
+  ctx.fillText('3. ACID -> WATER dilution safety (R6)', 110, 495);
+  ctx.fillText('4. RINSE BURETTE with titrant first', 110, 585);
+  ctx.fillText('5. SORT CHEMICAL vs BIOHAZARD waste', 110, 675);
+  ctx.fillText('6. WASH HANDS before report submit', 110, 765);
 
   // Section 2: Mathematical / Analytical Models
   ctx.strokeStyle = '#0284c7';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(1040, 160, 920, 800);
+  ctx.lineWidth = 8;
+  ctx.strokeRect(1030, 160, 930, 780);
 
   ctx.fillStyle = '#0369a1';
-  ctx.font = 'bold 46px sans-serif';
-  ctx.fillText('QUANTITATIVE MODELS', 1070, 230);
+  ctx.font = 'bold 50px sans-serif';
+  ctx.fillText('QUANTITATIVE MODELS', 1060, 235);
 
-  ctx.font = 'bold 36px monospace';
+  ctx.font = 'bold 38px monospace';
   ctx.fillStyle = '#0f172a';
-  ctx.fillText('PHARMACOKINETICS (Alex, 70kg):', 1070, 310);
+  ctx.fillText('PHARMACOKINETICS (Alex, 70kg):', 1060, 315);
   ctx.fillStyle = '#0284c7';
-  ctx.fillText('C(t) = D*ka / (Vd*(ka-ke))*(e^-ke*t - e^-ka*t)', 1070, 370);
+  ctx.fillText('C(t)=D*ka/(Vd*(ka-ke))*(e^-ke*t-e^-ka*t)', 1060, 375);
 
   ctx.fillStyle = '#0f172a';
-  ctx.fillText('ACID-BASE NEUTRALIZATION:', 1070, 480);
+  ctx.fillText('ACID-BASE NEUTRALIZATION:', 1060, 485);
   ctx.fillStyle = '#059669';
-  ctx.fillText('HCl + NaOH -> NaCl + H2O', 1070, 540);
-  ctx.fillText('Equivalence Point: pH 7.00', 1070, 600);
+  ctx.fillText('HCl + NaOH -> NaCl + H2O', 1060, 545);
+  ctx.fillText('Equivalence Point: pH 7.00', 1060, 605);
 
   ctx.fillStyle = '#0f172a';
-  ctx.fillText('BUFFER EQUATION:', 1070, 710);
+  ctx.fillText('BUFFER EQUATION:', 1060, 715);
   ctx.fillStyle = '#d97706';
-  ctx.fillText('pH = pKa + log([A-] / [HA])', 1070, 770);
+  ctx.fillText('pH = pKa + log([A-] / [HA])', 1060, 775);
+
+  // Bottom prompt banner
+  ctx.fillStyle = '#64748b';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🔍 CLICK PROTOCOL BOARD TO ZOOM & INSPECT', 1024, 985);
+  ctx.textAlign = 'left';
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.anisotropy = 8;
@@ -300,6 +307,9 @@ function createWhiteboard(parent, x, y, z) {
   const surface = new THREE.Mesh(surfaceGeo, surfaceMat);
   surface.position.z = 0.035;
   board.add(surface);
+
+  board.userData.targetId = 'protocol_board';
+  surface.userData.targetId = 'protocol_board';
 
   parent.add(board);
 }

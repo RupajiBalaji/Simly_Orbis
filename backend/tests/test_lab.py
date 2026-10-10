@@ -420,3 +420,24 @@ async def test_lab_session_api_lifecycle(client: AsyncClient):
     assert lb_resp.status_code == 200
     lb_data = lb_resp.json()
     assert any(e["nickname"] == "ApiTester" for e in lb_data)
+
+
+def test_all_experiments_protocol_steps_have_titles_and_hints():
+    """Requirement Stage 3.9 Item 2: Every protocol step in all experiments must have a human title and hint."""
+    exps = list_experiments()
+    assert len(exps) >= 2
+    for exp in exps:
+        assert len(exp.protocol) > 0, f"Experiment {exp.id} must define protocol steps"
+        for idx, step in enumerate(exp.protocol, start=1):
+            step_id = step.get("id")
+            assert step_id, f"Experiment {exp.id} step #{idx} is missing 'id'"
+
+            title = step.get("title")
+            assert title, f"Experiment {exp.id} step #{idx} ({step_id}) is missing human-readable 'title'"
+            assert isinstance(title, str) and len(title.strip()) > 3, f"Experiment {exp.id} step #{idx} has invalid title: {title}"
+            assert title != step_id, f"Experiment {exp.id} step #{idx} title cannot simply be raw step id '{step_id}'"
+
+            hint = step.get("hint_text") or step.get("hint")
+            assert hint, f"Experiment {exp.id} step #{idx} ({step_id}) is missing 'hint_text' or 'hint'"
+            assert isinstance(hint, str) and len(hint.strip()) > 5, f"Experiment {exp.id} step #{idx} has invalid hint: {hint}"
+

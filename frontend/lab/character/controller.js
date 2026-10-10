@@ -91,19 +91,139 @@ export class CharacterController {
     const apparatusWorldPos = new THREE.Vector3();
     apparatusObject.getWorldPosition(apparatusWorldPos);
 
+    const wrappedFinished = () => {
+      this.dropHeldItem();
+      if (onFinished) onFinished();
+    };
+
+    const startGesture = () => {
+      this.faceTarget(apparatusWorldPos);
+      const prop = this.createHeldProp(clipName);
+      if (prop) {
+        this.carryItem(prop);
+      }
+      this.animator.playClip(clipName, apparatusWorldPos, durationMs, wrappedFinished);
+    };
+
     // 1. Walk to station
     const distToStation = this.rig.root.position.distanceTo(stationPos);
     if (distToStation > 0.3) {
-      this.moveTo(stationPos, () => {
-        // 2. Face apparatus
-        this.faceTarget(apparatusWorldPos);
-        // 3. Play gesture clip
-        this.animator.playClip(clipName, apparatusWorldPos, durationMs, onFinished);
-      });
+      this.moveTo(stationPos, startGesture);
     } else {
-      this.faceTarget(apparatusWorldPos);
-      this.animator.playClip(clipName, apparatusWorldPos, durationMs, onFinished);
+      startGesture();
     }
+  }
+
+  createHeldProp(clipName) {
+    const propGroup = new THREE.Group();
+
+    if (clipName === 'weigh') {
+      // Weighing dish with powder
+      const dishGeo = new THREE.CylinderGeometry(0.045, 0.035, 0.015, 16);
+      const dishMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+      const dish = new THREE.Mesh(dishGeo, dishMat);
+      dish.position.set(0, -0.01, 0);
+      propGroup.add(dish);
+
+      const powderGeo = new THREE.CylinderGeometry(0.032, 0.032, 0.008, 12);
+      const powderMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.9 });
+      const powder = new THREE.Mesh(powderGeo, powderMat);
+      powder.position.set(0, -0.005, 0);
+      propGroup.add(powder);
+      return propGroup;
+    }
+
+    if (clipName === 'dissolve' || clipName === 'administer') {
+      // Dosing cup
+      const cupGeo = new THREE.CylinderGeometry(0.035, 0.028, 0.065, 16);
+      const cupMat = new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.7, roughness: 0.1 });
+      const cup = new THREE.Mesh(cupGeo, cupMat);
+      cup.position.set(0, -0.02, 0);
+      propGroup.add(cup);
+
+      const liqGeo = new THREE.CylinderGeometry(0.032, 0.026, 0.04, 16);
+      const liqMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
+      const liq = new THREE.Mesh(liqGeo, liqMat);
+      liq.position.set(0, -0.03, 0);
+      propGroup.add(liq);
+      return propGroup;
+    }
+
+    if (clipName === 'write_label') {
+      // Laboratory marker pen
+      const penGeo = new THREE.CylinderGeometry(0.007, 0.007, 0.13, 12);
+      const penMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
+      const pen = new THREE.Mesh(penGeo, penMat);
+      pen.rotation.x = Math.PI / 3;
+      propGroup.add(pen);
+      return propGroup;
+    }
+
+    if (clipName === 'draw_blood') {
+      // Venipuncture Syringe with blood chamber
+      const barrelGeo = new THREE.CylinderGeometry(0.014, 0.014, 0.09, 12);
+      const barrelMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+      const barrel = new THREE.Mesh(barrelGeo, barrelMat);
+      propGroup.add(barrel);
+
+      const bloodGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.06, 12);
+      const bloodMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.2 });
+      const blood = new THREE.Mesh(bloodGeo, bloodMat);
+      blood.position.y = -0.01;
+      propGroup.add(blood);
+
+      const needleGeo = new THREE.CylinderGeometry(0.002, 0.002, 0.04, 8);
+      const needleMat = new THREE.MeshStandardMaterial({ color: 0xcfd8dc, metalness: 0.9, roughness: 0.1 });
+      const needle = new THREE.Mesh(needleGeo, needleMat);
+      needle.position.y = -0.065;
+      propGroup.add(needle);
+      return propGroup;
+    }
+
+    if (clipName === 'pipette_analyte') {
+      // Pipette with rubber bulb
+      const pipGeo = new THREE.CylinderGeometry(0.006, 0.004, 0.18, 12);
+      const pipMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.75 });
+      const pip = new THREE.Mesh(pipGeo, pipMat);
+      propGroup.add(pip);
+
+      const bulbGeo = new THREE.SphereGeometry(0.018, 12, 12);
+      const bulbMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.6 });
+      const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+      bulb.position.y = 0.09;
+      propGroup.add(bulb);
+      return propGroup;
+    }
+
+    if (clipName === 'add_indicator') {
+      // Dropper bottle
+      const botGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.07, 12);
+      const botMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.3 });
+      const bot = new THREE.Mesh(botGeo, botMat);
+      propGroup.add(bot);
+
+      const dropBulb = new THREE.Mesh(new THREE.SphereGeometry(0.012, 10, 10), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+      dropBulb.position.y = 0.045;
+      propGroup.add(dropBulb);
+      return propGroup;
+    }
+
+    if (clipName === 'run_assay') {
+      // Specimen tube
+      const tubeGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.08, 12);
+      const tubeMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.7 });
+      const tube = new THREE.Mesh(tubeGeo, tubeMat);
+      propGroup.add(tube);
+
+      const capGeo = new THREE.CylinderGeometry(0.013, 0.013, 0.018, 12);
+      const capMat = new THREE.MeshStandardMaterial({ color: 0x7c3aed, roughness: 0.3 });
+      const cap = new THREE.Mesh(capGeo, capMat);
+      cap.position.y = 0.045;
+      propGroup.add(cap);
+      return propGroup;
+    }
+
+    return null;
   }
 
   update(dt) {

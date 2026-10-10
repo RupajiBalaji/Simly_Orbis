@@ -64,51 +64,52 @@ export function createVirtualTrialScreen() {
 
     // Top Header
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 36px "JetBrains Mono", monospace';
-    ctx.fillText('⬡ ORBIS VIRTUAL CLINICAL TRIAL', 48, 70);
+    ctx.font = 'bold 44px "JetBrains Mono", monospace';
+    ctx.fillText('⬡ VIRTUAL CLINICAL TRIAL ARENA', 48, 70);
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '22px Inter, sans-serif';
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = 'bold 24px Inter, sans-serif';
     ctx.fillText('1,000-Patient Population Pharmacokinetics • N=20–1000', 48, 108);
 
     // Center visual: stylized crowd matrix representation
     ctx.fillStyle = '#1e293b';
-    ctx.fillRect(48, 140, 520, 310);
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
-    ctx.strokeRect(48, 140, 520, 310);
+    ctx.fillRect(48, 135, 500, 315);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(48, 135, 500, 315);
 
     // Dot matrix pattern
     for (let r = 0; r < 14; r++) {
       for (let c = 0; c < 24; c++) {
-        const dotX = 72 + c * 20;
-        const dotY = 165 + r * 19;
+        const dotX = 70 + c * 19.5;
+        const dotY = 160 + r * 19;
         ctx.fillStyle = (r + c) % 5 === 0 ? '#10b981' : (r + c) % 11 === 0 ? '#ef4444' : '#64748b';
         ctx.beginPath();
-        ctx.arc(dotX, dotY, 4, 0, Math.PI * 2);
+        ctx.arc(dotX, dotY, 4.5, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
     // Right Side Info Panel
     ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 24px Inter, sans-serif';
-    ctx.fillText('Cohort Simulation Features', 600, 175);
+    ctx.font = 'bold 28px Inter, sans-serif';
+    ctx.fillText('Population Trial Engine', 580, 175);
 
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = '18px Inter, sans-serif';
-    ctx.fillText('• Log-normal weight & clearance variation', 600, 220);
-    ctx.fillText('• Impaired hepatic clearance subgroup (0.6x)', 600, 255);
-    ctx.fillText('• Bateman oral multi-dose superposition', 600, 290);
-    ctx.fillText('• Vectorized NumPy execution (< 2s)', 600, 325);
-    ctx.fillText('• 3D Instanced crowd wave visualization', 600, 360);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '21px Inter, sans-serif';
+    ctx.fillText('• Log-normal body weight (CV 18%)', 580, 222);
+    ctx.fillText('• Clearance CV 30% & ka CV 25%', 580, 260);
+    ctx.fillText('• Impaired hepatic clearance (0.6x)', 580, 298);
+    ctx.fillText('• Vectorized Bateman run (< 0.2s)', 580, 336);
+    ctx.fillText('• 3D Instanced 1,000 patient crowd wave', 580, 374);
 
     // Status / Click prompt banner
     ctx.fillStyle = '#9333ea';
-    ctx.fillRect(48, 480, 928, 56);
+    ctx.fillRect(48, 475, 928, 65);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px "JetBrains Mono", monospace';
+    ctx.font = 'bold 26px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(`▶ CLICK SCREEN TO ENTER VIEWING GALLERY (${statusText})`, 512, 516);
+    ctx.fillText(`▶ CLICK TO ENTER VIEWING GALLERY (${statusText})`, 512, 517);
     ctx.textAlign = 'left';
   }
 

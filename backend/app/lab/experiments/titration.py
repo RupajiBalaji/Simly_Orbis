@@ -141,47 +141,69 @@ TITRATION_BENCH_EXPERIMENT = ExperimentDefinition(
     protocol=[
         {
             "id": "wear_ppe",
+            "title": "Wear Personal Protective Equipment (PPE)",
             "hint_text": "Put on all required safety gear: goggles, gloves, and lab coat.",
+            "hint": "Put on all required safety gear: goggles, gloves, and lab coat.",
         },
         {
             "id": "rinse_burette",
+            "title": "Rinse & Condition Burette",
             "hint_text": "Condition the burette by rinsing with a small portion (5 mL) of NaOH titrant.",
+            "hint": "Condition the burette by rinsing with a small portion (5 mL) of NaOH titrant.",
         },
         {
             "id": "fill_burette",
+            "title": "Fill Burette with Titrant",
             "hint_text": "Fill the burette with 0.1 M NaOH up to 50 mL.",
+            "hint": "Fill the burette with 0.1 M NaOH up to 50 mL.",
         },
         {
             "id": "pipette_analyte",
+            "title": "Pipette Acid Analyte into Flask",
             "hint_text": "Pipette 25 mL of acid analyte (HCl 0.1M or Acetic acid 0.1M) into the conical flask.",
+            "hint": "Pipette 25 mL of acid analyte (HCl 0.1M or Acetic acid 0.1M) into the conical flask.",
         },
         {
             "id": "add_indicator",
+            "title": "Add Chemical Indicator Drops",
             "hint_text": "Add 2-3 drops of chemical indicator (e.g. phenolphthalein) to the flask.",
+            "hint": "Add 2-3 drops of chemical indicator (e.g. phenolphthalein) to the flask.",
         },
         {
             "id": "titrate",
+            "title": "Titrate Towards Equivalence Point",
             "hint_text": "Carefully dispense NaOH titrant into the flask.",
+            "hint": "Carefully dispense NaOH titrant into the flask.",
         },
         {
             "id": "swirl",
+            "title": "Swirl Conical Flask",
             "hint_text": "Swirl the conical flask to ensure complete chemical mixing.",
+            "hint": "Swirl the conical flask to ensure complete chemical mixing.",
         },
         {
             "id": "record_endpoint",
+            "title": "Record Equivalence Endpoint",
             "hint_text": "Observe the persistent color change and record the final endpoint volume.",
+            "hint": "Observe the persistent color change and record the final endpoint volume.",
         },
         {
             "id": "dispose_waste",
+            "title": "Dispose Chemical Waste",
             "hint_text": "Dispose of chemical contents into the designated chemical waste bin.",
+            "hint": "Dispose of chemical contents into the designated chemical waste bin.",
         },
         {
             "id": "wash_hands",
+            "title": "Wash Hands at Sink",
             "hint_text": "Remove PPE and wash hands thoroughly at the sink.",
+            "hint": "Remove PPE and wash hands thoroughly at the sink.",
         },
         {
             "id": "submit_report",
+            "title": "Submit Titration Lab Report",
             "hint_text": "Submit the completed acid-base titration laboratory report.",
+            "hint": "Submit the completed acid-base titration laboratory report.",
         },
     ],
     scoring_weights={

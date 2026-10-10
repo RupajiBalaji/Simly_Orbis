@@ -159,7 +159,7 @@ function setupLobby() {
     };
   }
 
-  // Automated Proof Snapshot handler (?snap=hall_before | hall_after | hall_compare)
+  // Automated Proof Snapshot handler (?snap=...)
   const urlParams = new URLSearchParams(window.location.search);
   const snapMode = urlParams.get('snap');
   if (snapMode) {
@@ -169,31 +169,114 @@ function setupLobby() {
         if (debugOverlay && !state.debugOverlayActive) {
           debugOverlay.toggle();
         }
-        if (window.trialPanel) {
-          window.trialPanel.open();
-          if (snapMode === 'hall_after') {
-            const dInput = document.getElementById('trial-dose');
-            const dVal = document.getElementById('trial-dose-val');
-            const dsInput = document.getElementById('trial-doses');
-            const dsVal = document.getElementById('trial-doses-val');
-            if (dInput) { dInput.value = 1000; if (dVal) dVal.textContent = '1000 mg'; }
-            if (dsInput) { dsInput.value = 2; if (dsVal) dsVal.textContent = '2 doses'; }
-            await window.trialPanel.runTrialSimulation();
-          } else if (snapMode === 'hall_compare') {
-            state.skipAnimation = true;
-            const dInput = document.getElementById('trial-dose');
-            const dVal = document.getElementById('trial-dose-val');
-            const dsInput = document.getElementById('trial-doses');
-            const dsVal = document.getElementById('trial-doses-val');
-            if (dInput) { dInput.value = 1000; if (dVal) dVal.textContent = '1000 mg'; }
-            if (dsInput) { dsInput.value = 2; if (dsVal) dsVal.textContent = '2 doses'; }
-            await window.trialPanel.runTrialComparison();
+
+        if (snapMode === 'hall_before' || snapMode === 'hall_after' || snapMode === 'hall_compare') {
+          if (window.trialPanel) {
+            window.trialPanel.open();
+            if (snapMode === 'hall_after') {
+              const dInput = document.getElementById('trial-dose');
+              const dVal = document.getElementById('trial-dose-val');
+              const dsInput = document.getElementById('trial-doses');
+              const dsVal = document.getElementById('trial-doses-val');
+              if (dInput) { dInput.value = 1000; if (dVal) dVal.textContent = '1000 mg'; }
+              if (dsInput) { dsInput.value = 2; if (dsVal) dsVal.textContent = '2 doses'; }
+              await window.trialPanel.runTrialSimulation();
+            } else if (snapMode === 'hall_compare') {
+              state.skipAnimation = true;
+              const dInput = document.getElementById('trial-dose');
+              const dVal = document.getElementById('trial-dose-val');
+              const dsInput = document.getElementById('trial-doses');
+              const dsVal = document.getElementById('trial-doses-val');
+              if (dInput) { dInput.value = 1000; if (dVal) dVal.textContent = '1000 mg'; }
+              if (dsInput) { dsInput.value = 2; if (dsVal) dsVal.textContent = '2 doses'; }
+              await window.trialPanel.runTrialComparison();
+            }
           }
+        } else if (snapMode === 'action_weigh') {
+          state.skipAnimation = true;
+          await actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          state.skipAnimation = false;
+          actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+        } else if (snapMode === 'action_administer') {
+          state.skipAnimation = true;
+          await actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          await actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+          await actionMenu.executeAction('dissolve', 'dosing_cup', { substance: 'paracetamol', solvent: 'water' });
+          await actionMenu.executeAction('label', 'dosing_cup', { text: 'Pt: Alex | 500mg' });
+          const bed = sceneManager.getApparatus('patient_bed');
+          if (bed && bed.userData?.stationPos) {
+            characterController.rig.root.position.copy(bed.userData.stationPos);
+          }
+          state.skipAnimation = false;
+          actionMenu.executeAction('administer_oral', 'patient_bed', {});
+        } else if (snapMode === 'action_label') {
+          state.skipAnimation = true;
+          await actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          await actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+          await actionMenu.executeAction('dissolve', 'dosing_cup', { substance: 'paracetamol', solvent: 'water' });
+          state.skipAnimation = false;
+          actionMenu.executeAction('label', 'dosing_cup', { text: 'Pt: Alex | 500mg' });
+        } else if (snapMode === 'action_blood') {
+          state.skipAnimation = true;
+          await actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          await actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+          await actionMenu.executeAction('dissolve', 'dosing_cup', { substance: 'paracetamol', solvent: 'water' });
+          await actionMenu.executeAction('label', 'dosing_cup', { text: 'Pt: Alex | 500mg' });
+          await actionMenu.executeAction('administer_oral', 'patient_bed', {});
+          await actionMenu.executeAction('advance_time', 'ward_clock', { hours: 1.0 });
+          await actionMenu.executeAction('label', 'tube_1', { text: 'Pt Alex t=1.0h' });
+          state.skipAnimation = false;
+          actionMenu.executeAction('draw_blood', 'tube_1', {});
+        } else if (snapMode === 'action_wash') {
+          state.skipAnimation = false;
+          actionMenu.executeAction('wash_hands', 'sink', {});
+        } else if (snapMode === 'step8_banner') {
+          state.skipAnimation = true;
+          await actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          await actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+          await actionMenu.executeAction('dissolve', 'dosing_cup', { substance: 'paracetamol', solvent: 'water' });
+          await actionMenu.executeAction('label', 'dosing_cup', { text: 'Pt: Alex | 500mg' });
+          await actionMenu.executeAction('administer_oral', 'patient_bed', {});
+          await actionMenu.executeAction('advance_time', 'ward_clock', { hours: 1.0 });
+        } else if (snapMode === 'target_picker') {
+          state.skipAnimation = true;
+          await actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          await actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+          await actionMenu.executeAction('dissolve', 'dosing_cup', { substance: 'paracetamol', solvent: 'water' });
+          await actionMenu.executeAction('label', 'dosing_cup', { text: 'Pt: Alex | 500mg' });
+          await actionMenu.executeAction('administer_oral', 'patient_bed', {});
+          await actionMenu.executeAction('advance_time', 'ward_clock', { hours: 1.0 });
+          actionMenu.showLabelModal('label', null);
+        } else if (snapMode === 'end_of_run') {
+          state.skipAnimation = true;
+          await actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          await actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+          await actionMenu.executeAction('dissolve', 'dosing_cup', { substance: 'paracetamol', solvent: 'water' });
+          await actionMenu.executeAction('label', 'dosing_cup', { text: 'Pt: Alex | 500mg' });
+          await actionMenu.executeAction('administer_oral', 'patient_bed', {});
+          await actionMenu.executeAction('advance_time', 'ward_clock', { hours: 1.0 });
+          await actionMenu.executeAction('label', 'tube_1', { text: 't=1.0h' });
+          await actionMenu.executeAction('draw_blood', 'tube_1', {});
+          await actionMenu.executeAction('run_assay', 'tube_1', {});
+          await actionMenu.executeAction('dispose_waste', 'chemical_waste_bin', { item: 'dosing_cup' });
+          await actionMenu.executeAction('wash_hands', 'sink', {});
+          sceneManager.resetCameraView();
+        } else if (snapMode === 'whiteboard_zoom') {
+          sceneManager.setStationCamera('whiteboard');
+        } else if (snapMode === 'trial_screen') {
+          sceneManager.setStationCamera('trial_screen');
         }
       } catch (e) {
         console.error('Snap mode error:', e);
       }
-    }, 500);
+    }, 450);
   }
 }
 

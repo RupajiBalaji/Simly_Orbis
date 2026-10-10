@@ -148,11 +148,13 @@ export class ActionMenu {
     }
 
     const stepIdx = protocol.indexOf(nextStep) + 1;
+    const title = nextStep.title || this.formatProtocolTitle(nextStep.id);
+    const hint = nextStep.hint_text || nextStep.hint || 'Complete protocol actions following safety standards.';
     if (this.nextStepInstruction) {
-      this.nextStepInstruction.textContent = `Step ${stepIdx}: ${this.formatProtocolTitle(nextStep.id)}`;
+      this.nextStepInstruction.textContent = `Step ${stepIdx}: ${title}`;
     }
     if (this.nextStepHint) {
-      this.nextStepHint.textContent = nextStep.hint || 'Complete protocol actions following safety standards.';
+      this.nextStepHint.textContent = hint.startsWith('Hint:') ? hint : `Hint: ${hint}`;
     }
 
     // Update pulsing beacon / glow over next step apparatus
@@ -169,7 +171,7 @@ export class ActionMenu {
     if (stepId.includes('balance') || stepId.includes('weigh')) return 'digital_balance';
     if (stepId.includes('dissolve') || stepId.includes('cup')) return 'dosing_cup';
     if (stepId.includes('oral') || stepId.includes('patient')) return 'patient_bed';
-    if (stepId.includes('blood') || stepId.includes('draw')) return 'tube_rack';
+    if (stepId.includes('tube') || stepId.includes('blood') || stepId.includes('draw')) return 'tube_rack';
     if (stepId.includes('assay')) return 'assay_analyzer';
     if (stepId.includes('burette')) return 'burette';
     if (stepId.includes('flask') || stepId.includes('pipette') || stepId.includes('indicator') || stepId.includes('titrate')) return 'conical_flask';
@@ -187,6 +189,7 @@ export class ActionMenu {
       label_cup: 'Label Dosing Cup with Patient Details',
       administer_oral: 'Administer Oral Suspension to Alex',
       advance_time: 'Advance Clinical Ward Clock',
+      label_tube: 'Label Venous Blood Sampling Tube',
       label_tubes: 'Label Venous Blood Sampling Tubes',
       draw_blood: 'Perform Timed Blood Plasma Sampling',
       run_assay: 'Centrifuge & Assay Plasma Concentrations',
@@ -200,7 +203,7 @@ export class ActionMenu {
       wash_hands: 'Wash Hands Thoroughly at Utility Sink',
       submit_report: 'Submit Complete Experimental Report',
     };
-    return map[stepId] || stepId.replace(/_/g, ' ');
+    return map[stepId] || stepId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
   renderActions() {
@@ -349,11 +352,41 @@ export class ActionMenu {
     }
   }
 
+  resolveDefaultTargetForAction(action) {
+    const protocol = state.experiment?.protocol || [];
+    const completed = new Set(state.session?.protocol_progress || []);
+    const nextStep = protocol.find((s) => !completed.has(s.id));
+
+    if (action === 'label') {
+      if (nextStep?.id === 'label_tube' || nextStep?.id === 'label_tubes') return 'tube_1';
+      return 'dosing_cup';
+    }
+    if (action === 'weigh' || action === 'tare_balance') return 'digital_balance';
+    if (action === 'dissolve') return 'dosing_cup';
+    if (action === 'administer_oral') return 'patient_bed';
+    if (action === 'draw_blood') return 'tube_1';
+    if (action === 'run_assay') return 'tube_1';
+    if (action === 'wash_hands') return 'sink';
+    if (action === 'dispose_waste') return 'chemical_waste_bin';
+    if (action === 'advance_time') return 'ward_clock';
+    if (action === 'rinse_burette' || action === 'fill_burette' || action === 'titrate') return 'burette';
+    if (action === 'pipette_analyte' || action === 'add_indicator' || action === 'swirl' || action === 'record_endpoint' || action === 'read_ph_meter') return 'conical_flask';
+    return null;
+  }
+
   createActionButton(item, targetId) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `action-btn ${item.enabled ? 'enabled' : 'disabled'}`;
-    btn.textContent = this.formatActionLabel(item.action);
+    const baseLabel = this.formatActionLabel(item.action);
+    const resolvedTarget = targetId || this.resolveDefaultTargetForAction(item.action);
+
+    if (!targetId && resolvedTarget && item.action !== 'wear_ppe' && item.action !== 'remove_ppe' && item.action !== 'submit_report') {
+      const cleanTarget = resolvedTarget.replace(/_/g, ' ');
+      btn.innerHTML = `<span class="act-main-lbl">${baseLabel}</span><span class="action-target-badge" style="font-size:0.68rem; opacity:0.8; display:block; margin-top:2px; font-weight:normal;">Target: ${cleanTarget}</span>`;
+    } else {
+      btn.textContent = baseLabel;
+    }
     btn.dataset.action = item.action;
 
     if (!item.enabled) {
@@ -361,7 +394,7 @@ export class ActionMenu {
       btn.dataset.backendDisabled = 'true';
       btn.title = item.disabled_reason || 'Action currently locked by protocol or safety prerequisite.';
     } else {
-      btn.title = `Execute ${item.label || item.action}`;
+      btn.title = `Execute ${item.label || item.action} on ${resolvedTarget || 'station'}`;
       btn.onclick = () => this.handleActionClick(item.action, targetId);
     }
 
@@ -397,22 +430,23 @@ export class ActionMenu {
   }
 
   async handleActionClick(action, targetId) {
+    const effectiveTarget = targetId || this.resolveDefaultTargetForAction(action);
     if (action === 'weigh') {
-      this.showWeighModal(action, targetId);
+      this.showWeighModal(action, effectiveTarget);
     } else if (action === 'titrate') {
-      this.showTitrateModal(action, targetId);
+      this.showTitrateModal(action, effectiveTarget);
     } else if (action === 'advance_time') {
-      this.showAdvanceTimeModal(action, targetId);
+      this.showAdvanceTimeModal(action, effectiveTarget);
     } else if (action === 'add_indicator') {
-      this.showIndicatorModal(action, targetId);
+      this.showIndicatorModal(action, effectiveTarget);
     } else if (action === 'label') {
-      this.showLabelModal(action, targetId);
+      this.showLabelModal(action, effectiveTarget);
     } else if (action === 'submit_report') {
       // Trigger finish report
       const btnFinish = document.getElementById('btn-finish-experiment');
       if (btnFinish) btnFinish.click();
     } else {
-      await this.executeAction(action, targetId, {});
+      await this.executeAction(action, effectiveTarget, {});
     }
   }
 
@@ -512,18 +546,77 @@ export class ActionMenu {
   }
 
   showLabelModal(action, targetId) {
-    this.openParamModal('Label Apparatus', (container, submit) => {
+    const protocol = state.experiment?.protocol || [];
+    const completed = new Set(state.session?.protocol_progress || []);
+    const nextStep = protocol.find((s) => !completed.has(s.id));
+
+    let recommendedTarget = 'dosing_cup';
+    if (nextStep?.id === 'label_tube' || nextStep?.id === 'label_tubes') {
+      recommendedTarget = 'tube_1';
+    } else if (nextStep?.id === 'label_cup') {
+      recommendedTarget = 'dosing_cup';
+    }
+
+    let effectiveTarget = targetId;
+    if (!effectiveTarget || effectiveTarget === 'general') {
+      effectiveTarget = recommendedTarget;
+    }
+
+    const isPK = (state.experiment?.id || 'pk_ward') === 'pk_ward';
+    const targetsList = isPK
+      ? [
+          { id: 'tube_1', name: '🩸 Blood Sample Tube 1', stepId: 'label_tube' },
+          { id: 'dosing_cup', name: '🥤 Oral Dosing Cup', stepId: 'label_cup' },
+          { id: 'tube_2', name: '🩸 Blood Sample Tube 2', stepId: 'label_tube' },
+          { id: 'tube_3', name: '🩸 Blood Sample Tube 3', stepId: 'label_tube' },
+        ]
+      : [
+          { id: 'conical_flask', name: '🧪 Conical Reaction Flask', stepId: 'conical_flask' },
+          { id: 'burette', name: '🧪 Titrant Burette Column', stepId: 'burette' },
+        ];
+
+    this.openParamModal('Label Apparatus / Specimen', (container, submit) => {
       container.innerHTML = `
+        <div class="param-field" style="margin-bottom:12px;">
+          <label style="font-weight:700; color:#38bdf8; display:block; margin-bottom:4px;">Which object? (Select Target):</label>
+          <select id="label-target-select" style="width:100%; padding:8px 10px; border-radius:6px; background:#0f172a; color:#f8fafc; border:1px solid #38bdf8; font-size:0.88rem;">
+            ${targetsList.map((t) => {
+              const isRec = t.id === recommendedTarget;
+              const isSel = t.id === effectiveTarget;
+              const badge = isRec ? ' ⭐ [Next Step Target]' : '';
+              return `<option value="${t.id}" ${isSel ? 'selected' : ''}>${t.name}${badge}</option>`;
+            }).join('')}
+          </select>
+        </div>
         <div class="param-field">
-          <label>Label Text:</label>
-          <input type="text" id="label-text-input" value="Pt: Alex" />
+          <label style="font-weight:600; display:block; margin-bottom:4px;">Label Text / Specimen ID:</label>
+          <input type="text" id="label-text-input" value="Pt: Alex" style="width:100%; padding:8px 10px; border-radius:6px; background:#0f172a; color:#f8fafc; border:1px solid #475569; font-size:0.88rem;" />
         </div>
       `;
+
+      const sel = container.querySelector('#label-target-select');
+      const txt = container.querySelector('#label-text-input');
+
+      const updateDefaultText = () => {
+        if (sel.value === 'dosing_cup') {
+          txt.value = 'Pt: Alex | Paracetamol 500mg';
+        } else if (sel.value === 'tube_1') {
+          txt.value = 'Pt: Alex | Blood Sample (t=1.0h)';
+        } else if (sel.value === 'tube_2') {
+          txt.value = 'Pt: Alex | Blood Sample (t=3.0h)';
+        } else {
+          txt.value = `Pt: Alex | Specimen (${sel.value})`;
+        }
+      };
+
+      updateDefaultText();
+      sel.onchange = updateDefaultText;
+
       submit(() => ({
-        text: container.querySelector('#label-text-input').value,
-        target: targetId || 'dosing_cup',
+        target: sel.value,
+        text: txt.value.trim() || 'Labeled Sample',
       }));
-    }, action, targetId);
+    }, action, effectiveTarget);
   }
 
   openParamModal(title, setupContent, action, targetId) {
@@ -560,17 +653,19 @@ export class ActionMenu {
       okBtn.onclick = async () => {
         const params = getParamsFn();
         this.paramModal.style.display = 'none';
-        await this.executeAction(action, targetId, params);
+        const finalTarget = params.target || targetId;
+        await this.executeAction(action, finalTarget, params);
       };
     });
   }
 
   async executeAction(action, targetId, params = {}) {
     if (!state.session?.session_id) return;
+    const finalTarget = targetId || this.resolveDefaultTargetForAction(action);
     state.setPending(true);
 
     try {
-      const result = await api.applyAction(state.session.session_id, action, targetId, params);
+      const result = await api.applyAction(state.session.session_id, action, finalTarget, params);
 
       // Show toast if message
       if (result.message) {

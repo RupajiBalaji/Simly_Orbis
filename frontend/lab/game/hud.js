@@ -168,14 +168,14 @@ export class LabHUD {
 
       const titleSpan = document.createElement('div');
       titleSpan.className = 'step-title';
-      titleSpan.textContent = this.formatStepTitle(step.id);
+      titleSpan.textContent = step.title || this.formatStepTitle(step.id);
       contentDiv.appendChild(titleSpan);
 
       // Render hint text ONLY under the active step
-      if (isCurrent && (step.hint || step.description)) {
+      if (isCurrent && (step.hint_text || step.hint || step.description)) {
         const hintSpan = document.createElement('div');
         hintSpan.className = 'step-hint-text';
-        hintSpan.textContent = step.hint || step.description;
+        hintSpan.textContent = step.hint_text || step.hint || step.description;
         contentDiv.appendChild(hintSpan);
       }
 

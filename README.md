@@ -19,6 +19,9 @@ It turns complex domain dynamics into modular, verifiable simulations. The core 
 - **🛡️ Laboratory Safety Rules Engine:** Real-time enforcement of PPE (goggles, gloves, lab coat), balance taring, sample tube labeling, acid-into-water dilution safety, burette overfilling/rinsing, max dosing thresholds, and chemical/biohazard waste segregation. Two critical violations fail the session immediately.
 - **🎨 3D Visual Directives Contract:** Returns structured rendering instructions (`liquid`, `effect`, `readout`, `vitals`, `label`, `highlight`) for Three.js 3D rendering clients. See [docs/visual_contract.md](file:///e:/Simly%20Orbis/docs/visual_contract.md).
 - **🧪 Interactive Dev Console:** Built-in web dashboard at `/lab-console.html` to run lab sessions, trigger available actions, inspect visual directives, and review final report cards.
+- **🎬 Action Camera & Visual Immersion (Stage 3.9):** Dynamic medium close-up action camera framing avatar upper body, hands, and active apparatus (~2m distance) with smooth easing in/out during actions (respects Skip Anim). Full collision avoidance preventing wall/bench/gallery clipping. Hand-held procedural props (syringe with blood column, dosing cup, weighing dish, marker pen, pipette, dropper bottle), animated pour streams, splash droplets, and avatar facial features.
+- **🎯 Intelligent Target Picker & Protocol Audits:** Interactive target picker for multi-specimen actions auto-highlighting next-step targets (`⭐ [Next Step Target]`). Complete human title and hint audit across all protocol steps with automated test coverage.
+- **🔍 Click-to-Zoom Wall Displays:** High-contrast, large-format typography for protocol whiteboard and virtual clinical trial screens with interactive zoom presets.
 - **5 Progressive Clinical Levels:** From standard healthy adults to paediatric dosing, impaired hepatic clearance, and night-shift caffeine maintenance.
 - **⚡ Demo Mode & Scripted Runner:** One-click automated safe run in the web UI, plus an end-to-end automated multi-experiment demo script (`scripts/play_demo.py`).
 - **🤖 Dr. Orbis AI Tutor:** Physiological explanations and dosing feedback powered by Google Gemini (with automatic rule-based fallback).
@@ -315,7 +318,7 @@ If you wish to connect a live MongoDB Atlas cluster instead of the in-memory fal
 cd backend
 pytest
 ```
-All unit tests and integration tests will run using async httpx and in-memory storage (55 passing tests).
+All unit tests and integration tests will run using async httpx and in-memory storage (65 passing tests).
 
 ### 🧪 Orbis Lab Dev Console & Scripted Demo
 
