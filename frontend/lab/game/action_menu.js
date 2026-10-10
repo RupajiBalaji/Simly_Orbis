@@ -21,6 +21,22 @@ export class ActionMenu {
     this.nextStepHint = document.getElementById('next-step-hint');
     this.targetNameEl = document.getElementById('selected-target-name');
 
+    // Compact action bar & drawer elements
+    this.stationActionsList = document.getElementById('station-actions-list');
+    this.moreActionsDrawer = document.getElementById('more-actions-drawer');
+    this.btnToggleMore = document.getElementById('btn-toggle-more-actions');
+    this.moreIndicator = document.getElementById('more-actions-indicator');
+
+    if (this.btnToggleMore && this.moreActionsDrawer) {
+      this.btnToggleMore.onclick = () => {
+        this.moreActionsDrawer.classList.toggle('hidden');
+        const isOpen = !this.moreActionsDrawer.classList.contains('hidden');
+        if (this.moreIndicator) {
+          this.moreIndicator.textContent = isOpen ? '▲' : '▾';
+        }
+      };
+    }
+
     // Subscribe to state updates
     state.subscribe((event, payload) => {
       if (event === 'actions_updated' || event === 'target_selected') {
@@ -185,14 +201,61 @@ export class ActionMenu {
   renderActions() {
     if (!this.groupsContainer && !this.container) return;
 
-    const allActions = state.availableActions || [];
+    // 1. Hide actions that never apply to the current experiment
+    let allActions = state.availableActions || [];
+    const expAllowed = state.experiment?.allowed_actions;
+    if (expAllowed && Array.isArray(expAllowed)) {
+      allActions = allActions.filter((item) => expAllowed.includes(item.action));
+    }
+
     const targetId = state.selectedTargetId;
 
     if (this.targetNameEl) {
-      this.targetNameEl.textContent = targetId ? `STATION: ${targetId.toUpperCase().replace(/_/g, ' ')}` : 'ALL STATIONS';
+      this.targetNameEl.textContent = targetId ? `STATION: ${targetId.toUpperCase().replace(/_/g, ' ')}` : 'GENERAL LAB';
     }
 
-    // Group available actions
+    // 2. Populate compact primary row for active station
+    if (this.stationActionsList) {
+      this.stationActionsList.innerHTML = '';
+
+      const stationAffinities = {
+        burette: ['rinse_burette', 'fill_burette', 'titrate'],
+        conical_flask: ['pipette_analyte', 'add_indicator', 'titrate', 'swirl', 'record_endpoint'],
+        digital_balance: ['tare_balance', 'weigh'],
+        patient_bed: ['administer_oral', 'draw_blood'],
+        tube_rack: ['label', 'draw_blood', 'run_assay'],
+        assay_analyzer: ['run_assay'],
+        dosing_cup: ['dissolve', 'label'],
+        ward_clock: ['advance_time'],
+        ph_meter: ['read_ph_meter', 'record_endpoint'],
+        sink: ['wash_hands'],
+        chemical_waste_bin: ['dispose_waste'],
+        biohazard_bin: ['dispose_waste'],
+      };
+
+      const validAffinities = targetId && stationAffinities[targetId]
+        ? new Set(stationAffinities[targetId])
+        : null;
+
+      let primaryActions = [];
+      if (validAffinities) {
+        primaryActions = allActions.filter((a) => validAffinities.has(a.action));
+      }
+
+      // If station has no specific actions or none found, show top enabled actions
+      if (primaryActions.length === 0) {
+        primaryActions = allActions.filter((a) => a.enabled).slice(0, 4);
+      }
+
+      // Sort primary actions so enabled appear first
+      primaryActions.sort((a, b) => (b.enabled ? 1 : 0) - (a.enabled ? 1 : 0));
+
+      primaryActions.forEach((item) => {
+        this.stationActionsList.appendChild(this.createActionButton(item, targetId));
+      });
+    }
+
+    // 3. Populate "More Actions" drawer with categorized full groups
     const groups = {
       safety: { title: '🛡️ Safety & Hygiene', items: [] },
       station: { title: '⚙️ Station Operations', items: [] },
@@ -293,29 +356,29 @@ export class ActionMenu {
   formatActionLabel(actionName) {
     const map = {
       wear_ppe: '🛡️ Wear PPE',
-      remove_ppe: 'Remove PPE',
+      remove_ppe: '🧤 Remove PPE',
       tare_balance: '⚖️ Tare Balance',
       weigh: '⚖️ Weigh Dose',
       dissolve: '💧 Dissolve Powder',
-      label: '🏷️ Label Object',
+      label: '🏷️ Label Item',
       administer_oral: '💊 Administer Oral',
       advance_time: '⏱️ Advance Time',
       draw_blood: '🩸 Draw Blood',
       run_assay: '🔬 Run Assay',
       rinse_burette: '🧪 Rinse Burette',
       fill_burette: '🧪 Fill Burette',
-      pipette_analyte: 'Pipette Analyte',
+      pipette_analyte: '🧪 Pipette Analyte',
       add_indicator: '💧 Add Indicator',
-      titrate: '🧪 Titrate (Dispense)',
-      swirl: 'Swirl Flask',
+      titrate: '🧪 Titrate',
+      swirl: '🔄 Swirl Flask',
       read_ph_meter: '⚡ Read pH Meter',
       record_endpoint: '📝 Record Endpoint',
       dispose_waste: '🗑️ Dispose Waste',
       wash_hands: '🧼 Wash Hands',
-      pour: 'Pour Liquid',
+      pour: '🫗 Pour Liquid',
       submit_report: '✓ Submit Report',
     };
-    return map[actionName] || actionName.replace(/_/g, ' ');
+    return map[actionName] || actionName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
   async handleActionClick(action, targetId) {

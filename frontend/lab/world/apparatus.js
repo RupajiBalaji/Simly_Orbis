@@ -270,7 +270,6 @@ function buildDigitalBalance(id) {
   // Base
   const baseGeo = new THREE.BoxGeometry(0.5, 0.1, 0.6);
   const base = new THREE.Mesh(baseGeo, plasticMat);
-  base.castShadow = true;
   g.add(base);
 
   // Pan (Stainless Steel)

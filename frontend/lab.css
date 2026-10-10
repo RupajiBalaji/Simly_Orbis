@@ -635,6 +635,41 @@ body.orbis-lab-body {
   border-bottom: 1px solid var(--border-subtle);
 }
 
+.panel-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.panel-toggle-btn:hover {
+  background: rgba(168, 85, 247, 0.3);
+  color: #ffffff;
+  border-color: #a855f7;
+}
+
+.hud-protocol-panel.collapsed {
+  width: 52px;
+  min-width: 52px;
+  padding: 12px 6px;
+}
+
+.hud-protocol-panel.collapsed .protocol-header h3,
+.hud-protocol-panel.collapsed .protocol-steps-list {
+  display: none;
+}
+
+.hud-protocol-panel.collapsed .protocol-header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  justify-content: center;
+}
+
 .protocol-header h3 {
   font-size: 0.88rem;
   font-weight: 700;
@@ -664,6 +699,31 @@ body.orbis-lab-body {
   transition: all 0.2s;
 }
 
+.step-content-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.step-title {
+  font-weight: 700;
+  color: #e2e8f0;
+  line-height: 1.3;
+}
+
+.step-hint-text {
+  font-size: 0.72rem;
+  color: #a855f7;
+  line-height: 1.35;
+  margin-top: 3px;
+  font-style: italic;
+  background: rgba(168, 85, 247, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 2px solid var(--accent-magenta);
+}
+
 .protocol-step-item.current {
   border-color: var(--accent-magenta);
   background: rgba(236, 72, 153, 0.12);
@@ -674,6 +734,12 @@ body.orbis-lab-body {
 .protocol-step-item.completed {
   color: #6ee7b7;
   background: rgba(16, 185, 129, 0.08);
+}
+
+.protocol-step-item.completed .step-title {
+  color: #6ee7b7;
+  text-decoration: line-through;
+  opacity: 0.85;
 }
 
 .step-indicator {
@@ -855,6 +921,58 @@ body.orbis-lab-body {
   color: #94a3b8;
 }
 
+.compact-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.station-actions-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-more-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-more-actions:hover {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #c084fc;
+  color: #ffffff;
+}
+
+.more-actions-drawer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  animation: fadeInDrawer 0.2s ease-out;
+}
+
+.more-actions-drawer.hidden {
+  display: none;
+}
+
+@keyframes fadeInDrawer {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .action-groups-container {
   display: flex;
   flex-wrap: wrap;
@@ -948,6 +1066,20 @@ body.orbis-lab-body {
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  max-height: 280px;
+  transition: all 0.25s ease;
+}
+
+.hud-right-panel.collapsed {
+  height: 82px;
+  min-height: 82px;
+  max-height: 82px;
+  padding: 10px 14px;
+}
+
+.hud-right-panel.collapsed .event-log-list {
+  max-height: 44px;
+  overflow: hidden;
 }
 
 .log-header {
@@ -956,11 +1088,12 @@ body.orbis-lab-body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-highlight);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
+  align-items: center;
 }
 
 .event-log-list {
@@ -1235,20 +1368,21 @@ body.orbis-lab-body {
    ═══════════════════════════════════════════════════════════════════════ */
 #debug-overlay {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  background: rgba(0, 0, 0, 0.85);
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  top: 68px;
+  right: 18px;
+  background: rgba(15, 23, 42, 0.94);
+  border: 1px solid rgba(168, 85, 247, 0.5);
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #38bdf8;
-  z-index: 999;
+  z-index: 55;
   pointer-events: none;
   display: none;
-  max-width: 360px;
+  max-width: 280px;
   line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 #debug-overlay.active {

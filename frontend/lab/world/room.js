@@ -113,51 +113,41 @@ export function buildLabRoom(scene) {
   createSafetyPoster(roomGroup, 7.85, 2.5, -2);
   createLabDoor(roomGroup, 7.85, 1.8, 3.5);
 
-  // 8. Physically Based Lighting (Tuned for Three.js r160)
-  // Ambient Daylight Fill
-  const ambLight = new THREE.AmbientLight(0xffffff, 2.0);
-  roomGroup.add(ambLight);
+  // 8. Optimized Laboratory Lighting (High performance & realistic PBR)
+  // Ambient & sky/floor diffuse fill via HemisphereLight (0 shadow passes, high efficiency)
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcfd8dc, 1.8);
+  hemiLight.position.set(0, 6, 0);
+  roomGroup.add(hemiLight);
 
-  // Key Overhead Directional Sun / Fixture Light
-  const dirLight = new THREE.DirectionalLight(0xffffff, 2.6);
+  // Key Overhead Directional Sun / Fixture Light with tight shadow bounds (Single shadow caster)
+  const dirLight = new THREE.DirectionalLight(0xffffff, 2.2);
   dirLight.position.set(3, 8, 4);
   dirLight.castShadow = true;
   dirLight.shadow.mapSize.width = 1024;
   dirLight.shadow.mapSize.height = 1024;
-  dirLight.shadow.camera.near = 1;
-  dirLight.shadow.camera.far = 20;
-  dirLight.shadow.camera.left = -9;
-  dirLight.shadow.camera.right = 9;
-  dirLight.shadow.camera.top = 9;
-  dirLight.shadow.camera.bottom = -9;
+  dirLight.shadow.camera.near = 1.5;
+  dirLight.shadow.camera.far = 18;
+  dirLight.shadow.camera.left = -6.0;
+  dirLight.shadow.camera.right = 6.0;
+  dirLight.shadow.camera.top = 4.5;
+  dirLight.shadow.camera.bottom = -4.5;
   dirLight.shadow.bias = -0.001;
   roomGroup.add(dirLight);
 
-  // Center Bench Overhead Point Light (r160 decay 2)
-  const centerPoint = new THREE.PointLight(0xffffff, 18.0, 18, 2);
-  centerPoint.position.set(0, 4.2, -2.0);
+  // Single subtle overhead worktop PointLight focused over center bench
+  const centerPoint = new THREE.PointLight(0xffffff, 8.0, 12, 2);
+  centerPoint.position.set(0, 4.0, -2.0);
   roomGroup.add(centerPoint);
-
-  // Left Weighing Bench Point Light
-  const leftPoint = new THREE.PointLight(0xf8fafc, 16.0, 16, 2);
-  leftPoint.position.set(-4.5, 4.2, -4.0);
-  roomGroup.add(leftPoint);
-
-  // Right Ward / Patient Bench Point Light
-  const rightPoint = new THREE.PointLight(0xf8fafc, 16.0, 16, 2);
-  rightPoint.position.set(4.5, 4.2, -4.0);
-  roomGroup.add(rightPoint);
-
-  // Subtle Accent Glow on signage / wall
-  const purpleAccent = new THREE.PointLight(0xa855f7, 4.0, 10, 2);
-  purpleAccent.position.set(0, 4.2, -6.5);
-  roomGroup.add(purpleAccent);
 
   // Emergency Alarm Beacon (Normally off; triggers pulsing on critical breaches)
   const alarmLight = new THREE.PointLight(0xef4444, 0, 18, 2);
   alarmLight.position.set(0, 4.5, -3.5);
   alarmLight.name = 'alarm_point_light';
   roomGroup.add(alarmLight);
+
+  // Save light references for runtime quality adjustments
+  roomGroup.userData.dirLight = dirLight;
+  roomGroup.userData.alarmLight = alarmLight;
 
   scene.add(roomGroup);
   return roomGroup;
@@ -171,6 +161,10 @@ function createCeilingLights(parent) {
     roughness: 0.2,
   });
   const borderMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4 });
+
+  // Shared geometries
+  const frameGeo = new THREE.BoxGeometry(2.4, 0.06, 0.9);
+  const panelGeo = new THREE.PlaneGeometry(2.2, 0.75);
 
   const trofferPositions = [
     [-4.5, -4.0],
@@ -186,8 +180,8 @@ function createCeilingLights(parent) {
     const fixture = new THREE.Group();
     fixture.position.set(tx, 4.95, tz);
 
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.06, 0.9), borderMat);
-    const panel = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.75), trofferMat);
+    const frame = new THREE.Mesh(frameGeo, borderMat);
+    const panel = new THREE.Mesh(panelGeo, trofferMat);
     panel.rotation.x = Math.PI / 2;
     panel.position.y = -0.035;
 
@@ -209,7 +203,7 @@ function createBench(parent, topMat, legMat, x, y, z, width, depth, height) {
   topMesh.receiveShadow = true;
   bench.add(topMesh);
 
-  // 4 Powder-coated metal legs
+  // 4 Powder-coated metal legs (castShadow turned off for props to optimize shadow rendering)
   const legGeo = new THREE.BoxGeometry(0.08, height, 0.08);
   const dx = width / 2 - 0.12;
   const dz = depth / 2 - 0.12;
@@ -218,8 +212,6 @@ function createBench(parent, topMat, legMat, x, y, z, width, depth, height) {
     for (const lz of [-dz, dz]) {
       const leg = new THREE.Mesh(legGeo, legMat);
       leg.position.set(lx, height / 2, lz);
-      leg.castShadow = true;
-      leg.receiveShadow = true;
       bench.add(leg);
     }
   }
@@ -228,7 +220,6 @@ function createBench(parent, topMat, legMat, x, y, z, width, depth, height) {
   const braceGeo = new THREE.BoxGeometry(width - 0.24, 0.05, 0.05);
   const brace = new THREE.Mesh(braceGeo, legMat);
   brace.position.set(0, 0.25, 0);
-  brace.castShadow = true;
   bench.add(brace);
 
   parent.add(bench);

@@ -22,6 +22,26 @@ export class LabHUD {
 
     this.selectedTargetEl = document.getElementById('selected-target-name');
 
+    // Panel collapse toggles
+    this.checklistPanel = document.getElementById('hud-protocol-panel');
+    this.logPanel = document.getElementById('hud-right-panel');
+    const btnToggleChecklist = document.getElementById('btn-toggle-checklist');
+    const btnToggleLog = document.getElementById('btn-toggle-log');
+
+    if (btnToggleChecklist && this.checklistPanel) {
+      btnToggleChecklist.onclick = () => {
+        this.checklistPanel.classList.toggle('collapsed');
+        btnToggleChecklist.textContent = this.checklistPanel.classList.contains('collapsed') ? '▶' : '◀';
+      };
+    }
+
+    if (btnToggleLog && this.logPanel) {
+      btnToggleLog.onclick = () => {
+        this.logPanel.classList.toggle('collapsed');
+        btnToggleLog.textContent = this.logPanel.classList.contains('collapsed') ? '▲' : '▼';
+      };
+    }
+
     // Subscribe to state changes
     state.subscribe((event, payload) => {
       if (event === 'session_updated') {
@@ -40,6 +60,33 @@ export class LabHUD {
 
   hide() {
     if (this.container) this.container.classList.add('hidden');
+  }
+
+  formatStepTitle(stepId) {
+    const map = {
+      wear_ppe: 'Wear Protective Equipment (PPE)',
+      tare_balance: 'Tare Analytical Balance',
+      weigh_dose: 'Weigh Active Drug Dose',
+      dissolve_dose: 'Dissolve Drug Dose in Water',
+      label_cup: 'Label Oral Dosing Cup',
+      administer_oral: 'Administer Oral Suspension',
+      advance_time: 'Advance Simulated Clock',
+      label_tube: 'Label Blood Sample Tube',
+      label_tubes: 'Label Sampling Tubes',
+      draw_blood: 'Collect Venous Blood Sample',
+      run_assay: 'Run Centrifuge Drug Assay',
+      rinse_burette: 'Rinse & Condition Burette',
+      fill_burette: 'Fill Burette to Zero Mark',
+      pipette_analyte: 'Pipette Analyte into Flask',
+      add_indicator: 'Add pH Indicator Drops',
+      titrate: 'Titrate to Equivalence Endpoint',
+      swirl: 'Swirl Conical Flask',
+      record_endpoint: 'Record Final Volume & pH',
+      dispose_waste: 'Dispose Laboratory Waste',
+      wash_hands: 'Wash Hands at Sink',
+      submit_report: 'Submit Experimental Report',
+    };
+    return map[stepId] || stepId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
   updateExperiment(exp) {
@@ -104,9 +151,10 @@ export class LabHUD {
       item.className = 'protocol-step-item';
 
       const isDone = completedSet.has(step.id);
+      const isCurrent = !isDone && !foundCurrent;
       if (isDone) {
         item.classList.add('completed');
-      } else if (!foundCurrent) {
+      } else if (isCurrent) {
         item.classList.add('current');
         foundCurrent = true;
       }
@@ -115,12 +163,24 @@ export class LabHUD {
       numSpan.className = 'step-indicator';
       numSpan.textContent = isDone ? '✓' : `${idx + 1}.`;
 
-      const textSpan = document.createElement('span');
-      textSpan.className = 'step-text';
-      textSpan.textContent = step.hint || step.description || step.id;
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'step-content-wrap';
+
+      const titleSpan = document.createElement('div');
+      titleSpan.className = 'step-title';
+      titleSpan.textContent = this.formatStepTitle(step.id);
+      contentDiv.appendChild(titleSpan);
+
+      // Render hint text ONLY under the active step
+      if (isCurrent && (step.hint || step.description)) {
+        const hintSpan = document.createElement('div');
+        hintSpan.className = 'step-hint-text';
+        hintSpan.textContent = step.hint || step.description;
+        contentDiv.appendChild(hintSpan);
+      }
 
       item.appendChild(numSpan);
-      item.appendChild(textSpan);
+      item.appendChild(contentDiv);
       this.protocolListEl.appendChild(item);
     });
   }

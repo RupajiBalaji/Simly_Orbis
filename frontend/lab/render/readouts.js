@@ -9,6 +9,12 @@ export function applyReadoutDirective(apparatusGroup, directive) {
   if (!apparatusGroup) return;
 
   const { label = '', value = '', unit = '' } = directive;
+  const stateKey = `${label}:${value}:${unit}`;
+  if (apparatusGroup.userData.lastReadoutKey === stateKey) {
+    return; // Skip redraw when value has not changed
+  }
+  apparatusGroup.userData.lastReadoutKey = stateKey;
+
   const ctx = apparatusGroup.userData.ctx;
   const canvas = apparatusGroup.userData.canvas;
   const tex = apparatusGroup.userData.tex;
@@ -37,9 +43,16 @@ export function applyVitalsDirective(patientBedGroup, directive) {
 
   const { hr = 70, spo2 = 99, status = 'Stable', patient = 'Alex' } = directive;
 
-  const mctx = patientBedGroup.userData.monitorCtx;
-  const canvas = patientBedGroup.userData.monitorCanvas;
-  const tex = patientBedGroup.userData.monitorTex;
+  const now = performance.now();
+  const lastEcgTime = patientBedGroup.userData.lastEcgTime || 0;
+  const stateKey = `${patient}:${hr}:${spo2}:${status}`;
+
+  // Throttle ECG and vitals redraw to at most 10 Hz (100ms) and only when values change
+  if (patientBedGroup.userData.lastVitalsKey === stateKey && now - lastEcgTime < 100) {
+    return;
+  }
+  patientBedGroup.userData.lastVitalsKey = stateKey;
+  patientBedGroup.userData.lastEcgTime = now;
 
   if (mctx && canvas && tex) {
     mctx.fillStyle = '#090d16';

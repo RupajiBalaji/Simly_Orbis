@@ -37,6 +37,10 @@ class LabStateStore {
     }
   }
 
+  emit(event, payload) {
+    this.notify(event, payload);
+  }
+
   setSession(session) {
     this.session = session;
     if (session?.session_id) {

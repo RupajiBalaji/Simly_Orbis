@@ -209,6 +209,7 @@
       </div>
 
       <div class="hud-right-controls">
+        <button type="button" class="hud-btn" id="btn-toggle-quality" title="Toggle Graphics Quality (High / Low)">⚙️ Quality: High</button>
         <button type="button" class="hud-btn" id="btn-toggle-nametags" title="Toggle 3D labels above apparatus (Key: N)">🏷️ Tags: ON</button>
         <button type="button" class="hud-btn" id="btn-reset-view" title="Reset camera viewpoint">🎥 Reset View</button>
         <button type="button" class="hud-btn" id="btn-toggle-skip-anim" title="Toggle animation speed">⚡ Skip Anim: OFF</button>
@@ -225,23 +226,25 @@
       <div class="next-step-hint" id="next-step-hint">Hint: Don goggles, gloves, and lab coat before touching apparatus.</div>
     </div>
 
-    <!-- Left Panel: Protocol Checklist -->
-    <aside class="hud-protocol-panel">
+    <!-- Left Panel: Protocol Checklist (Collapsible, open by default) -->
+    <aside class="hud-protocol-panel" id="hud-protocol-panel">
       <div class="protocol-header">
         <h3>Protocol Checklist</h3>
+        <button type="button" class="panel-toggle-btn" id="btn-toggle-checklist" title="Collapse / Expand Checklist">◀</button>
       </div>
       <div class="protocol-steps-list" id="protocol-steps-list"></div>
     </aside>
 
-    <!-- Right Panel: Real-Time Event Log -->
-    <aside class="hud-right-panel">
+    <!-- Right Panel: Real-Time Event Log (Collapsible, collapsed to last 2 lines by default) -->
+    <aside class="hud-right-panel collapsed" id="hud-right-panel">
       <div class="log-header">
         <span>Laboratory Event Log</span>
+        <button type="button" class="panel-toggle-btn" id="btn-toggle-log" title="Expand / Collapse Event Log">▲</button>
       </div>
       <div class="event-log-list" id="event-log-list"></div>
     </aside>
 
-    <!-- Bottom Station Navigation Strip & Always-Visible Action Bar -->
+    <!-- Bottom Station Navigation Strip & Compact Action Bar -->
     <div class="hud-bottom-dock">
       <!-- Go to Station Strip -->
       <div class="hud-station-strip" id="hud-station-strip">
@@ -249,17 +252,29 @@
         <div class="station-strip-buttons" id="station-strip-buttons"></div>
       </div>
 
-      <!-- Always-Visible Action Bar -->
+      <!-- Compact Action Bar (Station-focused with expandable More drawer) -->
       <section class="hud-action-bar-container" id="hud-action-bar-container">
         <div class="action-bar-header">
           <div class="action-bar-title-wrap">
             <span class="action-bar-title">What would you like to do?</span>
             <span class="selected-target-indicator" id="selected-target-name">STATION: GENERAL LAB</span>
           </div>
-          <div class="action-bar-helper">Enabled actions ready · Hover disabled actions for safety requirements</div>
+          <div class="action-bar-helper">Selected station actions ready · Click 'More Actions' for all allowed operations</div>
         </div>
-        <div class="action-groups-container" id="action-groups-container">
-          <div id="action-quick-buttons" class="action-quick-buttons"></div>
+
+        <!-- Primary Compact Row for Selected Station -->
+        <div class="compact-actions-row">
+          <div class="station-actions-list" id="station-actions-list"></div>
+          <button type="button" class="btn-more-actions" id="btn-toggle-more-actions" title="Show or hide general & extra actions">
+            <span>➕ More Actions</span> <span id="more-actions-indicator">▾</span>
+          </button>
+        </div>
+
+        <!-- Expandable Drawer for Full Action Categories -->
+        <div class="more-actions-drawer hidden" id="more-actions-drawer">
+          <div class="action-groups-container" id="action-groups-container">
+            <div id="action-quick-buttons" class="action-quick-buttons"></div>
+          </div>
         </div>
       </section>
     </div>

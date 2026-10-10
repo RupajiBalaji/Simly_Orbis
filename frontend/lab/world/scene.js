@@ -62,13 +62,19 @@ export class LabScene {
     this.camera.position.copy(this.cameraDefaultPos);
 
     // 3. Renderer (Physically Based Lighting for r160)
+    // 3. Renderer (Physically Based Lighting for r160, Capped Pixel Ratio 1.5)
+    this.quality = 'high';
+    this.lowFpsStreak = 0;
+    this.updateCallbacks = [];
+    this.isTabHidden = false;
+
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
       powerPreference: 'high-performance',
     });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // capped at 2 for 60fps
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Capped at 1.5 for laptop GPU performance
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -96,12 +102,48 @@ export class LabScene {
 
     window.addEventListener('resize', this.onWindowResize, false);
     window.addEventListener('keydown', this.onKeyDown, false);
+    document.addEventListener('visibilitychange', () => {
+      this.isTabHidden = document.hidden;
+    }, false);
     this.canvas.addEventListener('pointermove', this.onPointerMove, false);
     this.canvas.addEventListener('pointerdown', this.onPointerDown, false);
 
     // Start render loop
     this.lastTime = performance.now();
     this.animate();
+  }
+
+  addUpdateCallback(cb) {
+    if (typeof cb === 'function') {
+      this.updateCallbacks.push(cb);
+    }
+  }
+
+  setQuality(mode, isAuto = false) {
+    this.quality = mode;
+    const isHigh = mode === 'high';
+
+    const maxRatio = isHigh ? 1.5 : 1.0;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxRatio));
+    this.renderer.shadowMap.enabled = isHigh;
+
+    if (this.roomGroup?.userData?.dirLight) {
+      this.roomGroup.userData.dirLight.castShadow = isHigh;
+    }
+
+    this.scene.traverse((obj) => {
+      if (obj.isMesh && obj.material) {
+        obj.material.needsUpdate = true;
+      }
+    });
+
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    state.notify('quality_changed', { quality: mode, isAuto });
+  }
+
+  toggleQuality() {
+    this.setQuality(this.quality === 'high' ? 'low' : 'high', false);
+    return this.quality;
   }
 
   onKeyDown(event) {
@@ -261,11 +303,20 @@ export class LabScene {
     this.animationFrameId = requestAnimationFrame(this.animate);
 
     // Pause rendering when tab is hidden to save GPU battery
-    if (document.hidden) return;
+    if (this.isTabHidden || document.hidden) return;
 
     const now = performance.now();
-    const dt = (now - this.lastTime) / 1000;
+    const dt = Math.min(0.1, (now - this.lastTime) / 1000);
     this.lastTime = now;
+
+    // Run registered sub-system update callbacks (character, particles, etc.)
+    for (let i = 0; i < this.updateCallbacks.length; i++) {
+      try {
+        this.updateCallbacks[i](dt);
+      } catch (err) {
+        console.error('Error in scene update callback:', err);
+      }
+    }
 
     // Controls update
     if (this.controls) {
@@ -282,6 +333,17 @@ export class LabScene {
         const fps = Math.round((this.frameCount * 1000) / (now - this.fpsTimer));
         const drawCalls = this.renderer.info.render.calls;
         state.updateStats({ fps, drawCalls });
+
+        // Auto Quality: If FPS remains under 30 for 3 seconds (6 checks), drop to Low quality
+        if (fps < 30) {
+          this.lowFpsStreak++;
+          if (this.lowFpsStreak >= 6 && this.quality === 'high') {
+            this.setQuality('low', true);
+          }
+        } else {
+          this.lowFpsStreak = 0;
+        }
+
         this.frameCount = 0;
         this.fpsTimer = now;
       }

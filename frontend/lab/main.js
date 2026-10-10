@@ -55,18 +55,43 @@ async function initOrbisLab() {
   directiveQueue = new DirectiveQueue(sceneManager, characterController, effectManager);
 
   // Hook scene animation loop with controller & effects updates
-  const origAnimate = sceneManager.animate;
-  let prevTime = performance.now();
-  sceneManager.animate = function () {
-    const now = performance.now();
-    const dt = Math.min(0.1, (now - prevTime) / 1000);
-    prevTime = now;
-
+  sceneManager.addUpdateCallback((dt) => {
     characterController.update(dt);
     effectManager.update(dt);
+  });
 
-    origAnimate.call(sceneManager);
-  };
+  // State subscriptions for graphics quality & ward clock updates
+  state.subscribe((event, payload) => {
+    if (event === 'session_updated') {
+      const clockGroup = sceneManager.getApparatus('ward_clock');
+      if (clockGroup) {
+        const clockText = `${(payload.clock_h || 0).toFixed(1)} h`;
+        if (clockGroup.userData.lastClock !== clockText) {
+          clockGroup.userData.lastClock = clockText;
+          const ctx = clockGroup.userData.ctx;
+          const canvas = clockGroup.userData.canvas;
+          const tex = clockGroup.userData.tex;
+          if (ctx && canvas && tex) {
+            ctx.fillStyle = '#020617';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#f59e0b';
+            ctx.font = 'bold 44px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(clockText, 128, 70);
+            tex.needsUpdate = true;
+          }
+        }
+      }
+    } else if (event === 'quality_changed') {
+      const btnQuality = document.getElementById('btn-toggle-quality');
+      if (btnQuality) {
+        btnQuality.textContent = payload.quality === 'high' ? '⚙️ Quality: High' : '⚡ Quality: Low';
+      }
+      if (payload.isAuto) {
+        toast.showInfo('⚡ Auto Performance: Quality dropped to Low (shadows off, 1x resolution).', 3500);
+      }
+    }
+  });
 
   // 2. Initialize UI Systems
   hud = new LabHUD();
@@ -236,6 +261,16 @@ function setupHUDControls() {
       const isFast = state.toggleSkipAnimation();
       btnSkipAnim.textContent = isFast ? '⚡ Skip Anim: ON' : '⚡ Skip Anim: OFF';
       toast.showInfo(isFast ? 'Fast Mode: Skipping animations' : 'Standard Mode: Animations active');
+    };
+  }
+
+  // Quality Mode Button
+  const btnQuality = document.getElementById('btn-toggle-quality');
+  if (btnQuality) {
+    btnQuality.onclick = () => {
+      const newQ = sceneManager.toggleQuality();
+      btnQuality.textContent = newQ === 'high' ? '⚙️ Quality: High' : '⚡ Quality: Low';
+      toast.showInfo(`Graphics Quality: ${newQ.toUpperCase()}`);
     };
   }
 
