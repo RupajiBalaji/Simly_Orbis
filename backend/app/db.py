@@ -136,6 +136,19 @@ async def create_indexes() -> None:
         name="runs_module_created_idx",
     )
     await runs.create_index([("run_id", pymongo.ASCENDING)], unique=True, name="runs_run_id_unique_idx")
+
+    lab_sessions = database["lab_sessions"]
+    await lab_sessions.create_index([("session_id", pymongo.ASCENDING)], unique=True, name="lab_sessions_id_idx")
+    await lab_sessions.create_index(
+        [("experiment_id", pymongo.ASCENDING), ("created_at", pymongo.DESCENDING)],
+        name="lab_sessions_exp_created_idx",
+    )
+
+    lab_reports = database["lab_reports"]
+    await lab_reports.create_index(
+        [("experiment_id", pymongo.ASCENDING), ("score", pymongo.DESCENDING)],
+        name="lab_reports_exp_score_idx",
+    )
     log.info("MongoDB indexes ensured.")
 
 
@@ -271,4 +284,62 @@ async def get_run(run_id: str) -> dict[str, Any] | None:
     if doc:
         doc.pop("_id", None)
     return doc
+
+
+# ---------------------------------------------------------------------------
+# Lab Session & Report helpers (Motor + In-Memory unified interface)
+# ---------------------------------------------------------------------------
+
+async def upsert_lab_session(session_doc: dict[str, Any]) -> None:
+    """Upsert a lab session document by its session_id."""
+    doc = dict(session_doc)
+    doc.pop("_id", None)
+    # Convert sets to lists if present for Mongo serialization
+    if "ppe" in doc and isinstance(doc["ppe"], set):
+        doc["ppe"] = list(doc["ppe"])
+    session_id = doc["session_id"]
+    await database["lab_sessions"].update_one(
+        {"session_id": session_id},
+        {"$set": doc},
+        upsert=True,
+    )
+
+
+async def get_lab_session(session_id: str) -> dict[str, Any] | None:
+    """Retrieve a lab session by its session_id."""
+    doc = await database["lab_sessions"].find_one({"session_id": session_id})
+    if doc:
+        doc.pop("_id", None)
+        if "ppe" in doc and isinstance(doc["ppe"], list):
+            doc["ppe"] = set(doc["ppe"])
+    return doc
+
+
+async def save_lab_report(report_doc: dict[str, Any]) -> None:
+    """Save a completed lab experiment report to the 'lab_reports' collection."""
+    doc = dict(report_doc)
+    doc.pop("_id", None)
+    await database["lab_reports"].insert_one(doc)
+
+
+async def list_lab_leaderboard(
+    experiment_id: str | None = None,
+    limit: int = 10,
+) -> list[dict[str, Any]]:
+    """Return top scores for a laboratory experiment."""
+    filter_dict = {"experiment_id": experiment_id} if experiment_id else {}
+    import pymongo  # noqa: PLC0415
+    res = database["lab_reports"].find(
+        filter_dict,
+        sort=[("score", pymongo.DESCENDING)],
+        limit=min(limit, 100),
+    )
+    if hasattr(res, "to_list"):
+        docs = await res.to_list(length=min(limit, 100))
+    else:
+        docs = await res
+    for d in docs:
+        d.pop("_id", None)
+    return docs
+
 

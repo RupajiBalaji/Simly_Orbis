@@ -11,18 +11,23 @@ It turns complex domain dynamics into modular, verifiable simulations. The core 
 ## 🌟 Features
 
 - **Multi-District Simulation Core:** Pluggable `SimModule` architecture with unified parameter schemas, execution tracking, and built-in analytical reality checks.
-- **Bateman PK Simulation Engine (`pharma.pk`):** One-compartment oral absorption model with linear superposition for multi-dose regimens, handling clearance impairment, body weight scaling, and edge cases ($k_a = k_e$).
+- **Pharmacokinetics Engine (`pharma.pk`):** One-compartment Bateman oral absorption model with linear superposition for multi-dose regimens, handling clearance impairment, body weight scaling, and analytical reality checks.
+- **Chemistry Titration Engine (`chem.titration`):** Analytical charge-balance solver for strong acids and high-precision bisection solver (60 iterations) for weak monoprotic acids (e.g. acetic acid $pK_a=4.76$), dynamic indicator absorption spectra interpolation, and 4 verified reality checks.
+- **🔬 Orbis Lab ("World Brain" Stateful Engine):** Full stateful laboratory session engine running interactive experiments (`pk_ward` and `titration_bench`) with action validation, protocol progression, and avatar animations.
+- **🛡️ Laboratory Safety Rules Engine:** Real-time enforcement of PPE (goggles, gloves, lab coat), balance taring, sample tube labeling, acid-into-water dilution safety, burette overfilling/rinsing, max dosing thresholds, and chemical/biohazard waste segregation. Two critical violations fail the session immediately.
+- **🎨 3D Visual Directives Contract:** Returns structured rendering instructions (`liquid`, `effect`, `readout`, `vitals`, `label`, `highlight`) for Three.js 3D rendering clients. See [docs/visual_contract.md](file:///e:/Simly%20Orbis/docs/visual_contract.md).
+- **🧪 Interactive Dev Console:** Built-in web dashboard at `/lab-console.html` to run lab sessions, trigger available actions, inspect visual directives, and review final report cards.
 - **5 Progressive Clinical Levels:** From standard healthy adults to paediatric dosing, impaired hepatic clearance, and night-shift caffeine maintenance.
-- **⚡ Demo Mode:** One-click automated safe run for Level 1 (500 mg × 4 every 6h = 2 g/day, achieving 3 stars).
-- **🤖 Dr. Orbis AI Tutor:** Physiological explanations and actionable dosing feedback powered by Claude (with automatic rule-based fallback).
+- **⚡ Demo Mode & Scripted Runner:** One-click automated safe run in the web UI, plus an end-to-end automated multi-experiment demo script (`scripts/play_demo.py`).
+- **🤖 Dr. Orbis AI Tutor:** Physiological explanations and dosing feedback powered by Google Gemini (with automatic rule-based fallback).
 - **⚙ Under the Hood Drawer:** Live inspects registered modules, run logs, raw API payloads, active database storage mode (MongoDB Atlas or in-memory fallback), document counts, and mathematical equations.
-- **Live Leaderboard:** Top rankings per level with seeded sample players labelled `(sample)`.
+- **Live Leaderboard:** Top rankings per clinical level and interactive lab experiment.
 
 ---
 
 ## 🏗️ Architecture
 
-Simly Orbis is organized into a modular simulation platform:
+Simly Orbis is organized into a modular simulation platform and world-brain lab engine:
 
 ```
 simly-orbis/
@@ -30,16 +35,26 @@ simly-orbis/
 │   ├── app/
 │   │   ├── main.py            Entry point – routes, CORS, module registration, static mount
 │   │   ├── config.py          Pydantic-settings (reads .env)
-│   │   ├── db.py              Motor connection + in-memory fallback, runs & score collections
+│   │   ├── db.py              Motor connection + in-memory fallback, runs, scores, lab sessions & reports
 │   │   ├── core/              Core simulation engine interface
 │   │   │   ├── version.py     ENGINE_VERSION ("0.1.0")
 │   │   │   ├── base.py        SimModule abstract base, RunResult, RealityCheck
 │   │   │   └── registry.py    Global module registry (register, get, list)
 │   │   ├── modules/           Registered simulation domain modules
-│   │   │   └── pharma_pk.py   Module #1: "pharma.pk" wrapping PK engine + 3 reality checks
+│   │   │   ├── pharma_pk.py   Module #1: "pharma.pk" wrapping PK engine + 3 reality checks
+│   │   │   └── chem_titration.py Module #2: "chem.titration" acid-base solver + 4 reality checks
+│   │   ├── lab/               Orbis Lab stateful engine & world brain
+│   │   │   ├── models.py      Action vocabulary, VisualDirective, CharacterAnimation, LabSession
+│   │   │   ├── rules.py       Safety rules engine (R1-R10: PPE, Tare, Dilution, Waste, etc.)
+│   │   │   ├── engine.py      Session manager, action evaluator, scoring, vitals & assay noise
+│   │   │   └── experiments/   Experiment catalog & protocol definitions
+│   │   │       ├── base.py    ExperimentDefinition schema
+│   │   │       ├── pk_ward.py "pk_ward" clinical PK ward protocol & apparatus
+│   │   │       └── titration.py "titration_bench" acid-base titration bench protocol
 │   │   ├── routes/
 │   │   │   ├── modules.py     GET /api/modules, GET /api/modules/{id}, GET .../reality-check
 │   │   │   ├── runs.py        POST /api/run, GET /api/runs, GET /api/runs/{run_id}
+│   │   │   ├── lab.py         POST /api/lab/sessions, POST .../actions, GET /api/lab/leaderboard
 │   │   │   ├── drugs.py       GET /api/drugs
 │   │   │   ├── levels.py      GET /api/levels
 │   │   │   ├── simulate.py    POST /api/simulate (legacy / game wrapper)
@@ -55,45 +70,59 @@ simly-orbis/
 │   │   ├── conftest.py        Async httpx client fixture
 │   │   ├── test_api.py        API integration tests
 │   │   ├── test_core_and_runs.py Core registry, schema, runs & reality checks tests
-│   │   └── test_pk_engine.py  PK engine unit tests
+│   │   ├── test_pk_engine.py  PK engine unit tests
+│   │   ├── test_titration.py  Titration module & reality checks tests
+│   │   └── test_lab.py        Lab session engine, safety rules, protocols & scoring tests
 │   ├── requirements.txt
 │   ├── pytest.ini
 │   └── .env.example
 │
+├── docs/
+│   └── visual_contract.md     3D Visual Directives & Character Animation specification
+├── scripts/
+│   └── play_demo.py           End-to-end multi-experiment automated demo runner
 └── frontend/                  Static web client (no build step required)
     ├── index.html             Single-page application (7 screens + Under the Hood drawer)
+    ├── lab-console.html       Orbis Lab dev console (interactive experiment runner)
     ├── style.css              Dark theme design system & animations
     └── app.js                 State, Chart.js graphs, AI tutor typewriter & drawer
 ```
-
-### Run Log Collection
-Every execution via `POST /api/run` (and in-game simulation) stores a persistent record in the `runs` collection:
-- `run_id` (UUID4)
-- `module_id`, `district`
-- `params`, `summary`, `series` (omitted if > 5000 points)
-- `warnings`, `nickname`, `parent_run_id`
-- `engine_version`, `duration_ms`, `created_at`, `storage_mode`
-
-Compound database indexes are maintained on `created_at desc`, `(module_id, created_at desc)`, and unique `run_id`.
 
 ---
 
 ## 📡 API Endpoints
 
+### Core & Modules
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/health` | Health check with storage mode, runs count, and registered module IDs |
-| `GET` | `/api/modules` | List all registered simulation modules (`id`, `name`, `district`, `version`) |
+| `GET` | `/api/health` | Health check with storage mode, runs/sessions count, and registered modules |
+| `GET` | `/api/modules` | List registered simulation modules (`pharma.pk`, `chem.titration`) |
 | `GET` | `/api/modules/{id}` | Detailed module metadata including parameter JSON schema |
 | `GET` | `/api/modules/{id}/reality-check` | Execute analytical verification tests for a module |
-| `POST` | `/api/run` | Execute any registered module with params and log execution |
-| `GET` | `/api/runs` | Query latest simulation runs (query params: `limit`, `module_id`) |
+| `POST` | `/api/run` | Execute any registered module with params and record execution run |
+| `GET` | `/api/runs` | Query recent simulation runs (`limit`, `module_id`) |
 | `GET` | `/api/runs/{run_id}` | Retrieve details of a specific simulation run |
+
+### Orbis Lab Interactive Sessions
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/lab/experiments` | List available lab experiments (`pk_ward`, `titration_bench`) |
+| `GET` | `/api/lab/experiments/{id}` | Experiment details, apparatus list, inventory, protocol, allowed actions |
+| `POST` | `/api/lab/sessions` | Create a new stateful lab session (`experiment_id`, `nickname`) |
+| `GET` | `/api/lab/sessions/{id}` | Get current session state, apparatus status, clock, violations, protocol |
+| `GET` | `/api/lab/sessions/{id}/available-actions` | Get context-aware valid actions for the current state with hints |
+| `POST` | `/api/lab/sessions/{id}/actions` | Apply player action (`action`, `params`), returns directives & animations |
+| `POST` | `/api/lab/sessions/{id}/finish` | Complete session, calculate multi-factor score card, and record to leaderboard |
+| `GET` | `/api/lab/leaderboard` | View Orbis Lab leaderboard rankings (`experiment_id`, `limit`) |
+
+### Game & AI Tutor
+| Method | Endpoint | Description |
+|---|---|---|
 | `GET` | `/api/drugs` | List available drugs |
 | `GET` | `/api/levels` | List gameplay puzzle levels |
 | `POST` | `/api/simulate` | Pharmacokinetics simulation endpoint (gameplay) |
 | `POST` | `/api/score` | Record player score |
-| `GET` | `/api/leaderboard` | Get leaderboard standings |
+| `GET` | `/api/leaderboard` | Get clinical game leaderboard standings |
 | `POST` | `/api/tutor` | Request Dr. Orbis explanation (`source`: "ai" or "fallback") |
 
 ---
@@ -239,7 +268,21 @@ If you wish to connect a live MongoDB Atlas cluster instead of the in-memory fal
 cd backend
 pytest
 ```
-All unit tests and integration tests will run using async httpx and in-memory storage.
+All unit tests and integration tests will run using async httpx and in-memory storage (55 passing tests).
+
+### 🧪 Orbis Lab Dev Console & Scripted Demo
+
+1. **Interactive Dev Console:**
+   With the server running, visit:
+   **<http://localhost:8000/lab-console.html>**
+   - Switch between **Pharmacokinetics Ward** and **Acid-Base Titration**.
+   - Start stateful sessions, click allowed actions, inspect safety warnings, and view live JSON visual directives.
+
+2. **Automated End-to-End Demo Script:**
+   To play through both experiments with zero manual input and review final report cards:
+   ```bash
+   python scripts/play_demo.py
+   ```
 
 ---
 

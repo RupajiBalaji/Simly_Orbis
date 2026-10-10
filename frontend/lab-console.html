@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orbis Lab – Interactive Dev Console</title>
+  <style>
+    :root {
+      --bg: #0b0816;
+      --card-bg: #140f26;
+      --border: #271f45;
+      --accent: #a855f7;
+      --accent-glow: rgba(168, 85, 247, 0.25);
+      --teal: #2dd4bf;
+      --rose: #f43f5e;
+      --amber: #f59e0b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); padding: 24px; min-height: 100vh; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    h1 { font-size: 1.5rem; display: flex; align-items: center; gap: 8px; color: #fff; }
+    .badge { font-size: 0.75rem; background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent); padding: 2px 8px; border-radius: 999px; text-transform: uppercase; }
+
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 24px; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+    h2 { font-size: 1rem; margin-bottom: 14px; color: var(--teal); border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 6px; }
+
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+    select, input { width: 100%; padding: 8px 12px; background: #1c1636; border: 1px solid var(--border); border-radius: 6px; color: #fff; margin-bottom: 12px; font-size: 0.9rem; }
+    button.btn-primary { width: 100%; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    button.btn-primary:hover { filter: brightness(1.15); box-shadow: 0 0 12px var(--accent-glow); }
+
+    .status-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; }
+    .status-val { font-weight: 600; color: #fff; }
+    .ppe-chips { display: flex; gap: 6px; margin-top: 4px; }
+    .ppe-chip { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #1f193d; color: var(--text-muted); border: 1px solid #312759; }
+    .ppe-chip.active { background: rgba(45, 212, 191, 0.2); color: var(--teal); border-color: var(--teal); }
+
+    .score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+    .score-box { background: #1a1433; padding: 8px; border-radius: 6px; text-align: center; border: 1px solid rgba(255,255,255,0.05); }
+    .score-title { font-size: 0.7rem; color: var(--text-muted); }
+    .score-num { font-size: 1.1rem; font-weight: 700; color: #fff; }
+
+    /* Action buttons grid */
+    .actions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 12px; }
+    .action-btn-card { background: #191236; border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; }
+    .action-btn-card.disabled { opacity: 0.45; border-color: rgba(255,255,255,0.05); }
+    .action-btn { padding: 8px; background: #2e2254; border: 1px solid #483782; color: #fff; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.85rem; width: 100%; text-align: center; }
+    .action-btn:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
+    .action-btn:disabled { cursor: not-allowed; }
+    .action-desc { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; }
+
+    /* Results log */
+    .log-panel { background: #0f0a1c; border: 1px solid #1f1738; border-radius: 8px; padding: 14px; max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.82rem; }
+    .log-entry { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .violation-banner { background: rgba(244, 63, 94, 0.15); border-left: 3px solid var(--rose); padding: 8px 12px; border-radius: 4px; margin-top: 6px; color: #fecdd3; font-size: 0.8rem; }
+    .visual-pill { display: inline-flex; align-items: center; gap: 4px; background: #221845; padding: 2px 8px; border-radius: 4px; margin: 2px; font-size: 0.75rem; border: 1px solid #362769; }
+    .color-swatch { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 1px solid rgba(255,255,255,0.3); }
+
+    .finish-btn { margin-top: 14px; background: var(--teal); color: #0f172a; font-weight: 700; border: none; padding: 10px; border-radius: 6px; width: 100%; cursor: pointer; }
+    .finish-btn:hover { filter: brightness(1.1); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🧪 Orbis Lab <span class="badge">Engine Dev Console</span></h1>
+    <div><a href="/" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;">← Back to Simly Orbis</a></div>
+  </header>
+
+  <div class="grid">
+    <!-- Left Column: Controls & State -->
+    <div>
+      <div class="card">
+        <h2>1. Session Setup</h2>
+        <label for="expSelect">Select Laboratory Experiment</label>
+        <select id="expSelect">
+          <option value="pk_ward">Pharmacokinetics Ward (pharma)</option>
+          <option value="titration_bench">Titration Bench (chemistry)</option>
+        </select>
+
+        <label for="nickInput">Researcher Nickname</label>
+        <input type="text" id="nickInput" value="CuriosityDoc" />
+
+        <button class="btn-primary" id="startBtn">Initialize Session</button>
+      </div>
+
+      <div class="card" id="sessionStateCard" style="display:none;">
+        <h2>2. Session Status</h2>
+        <div class="status-row"><span>Status:</span><span class="status-val" id="statStatus">active</span></div>
+        <div class="status-row"><span>Simulated Clock:</span><span class="status-val" id="statClock">t = 0.00 h</span></div>
+        <div class="status-row">
+          <span>Active PPE:</span>
+          <div class="ppe-chips" id="statPPE">
+            <span class="ppe-chip" id="ppeGoggles">Goggles</span>
+            <span class="ppe-chip" id="ppeGloves">Gloves</span>
+            <span class="ppe-chip" id="ppeCoat">Coat</span>
+          </div>
+        </div>
+
+        <div class="score-grid">
+          <div class="score-box"><div class="score-title">Safety</div><div class="score-num" id="scSafety">40</div></div>
+          <div class="score-box"><div class="score-title">Accuracy</div><div class="score-num" id="scAcc">0</div></div>
+          <div class="score-box"><div class="score-title">Technique</div><div class="score-num" id="scTech">0</div></div>
+          <div class="score-box"><div class="score-title">Protocol</div><div class="score-num" id="scProto">0</div></div>
+        </div>
+
+        <button class="finish-btn" id="finishBtn">Finish Session & Compile Report</button>
+      </div>
+
+      <div class="card" id="actionParamsCard" style="display:none;">
+        <h2>Parameter Overrides (Optional)</h2>
+        <label for="paramDose">Dose (mg) / Volume (mL)</label>
+        <input type="number" id="paramValue" value="500" step="any" />
+        <label for="paramTarget">Target Apparatus / Tube</label>
+        <input type="text" id="paramTarget" value="" placeholder="e.g. tube_1 or phenolphthalein" />
+      </div>
+    </div>
+
+    <!-- Right Column: Interactive Actions & Directives Output -->
+    <div>
+      <div class="card">
+        <h2>3. Available Actions (World Brain Menu)</h2>
+        <div id="noSessionNotice" style="color:var(--text-muted); font-size:0.85rem;">Initialize a session to inspect context-aware actions.</div>
+        <div class="actions-grid" id="actionsContainer"></div>
+      </div>
+
+      <div class="card">
+        <h2>4. Live Execution Log & Visual Directives</h2>
+        <div class="log-panel" id="logPanel">
+          <div style="color:var(--text-muted);">Waiting for actions...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSessionId = null;
+
+    async function loadExperiments() {
+      try {
+        const res = await fetch('/api/lab/experiments');
+        const exps = await res.json();
+        const sel = document.getElementById('expSelect');
+        sel.innerHTML = '';
+        exps.forEach(e => {
+          const opt = document.createElement('option');
+          opt.value = e.id;
+          opt.textContent = `${e.title} (${e.district})`;
+          sel.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('Failed to fetch experiments', err);
+      }
+    }
+
+    async function startSession() {
+      const experiment_id = document.getElementById('expSelect').value;
+      const nickname = document.getElementById('nickInput').value.trim() || 'Researcher';
+
+      const res = await fetch('/api/lab/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ experiment_id, nickname })
+      });
+      const data = await res.json();
+      currentSessionId = data.session_id;
+
+      document.getElementById('sessionStateCard').style.display = '';
+      document.getElementById('actionParamsCard').style.display = '';
+      document.getElementById('noSessionNotice').style.display = 'none';
+
+      updateStateUI(data);
+      loadAvailableActions();
+      logMsg(`Started session ${data.session_id} for ${experiment_id}.`, 'info');
+    }
+
+    async function loadAvailableActions() {
+      if (!currentSessionId) return;
+      const res = await fetch(`/api/lab/sessions/${currentSessionId}/available-actions`);
+      const actions = await res.json();
+
+      const container = document.getElementById('actionsContainer');
+      container.innerHTML = '';
+
+      actions.forEach(a => {
+        const card = document.createElement('div');
+        card.className = `action-btn-card ${a.enabled ? '' : 'disabled'}`;
+
+        const btn = document.createElement('button');
+        btn.className = 'action-btn';
+        btn.textContent = a.label;
+        btn.disabled = !a.enabled;
+        btn.onclick = () => triggerAction(a.action, a.targets);
+
+        const desc = document.createElement('div');
+        desc.className = 'action-desc';
+        desc.textContent = a.enabled ? (a.targets.length ? `Targets: ${a.targets.join(', ')}` : 'Ready') : `Disabled: ${a.disabled_reason}`;
+
+        card.appendChild(btn);
+        card.appendChild(desc);
+        container.appendChild(card);
+      });
+    }
+
+    async function triggerAction(actionName, defaultTargets) {
+      if (!currentSessionId) return;
+
+      const paramVal = parseFloat(document.getElementById('paramValue').value) || 0;
+      const overrideTarget = document.getElementById('paramTarget').value.trim();
+
+      const target = overrideTarget || (defaultTargets && defaultTargets.length ? defaultTargets[0] : null);
+
+      let params = {};
+      if (actionName === 'weigh') params.dose_mg = paramVal || 500;
+      if (actionName === 'administer_oral') params.dose_mg = paramVal || 500;
+      if (actionName === 'dissolve') params.volume_ml = 50;
+      if (actionName === 'advance_time') params.hours = paramVal || 1.0;
+      if (actionName === 'fill_burette') params.volume_ml = 50.0;
+      if (actionName === 'titrate') params.volume_ml = paramVal || 1.0;
+      if (actionName === 'record_endpoint') params.volume_ml = paramVal || 25.0;
+
+      const res = await fetch(`/api/lab/sessions/${currentSessionId}/actions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName, target, params })
+      });
+
+      const result = await res.json();
+      renderActionResult(actionName, result);
+
+      // Refresh session state
+      const sessRes = await fetch(`/api/lab/sessions/${currentSessionId}`);
+      const sessData = await sessRes.json();
+      updateStateUI(sessData);
+      loadAvailableActions();
+    }
+
+    function updateStateUI(session) {
+      document.getElementById('statStatus').textContent = session.status;
+      document.getElementById('statClock').textContent = `t = ${session.clock_h.toFixed(2)} h`;
+
+      const ppeSet = new Set(session.ppe || []);
+      document.getElementById('ppeGoggles').classList.toggle('active', ppeSet.has('goggles'));
+      document.getElementById('ppeGloves').classList.toggle('active', ppeSet.has('gloves'));
+      document.getElementById('ppeCoat').classList.toggle('active', ppeSet.has('coat'));
+
+      const parts = session.score_parts || {};
+      document.getElementById('scSafety').textContent = parts.safety ?? 40;
+      document.getElementById('scAcc').textContent = parts.accuracy ?? 0;
+      document.getElementById('scTech').textContent = parts.technique ?? 0;
+      document.getElementById('scProto').textContent = parts.protocol ?? 0;
+    }
+
+    function renderActionResult(action, res) {
+      const panel = document.getElementById('logPanel');
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+
+      let visualsHtml = '';
+      if (res.visuals && res.visuals.length) {
+        visualsHtml = '<div style="margin-top:4px;">' + res.visuals.map(v => {
+          let extra = '';
+          if (v.hex) extra = `<span class="color-swatch" style="background:${v.hex}"></span> ${v.hex} (${v.volume_ml}mL)`;
+          if (v.value !== undefined) extra = `${v.label || ''}: ${v.value} ${v.unit || ''}`;
+          if (v.name) extra = `effect: ${v.name}`;
+          if (v.status) extra = `vitals: ${v.status} (HR:${v.hr})`;
+          return `<span class="visual-pill">[${v.type}] ${v.target} ${extra}</span>`;
+        }).join('') + '</div>';
+      }
+
+      let animHtml = res.character_animation ? `<div style="color:#c084fc; font-size:0.75rem; margin-top:2px;">Animation: <b>${res.character_animation.name}</b> (${res.character_animation.duration_ms}ms) -> ${res.character_animation.target}</div>` : '';
+
+      let vioHtml = '';
+      if (res.violations && res.violations.length) {
+        vioHtml = res.violations.map(v => `<div class="violation-banner">⚠️ <b>${v.rule_id} (${v.severity.toUpperCase()} -${v.penalty_points}pts):</b> ${v.explanation}</div>`).join('');
+      }
+
+      div.innerHTML = `
+        <div style="color:${res.accepted ? '#2dd4bf' : '#f43f5e'}">
+          <b>▶ ${action}</b>: ${res.message}
+        </div>
+        ${animHtml}
+        ${visualsHtml}
+        ${vioHtml}
+      `;
+      panel.prepend(div);
+    }
+
+    function logMsg(msg, sev) {
+      const panel = document.getElementById('logPanel');
+      const div = document.createElement('div');
+      div.className = 'log-entry';
+      div.textContent = msg;
+      panel.prepend(div);
+    }
+
+    async function finishSession() {
+      if (!currentSessionId) return;
+      const res = await fetch(`/api/lab/sessions/${currentSessionId}/finish`, { method: 'POST' });
+      const rep = await res.json();
+
+      alert(`Session Completed!\nFinal Score: ${rep.score}/100 (Grade: ${rep.grade})\nReport ID: ${rep.report_id}\n\nLessons Learned:\n${rep.lessons_learned.join('\n')}`);
+      const sessRes = await fetch(`/api/lab/sessions/${currentSessionId}`);
+      updateStateUI(await sessRes.json());
+      loadAvailableActions();
+    }
+
+    document.getElementById('startBtn').onclick = startSession;
+    document.getElementById('finishBtn').onclick = finishSession;
+    loadExperiments();
+  </script>
+</body>
+</html>

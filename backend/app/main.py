@@ -20,8 +20,9 @@ from fastapi.staticfiles import StaticFiles
 from app.core.registry import list_modules, register
 from app.db import STORAGE_MODE, close_db, init_db
 import app.db as _db
+from app.modules.chem_titration import ChemTitrationModule
 from app.modules.pharma_pk import PharmaPKModule
-from app.routes import drugs, levels, modules, runs, scores, simulate, tutor
+from app.routes import drugs, lab, levels, modules, runs, scores, simulate, tutor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,6 +41,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN001
     await init_db()
     # Register core simulation modules
     register(PharmaPKModule())
+    register(ChemTitrationModule())
     log.info("Storage mode: %s", STORAGE_MODE)
     yield
     await close_db()
@@ -75,6 +77,8 @@ async def health() -> dict:
     players_count = await db["players"].count_documents({})
     scores_count = await db["scores"].count_documents({})
     runs_count = await db["runs"].count_documents({})
+    lab_sessions_count = await db["lab_sessions"].count_documents({})
+    lab_reports_count = await db["lab_reports"].count_documents({})
     registered_module_ids = [m.id for m in list_modules()]
 
     return {
@@ -84,6 +88,8 @@ async def health() -> dict:
             "players": players_count,
             "scores": scores_count,
             "runs": runs_count,
+            "lab_sessions": lab_sessions_count,
+            "lab_reports": lab_reports_count,
         },
         "modules": registered_module_ids,
     }
@@ -96,6 +102,7 @@ app.include_router(levels.router)
 app.include_router(simulate.router)
 app.include_router(scores.router)
 app.include_router(tutor.router)
+app.include_router(lab.router)
 
 
 # ---------------------------------------------------------------------------
