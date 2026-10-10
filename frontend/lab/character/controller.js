@@ -31,13 +31,13 @@ export class CharacterController {
 
   spawnForExperiment(experimentId) {
     if (experimentId === 'pk_ward') {
-      // Spawn facing the Digital Balance
-      this.rig.root.position.set(-3.8, 0, -3.2);
+      // Spawn facing the Digital Balance at proper reach distance
+      this.rig.root.position.set(-4.85, 0, -3.75);
       this.faceTarget(new THREE.Vector3(-4.5, 0.94, -4.2));
     } else {
-      // Spawn to the side of the Burette Stand (unobstructed hero apparatus view)
-      this.rig.root.position.set(-0.65, 0, -1.05);
-      this.faceTarget(new THREE.Vector3(0, 1.1, -1.9));
+      // Spawn to the side of the Burette Stand (unobstructed hero apparatus view & reachable)
+      this.rig.root.position.set(-0.48, 0, -1.65);
+      this.faceTarget(new THREE.Vector3(0.02, 1.25, -1.85));
     }
     this.animator.playClip('idle');
   }

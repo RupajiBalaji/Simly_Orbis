@@ -142,24 +142,24 @@ export function buildApparatus(rawApparatus, scene) {
     if (id === 'digital_balance' || type === 'balance' || type === 'digital_balance') {
       group = buildDigitalBalance(id);
       group.position.set(-4.5, 0.94, -4.2);
-      group.userData.stationPos = new THREE.Vector3(-4.5, 0, -3.2);
+      group.userData.stationPos = new THREE.Vector3(-4.85, 0, -3.75);
     } else if (id === 'dosing_cup' || type === 'cup' || type === 'container' || type === 'dosing_cup') {
       group = buildDosingCup(id);
       group.position.set(-3.6, 0.94, -4.0);
-      group.userData.stationPos = new THREE.Vector3(-3.8, 0, -3.2);
+      group.userData.stationPos = new THREE.Vector3(-3.8, 0, -3.5);
     } else if (id === 'water_jug' || type === 'source' || type === 'water_jug') {
       group = buildWaterJug(id);
       group.position.set(-5.3, 0.94, -4.3);
-      group.userData.stationPos = new THREE.Vector3(-4.5, 0, -3.2);
+      group.userData.stationPos = new THREE.Vector3(-4.5, 0, -3.75);
     } else if (id === 'patient_bed' || type === 'patient_station' || type === 'patient_bed') {
       group = buildPatientBed(id);
       group.position.set(4.5, 0, -3.8);
-      group.userData.stationPos = new THREE.Vector3(3.2, 0, -3.5);
+      group.userData.stationPos = new THREE.Vector3(3.4, 0, -3.3);
     } else if (id.startsWith('tube_') || type === 'sample_tube' || id === 'tube_rack' || type === 'tube_rack') {
       if (!lookup['tube_rack']) {
         const rack = buildTubeRack('tube_rack');
         rack.position.set(-3.0, 0.94, -4.3);
-        rack.userData.stationPos = new THREE.Vector3(-3.2, 0, -3.2);
+        rack.userData.stationPos = new THREE.Vector3(-3.2, 0, -3.5);
         rack.userData.targetId = 'tube_rack';
         rack.userData.title = 'Sample Tube Rack';
         rack.userData.interactive = true;
@@ -178,11 +178,11 @@ export function buildApparatus(rawApparatus, scene) {
     } else if (id === 'label_pen' || type === 'tool' || type === 'label_pen') {
       group = buildLabelPen(id);
       group.position.set(-4.0, 0.94, -3.7);
-      group.userData.stationPos = new THREE.Vector3(-4.0, 0, -3.0);
+      group.userData.stationPos = new THREE.Vector3(-4.0, 0, -3.2);
     } else if (id === 'assay_analyzer' || type === 'analyzer' || type === 'assay_analyzer') {
       group = buildAssayAnalyzer(id);
       group.position.set(-5.5, 0.94, -3.5);
-      group.userData.stationPos = new THREE.Vector3(-5.2, 0, -2.6);
+      group.userData.stationPos = new THREE.Vector3(-5.2, 0, -2.8);
     } else if (id === 'biohazard_bin' || (type === 'waste_bin' && id.includes('bio'))) {
       group = buildWasteBin(id, 'biohazard');
       group.position.set(-2.0, 0, -5.2);
@@ -199,16 +199,16 @@ export function buildApparatus(rawApparatus, scene) {
       }
     } else if (id === 'burette' || type === 'burette') {
       group = buildBurette(id);
-      group.position.set(0, 0.94, -1.95);
-      group.userData.stationPos = new THREE.Vector3(-0.65, 0, -1.05);
+      group.position.set(0, 0.94, -1.85);
+      group.userData.stationPos = new THREE.Vector3(-0.48, 0, -1.65);
     } else if (id === 'conical_flask' || type === 'flask' || type === 'conical_flask') {
       group = buildConicalFlask(id);
-      group.position.set(0.06, 0.94, -1.8);
-      group.userData.stationPos = new THREE.Vector3(-0.65, 0, -1.05);
+      group.position.set(0.04, 0.94, -1.85);
+      group.userData.stationPos = new THREE.Vector3(-0.48, 0, -1.65);
     } else if (id === 'pipette' || type === 'pipette') {
       group = buildPipette(id);
-      group.position.set(-1.0, 0.94, -1.8);
-      group.userData.stationPos = new THREE.Vector3(-0.8, 0, -1.0);
+      group.position.set(-1.0, 0.94, -1.85);
+      group.userData.stationPos = new THREE.Vector3(-0.8, 0, -1.5);
     } else if (id === 'indicator_bottles' || type === 'indicator_shelf') {
       group = buildIndicatorBottles(id);
       group.position.set(1.1, 0.94, -2.2);
@@ -404,32 +404,108 @@ function buildPatientBed(id) {
   mattress.position.y = 0.5;
   g.add(mattress);
 
-  // Blanket
-  const blanketGeo = new THREE.BoxGeometry(1.6, 0.08, 1.16);
-  const blanketMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 });
+  // Patient Torso Contour under blanket
+  const torsoGeo = new THREE.BoxGeometry(1.1, 0.18, 0.68);
+  const torsoMat = new THREE.MeshStandardMaterial({ color: 0x93c5fd, roughness: 0.6 }); // patient gown
+  const torso = new THREE.Mesh(torsoGeo, torsoMat);
+  torso.position.set(0.1, 0.68, 0);
+  g.add(torso);
+
+  // Layered Hospital Duvet / Blanket
+  const blanketGeo = new THREE.BoxGeometry(1.45, 0.16, 1.16);
+  const blanketMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.8 });
   const blanket = new THREE.Mesh(blanketGeo, blanketMat);
-  blanket.position.set(-0.3, 0.64, 0);
+  blanket.position.set(-0.35, 0.68, 0);
   g.add(blanket);
 
+  // Turned-Down Sheet Collar Fold at chest
+  const collarGeo = new THREE.BoxGeometry(0.16, 0.04, 1.08);
+  const collarMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 });
+  const collar = new THREE.Mesh(collarGeo, collarMat);
+  collar.position.set(0.42, 0.77, 0);
+  g.add(collar);
+
   // Pillow
-  const pillowGeo = new THREE.BoxGeometry(0.4, 0.1, 0.8);
-  const pillow = new THREE.Mesh(pillowGeo, blanketMat);
+  const pillowGeo = new THREE.BoxGeometry(0.42, 0.12, 0.82);
+  const pillow = new THREE.Mesh(pillowGeo, collarMat);
   pillow.position.set(0.85, 0.66, 0);
   g.add(pillow);
 
-  // Stylized Patient Figure (Alex)
+  // Stylized Patient Figure (Alex) with Face & Exposed Venipuncture Arm
   const patientGroup = new THREE.Group();
-  const skinMat = new THREE.MeshStandardMaterial({ color: 0xfbcfe8, roughness: 0.5 });
-  const headGeo = new THREE.SphereGeometry(0.16, 16, 16);
+  const skinMat = new THREE.MeshStandardMaterial({ color: 0xfed7aa, roughness: 0.5 }); // warm skin
+  const hairMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.8 }); // brown hair
+  const darkMat = new THREE.MeshBasicMaterial({ color: 0x334155 }); // facial features
+  const lipMat = new THREE.MeshBasicMaterial({ color: 0xfb7185 }); // soft lips
+
+  // Head
+  const headGeo = new THREE.SphereGeometry(0.16, 20, 20);
   const head = new THREE.Mesh(headGeo, skinMat);
   head.position.set(0.85, 0.82, 0);
   patientGroup.add(head);
 
-  const armGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.7, 12);
-  const arm = new THREE.Mesh(armGeo, skinMat);
-  arm.position.set(0.2, 0.68, 0.5);
-  arm.rotation.z = Math.PI / 2.2;
-  patientGroup.add(arm);
+  // Hair
+  const hairGeo = new THREE.BoxGeometry(0.25, 0.12, 0.28);
+  const hair = new THREE.Mesh(hairGeo, hairMat);
+  hair.position.set(0.88, 0.90, 0);
+  patientGroup.add(hair);
+
+  // Face Features (Eyes closed resting, nose, lips)
+  const leftEye = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.010, 0.02), darkMat);
+  leftEye.position.set(0.78, 0.84, 0.13);
+  patientGroup.add(leftEye);
+
+  const rightEye = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.010, 0.02), darkMat);
+  rightEye.position.set(0.88, 0.84, 0.13);
+  patientGroup.add(rightEye);
+
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(0.020, 0.032, 0.025), skinMat);
+  nose.position.set(0.83, 0.80, 0.15);
+  patientGroup.add(nose);
+
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.010, 0.015), lipMat);
+  mouth.position.set(0.83, 0.75, 0.14);
+  patientGroup.add(mouth);
+
+  // Exposed Arm for Blood Draw (resting on sterile arm-support pad outside blanket)
+  const padGeo = new THREE.BoxGeometry(0.65, 0.05, 0.22);
+  const padMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+  const armPad = new THREE.Mesh(padGeo, padMat);
+  armPad.position.set(0.24, 0.64, 0.48);
+  patientGroup.add(armPad);
+
+  // Upper arm emerging from under collar
+  const upperArmGeo = new THREE.CylinderGeometry(0.048, 0.044, 0.28, 12);
+  const upperArm = new THREE.Mesh(upperArmGeo, skinMat);
+  upperArm.position.set(0.44, 0.74, 0.36);
+  upperArm.rotation.set(0.2, 0, Math.PI / 3);
+  patientGroup.add(upperArm);
+
+  // Cyan Tourniquet Band
+  const tourniquetGeo = new THREE.CylinderGeometry(0.051, 0.051, 0.03, 12);
+  const tourniquetMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3 });
+  const tourniquet = new THREE.Mesh(tourniquetGeo, tourniquetMat);
+  tourniquet.position.set(0.38, 0.72, 0.41);
+  tourniquet.rotation.set(0.2, 0, Math.PI / 3);
+  patientGroup.add(tourniquet);
+
+  // Forearm extended along arm support pad exposing antecubital vein
+  const forearmGeo = new THREE.CylinderGeometry(0.040, 0.036, 0.30, 12);
+  const forearm = new THREE.Mesh(forearmGeo, skinMat);
+  forearm.position.set(0.22, 0.69, 0.48);
+  forearm.rotation.z = Math.PI / 2;
+  patientGroup.add(forearm);
+
+  // Relaxed hand and curled fingers
+  const handGeo = new THREE.BoxGeometry(0.075, 0.032, 0.075);
+  const hand = new THREE.Mesh(handGeo, skinMat);
+  hand.position.set(0.04, 0.68, 0.48);
+  patientGroup.add(hand);
+
+  const fingersGeo = new THREE.BoxGeometry(0.035, 0.018, 0.065);
+  const fingers = new THREE.Mesh(fingersGeo, skinMat);
+  fingers.position.set(-0.015, 0.67, 0.48);
+  patientGroup.add(fingers);
 
   g.add(patientGroup);
   g.userData.patientMesh = head; // tinted on vitals changes
@@ -688,55 +764,89 @@ function buildSink(id) {
 // ---------------------------------------------------------------------------
 function buildBurette(id) {
   const g = new THREE.Group();
-  g.scale.set(1.45, 1.45, 1.45);
+  g.scale.set(1.15, 1.15, 1.15);
 
-  // Retort Stand Base & Rod
-  const baseGeo = new THREE.BoxGeometry(0.35, 0.03, 0.25);
+  // Retort Stand Base & Porcelain Contrast Tile
+  const baseGeo = new THREE.BoxGeometry(0.36, 0.025, 0.28);
   const base = new THREE.Mesh(baseGeo, plasticMat);
+  base.position.y = 0.0125;
   g.add(base);
 
-  const rodGeo = new THREE.CylinderGeometry(0.012, 0.012, 1.2, 12);
+  const tileGeo = new THREE.BoxGeometry(0.20, 0.005, 0.20);
+  const tileMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
+  const tile = new THREE.Mesh(tileGeo, tileMat);
+  tile.position.set(0.04, 0.0275, 0);
+  g.add(tile);
+
+  // Steel Retort Rod
+  const rodGeo = new THREE.CylinderGeometry(0.012, 0.012, 0.88, 12);
   const rod = new THREE.Mesh(rodGeo, metalMat);
-  rod.position.set(-0.1, 0.6, 0);
+  rod.position.set(-0.12, 0.45, 0);
   g.add(rod);
 
-  // Clamp Arm
-  const clampGeo = new THREE.BoxGeometry(0.14, 0.03, 0.03);
+  // Upper Clamp Arm
+  const clampGeo = new THREE.BoxGeometry(0.18, 0.025, 0.025);
   const clamp = new THREE.Mesh(clampGeo, metalMat);
-  clamp.position.set(-0.04, 0.7, 0);
+  clamp.position.set(-0.03, 0.60, 0);
   g.add(clamp);
 
+  // Lower Stabilizer Clamp
+  const clamp2 = new THREE.Mesh(clampGeo.clone(), metalMat);
+  clamp2.position.set(-0.03, 0.35, 0);
+  g.add(clamp2);
+
   // Burette Glass Tube (50 mL graduated)
-  const tubeGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.85, 20, 1, true);
+  const tubeGeo = new THREE.CylinderGeometry(0.020, 0.020, 0.58, 20, 1, true);
   const tube = new THREE.Mesh(tubeGeo, glassMat);
-  tube.position.set(0.04, 0.65, 0);
+  tube.position.set(0.04, 0.52, 0);
   g.add(tube);
 
-  // Stopcock valve handle
-  const valveGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.08, 12);
-  const valveMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
-  const valve = new THREE.Mesh(valveGeo, valveMat);
-  valve.rotation.x = Math.PI / 2;
-  valve.position.set(0.04, 0.22, 0);
-  g.add(valve);
+  // Funnel Rim at Top Opening
+  const rimGeo = new THREE.CylinderGeometry(0.030, 0.020, 0.03, 20);
+  const rim = new THREE.Mesh(rimGeo, glassMat);
+  rim.position.set(0.04, 0.82, 0);
+  g.add(rim);
 
-  // Burette Tip
-  const tipGeo = new THREE.CylinderGeometry(0.01, 0.004, 0.08, 12);
+  // Stopcock Glass Housing (Fused seamlessly into the glass tube)
+  const scHousingGeo = new THREE.CylinderGeometry(0.024, 0.024, 0.04, 16);
+  const scHousing = new THREE.Mesh(scHousingGeo, glassMat);
+  scHousing.position.set(0.04, 0.21, 0);
+  g.add(scHousing);
+
+  // Stopcock Valve Tap (PTFE barrel + neat ergonomic handle)
+  const valveKeyGeo = new THREE.CylinderGeometry(0.010, 0.010, 0.05, 12);
+  const ptfeMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3 });
+  const valveKey = new THREE.Mesh(valveKeyGeo, ptfeMat);
+  valveKey.rotation.x = Math.PI / 2;
+  valveKey.position.set(0.04, 0.21, 0);
+  g.add(valveKey);
+
+  const handleGeo = new THREE.BoxGeometry(0.042, 0.012, 0.012);
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4 });
+  const handle = new THREE.Mesh(handleGeo, handleMat);
+  handle.position.set(0.04, 0.21, 0.03);
+  g.add(handle);
+
+  // Burette Tip (tapered delivery jet extending right down over flask)
+  const tipGeo = new THREE.CylinderGeometry(0.012, 0.003, 0.08, 12);
   const tip = new THREE.Mesh(tipGeo, glassMat);
-  tip.position.set(0.04, 0.17, 0);
+  tip.position.set(0.04, 0.15, 0);
   g.add(tip);
 
   // Burette Interior Liquid
-  const liqGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.001, 16);
+  const liqGeo = new THREE.CylinderGeometry(0.018, 0.018, 1.0, 16);
+  liqGeo.translate(0, 0.5, 0);
   const liqMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, transparent: true, opacity: 0.0 });
   const liq = new THREE.Mesh(liqGeo, liqMat);
-  liq.position.set(0.04, 0.23, 0);
+  liq.position.set(0.04, 0.22, 0);
+  liq.scale.set(1.0, 0.001, 1.0);
+  liq.visible = false;
   g.add(liq);
 
   g.userData.liquidMesh = liq;
-  g.userData.valveMesh = valve;
+  g.userData.valveMesh = handle;
   g.userData.maxVolume = 50.0;
-  g.userData.fullHeight = 0.8;
+  g.userData.fullHeight = 0.56;
 
   return g;
 }
@@ -746,7 +856,7 @@ function buildBurette(id) {
 // ---------------------------------------------------------------------------
 function buildConicalFlask(id) {
   const g = new THREE.Group();
-  g.scale.set(1.35, 1.35, 1.35);
+  g.scale.set(1.15, 1.15, 1.15);
 
   // Glass Erlenmeyer Cone & Neck
   const coneGeo = new THREE.ConeGeometry(0.18, 0.26, 24, 1, true);
@@ -765,9 +875,8 @@ function buildConicalFlask(id) {
   btm.rotation.x = Math.PI / 2;
   g.add(btm);
 
-  // Interior Liquid mesh (normalized height 1.0, base at y=0)
-  const liqGeo = new THREE.CylinderGeometry(0.12, 0.16, 1.0, 24);
-  liqGeo.translate(0, 0.5, 0);
+  // Interior Liquid mesh (starts completely empty, volume 0 = invisible)
+  const liqGeo = new THREE.CylinderGeometry(0.165, 0.168, 0.02, 24);
   const liqMat = new THREE.MeshStandardMaterial({
     color: 0xf8fafc,
     transparent: true,
@@ -775,13 +884,14 @@ function buildConicalFlask(id) {
     roughness: 0.1,
   });
   const liq = new THREE.Mesh(liqGeo, liqMat);
-  liq.scale.set(1.0, 0.001, 1.0);
   liq.position.y = 0.01;
+  liq.visible = false;
   g.add(liq);
 
   g.userData.liquidMesh = liq;
   g.userData.maxVolume = 250.0;
-  g.userData.fullHeight = 0.22;
+  g.userData.fullHeight = 0.20;
+  g.userData.isConicalFlask = true;
 
   return g;
 }
@@ -792,17 +902,25 @@ function buildConicalFlask(id) {
 function buildPipette(id) {
   const g = new THREE.Group();
 
-  const stemGeo = new THREE.CylinderGeometry(0.008, 0.008, 0.5, 12);
+  // Silicone Pipette Rest Pad on Bench
+  const restPadGeo = new THREE.BoxGeometry(0.18, 0.014, 0.36);
+  const restPadMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.5 });
+  const restPad = new THREE.Mesh(restPadGeo, restPadMat);
+  restPad.position.y = 0.007;
+  g.add(restPad);
+
+  // Pipette Glass Stem resting horizontally on the pad
+  const stemGeo = new THREE.CylinderGeometry(0.007, 0.007, 0.30, 12);
   const stem = new THREE.Mesh(stemGeo, glassMat);
-  stem.rotation.z = Math.PI / 3;
-  stem.position.y = 0.04;
+  stem.rotation.x = Math.PI / 2;
+  stem.position.set(0, 0.02, 0.02);
   g.add(stem);
 
-  // Rubber bulb
-  const bulbGeo = new THREE.SphereGeometry(0.035, 12, 12);
-  const bulbMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.7 });
+  // Pipette Suction Bulb
+  const bulbGeo = new THREE.SphereGeometry(0.028, 14, 14);
+  const bulbMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.6 });
   const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-  bulb.position.set(-0.22, 0.17, 0);
+  bulb.position.set(0, 0.025, -0.14);
   g.add(bulb);
 
   return g;

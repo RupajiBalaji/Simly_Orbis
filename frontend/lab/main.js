@@ -204,8 +204,11 @@ async function openExperimentBrief(experimentId) {
 }
 
 async function startExperimentSession(experimentId, nickname = 'Researcher') {
+  const lobbyScreen = document.getElementById('screen-lobby');
   const briefScreen = document.getElementById('screen-brief');
   const errorOverlay = document.getElementById('session-error-overlay');
+  if (lobbyScreen) lobbyScreen.classList.add('hidden');
+  if (briefScreen) briefScreen.classList.add('hidden');
   if (errorOverlay) errorOverlay.classList.add('hidden');
   toast.clear();
 
@@ -222,6 +225,9 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
     const session = await api.createSession(experimentId, nickname);
     state.setSession(session);
     characterController.updatePPE(session.ppe);
+    if (session.apparatus_state) {
+      sceneManager.syncApparatusState(session.apparatus_state);
+    }
 
     // 3. Fetch available actions for initial state & render UI
     const actions = await api.getAvailableActions(session.session_id);

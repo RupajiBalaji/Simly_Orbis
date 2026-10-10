@@ -27,6 +27,28 @@ export class AvatarAnimator {
     this.onClipComplete = onComplete;
   }
 
+  sampleClipAtProgress(clipName, p, targetPos = null) {
+    this.currentClip = clipName;
+    this.clipDuration = 2.0;
+    this.clipTime = Math.min(1.0, Math.max(0.0, p)) * this.clipDuration;
+    this.clipTargetPos = targetPos ? targetPos.clone() : null;
+
+    switch (clipName) {
+      case 'weigh':
+        this.evaluateWeigh(this.clipTime, this.clipDuration, this.clipTargetPos);
+        break;
+      case 'pour':
+        this.evaluatePour(this.clipTime, this.clipDuration, this.clipTargetPos);
+        break;
+      case 'wear_ppe':
+        this.evaluateWearPPE(this.clipTime, this.clipDuration);
+        break;
+      default:
+        this.evaluateIdle(0);
+        break;
+    }
+  }
+
   update(dt) {
     this.clipTime += dt;
 
@@ -102,20 +124,32 @@ export class AvatarAnimator {
     }
   }
 
+  getRestHandPos(isRight = true) {
+    const side = isRight ? -0.22 : 0.22;
+    const v = new THREE.Vector3(side, -0.25, 0.0);
+    return this.rig.torso.localToWorld(v);
+  }
+
   // -------------------------------------------------------------------------
-  // Idle Animation (Gentle breathing sway)
+  // Idle Animation (Gentle breathing sway, relaxed arms at sides)
   // -------------------------------------------------------------------------
   evaluateIdle(t) {
     const breath = Math.sin(t * 2.2);
-    this.rig.pelvis.position.y = 0.95 + breath * 0.012;
-    this.rig.torso.rotation.x = breath * 0.015;
+    this.rig.pelvis.position.y = 0.95 + breath * 0.008;
+    this.rig.torso.rotation.x = breath * 0.01;
 
-    // Natural arm rest
-    this.rig.leftArm.shoulder.rotation.set(0.05, 0, 0.1);
-    this.rig.leftArm.elbow.rotation.set(-0.25, 0, 0);
+    // Both arms relaxed naturally at the sides (slight outward flare and slight elbow bend)
+    this.rig.leftArm.shoulder.quaternion.identity();
+    this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+    this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
+    this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
+    this.rig.leftArm.hand.rotation.set(0, 0, 0);
 
-    this.rig.rightArm.shoulder.rotation.set(0.05, 0, -0.1);
-    this.rig.rightArm.elbow.rotation.set(-0.25, 0, 0);
+    this.rig.rightArm.shoulder.quaternion.identity();
+    this.rig.rightArm.shoulder.rotation.order = 'YXZ';
+    this.rig.rightArm.shoulder.rotation.set(0.02, 0, -0.05);
+    this.rig.rightArm.elbow.rotation.set(-0.08, 0, 0);
+    this.rig.rightArm.hand.rotation.set(0, 0, 0);
 
     // Legs straight
     this.rig.leftLeg.hip.rotation.set(0, 0, 0);
@@ -150,40 +184,68 @@ export class AvatarAnimator {
   }
 
   // -------------------------------------------------------------------------
-  // Gesture Clips
+  // Gesture Clips (Smooth IK reaching from rest to target and back to rest)
   // -------------------------------------------------------------------------
   evaluatePour(t, dur, targetPos) {
-    const progress = Math.min(1.0, t / dur);
-    // Reach -> Tilt -> Hold -> Return
-    let tilt = 0;
-    if (progress < 0.3) {
-      tilt = (progress / 0.3) * 0.8;
-    } else if (progress < 0.7) {
-      tilt = 0.8;
-    } else {
-      tilt = ((1.0 - progress) / 0.3) * 0.8;
-    }
+    const p = Math.min(1.0, Math.max(0.0, t / dur));
+    const w = Math.sin(p * Math.PI); // 0 at start, 1.0 at midpoint, 0 at end
 
-    if (targetPos) {
-      this.rig.rightArm.ik.solve(targetPos);
+    // Non-dominant hand relaxed at side
+    this.rig.leftArm.shoulder.quaternion.identity();
+    this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+    this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
+    this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
+    this.rig.leftArm.hand.rotation.set(0, 0, 0);
+
+    if (w > 0.001) {
+      const restPos = this.getRestHandPos(true);
+      const topPos = targetPos ? targetPos.clone() : new THREE.Vector3(0.04, 1.80, -1.85);
+      if (topPos.y < 1.3) topPos.y += 0.85;
+
+      const curTarget = restPos.lerp(topPos, w);
+      this.rig.rightArm.ik.solve(curTarget);
+
+      // Wrist pouring tilt during hold phase
+      let tilt = 0;
+      if (p > 0.25 && p < 0.75) {
+        tilt = Math.sin(((p - 0.25) / 0.5) * Math.PI) * 0.80;
+      }
+      this.rig.rightArm.hand.rotation.z = tilt;
     } else {
-      this.rig.rightArm.shoulder.rotation.set(-0.8, -0.2, -0.2);
-      this.rig.rightArm.elbow.rotation.set(-0.8, 0, 0);
+      this.rig.rightArm.shoulder.quaternion.identity();
+      this.rig.rightArm.shoulder.rotation.order = 'YXZ';
+      this.rig.rightArm.shoulder.rotation.set(0.02, 0, -0.05);
+      this.rig.rightArm.elbow.rotation.set(-0.08, 0, 0);
+      this.rig.rightArm.hand.rotation.set(0, 0, 0);
     }
-    this.rig.rightArm.hand.rotation.z = tilt;
   }
 
   evaluateWeigh(t, dur, targetPos) {
-    const p = Math.min(1.0, t / dur);
-    const dip = Math.sin(p * Math.PI) * 0.06;
+    const p = Math.min(1.0, Math.max(0.0, t / dur));
+    const w = Math.sin(p * Math.PI); // 0 at start, 1.0 at midpoint, 0 at end
 
-    if (targetPos) {
-      const pos = targetPos.clone();
-      pos.y -= dip;
-      this.rig.rightArm.ik.solve(pos);
+    // Non-dominant hand relaxed at side
+    this.rig.leftArm.shoulder.quaternion.identity();
+    this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+    this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
+    this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
+    this.rig.leftArm.hand.rotation.set(0, 0, 0);
+
+    if (w > 0.001) {
+      const restPos = this.getRestHandPos(true);
+      const panPos = targetPos ? targetPos.clone() : new THREE.Vector3(-4.5, 1.05, -4.15);
+      if (panPos.y < 1.0) panPos.y += 0.10;
+
+      const curTarget = restPos.lerp(panPos, w);
+      curTarget.y -= Math.sin(p * Math.PI) * 0.025; // delicate spatula transfer dip
+      this.rig.rightArm.ik.solve(curTarget);
+      this.rig.rightArm.hand.rotation.set(0, 0, -w * 0.35);
     } else {
-      this.rig.rightArm.shoulder.rotation.set(-0.6 - dip, 0, -0.2);
-      this.rig.rightArm.elbow.rotation.set(-0.9, 0, 0);
+      this.rig.rightArm.shoulder.quaternion.identity();
+      this.rig.rightArm.shoulder.rotation.order = 'YXZ';
+      this.rig.rightArm.shoulder.rotation.set(0.02, 0, -0.05);
+      this.rig.rightArm.elbow.rotation.set(-0.08, 0, 0);
+      this.rig.rightArm.hand.rotation.set(0, 0, 0);
     }
   }
 
@@ -201,15 +263,22 @@ export class AvatarAnimator {
   }
 
   evaluateWearPPE(t, dur) {
-    const p = Math.min(1.0, t / dur);
+    const p = Math.min(1.0, Math.max(0.0, t / dur));
     const lift = Math.sin(p * Math.PI);
 
-    // Hands move up to face/chest
-    this.rig.leftArm.shoulder.rotation.set(-1.2 * lift, 0.4 * lift, 0.5 * lift);
-    this.rig.leftArm.elbow.rotation.set(-1.4 * lift, 0, 0);
+    if (lift > 0.001) {
+      this.rig.leftArm.shoulder.quaternion.identity();
+      this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+      this.rig.leftArm.shoulder.rotation.set(-1.1 * lift, 0.3 * lift, 0.4 * lift);
+      this.rig.leftArm.elbow.rotation.set(-1.3 * lift, 0, 0);
 
-    this.rig.rightArm.shoulder.rotation.set(-1.2 * lift, -0.4 * lift, -0.5 * lift);
-    this.rig.rightArm.elbow.rotation.set(-1.4 * lift, 0, 0);
+      this.rig.rightArm.shoulder.quaternion.identity();
+      this.rig.rightArm.shoulder.rotation.order = 'YXZ';
+      this.rig.rightArm.shoulder.rotation.set(-1.1 * lift, -0.3 * lift, -0.4 * lift);
+      this.rig.rightArm.elbow.rotation.set(-1.3 * lift, 0, 0);
+    } else {
+      this.evaluateIdle(0);
+    }
   }
 
   evaluateDrawBlood(t, dur, targetPos) {

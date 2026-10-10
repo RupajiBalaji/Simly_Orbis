@@ -24,15 +24,31 @@ export function applyLiquidDirective(apparatusGroup, directive) {
 
   const maxVol = apparatusGroup.userData.maxVolume || 100.0;
   const fullHeight = apparatusGroup.userData.fullHeight || 0.15;
+  const volRatio = Math.max(0.0, Math.min(1.0, volume_ml / maxVol));
 
-  const volRatio = Math.max(0.001, Math.min(1.0, volume_ml / maxVol));
-  const newHeight = Math.max(0.02, volRatio * fullHeight);
+  if (volume_ml <= 0 || volRatio <= 0.001) {
+    liqMesh.visible = false;
+    liqMesh.material.opacity = 0.0;
+    return;
+  }
 
-  // Update scale & position (geometry has origin at base or center)
-  if (liqMesh.geometry.parameters && liqMesh.geometry.parameters.height === 1.0) {
+  liqMesh.visible = true;
+
+  // If this is a conical flask, build exact tapered frustum fitting inside cone
+  if (apparatusGroup.userData.isConicalFlask) {
+    const h = Math.max(0.02, Math.min(0.20, volRatio * fullHeight));
+    const rBottom = 0.168;
+    const rTop = Math.max(0.038, rBottom * (1.0 - h / 0.26));
+    if (liqMesh.geometry) liqMesh.geometry.dispose();
+    liqMesh.geometry = new THREE.CylinderGeometry(rTop, rBottom, h, 24);
+    liqMesh.position.y = 0.004 + h / 2;
+    liqMesh.scale.set(1.0, 1.0, 1.0);
+  } else if (liqMesh.geometry.parameters && liqMesh.geometry.parameters.height === 1.0) {
+    const newHeight = Math.max(0.02, volRatio * fullHeight);
     liqMesh.scale.set(1.0, newHeight, 1.0);
     liqMesh.position.y = 0.01;
   } else {
+    const newHeight = Math.max(0.02, volRatio * fullHeight);
     liqMesh.scale.y = Math.max(1.0, volRatio * 50);
     liqMesh.position.y = Math.max(0.02, newHeight / 2);
   }
@@ -50,8 +66,6 @@ export function applyLiquidDirective(apparatusGroup, directive) {
   if (opacity !== undefined && opacity !== null) {
     liqMesh.material.opacity = opacity;
     liqMesh.material.transparent = opacity < 1.0;
-  } else if (volume_ml <= 0) {
-    liqMesh.material.opacity = 0.0;
   } else {
     liqMesh.material.opacity = 0.85;
     liqMesh.material.transparent = true;

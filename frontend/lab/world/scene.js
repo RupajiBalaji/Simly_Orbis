@@ -8,6 +8,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/OrbitControls.js';
 import { buildLabRoom } from './room.js';
 import { buildApparatus } from './apparatus.js';
+import { applyLiquidDirective } from '../render/liquid.js';
+import { applyReadoutDirective } from '../render/readouts.js';
 import { state } from '../state.js';
 
 export class LabScene {
@@ -32,10 +34,10 @@ export class LabScene {
 
     this.stationPresets = {
       default: { pos: new THREE.Vector3(0, 2.2, 2.8), target: new THREE.Vector3(0, 1.15, -1.8) },
-      burette: { pos: new THREE.Vector3(0.7, 1.75, -0.65), target: new THREE.Vector3(0, 1.35, -1.9) },
-      conical_flask: { pos: new THREE.Vector3(0.6, 1.55, -0.75), target: new THREE.Vector3(0.06, 1.1, -1.8) },
-      balance: { pos: new THREE.Vector3(-3.2, 1.8, -2.8), target: new THREE.Vector3(-4.5, 1.15, -4.2) },
-      patient: { pos: new THREE.Vector3(2.3, 1.8, -2.2), target: new THREE.Vector3(4.2, 1.1, -3.8) },
+      burette: { pos: new THREE.Vector3(0.55, 1.70, 0.45), target: new THREE.Vector3(-0.02, 1.50, -1.85) },
+      conical_flask: { pos: new THREE.Vector3(0.35, 1.55, -0.45), target: new THREE.Vector3(0.02, 1.25, -1.85) },
+      balance: { pos: new THREE.Vector3(-3.20, 1.65, -2.40), target: new THREE.Vector3(-4.45, 1.15, -4.15) },
+      patient: { pos: new THREE.Vector3(2.8, 1.65, -3.2), target: new THREE.Vector3(4.3, 1.05, -3.9) },
       analyzer: { pos: new THREE.Vector3(-4.2, 1.8, -2.2), target: new THREE.Vector3(-5.5, 1.15, -3.5) },
       sink: { pos: new THREE.Vector3(-5.2, 1.9, 0.4), target: new THREE.Vector3(-7.2, 1.1, -1.0) }
     };
@@ -243,8 +245,37 @@ export class LabScene {
     this.apparatusContainer = container;
     this.apparatusLookup = lookup;
 
+    this.syncApparatusState(experimentDef?.apparatus);
     this.updateNameTagVisibility();
     this.resetCameraView();
+  }
+
+  syncApparatusState(apparatusState) {
+    if (!apparatusState || !this.apparatusLookup) return;
+    const entries = Array.isArray(apparatusState)
+      ? apparatusState.map((item) => [item.id, item.state || item])
+      : Object.entries(apparatusState);
+
+    for (const [targetId, itemState] of entries) {
+      const obj = this.getApparatus(targetId);
+      if (!obj || !itemState) continue;
+      // 1. Liquid volume & color sync
+      if (itemState.volume_ml !== undefined || itemState.color_hex) {
+        applyLiquidDirective(obj, {
+          target: targetId,
+          volume_ml: itemState.volume_ml !== undefined ? itemState.volume_ml : 0.0,
+          hex: itemState.color_hex || '#f8fafc',
+          opacity: (itemState.volume_ml || 0) > 0 ? 0.85 : 0.0,
+        });
+      }
+      // 2. Screen readouts sync
+      if (itemState.weight_g !== undefined) {
+        applyReadoutDirective(obj, { target: targetId, value: itemState.weight_g, unit: 'g' });
+      }
+      if (itemState.ph !== undefined) {
+        applyReadoutDirective(obj, { target: targetId, value: itemState.ph, unit: 'pH' });
+      }
+    }
   }
 
   getApparatus(targetId) {
