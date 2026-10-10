@@ -54,6 +54,12 @@ export class ToastManager {
 
     this.container.appendChild(toast);
   }
+
+  clear() {
+    if (this.container) {
+      this.container.innerHTML = '';
+    }
+  }
 }
 
 export const toast = new ToastManager();

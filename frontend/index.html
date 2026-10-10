@@ -209,6 +209,7 @@
       </div>
 
       <div class="hud-right-controls">
+        <button type="button" class="hud-btn" id="btn-toggle-nametags" title="Toggle 3D labels above apparatus (Key: N)">🏷️ Tags: ON</button>
         <button type="button" class="hud-btn" id="btn-reset-view" title="Reset camera viewpoint">🎥 Reset View</button>
         <button type="button" class="hud-btn" id="btn-toggle-skip-anim" title="Toggle animation speed">⚡ Skip Anim: OFF</button>
         <button type="button" class="hud-btn" id="btn-director-mode" title="Press D for hands-free autoplay">🎬 Director</button>
@@ -216,6 +217,13 @@
         <button type="button" class="hud-btn btn-finish" id="btn-finish-experiment">✓ Finish Report</button>
       </div>
     </header>
+
+    <!-- Highlighted Next Step Banner -->
+    <div class="hud-next-step-banner" id="hud-next-step-banner">
+      <div class="next-step-badge">🎯 NEXT PROTOCOL STEP</div>
+      <div class="next-step-text" id="next-step-instruction">Step 1: Wear Personal Protective Equipment (PPE)</div>
+      <div class="next-step-hint" id="next-step-hint">Hint: Don goggles, gloves, and lab coat before touching apparatus.</div>
+    </div>
 
     <!-- Left Panel: Protocol Checklist -->
     <aside class="hud-protocol-panel">
@@ -225,15 +233,6 @@
       <div class="protocol-steps-list" id="protocol-steps-list"></div>
     </aside>
 
-    <!-- Center Dock: Selected Object & Interactive Action Menu -->
-    <section class="hud-center-dock">
-      <div class="selected-object-banner">
-        <span>Target Station:</span>
-        <strong id="selected-target-name">CLICK ANY APPARATUS</strong>
-      </div>
-      <div class="action-quick-buttons" id="action-quick-buttons"></div>
-    </section>
-
     <!-- Right Panel: Real-Time Event Log -->
     <aside class="hud-right-panel">
       <div class="log-header">
@@ -242,11 +241,34 @@
       <div class="event-log-list" id="event-log-list"></div>
     </aside>
 
+    <!-- Bottom Station Navigation Strip & Always-Visible Action Bar -->
+    <div class="hud-bottom-dock">
+      <!-- Go to Station Strip -->
+      <div class="hud-station-strip" id="hud-station-strip">
+        <span class="station-strip-label">GO TO STATION:</span>
+        <div class="station-strip-buttons" id="station-strip-buttons"></div>
+      </div>
+
+      <!-- Always-Visible Action Bar -->
+      <section class="hud-action-bar-container" id="hud-action-bar-container">
+        <div class="action-bar-header">
+          <div class="action-bar-title-wrap">
+            <span class="action-bar-title">What would you like to do?</span>
+            <span class="selected-target-indicator" id="selected-target-name">STATION: GENERAL LAB</span>
+          </div>
+          <div class="action-bar-helper">Enabled actions ready · Hover disabled actions for safety requirements</div>
+        </div>
+        <div class="action-groups-container" id="action-groups-container">
+          <div id="action-quick-buttons" class="action-quick-buttons"></div>
+        </div>
+      </section>
+    </div>
+
     <!-- Footer -->
     <footer class="hud-footer">
       <div class="disclaimer-pill">Educational simulation. Simplified models. Not medical advice.</div>
       <div style="font-size:0.75rem; color:#64748b; background:rgba(0,0,0,0.4); padding:4px 8px; border-radius:6px; pointer-events:auto;">
-        Shortcuts: <kbd>[D]</kbd> Director Mode · <kbd>[F3]</kbd> Debug
+        Shortcuts: <kbd>[D]</kbd> Director Mode · <kbd>[N]</kbd> Tags · <kbd>[F3]</kbd> Debug
       </div>
     </footer>
   </div>

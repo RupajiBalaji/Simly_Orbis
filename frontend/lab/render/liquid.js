@@ -26,15 +26,24 @@ export function applyLiquidDirective(apparatusGroup, directive) {
   const fullHeight = apparatusGroup.userData.fullHeight || 0.15;
 
   const volRatio = Math.max(0.001, Math.min(1.0, volume_ml / maxVol));
-  const newHeight = volRatio * fullHeight;
+  const newHeight = Math.max(0.02, volRatio * fullHeight);
 
-  // Update scale & position
-  liqMesh.scale.y = Math.max(0.01, volRatio * 100);
-  liqMesh.position.y = newHeight / 2;
+  // Update scale & position (geometry has origin at base or center)
+  if (liqMesh.geometry.parameters && liqMesh.geometry.parameters.height === 1.0) {
+    liqMesh.scale.set(1.0, newHeight, 1.0);
+    liqMesh.position.y = 0.01;
+  } else {
+    liqMesh.scale.y = Math.max(1.0, volRatio * 50);
+    liqMesh.position.y = Math.max(0.02, newHeight / 2);
+  }
 
   // Update color
   if (hex) {
-    liqMesh.material.color.setStyle(hex);
+    try {
+      liqMesh.material.color.set(hex);
+    } catch (_) {
+      liqMesh.material.color.setStyle(hex);
+    }
   }
 
   // Update opacity
@@ -45,5 +54,6 @@ export function applyLiquidDirective(apparatusGroup, directive) {
     liqMesh.material.opacity = 0.0;
   } else {
     liqMesh.material.opacity = 0.85;
+    liqMesh.material.transparent = true;
   }
 }

@@ -27,8 +27,20 @@ export class LabScene {
     this.selectedObject = null;
 
     this.isTransitioningCamera = false;
-    this.cameraTarget = new THREE.Vector3(0, 1.2, -2.5);
-    this.cameraDefaultPos = new THREE.Vector3(0, 3.6, 4.2);
+    this.cameraTarget = new THREE.Vector3(0, 1.1, -1.8);
+    this.cameraDefaultPos = new THREE.Vector3(0, 3.2, 5.0);
+
+    this.stationPresets = {
+      default: { pos: new THREE.Vector3(0, 3.2, 5.0), target: new THREE.Vector3(0, 1.1, -1.8) },
+      burette: { pos: new THREE.Vector3(0, 2.1, 0.8), target: new THREE.Vector3(0, 1.3, -2.0) },
+      conical_flask: { pos: new THREE.Vector3(0.5, 1.9, -0.6), target: new THREE.Vector3(0, 1.1, -1.9) },
+      balance: { pos: new THREE.Vector3(-4.5, 2.1, -2.0), target: new THREE.Vector3(-4.5, 1.1, -4.2) },
+      patient: { pos: new THREE.Vector3(3.6, 2.0, -1.8), target: new THREE.Vector3(4.5, 1.0, -3.8) },
+      analyzer: { pos: new THREE.Vector3(-4.5, 2.1, -1.5), target: new THREE.Vector3(-5.5, 1.1, -3.5) },
+      sink: { pos: new THREE.Vector3(-5.5, 2.2, 0.8), target: new THREE.Vector3(-7.2, 1.1, -1.0) }
+    };
+
+    this.nameTagsVisible = true;
 
     this.animationFrameId = null;
     this.lastTime = performance.now();
@@ -39,17 +51,17 @@ export class LabScene {
   }
 
   init() {
-    // 1. Scene & Fog
+    // 1. Scene & Environment (Bright Clean Laboratory)
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0c071d);
-    this.scene.fog = new THREE.FogExp2(0x0c071d, 0.035);
+    this.scene.background = new THREE.Color(0xf1f5f9);
+    this.scene.fog = new THREE.FogExp2(0xf1f5f9, 0.012);
 
     // 2. Camera
     const aspect = window.innerWidth / window.innerHeight;
     this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 50);
     this.camera.position.copy(this.cameraDefaultPos);
 
-    // 3. Renderer
+    // 3. Renderer (Physically Based Lighting for r160)
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
@@ -59,16 +71,17 @@ export class LabScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // capped at 2 for 60fps
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.1;
 
     // 4. OrbitControls (touch + mouse)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.06;
     this.controls.maxPolarAngle = Math.PI / 2.05; // do not go below floor
-    this.controls.minDistance = 1.2;
-    this.controls.maxDistance = 14.0;
+    this.controls.minDistance = 1.0;
+    this.controls.maxDistance = 16.0;
     this.controls.target.copy(this.cameraTarget);
 
     // 5. Room geometry & permanent fixtures
@@ -78,15 +91,38 @@ export class LabScene {
     this.onWindowResize = this.onWindowResize.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerDown = this.onPointerDown.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
     this.animate = this.animate.bind(this);
 
     window.addEventListener('resize', this.onWindowResize, false);
+    window.addEventListener('keydown', this.onKeyDown, false);
     this.canvas.addEventListener('pointermove', this.onPointerMove, false);
     this.canvas.addEventListener('pointerdown', this.onPointerDown, false);
 
     // Start render loop
     this.lastTime = performance.now();
     this.animate();
+  }
+
+  onKeyDown(event) {
+    if (event.key === 'n' || event.key === 'N') {
+      this.toggleNameTags();
+    }
+  }
+
+  toggleNameTags(forceValue) {
+    this.nameTagsVisible = forceValue !== undefined ? forceValue : !this.nameTagsVisible;
+    if (this.apparatusContainer) {
+      this.apparatusContainer.traverse((child) => {
+        if (child.userData?.isNameTag) {
+          child.visible = this.nameTagsVisible;
+        }
+      });
+    }
+    const btn = document.getElementById('btn-toggle-nametags');
+    if (btn) {
+      btn.textContent = this.nameTagsVisible ? '🏷️ Tags: ON' : '🏷️ Tags: OFF';
+    }
   }
 
   loadExperiment(experimentDef) {
@@ -101,6 +137,7 @@ export class LabScene {
     this.apparatusContainer = container;
     this.apparatusLookup = lookup;
 
+    this.toggleNameTags(this.nameTagsVisible);
     this.resetCameraView();
   }
 
@@ -116,15 +153,21 @@ export class LabScene {
     const worldPos = new THREE.Vector3();
     obj.getWorldPosition(worldPos);
 
-    // Smooth transition camera target toward station
     this.cameraTarget.set(worldPos.x, worldPos.y + 0.3, worldPos.z);
     this.controls.target.copy(this.cameraTarget);
   }
 
-  resetCameraView() {
-    this.cameraTarget.set(0, 1.2, -2.5);
+  setStationCamera(presetKey) {
+    const preset = this.stationPresets[presetKey] || this.stationPresets.default;
+    this.camera.position.copy(preset.pos);
+    this.cameraTarget.copy(preset.target);
     this.controls.target.copy(this.cameraTarget);
-    this.camera.position.copy(this.cameraDefaultPos);
+  }
+
+  resetCameraView() {
+    this.cameraTarget.copy(this.stationPresets.default.target);
+    this.controls.target.copy(this.cameraTarget);
+    this.camera.position.copy(this.stationPresets.default.pos);
   }
 
   onWindowResize() {

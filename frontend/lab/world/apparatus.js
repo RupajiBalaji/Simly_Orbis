@@ -57,6 +57,75 @@ export function normalizeApparatus(rawApparatus) {
   return [];
 }
 
+export function formatApparatusTitle(id) {
+  const titles = {
+    digital_balance: 'Digital Balance',
+    dosing_cup: 'Dosing Cup',
+    water_jug: 'Water Jug',
+    patient_bed: 'Patient Alex',
+    tube_rack: 'Sample Tube Rack',
+    label_pen: 'Label Pen',
+    assay_analyzer: 'Centrifuge Analyzer',
+    burette: 'Burette Stand',
+    conical_flask: 'Conical Flask',
+    pipette: 'Pipette',
+    indicator_bottles: 'pH Indicators',
+    acid_bottle_hcl: '0.1M HCl',
+    acid_bottle_acetic: '0.1M Acetic Acid',
+    naoh_bottle: '0.1M NaOH',
+    ph_meter: 'pH Meter',
+    wash_bottle: 'Wash Bottle',
+    sink: 'Utility Sink',
+    biohazard_bin: 'Biohazard Bin',
+    chemical_waste_bin: 'Chemical Waste',
+    ward_clock: 'Clinical Clock',
+  };
+  return titles[id] || (id ? id.replace(/_/g, ' ') : '');
+}
+
+export function getApparatusTagHeight(id) {
+  if (id === 'burette') return 1.4;
+  if (id === 'patient_bed') return 1.05;
+  if (id === 'assay_analyzer') return 0.75;
+  if (id === 'water_jug' || id === 'wash_bottle') return 0.55;
+  if (id === 'sink') return 0.6;
+  if (id && id.includes('bin')) return 0.7;
+  return 0.45;
+}
+
+export function createNameTag(label) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+  ctx.strokeStyle = '#c084fc';
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(6, 6, 244, 52, 10);
+  } else {
+    ctx.rect(6, 6, 244, 52);
+  }
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = '#f8fafc';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, 128, 32);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const spriteMat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.scale.set(0.75, 0.2, 1.0);
+  sprite.userData.isNameTag = true;
+  return sprite;
+}
+
 export function buildApparatus(rawApparatus, scene) {
   const container = new THREE.Group();
   container.name = 'apparatus_container';
@@ -93,6 +162,9 @@ export function buildApparatus(rawApparatus, scene) {
         rack.userData.targetId = 'tube_rack';
         rack.userData.title = 'Sample Tube Rack';
         rack.userData.interactive = true;
+        const tag = createNameTag('Sample Tube Rack');
+        tag.position.set(0, getApparatusTagHeight('tube_rack'), 0);
+        rack.add(tag);
         container.add(rack);
         lookup['tube_rack'] = rack;
         if (rack.userData.tubes) {
@@ -164,8 +236,14 @@ export function buildApparatus(rawApparatus, scene) {
     if (group) {
       group.userData.targetId = id;
       group.userData.apparatusType = type;
-      group.userData.title = item.name || id.replace(/_/g, ' ');
+      group.userData.title = item.name || formatApparatusTitle(id);
       group.userData.interactive = true;
+
+      // Floating Name Tag (Toggleable with 'N')
+      const tag = createNameTag(formatApparatusTitle(id));
+      tag.position.set(0, getApparatusTagHeight(id), 0);
+      group.add(tag);
+
       container.add(group);
       lookup[id] = group;
     }
@@ -380,16 +458,21 @@ function buildPatientBed(id) {
   mctx.fillText('Normal Sinus', 20, 175);
 
   const monTex = new THREE.CanvasTexture(monCanvas);
+  const monGroup = new THREE.Group();
+  monGroup.position.set(1.0, 1.6, -0.7);
+  monGroup.rotation.y = -Math.PI / 4; // Angled toward camera & room center
+
   const monGeo = new THREE.BoxGeometry(0.6, 0.45, 0.08);
   const monMesh = new THREE.Mesh(monGeo, plasticMat);
-  monMesh.position.set(1.1, 1.6, -0.7);
-  g.add(monMesh);
+  monGroup.add(monMesh);
 
   const monScreenGeo = new THREE.PlaneGeometry(0.54, 0.39);
   const monScreenMat = new THREE.MeshBasicMaterial({ map: monTex });
   const monScreen = new THREE.Mesh(monScreenGeo, monScreenMat);
-  monScreen.position.set(1.1, 1.6, -0.655);
-  g.add(monScreen);
+  monScreen.position.z = 0.045;
+  monGroup.add(monScreen);
+
+  g.add(monGroup);
 
   g.userData.monitorCanvas = monCanvas;
   g.userData.monitorCtx = mctx;
@@ -680,8 +763,9 @@ function buildConicalFlask(id) {
   btm.rotation.x = Math.PI / 2;
   g.add(btm);
 
-  // Interior Liquid mesh
-  const liqGeo = new THREE.ConeGeometry(0.16, 0.001, 24);
+  // Interior Liquid mesh (normalized height 1.0, base at y=0)
+  const liqGeo = new THREE.CylinderGeometry(0.12, 0.16, 1.0, 24);
+  liqGeo.translate(0, 0.5, 0);
   const liqMat = new THREE.MeshStandardMaterial({
     color: 0xf8fafc,
     transparent: true,
@@ -689,6 +773,7 @@ function buildConicalFlask(id) {
     roughness: 0.1,
   });
   const liq = new THREE.Mesh(liqGeo, liqMat);
+  liq.scale.set(1.0, 0.001, 1.0);
   liq.position.y = 0.01;
   g.add(liq);
 

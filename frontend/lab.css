@@ -695,67 +695,243 @@ body.orbis-lab-body {
   line-height: 1.35;
 }
 
-/* Center Bottom: Action Dock / Selected Object */
-.hud-center-dock {
-  grid-column: 2;
+/* Highlighted Next Step Banner */
+.hud-next-step-banner {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(24, 14, 52, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(236, 72, 153, 0.45);
+  border-radius: 10px;
+  padding: 8px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
+  animation: bannerPulse 3s infinite ease-in-out;
+}
+
+@keyframes bannerPulse {
+  0%, 100% { border-color: rgba(236, 72, 153, 0.45); }
+  50% { border-color: rgba(192, 132, 252, 0.8); }
+}
+
+.next-step-badge {
+  background: linear-gradient(135deg, var(--accent-magenta), var(--accent-purple));
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.next-step-text {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #f8fafc;
+}
+
+.next-step-hint {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  margin-left: auto;
+}
+
+/* Bottom Navigation Dock: Station Strip + Always-Visible Action Bar */
+.hud-bottom-dock {
+  grid-column: 1 / -1;
   grid-row: 3;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Go to Station Navigation Strip */
+.hud-station-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 20px;
+  padding: 4px 14px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.station-strip-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #c084fc;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.station-strip-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.station-pill-btn {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.station-pill-btn:hover {
+  background: rgba(147, 51, 234, 0.3);
+  border-color: #c084fc;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.station-pill-btn.active {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.4), rgba(147, 51, 234, 0.5));
+  border-color: #ec4899;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+}
+
+/* Always-Visible Action Bar Container */
+.hud-action-bar-container {
+  background: rgba(20, 13, 46, 0.94);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--border-glow);
+  border-radius: 14px;
+  padding: 10px 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  width: 100%;
+}
+
+.action-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.action-bar-title-wrap {
+  display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-.selected-object-banner {
-  background: var(--bg-glass);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-glow);
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--text-highlight);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+.action-bar-title {
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+}
+
+.selected-target-indicator {
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.15);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.action-bar-helper {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.action-groups-container {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.action-group-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.action-group-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .action-quick-buttons {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  max-width: 600px;
+  gap: 6px;
+  width: 100%;
 }
 
 .action-btn {
-  padding: 10px 18px;
-  border-radius: 10px;
-  background: var(--bg-surface);
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(30, 20, 68, 0.85);
   border: 1px solid var(--border-subtle);
   color: var(--text-main);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
+  transition: all 0.15s;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  gap: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-.action-btn:hover:not(:disabled) {
-  border-color: var(--accent-magenta);
-  background: rgba(236, 72, 153, 0.2);
+.action-btn.enabled {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.35), rgba(79, 70, 229, 0.35));
+  border-color: rgba(168, 85, 247, 0.5);
+  color: #ffffff;
+}
+
+.action-btn.enabled:hover {
+  background: linear-gradient(135deg, var(--accent-magenta), var(--accent-purple));
+  border-color: #ec4899;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(236, 72, 153, 0.3);
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.4);
 }
 
+.action-btn.disabled,
 .action-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.42;
   cursor: not-allowed;
-  border-color: rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #64748b;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Right Panel: Event Log & Station Status */

@@ -29,6 +29,19 @@ export class CharacterController {
     this.heldItem = null;
   }
 
+  spawnForExperiment(experimentId) {
+    if (experimentId === 'pk_ward') {
+      // Spawn facing the Digital Balance
+      this.rig.root.position.set(-3.8, 0, -3.2);
+      this.faceTarget(new THREE.Vector3(-4.5, 0.94, -4.2));
+    } else {
+      // Spawn facing the Burette Stand
+      this.rig.root.position.set(0, 0, -1.0);
+      this.faceTarget(new THREE.Vector3(0, 0.94, -2.0));
+    }
+    this.animator.playClip('idle');
+  }
+
   updatePPE(ppeSet) {
     this.rig.updatePPE(ppeSet);
   }

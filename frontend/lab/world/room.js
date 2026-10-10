@@ -1,6 +1,7 @@
 /**
  * Procedural Laboratory Architecture & Room Builder (frontend/lab/world/room.js)
- * Constructs the 3D room, benches, wall apparatus, lighting, and safety fixtures.
+ * Constructs a bright, clean, modern laboratory room, workbenches, lighting,
+ * high-contrast whiteboard, and safety equipment.
  */
 
 import * as THREE from 'three';
@@ -9,70 +10,71 @@ export function buildLabRoom(scene) {
   const roomGroup = new THREE.Group();
   roomGroup.name = 'laboratory_room';
 
-  // 1. Materials (Reused for performance)
+  // 1. Materials for a bright, clean, modern laboratory
   const floorMat = new THREE.MeshStandardMaterial({
-    color: 0x120c24,
+    color: 0xdbe3ed, // Light grey clean epoxy/tile floor
     roughness: 0.35,
-    metalness: 0.15,
-  });
-
-  const wallMat = new THREE.MeshStandardMaterial({
-    color: 0x1a1236,
-    roughness: 0.8,
     metalness: 0.05,
   });
 
+  const wallMat = new THREE.MeshStandardMaterial({
+    color: 0xf3f6f9, // Bright off-white / light-grey clean lab walls
+    roughness: 0.85,
+    metalness: 0.02,
+  });
+
   const trimMat = new THREE.MeshStandardMaterial({
-    color: 0x31205a,
-    roughness: 0.4,
-    metalness: 0.4,
+    color: 0x64748b, // Clean slate baseboards
+    roughness: 0.5,
+    metalness: 0.2,
   });
 
   const counterMat = new THREE.MeshStandardMaterial({
-    color: 0x0f172a, // dark phenolic resin
-    roughness: 0.25,
-    metalness: 0.3,
+    color: 0x1e293b, // Chemical-resistant dark phenolic resin worktop
+    roughness: 0.28,
+    metalness: 0.25,
   });
 
   const frameMat = new THREE.MeshStandardMaterial({
-    color: 0x221742,
-    roughness: 0.5,
-    metalness: 0.6,
+    color: 0xe2e8f0, // Clean white/light-grey powder-coated metal legs
+    roughness: 0.4,
+    metalness: 0.3,
   });
 
-  // 2. Floor (16m x 14m)
+  // 2. Floor (18m x 16m)
   const floorGeo = new THREE.PlaneGeometry(18, 16);
   const floor = new THREE.Mesh(floorGeo, floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   roomGroup.add(floor);
 
-  // Floor Grid Overlay
-  const gridHelper = new THREE.GridHelper(18, 18, 0x9333ea, 0x2e1065);
-  gridHelper.position.y = 0.01;
-  gridHelper.material.opacity = 0.35;
-  gridHelper.material.transparent = true;
-  roomGroup.add(gridHelper);
-
   // 3. Walls (Back wall at z = -7, Left wall at x = -8, Right wall at x = 8)
-  const wallGeo = new THREE.PlaneGeometry(18, 5);
+  const wallGeo = new THREE.PlaneGeometry(18, 5.2);
   const backWall = new THREE.Mesh(wallGeo, wallMat);
-  backWall.position.set(0, 2.5, -7);
+  backWall.position.set(0, 2.6, -7);
   backWall.receiveShadow = true;
   roomGroup.add(backWall);
 
-  const sideWallGeo = new THREE.PlaneGeometry(16, 5);
+  const sideWallGeo = new THREE.PlaneGeometry(16, 5.2);
   const leftWall = new THREE.Mesh(sideWallGeo, wallMat);
-  leftWall.position.set(-8, 2.5, 0);
+  leftWall.position.set(-8, 2.6, 0);
   leftWall.rotation.y = Math.PI / 2;
   leftWall.receiveShadow = true;
   roomGroup.add(leftWall);
 
   const rightWall = new THREE.Mesh(sideWallGeo, wallMat);
-  rightWall.position.set(8, 2.5, 0);
+  rightWall.position.set(8, 2.6, 0);
   rightWall.rotation.y = -Math.PI / 2;
   rightWall.receiveShadow = true;
   roomGroup.add(rightWall);
+
+  // Ceiling Plane (White reflective ceiling)
+  const ceilingGeo = new THREE.PlaneGeometry(18, 16);
+  const ceilingMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.9 });
+  const ceiling = new THREE.Mesh(ceilingGeo, ceilingMat);
+  ceiling.position.set(0, 5.0, 0);
+  ceiling.rotation.x = Math.PI / 2;
+  roomGroup.add(ceiling);
 
   // Wall Baseboards/Trims
   const trimGeo = new THREE.BoxGeometry(18, 0.15, 0.08);
@@ -80,38 +82,50 @@ export function buildLabRoom(scene) {
   backTrim.position.set(0, 0.075, -6.95);
   roomGroup.add(backTrim);
 
-  // 4. Laboratory Workbenches
+  const leftTrimGeo = new THREE.BoxGeometry(0.08, 0.15, 16);
+  const leftTrim = new THREE.Mesh(leftTrimGeo, trimMat);
+  leftTrim.position.set(-7.95, 0.075, 0);
+  roomGroup.add(leftTrim);
+
+  const rightTrim = new THREE.Mesh(leftTrimGeo, trimMat);
+  rightTrim.position.set(7.95, 0.075, 0);
+  roomGroup.add(rightTrim);
+
+  // 4. Ceiling Light Troffer Panels (Emissive soft cool-white)
+  createCeilingLights(roomGroup);
+
+  // 5. Laboratory Workbenches (Bench height 0.9m + 0.08m top = 0.94m working surface)
   // Center Bench A (Titration & Analysis Station)
   createBench(roomGroup, counterMat, frameMat, 0, 0, -2, 5.5, 1.6, 0.9);
 
   // Left Bench B (Weighing & Reagent Preparation)
   createBench(roomGroup, counterMat, frameMat, -4.5, 0, -4.2, 4.0, 1.4, 0.9);
 
-  // Right Ward Station (Patient Bed area or secondary bench)
+  // Right Ward Station (Patient Bed area / secondary bench)
   createBench(roomGroup, counterMat, frameMat, 4.5, 0, -4.2, 4.0, 1.4, 0.9);
 
-  // 5. Whiteboard on Back Wall
+  // 6. Whiteboard on Back Wall (High contrast, crisp text)
   createWhiteboard(roomGroup, 0, 2.8, -6.9);
 
-  // 6. Safety Wall Fixtures
-  createEyewashStation(roomGroup, -7.8, 1.6, -3.5);
-  createFireExtinguisher(roomGroup, -7.8, 1.2, 1.5);
+  // 7. Safety Wall Fixtures (Wall & floor mounted, nothing floats!)
+  createEyewashStation(roomGroup, -7.85, 1.4, -3.5);
+  createFireExtinguisher(roomGroup, -7.85, 1.2, 1.5);
   createSafetyPoster(roomGroup, 7.85, 2.5, -2);
   createLabDoor(roomGroup, 7.85, 1.8, 3.5);
 
-  // 7. Lighting
-  // Ambient fill
-  const ambLight = new THREE.AmbientLight(0x2a1b4e, 1.8);
+  // 8. Physically Based Lighting (Tuned for Three.js r160)
+  // Ambient Daylight Fill
+  const ambLight = new THREE.AmbientLight(0xffffff, 2.0);
   roomGroup.add(ambLight);
 
-  // Key Overhead Directional Light (casts soft shadows)
-  const dirLight = new THREE.DirectionalLight(0xfff5ea, 2.2);
-  dirLight.position.set(4, 7, 3);
+  // Key Overhead Directional Sun / Fixture Light
+  const dirLight = new THREE.DirectionalLight(0xffffff, 2.6);
+  dirLight.position.set(3, 8, 4);
   dirLight.castShadow = true;
   dirLight.shadow.mapSize.width = 1024;
   dirLight.shadow.mapSize.height = 1024;
   dirLight.shadow.camera.near = 1;
-  dirLight.shadow.camera.far = 18;
+  dirLight.shadow.camera.far = 20;
   dirLight.shadow.camera.left = -9;
   dirLight.shadow.camera.right = 9;
   dirLight.shadow.camera.top = 9;
@@ -119,19 +133,29 @@ export function buildLabRoom(scene) {
   dirLight.shadow.bias = -0.001;
   roomGroup.add(dirLight);
 
-  // Cool Cyan Point Fill (modern lab aesthetic)
-  const cyanFill = new THREE.PointLight(0x06b6d4, 1.4, 12);
-  cyanFill.position.set(-3, 3.5, -2);
-  roomGroup.add(cyanFill);
+  // Center Bench Overhead Point Light (r160 decay 2)
+  const centerPoint = new THREE.PointLight(0xffffff, 18.0, 18, 2);
+  centerPoint.position.set(0, 4.2, -2.0);
+  roomGroup.add(centerPoint);
 
-  // Warm Magenta Accent Light
-  const magFill = new THREE.PointLight(0xec4899, 1.2, 12);
-  magFill.position.set(3, 3.5, -2);
-  roomGroup.add(magFill);
+  // Left Weighing Bench Point Light
+  const leftPoint = new THREE.PointLight(0xf8fafc, 16.0, 16, 2);
+  leftPoint.position.set(-4.5, 4.2, -4.0);
+  roomGroup.add(leftPoint);
 
-  // Alarm Beacon Light (normally off or very dim; pulsed on critical violations)
-  const alarmLight = new THREE.PointLight(0xef4444, 0, 15);
-  alarmLight.position.set(0, 4.2, -4);
+  // Right Ward / Patient Bench Point Light
+  const rightPoint = new THREE.PointLight(0xf8fafc, 16.0, 16, 2);
+  rightPoint.position.set(4.5, 4.2, -4.0);
+  roomGroup.add(rightPoint);
+
+  // Subtle Accent Glow on signage / wall
+  const purpleAccent = new THREE.PointLight(0xa855f7, 4.0, 10, 2);
+  purpleAccent.position.set(0, 4.2, -6.5);
+  roomGroup.add(purpleAccent);
+
+  // Emergency Alarm Beacon (Normally off; triggers pulsing on critical breaches)
+  const alarmLight = new THREE.PointLight(0xef4444, 0, 18, 2);
+  alarmLight.position.set(0, 4.5, -3.5);
   alarmLight.name = 'alarm_point_light';
   roomGroup.add(alarmLight);
 
@@ -139,11 +163,45 @@ export function buildLabRoom(scene) {
   return roomGroup;
 }
 
+function createCeilingLights(parent) {
+  const trofferMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.8,
+    roughness: 0.2,
+  });
+  const borderMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.4 });
+
+  const trofferPositions = [
+    [-4.5, -4.0],
+    [0.0, -4.0],
+    [4.5, -4.0],
+    [-4.5, -1.0],
+    [0.0, -1.0],
+    [4.5, -1.0],
+    [0.0, 2.5],
+  ];
+
+  for (const [tx, tz] of trofferPositions) {
+    const fixture = new THREE.Group();
+    fixture.position.set(tx, 4.95, tz);
+
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.06, 0.9), borderMat);
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.75), trofferMat);
+    panel.rotation.x = Math.PI / 2;
+    panel.position.y = -0.035;
+
+    fixture.add(frame);
+    fixture.add(panel);
+    parent.add(fixture);
+  }
+}
+
 function createBench(parent, topMat, legMat, x, y, z, width, depth, height) {
   const bench = new THREE.Group();
   bench.position.set(x, y, z);
 
-  // Top Surface
+  // Dark chemical-resistant top surface
   const topGeo = new THREE.BoxGeometry(width, 0.08, depth);
   const topMesh = new THREE.Mesh(topGeo, topMat);
   topMesh.position.y = height;
@@ -151,24 +209,26 @@ function createBench(parent, topMat, legMat, x, y, z, width, depth, height) {
   topMesh.receiveShadow = true;
   bench.add(topMesh);
 
-  // 4 Legs / Metal Frame
-  const legGeo = new THREE.BoxGeometry(0.06, height, 0.06);
-  const dx = width / 2 - 0.1;
-  const dz = depth / 2 - 0.1;
+  // 4 Powder-coated metal legs
+  const legGeo = new THREE.BoxGeometry(0.08, height, 0.08);
+  const dx = width / 2 - 0.12;
+  const dz = depth / 2 - 0.12;
 
   for (const lx of [-dx, dx]) {
     for (const lz of [-dz, dz]) {
       const leg = new THREE.Mesh(legGeo, legMat);
       leg.position.set(lx, height / 2, lz);
       leg.castShadow = true;
+      leg.receiveShadow = true;
       bench.add(leg);
     }
   }
 
-  // Cross brace
-  const braceGeo = new THREE.BoxGeometry(width - 0.2, 0.04, 0.04);
+  // Cross structural brace
+  const braceGeo = new THREE.BoxGeometry(width - 0.24, 0.05, 0.05);
   const brace = new THREE.Mesh(braceGeo, legMat);
   brace.position.set(0, 0.25, 0);
+  brace.castShadow = true;
   bench.add(brace);
 
   parent.add(bench);
@@ -179,47 +239,76 @@ function createWhiteboard(parent, x, y, z) {
   board.position.set(x, y, z);
 
   // Frame
-  const frameGeo = new THREE.BoxGeometry(4.2, 2.2, 0.05);
-  const frameMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.2 });
+  const frameGeo = new THREE.BoxGeometry(4.4, 2.3, 0.06);
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8, roughness: 0.2 });
   const frame = new THREE.Mesh(frameGeo, frameMat);
   board.add(frame);
 
-  // Canvas Whiteboard Surface
+  // High-Resolution Canvas Whiteboard Surface (1024x512)
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 256;
+  canvas.width = 1024;
+  canvas.height = 512;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#f8fafc';
-  ctx.fillRect(0, 0, 512, 256);
+
+  // Crisp White Background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, 1024, 512);
+
+  // Header Bar
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 36px sans-serif';
+  ctx.fillText('ORBIS LAB PROTOCOLS & FORMULAS', 48, 64);
+
+  // Section 1: Standard Protocols
+  ctx.strokeStyle = '#9333ea';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(40, 90, 440, 380);
+
+  ctx.fillStyle = '#7e22ce';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillText('SAFETY & TECHNIQUE RULES', 60, 130);
+
+  ctx.font = 'bold 20px monospace';
+  ctx.fillStyle = '#1e293b';
+  ctx.fillText('1. WEAR PPE (Goggles, Gloves, Coat)', 60, 180);
+  ctx.fillText('2. TARE BALANCE before weighing dose', 60, 230);
+  ctx.fillText('3. ACID -> WATER dilution safety (R6)', 60, 280);
+  ctx.fillText('4. RINSE BURETTE with titrant first', 60, 330);
+  ctx.fillText('5. SORT CHEMICAL vs BIOHAZARD waste', 60, 380);
+  ctx.fillText('6. WASH HANDS before report submit', 60, 430);
+
+  // Section 2: Mathematical / Analytical Models
+  ctx.strokeStyle = '#0284c7';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(520, 90, 460, 380);
+
+  ctx.fillStyle = '#0369a1';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillText('QUANTITATIVE MODELS', 540, 130);
+
+  ctx.font = 'bold 20px monospace';
+  ctx.fillStyle = '#0f172a';
+  ctx.fillText('PHARMACOKINETICS (Alex, 70kg):', 540, 180);
+  ctx.fillStyle = '#0284c7';
+  ctx.fillText('C(t) = D*ka / (Vd*(ka-ke)) * (e^-ke*t - e^-ka*t)', 540, 215);
 
   ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 18px sans-serif';
-  ctx.fillText('ORBIS LAB PROTOCOLS', 24, 38);
+  ctx.fillText('ACID-BASE NEUTRALIZATION:', 540, 275);
+  ctx.fillStyle = '#059669';
+  ctx.fillText('HCl + NaOH -> NaCl + H2O', 540, 310);
+  ctx.fillText('Equivalence Point: pH 7.00', 540, 345);
 
-  ctx.strokeStyle = '#9333ea';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(20, 52, 220, 180);
-
-  ctx.font = '13px monospace';
-  ctx.fillStyle = '#334155';
-  ctx.fillText('1. WEAR PPE (R1-R3)', 32, 80);
-  ctx.fillText('2. TARE BALANCE (R4)', 32, 105);
-  ctx.fillText('3. ACID -> WATER (R6)', 32, 130);
-  ctx.fillText('4. RINSE BURETTE (R7)', 32, 155);
-  ctx.fillText('5. SORT WASTE (R9)', 32, 180);
-
-  // Mathematical diagram
-  ctx.fillStyle = '#0284c7';
-  ctx.fillText('C(t) = D*ka/(Vd*(ka-ke))', 260, 80);
-  ctx.fillText('HCl + NaOH -> NaCl + H2O', 260, 110);
-  ctx.fillText('Equivalence: pH 7.00', 260, 140);
-  ctx.fillText('Buffer: pH = pKa + log([A-]/[HA])', 260, 170);
+  ctx.fillStyle = '#0f172a';
+  ctx.fillText('BUFFER EQUATION:', 540, 400);
+  ctx.fillStyle = '#d97706';
+  ctx.fillText('pH = pKa + log([A-] / [HA])', 540, 435);
 
   const texture = new THREE.CanvasTexture(canvas);
-  const surfaceGeo = new THREE.PlaneGeometry(4.0, 2.0);
+  texture.anisotropy = 4;
+  const surfaceGeo = new THREE.PlaneGeometry(4.2, 2.1);
   const surfaceMat = new THREE.MeshBasicMaterial({ map: texture });
   const surface = new THREE.Mesh(surfaceGeo, surfaceMat);
-  surface.position.z = 0.03;
+  surface.position.z = 0.035;
   board.add(surface);
 
   parent.add(board);
@@ -230,16 +319,48 @@ function createEyewashStation(parent, x, y, z) {
   station.position.set(x, y, z);
   station.rotation.y = Math.PI / 2;
 
-  const bowlGeo = new THREE.CylinderGeometry(0.2, 0.15, 0.12, 16);
-  const greenMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.3 });
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.15 });
+  const greenMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.25 });
+  const yellowMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3 });
+
+  // 1. Heavy-duty wall bracket mounting directly into left wall (x = -8.0)
+  const bracketGeo = new THREE.BoxGeometry(0.35, 0.45, 0.18);
+  const bracket = new THREE.Mesh(bracketGeo, metalMat);
+  bracket.position.set(0, 0, -0.15);
+  station.add(bracket);
+
+  // 2. Full vertical stainless-steel pedestal pipe running to the floor (y = 0.0)
+  // Station root is at y = 1.4, so pedestal goes down 1.4m to floor
+  const pedestalGeo = new THREE.CylinderGeometry(0.035, 0.035, 1.4, 16);
+  const pedestal = new THREE.Mesh(pedestalGeo, metalMat);
+  pedestal.position.set(0, -0.7, 0);
+  station.add(pedestal);
+
+  // Floor mounting flange plate
+  const flangeGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.03, 16);
+  const flange = new THREE.Mesh(flangeGeo, metalMat);
+  flange.position.set(0, -1.39, 0);
+  station.add(flange);
+
+  // 3. Eyewash safety bowl (Green)
+  const bowlGeo = new THREE.CylinderGeometry(0.24, 0.16, 0.14, 20);
   const bowl = new THREE.Mesh(bowlGeo, greenMat);
+  bowl.position.set(0, 0.07, 0);
   station.add(bowl);
 
-  const pipeGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8);
-  const metalMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.1 });
-  const pipe = new THREE.Mesh(pipeGeo, metalMat);
-  pipe.position.y = -0.22;
-  station.add(pipe);
+  // Dual spray heads
+  const headGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.05, 12);
+  for (const hx of [-0.06, 0.06]) {
+    const head = new THREE.Mesh(headGeo, metalMat);
+    head.position.set(hx, 0.12, 0);
+    station.add(head);
+  }
+
+  // Yellow Push Flag Paddle
+  const flagGeo = new THREE.BoxGeometry(0.02, 0.12, 0.14);
+  const flag = new THREE.Mesh(flagGeo, yellowMat);
+  flag.position.set(0.2, 0.08, 0);
+  station.add(flag);
 
   parent.add(station);
 }
@@ -249,15 +370,28 @@ function createFireExtinguisher(parent, x, y, z) {
   ext.position.set(x, y, z);
   ext.rotation.y = Math.PI / 2;
 
-  const bodyGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.5, 16);
+  const metalMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8, roughness: 0.2 });
   const redMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.3, metalness: 0.2 });
+
+  // Wall mounting bracket
+  const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 0.08), metalMat);
+  bracket.position.set(0, 0, -0.1);
+  ext.add(bracket);
+
+  // Tank Body
+  const bodyGeo = new THREE.CylinderGeometry(0.11, 0.11, 0.55, 20);
   const body = new THREE.Mesh(bodyGeo, redMat);
   ext.add(body);
 
-  const topGeo = new THREE.SphereGeometry(0.1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+  const topGeo = new THREE.SphereGeometry(0.11, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
   const top = new THREE.Mesh(topGeo, redMat);
-  top.position.y = 0.25;
+  top.position.y = 0.275;
   ext.add(top);
+
+  // Handle and Valve
+  const valve = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.1, 0.08), metalMat);
+  valve.position.set(0, 0.38, 0);
+  ext.add(valve);
 
   parent.add(ext);
 }
@@ -267,36 +401,58 @@ function createSafetyPoster(parent, x, y, z) {
   poster.position.set(x, y, z);
   poster.rotation.y = -Math.PI / 2;
 
+  // High-Resolution Safety Poster (512x680)
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 340;
+  canvas.width = 512;
+  canvas.height = 680;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#1e1b4b';
-  ctx.fillRect(0, 0, 256, 340);
+
+  // Deep Navy Background with Gold Border
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, 512, 680);
 
   ctx.strokeStyle = '#f59e0b';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(6, 6, 244, 328);
+  ctx.lineWidth = 12;
+  ctx.strokeRect(12, 12, 488, 656);
 
   ctx.fillStyle = '#f59e0b';
-  ctx.font = 'bold 22px sans-serif';
+  ctx.font = 'bold 42px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('SAFETY FIRST', 128, 48);
+  ctx.fillText('SAFETY FIRST', 256, 80);
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 26px sans-serif';
+  ctx.fillText('ORBIS LAB PROTOCOLS', 256, 130);
 
   ctx.fillStyle = '#f8fafc';
-  ctx.font = '14px sans-serif';
-  ctx.fillText('Mandatory Lab PPE:', 128, 90);
-  ctx.fillText('• Eye Protection (R1)', 128, 125);
-  ctx.fillText('• Nitrile Gloves (R2)', 128, 155);
-  ctx.fillText('• Cotton Lab Coat (R3)', 128, 185);
-  ctx.fillText('• Wash Hands at Exit', 128, 220);
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('MANDATORY PPE BEFORE WORK:', 48, 200);
+
+  ctx.font = '22px monospace';
+  ctx.fillStyle = '#e2e8f0';
+  ctx.fillText('• Eye Protection (R1 Goggles)', 60, 250);
+  ctx.fillText('• Chemical Gloves (R2 Nitrile)', 60, 300);
+  ctx.fillText('• Lab Coat Buttoned (R3 Coat)', 60, 350);
+  ctx.fillText('• Wash Hands Prior to Exit', 60, 400);
+
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(40, 460, 432, 160);
 
   ctx.fillStyle = '#ef4444';
-  ctx.font = 'bold 16px sans-serif';
-  ctx.fillText('2 CRITICALS = FAIL', 128, 275);
+  ctx.font = 'bold 26px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('LAB SAFETY ENFORCEMENT', 256, 510);
+
+  ctx.fillStyle = '#fca5a5';
+  ctx.font = '20px monospace';
+  ctx.fillText('2 CRITICAL BREACHES = FAIL', 256, 560);
+  ctx.fillText('Report is recorded in run log', 256, 595);
 
   const texture = new THREE.CanvasTexture(canvas);
-  const geo = new THREE.PlaneGeometry(1.0, 1.33);
+  texture.anisotropy = 4;
+  const geo = new THREE.PlaneGeometry(1.2, 1.6);
   const mat = new THREE.MeshBasicMaterial({ map: texture });
   const mesh = new THREE.Mesh(geo, mat);
   poster.add(mesh);
@@ -309,17 +465,24 @@ function createLabDoor(parent, x, y, z) {
   door.position.set(x, y, z);
   door.rotation.y = -Math.PI / 2;
 
+  const doorMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4, metalness: 0.3 });
   const doorGeo = new THREE.BoxGeometry(1.6, 2.8, 0.08);
-  const doorMat = new THREE.MeshStandardMaterial({ color: 0x1f163b, roughness: 0.5, metalness: 0.3 });
   const doorMesh = new THREE.Mesh(doorGeo, doorMat);
   door.add(doorMesh);
 
   // Door Window
-  const winGeo = new THREE.PlaneGeometry(0.6, 0.8);
-  const winMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.6, roughness: 0.1 });
+  const winGeo = new THREE.PlaneGeometry(0.6, 0.9);
+  const winMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7, roughness: 0.1 });
   const winMesh = new THREE.Mesh(winGeo, winMat);
   winMesh.position.set(0, 0.4, 0.045);
   door.add(winMesh);
+
+  // Door Handle
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.1 });
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.25, 12), handleMat);
+  handle.rotation.x = Math.PI / 2;
+  handle.position.set(0.6, 0, 0.08);
+  door.add(handle);
 
   parent.add(door);
 }

@@ -5,6 +5,7 @@
 
 import { api } from '../api.js';
 import { state } from '../state.js';
+import { toast } from './toast.js';
 
 export class ReportScreen {
   constructor() {
@@ -142,5 +143,6 @@ export class ReportScreen {
 
   hide() {
     if (this.screenEl) this.screenEl.classList.add('hidden');
+    toast.clear();
   }
 }

@@ -77,6 +77,10 @@ async function initOrbisLab() {
 
   window.reportScreen = reportScreen;
   window.directorRunner = directorRunner;
+  window.sceneManager = sceneManager;
+  window.characterController = characterController;
+  window.state = state;
+  window.api = api;
 
   // 3. Setup Navigation & District Selection
   setupLobby();
@@ -175,6 +179,7 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
   const briefScreen = document.getElementById('screen-brief');
   const errorOverlay = document.getElementById('session-error-overlay');
   if (errorOverlay) errorOverlay.classList.add('hidden');
+  toast.clear();
 
   try {
     toast.showInfo(`Entering 3D Laboratory for '${experimentId}'...`, 2000);
@@ -183,15 +188,18 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
     const exp = await api.getExperiment(experimentId);
     state.setExperiment(exp);
     sceneManager.loadExperiment(exp);
+    characterController.spawnForExperiment(experimentId);
 
     // 2. Create stateful session on backend
     const session = await api.createSession(experimentId, nickname);
     state.setSession(session);
     characterController.updatePPE(session.ppe);
 
-    // 3. Fetch available actions for initial state
+    // 3. Fetch available actions for initial state & render UI
     const actions = await api.getAvailableActions(session.session_id);
     state.setAvailableActions(actions);
+    actionMenu.renderStationStrip(exp);
+    actionMenu.updateNextStepBanner();
 
     // 4. Hide brief screen and show HUD
     if (briefScreen) briefScreen.classList.add('hidden');
@@ -209,6 +217,12 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
 window.startExperimentSession = startExperimentSession;
 
 function setupHUDControls() {
+  // Toggle Name Tags Button
+  const btnToggleTags = document.getElementById('btn-toggle-nametags');
+  if (btnToggleTags) {
+    btnToggleTags.onclick = () => sceneManager.toggleNameTags();
+  }
+
   // Reset Camera View Button
   const btnResetView = document.getElementById('btn-reset-view');
   if (btnResetView) {
