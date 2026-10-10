@@ -95,14 +95,13 @@ export function buildLabRoom(scene) {
   createCeilingLights(roomGroup);
 
   // 5. Laboratory Workbenches (Bench height 0.9m + 0.08m top = 0.94m working surface)
-  // Center Bench A (Titration & Analysis Station)
-  createBench(roomGroup, counterMat, frameMat, 0, 0, -2, 5.5, 1.6, 0.9);
+  // Center Bench A (Titration & Analysis Station - compact, unobstructed)
+  createBench(roomGroup, counterMat, frameMat, 0, 0, -2.0, 4.4, 1.4, 0.9);
 
   // Left Bench B (Weighing & Reagent Preparation)
   createBench(roomGroup, counterMat, frameMat, -4.5, 0, -4.2, 4.0, 1.4, 0.9);
 
-  // Right Ward Station (Patient Bed area / secondary bench)
-  createBench(roomGroup, counterMat, frameMat, 4.5, 0, -4.2, 4.0, 1.4, 0.9);
+  // Right Clinical Ward Bay: Clear floor area for Patient Bed, bedside vitals monitor & avatar
 
   // 6. Whiteboard on Back Wall (High contrast, crisp text)
   createWhiteboard(roomGroup, 0, 2.8, -6.9);
@@ -235,67 +234,67 @@ function createWhiteboard(parent, x, y, z) {
   const frame = new THREE.Mesh(frameGeo, frameMat);
   board.add(frame);
 
-  // High-Resolution Canvas Whiteboard Surface (1024x512)
+  // High-Resolution Crisp Canvas Whiteboard Surface (2048x1024)
   const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
+  canvas.width = 2048;
+  canvas.height = 1024;
   const ctx = canvas.getContext('2d');
 
   // Crisp White Background
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, 1024, 512);
+  ctx.fillRect(0, 0, 2048, 1024);
 
   // Header Bar
   ctx.fillStyle = '#0f172a';
-  ctx.font = 'bold 36px sans-serif';
-  ctx.fillText('ORBIS LAB PROTOCOLS & FORMULAS', 48, 64);
+  ctx.font = 'bold 64px sans-serif';
+  ctx.fillText('ORBIS LAB PROTOCOLS & FORMULAS', 80, 110);
 
   // Section 1: Standard Protocols
   ctx.strokeStyle = '#9333ea';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(40, 90, 440, 380);
+  ctx.lineWidth = 6;
+  ctx.strokeRect(80, 160, 900, 800);
 
   ctx.fillStyle = '#7e22ce';
-  ctx.font = 'bold 24px sans-serif';
-  ctx.fillText('SAFETY & TECHNIQUE RULES', 60, 130);
+  ctx.font = 'bold 46px sans-serif';
+  ctx.fillText('SAFETY & TECHNIQUE RULES', 110, 230);
 
-  ctx.font = 'bold 20px monospace';
+  ctx.font = 'bold 36px monospace';
   ctx.fillStyle = '#1e293b';
-  ctx.fillText('1. WEAR PPE (Goggles, Gloves, Coat)', 60, 180);
-  ctx.fillText('2. TARE BALANCE before weighing dose', 60, 230);
-  ctx.fillText('3. ACID -> WATER dilution safety (R6)', 60, 280);
-  ctx.fillText('4. RINSE BURETTE with titrant first', 60, 330);
-  ctx.fillText('5. SORT CHEMICAL vs BIOHAZARD waste', 60, 380);
-  ctx.fillText('6. WASH HANDS before report submit', 60, 430);
+  ctx.fillText('1. WEAR PPE (Goggles, Gloves, Coat)', 110, 310);
+  ctx.fillText('2. TARE BALANCE before weighing dose', 110, 400);
+  ctx.fillText('3. ACID -> WATER dilution safety (R6)', 110, 490);
+  ctx.fillText('4. RINSE BURETTE with titrant first', 110, 580);
+  ctx.fillText('5. SORT CHEMICAL vs BIOHAZARD waste', 110, 670);
+  ctx.fillText('6. WASH HANDS before report submit', 110, 760);
 
   // Section 2: Mathematical / Analytical Models
   ctx.strokeStyle = '#0284c7';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(520, 90, 460, 380);
+  ctx.lineWidth = 6;
+  ctx.strokeRect(1040, 160, 920, 800);
 
   ctx.fillStyle = '#0369a1';
-  ctx.font = 'bold 24px sans-serif';
-  ctx.fillText('QUANTITATIVE MODELS', 540, 130);
+  ctx.font = 'bold 46px sans-serif';
+  ctx.fillText('QUANTITATIVE MODELS', 1070, 230);
 
-  ctx.font = 'bold 20px monospace';
+  ctx.font = 'bold 36px monospace';
   ctx.fillStyle = '#0f172a';
-  ctx.fillText('PHARMACOKINETICS (Alex, 70kg):', 540, 180);
+  ctx.fillText('PHARMACOKINETICS (Alex, 70kg):', 1070, 310);
   ctx.fillStyle = '#0284c7';
-  ctx.fillText('C(t) = D*ka / (Vd*(ka-ke)) * (e^-ke*t - e^-ka*t)', 540, 215);
+  ctx.fillText('C(t) = D*ka / (Vd*(ka-ke))*(e^-ke*t - e^-ka*t)', 1070, 370);
 
   ctx.fillStyle = '#0f172a';
-  ctx.fillText('ACID-BASE NEUTRALIZATION:', 540, 275);
+  ctx.fillText('ACID-BASE NEUTRALIZATION:', 1070, 480);
   ctx.fillStyle = '#059669';
-  ctx.fillText('HCl + NaOH -> NaCl + H2O', 540, 310);
-  ctx.fillText('Equivalence Point: pH 7.00', 540, 345);
+  ctx.fillText('HCl + NaOH -> NaCl + H2O', 1070, 540);
+  ctx.fillText('Equivalence Point: pH 7.00', 1070, 600);
 
   ctx.fillStyle = '#0f172a';
-  ctx.fillText('BUFFER EQUATION:', 540, 400);
+  ctx.fillText('BUFFER EQUATION:', 1070, 710);
   ctx.fillStyle = '#d97706';
-  ctx.fillText('pH = pKa + log([A-] / [HA])', 540, 435);
+  ctx.fillText('pH = pKa + log([A-] / [HA])', 1070, 770);
 
   const texture = new THREE.CanvasTexture(canvas);
-  texture.anisotropy = 4;
+  texture.anisotropy = 8;
   const surfaceGeo = new THREE.PlaneGeometry(4.2, 2.1);
   const surfaceMat = new THREE.MeshBasicMaterial({ map: texture });
   const surface = new THREE.Mesh(surfaceGeo, surfaceMat);

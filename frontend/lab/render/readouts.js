@@ -54,6 +54,10 @@ export function applyVitalsDirective(patientBedGroup, directive) {
   patientBedGroup.userData.lastVitalsKey = stateKey;
   patientBedGroup.userData.lastEcgTime = now;
 
+  const mctx = patientBedGroup.userData.monitorCtx;
+  const canvas = patientBedGroup.userData.monitorCanvas;
+  const tex = patientBedGroup.userData.monitorTex;
+
   if (mctx && canvas && tex) {
     mctx.fillStyle = '#090d16';
     mctx.fillRect(0, 0, canvas.width, canvas.height);

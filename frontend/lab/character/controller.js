@@ -35,9 +35,9 @@ export class CharacterController {
       this.rig.root.position.set(-3.8, 0, -3.2);
       this.faceTarget(new THREE.Vector3(-4.5, 0.94, -4.2));
     } else {
-      // Spawn facing the Burette Stand
-      this.rig.root.position.set(0, 0, -1.0);
-      this.faceTarget(new THREE.Vector3(0, 0.94, -2.0));
+      // Spawn to the side of the Burette Stand (unobstructed hero apparatus view)
+      this.rig.root.position.set(-0.65, 0, -1.05);
+      this.faceTarget(new THREE.Vector3(0, 1.1, -1.9));
     }
     this.animator.playClip('idle');
   }

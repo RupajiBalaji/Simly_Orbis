@@ -84,8 +84,9 @@ export function formatApparatusTitle(id) {
 }
 
 export function getApparatusTagHeight(id) {
-  if (id === 'burette') return 1.4;
-  if (id === 'patient_bed') return 1.05;
+  if (id === 'burette') return 1.7;
+  if (id === 'patient_bed') return 1.1;
+  if (id === 'conical_flask') return 0.55;
   if (id === 'assay_analyzer') return 0.75;
   if (id === 'water_jug' || id === 'wash_bottle') return 0.55;
   if (id === 'sink') return 0.6;
@@ -99,7 +100,7 @@ export function createNameTag(label) {
   canvas.height = 64;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
   ctx.strokeStyle = '#c084fc';
   ctx.lineWidth = 3;
 
@@ -121,7 +122,7 @@ export function createNameTag(label) {
   const texture = new THREE.CanvasTexture(canvas);
   const spriteMat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
   const sprite = new THREE.Sprite(spriteMat);
-  sprite.scale.set(0.75, 0.2, 1.0);
+  sprite.scale.set(0.52, 0.14, 1.0);
   sprite.userData.isNameTag = true;
   return sprite;
 }
@@ -198,12 +199,12 @@ export function buildApparatus(rawApparatus, scene) {
       }
     } else if (id === 'burette' || type === 'burette') {
       group = buildBurette(id);
-      group.position.set(0, 0.94, -2.0);
-      group.userData.stationPos = new THREE.Vector3(0, 0, -1.0);
+      group.position.set(0, 0.94, -1.95);
+      group.userData.stationPos = new THREE.Vector3(-0.65, 0, -1.05);
     } else if (id === 'conical_flask' || type === 'flask' || type === 'conical_flask') {
       group = buildConicalFlask(id);
-      group.position.set(0, 0.94, -1.9);
-      group.userData.stationPos = new THREE.Vector3(0, 0, -1.0);
+      group.position.set(0.06, 0.94, -1.8);
+      group.userData.stationPos = new THREE.Vector3(-0.65, 0, -1.05);
     } else if (id === 'pipette' || type === 'pipette') {
       group = buildPipette(id);
       group.position.set(-1.0, 0.94, -1.8);
@@ -687,6 +688,7 @@ function buildSink(id) {
 // ---------------------------------------------------------------------------
 function buildBurette(id) {
   const g = new THREE.Group();
+  g.scale.set(1.45, 1.45, 1.45);
 
   // Retort Stand Base & Rod
   const baseGeo = new THREE.BoxGeometry(0.35, 0.03, 0.25);
@@ -744,6 +746,7 @@ function buildBurette(id) {
 // ---------------------------------------------------------------------------
 function buildConicalFlask(id) {
   const g = new THREE.Group();
+  g.scale.set(1.35, 1.35, 1.35);
 
   // Glass Erlenmeyer Cone & Neck
   const coneGeo = new THREE.ConeGeometry(0.18, 0.26, 24, 1, true);

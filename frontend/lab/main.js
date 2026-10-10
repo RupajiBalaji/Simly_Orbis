@@ -3,6 +3,7 @@
  * Initializes WebGL scene, lobby navigation, HUD, character, and action loops.
  */
 
+import * as THREE from 'three';
 import { api } from './api.js';
 import { state } from './state.js';
 import { LabScene } from './world/scene.js';
@@ -104,8 +105,10 @@ async function initOrbisLab() {
   window.directorRunner = directorRunner;
   window.sceneManager = sceneManager;
   window.characterController = characterController;
+  window.debugOverlay = debugOverlay;
   window.state = state;
   window.api = api;
+  window.THREE = THREE;
 
   // 3. Setup Navigation & District Selection
   setupLobby();

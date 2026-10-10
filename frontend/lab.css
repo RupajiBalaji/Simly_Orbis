@@ -6,8 +6,8 @@
 :root {
   --bg-deep: #0b071a;
   --bg-surface: #140d2e;
-  --bg-panel: rgba(26, 17, 56, 0.85);
-  --bg-glass: rgba(30, 20, 68, 0.72);
+  --bg-panel: rgba(20, 14, 46, 0.95);
+  --bg-glass: rgba(18, 14, 38, 0.94);
   --border-subtle: rgba(168, 85, 247, 0.25);
   --border-glow: rgba(192, 132, 252, 0.6);
   --accent-purple: #9333ea;
@@ -86,8 +86,7 @@ body.orbis-lab-body {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(12, 7, 29, 0.7);
-  backdrop-filter: blur(12px);
+  background: rgba(12, 7, 29, 0.95);
 }
 
 .lobby-brand {
@@ -194,7 +193,6 @@ body.orbis-lab-body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  backdrop-filter: blur(12px);
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s, box-shadow 0.25s;
   cursor: pointer;
   overflow: hidden;
@@ -322,8 +320,7 @@ body.orbis-lab-body {
   border: 1px solid var(--border-glow);
   border-radius: 20px;
   padding: 36px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(20px);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.6);
 }
 
 .brief-header {
@@ -486,11 +483,10 @@ body.orbis-lab-body {
   align-items: center;
   pointer-events: auto;
   background: var(--bg-glass);
-  backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
-  padding: 10px 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  padding: 8px 18px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .hud-left {
@@ -616,14 +612,13 @@ body.orbis-lab-body {
   grid-row: 2;
   pointer-events: auto;
   background: var(--bg-glass);
-  backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .protocol-header {
@@ -767,12 +762,11 @@ body.orbis-lab-body {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(24, 14, 52, 0.88);
-  backdrop-filter: blur(10px);
+  background: rgba(22, 14, 48, 0.95);
   border: 1px solid rgba(236, 72, 153, 0.45);
   border-radius: 10px;
   padding: 8px 18px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   pointer-events: auto;
   animation: bannerPulse 3s infinite ease-in-out;
 }
@@ -824,12 +818,11 @@ body.orbis-lab-body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 23, 42, 0.95);
   border: 1px solid rgba(168, 85, 247, 0.35);
   border-radius: 20px;
   padding: 4px 14px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .station-strip-label {
@@ -874,12 +867,11 @@ body.orbis-lab-body {
 
 /* Always-Visible Action Bar Container */
 .hud-action-bar-container {
-  background: rgba(20, 13, 46, 0.94);
-  backdrop-filter: blur(14px);
+  background: rgba(18, 13, 42, 0.96);
   border: 1px solid var(--border-glow);
   border-radius: 14px;
   padding: 10px 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
   width: 100%;
 }
 
@@ -1058,14 +1050,13 @@ body.orbis-lab-body {
   grid-row: 2;
   pointer-events: auto;
   background: var(--bg-glass);
-  backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
   max-height: 280px;
   transition: all 0.25s ease;
 }
@@ -1165,8 +1156,8 @@ body.orbis-lab-body {
 .toast {
   padding: 12px 18px;
   border-radius: 12px;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background: rgba(18, 14, 38, 0.96);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
   font-size: 0.88rem;
   line-height: 1.4;
   animation: toastSlide 0.3s ease forwards;
@@ -1368,21 +1359,21 @@ body.orbis-lab-body {
    ═══════════════════════════════════════════════════════════════════════ */
 #debug-overlay {
   position: absolute;
-  top: 68px;
-  right: 18px;
-  background: rgba(15, 23, 42, 0.94);
+  bottom: 56px;
+  left: 20px;
+  background: rgba(15, 23, 42, 0.95);
   border: 1px solid rgba(168, 85, 247, 0.5);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: #38bdf8;
-  z-index: 55;
+  z-index: 100;
   pointer-events: none;
   display: none;
-  max-width: 280px;
+  max-width: 320px;
   line-height: 1.45;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
 #debug-overlay.active {

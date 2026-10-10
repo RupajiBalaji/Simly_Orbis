@@ -11,20 +11,26 @@ export class ToastManager {
       this.container.id = 'toast-container';
       document.body.appendChild(this.container);
     }
+    this.activeTimer = null;
   }
 
   showInfo(message, durationMs = 3000) {
+    this.clear(); // At most 1 active toast at any time
+
     const toast = document.createElement('div');
     toast.className = 'toast toast-info';
     toast.textContent = message;
     this.container.appendChild(toast);
 
-    setTimeout(() => {
+    this.activeTimer = setTimeout(() => {
       toast.remove();
+      this.activeTimer = null;
     }, durationMs);
   }
 
   showViolation(violation) {
+    this.clear(); // At most 1 active toast at any time
+
     const toast = document.createElement('div');
     toast.className = 'toast toast-violation';
 
@@ -44,18 +50,29 @@ export class ToastManager {
       const btn = document.createElement('button');
       btn.className = 'toast-btn-dismiss';
       btn.textContent = 'I Understand';
-      btn.onclick = () => toast.remove();
+      btn.onclick = () => {
+        toast.remove();
+        if (this.activeTimer) {
+          clearTimeout(this.activeTimer);
+          this.activeTimer = null;
+        }
+      };
       toast.appendChild(btn);
     } else {
-      setTimeout(() => {
+      this.activeTimer = setTimeout(() => {
         toast.remove();
-      }, 5000);
+        this.activeTimer = null;
+      }, 3000);
     }
 
     this.container.appendChild(toast);
   }
 
   clear() {
+    if (this.activeTimer) {
+      clearTimeout(this.activeTimer);
+      this.activeTimer = null;
+    }
     if (this.container) {
       this.container.innerHTML = '';
     }

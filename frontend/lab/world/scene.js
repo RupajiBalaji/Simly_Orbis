@@ -27,17 +27,17 @@ export class LabScene {
     this.selectedObject = null;
 
     this.isTransitioningCamera = false;
-    this.cameraTarget = new THREE.Vector3(0, 1.1, -1.8);
-    this.cameraDefaultPos = new THREE.Vector3(0, 3.2, 5.0);
+    this.cameraTarget = new THREE.Vector3(0, 1.15, -1.8);
+    this.cameraDefaultPos = new THREE.Vector3(0, 2.2, 2.8);
 
     this.stationPresets = {
-      default: { pos: new THREE.Vector3(0, 3.2, 5.0), target: new THREE.Vector3(0, 1.1, -1.8) },
-      burette: { pos: new THREE.Vector3(0, 2.1, 0.8), target: new THREE.Vector3(0, 1.3, -2.0) },
-      conical_flask: { pos: new THREE.Vector3(0.5, 1.9, -0.6), target: new THREE.Vector3(0, 1.1, -1.9) },
-      balance: { pos: new THREE.Vector3(-4.5, 2.1, -2.0), target: new THREE.Vector3(-4.5, 1.1, -4.2) },
-      patient: { pos: new THREE.Vector3(3.6, 2.0, -1.8), target: new THREE.Vector3(4.5, 1.0, -3.8) },
-      analyzer: { pos: new THREE.Vector3(-4.5, 2.1, -1.5), target: new THREE.Vector3(-5.5, 1.1, -3.5) },
-      sink: { pos: new THREE.Vector3(-5.5, 2.2, 0.8), target: new THREE.Vector3(-7.2, 1.1, -1.0) }
+      default: { pos: new THREE.Vector3(0, 2.2, 2.8), target: new THREE.Vector3(0, 1.15, -1.8) },
+      burette: { pos: new THREE.Vector3(0.7, 1.75, -0.65), target: new THREE.Vector3(0, 1.35, -1.9) },
+      conical_flask: { pos: new THREE.Vector3(0.6, 1.55, -0.75), target: new THREE.Vector3(0.06, 1.1, -1.8) },
+      balance: { pos: new THREE.Vector3(-3.2, 1.8, -2.8), target: new THREE.Vector3(-4.5, 1.15, -4.2) },
+      patient: { pos: new THREE.Vector3(2.3, 1.8, -2.2), target: new THREE.Vector3(4.2, 1.1, -3.8) },
+      analyzer: { pos: new THREE.Vector3(-4.2, 1.8, -2.2), target: new THREE.Vector3(-5.5, 1.15, -3.5) },
+      sink: { pos: new THREE.Vector3(-5.2, 1.9, 0.4), target: new THREE.Vector3(-7.2, 1.1, -1.0) }
     };
 
     this.nameTagsVisible = true;
@@ -61,10 +61,11 @@ export class LabScene {
     this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 50);
     this.camera.position.copy(this.cameraDefaultPos);
 
-    // 3. Renderer (Physically Based Lighting for r160)
     // 3. Renderer (Physically Based Lighting for r160, Capped Pixel Ratio 1.5)
     this.quality = 'high';
-    this.lowFpsStreak = 0;
+    this.autoQualityLocked = false;
+    this.hasAutoDowngraded = false;
+    this.fpsSamples = [];
     this.updateCallbacks = [];
     this.isTabHidden = false;
 
@@ -108,6 +109,15 @@ export class LabScene {
     this.canvas.addEventListener('pointermove', this.onPointerMove, false);
     this.canvas.addEventListener('pointerdown', this.onPointerDown, false);
 
+    // Dynamic selective name tags subscription
+    state.subscribe((event, payload) => {
+      if (event === 'target_selected') {
+        this.updateNameTagVisibility(payload, this.getNextStepTargetId());
+      } else if (event === 'session_updated') {
+        this.updateNameTagVisibility(state.selectedTarget, this.getNextStepTargetId());
+      }
+    });
+
     // Start render loop
     this.lastTime = performance.now();
     this.animate();
@@ -142,6 +152,7 @@ export class LabScene {
   }
 
   toggleQuality() {
+    this.autoQualityLocked = true; // Manual toggle locks automatic quality adjustment
     this.setQuality(this.quality === 'high' ? 'low' : 'high', false);
     return this.quality;
   }
@@ -152,15 +163,68 @@ export class LabScene {
     }
   }
 
+  getNextStepTargetId() {
+    const exp = state.experiment;
+    const session = state.session;
+    if (!exp?.protocol) return null;
+    const completed = new Set(session?.protocol_progress || []);
+    const nextStep = exp.protocol.find((s) => !completed.has(s.id));
+    if (!nextStep) return null;
+
+    const stepTargetMap = {
+      wear_ppe: 'avatar',
+      tare_balance: 'digital_balance',
+      weigh_dose: 'digital_balance',
+      dissolve_dose: 'dosing_cup',
+      label_cup: 'dosing_cup',
+      administer_oral: 'patient_bed',
+      advance_time: 'ward_clock',
+      label_tube: 'tube_rack',
+      label_tubes: 'tube_rack',
+      draw_blood: 'patient_bed',
+      run_assay: 'assay_analyzer',
+      rinse_burette: 'burette',
+      fill_burette: 'burette',
+      pipette_analyte: 'conical_flask',
+      add_indicator: 'conical_flask',
+      titrate: 'burette',
+      swirl: 'conical_flask',
+      record_endpoint: 'conical_flask',
+      dispose_waste: 'chemical_waste_bin',
+      wash_hands: 'sink',
+    };
+    return stepTargetMap[nextStep.id] || null;
+  }
+
+  updateNameTagVisibility(selectedId = null, nextStepTargetId = null) {
+    if (!this.apparatusContainer) return;
+    const activeSelected = selectedId || state.selectedTarget;
+    const activeNext = nextStepTargetId || this.getNextStepTargetId();
+
+    this.apparatusContainer.traverse((child) => {
+      if (child.userData?.isNameTag) {
+        if (!this.nameTagsVisible) {
+          child.visible = false;
+          return;
+        }
+        const parentTargetId = child.parent?.userData?.targetId;
+        const matchesSelected = activeSelected && parentTargetId === activeSelected;
+        const matchesNext = activeNext && parentTargetId === activeNext;
+
+        // If an apparatus is selected or next step exists, show only matching tag(s)
+        if (activeSelected || activeNext) {
+          child.visible = Boolean(matchesSelected || matchesNext);
+        } else {
+          // Default initial fallback: only hero apparatus
+          child.visible = parentTargetId === 'burette' || parentTargetId === 'patient_bed';
+        }
+      }
+    });
+  }
+
   toggleNameTags(forceValue) {
     this.nameTagsVisible = forceValue !== undefined ? forceValue : !this.nameTagsVisible;
-    if (this.apparatusContainer) {
-      this.apparatusContainer.traverse((child) => {
-        if (child.userData?.isNameTag) {
-          child.visible = this.nameTagsVisible;
-        }
-      });
-    }
+    this.updateNameTagVisibility();
     const btn = document.getElementById('btn-toggle-nametags');
     if (btn) {
       btn.textContent = this.nameTagsVisible ? '🏷️ Tags: ON' : '🏷️ Tags: OFF';
@@ -179,7 +243,7 @@ export class LabScene {
     this.apparatusContainer = container;
     this.apparatusLookup = lookup;
 
-    this.toggleNameTags(this.nameTagsVisible);
+    this.updateNameTagVisibility();
     this.resetCameraView();
   }
 
@@ -199,11 +263,29 @@ export class LabScene {
     this.controls.target.copy(this.cameraTarget);
   }
 
+  checkCameraObstruction() {
+    if (!this.roomGroup || !this.camera || !this.cameraTarget) return;
+    const dir = new THREE.Vector3().subVectors(this.cameraTarget, this.camera.position);
+    const dist = dir.length();
+    if (dist < 0.2) return;
+    dir.normalize();
+
+    this.raycaster.set(this.camera.position, dir);
+    this.raycaster.far = Math.max(0.1, dist - 0.2);
+
+    const hits = this.raycaster.intersectObjects(this.roomGroup.children, true);
+    if (hits.length > 0) {
+      this.camera.position.y += 0.35;
+      this.camera.position.z += 0.2;
+    }
+  }
+
   setStationCamera(presetKey) {
     const preset = this.stationPresets[presetKey] || this.stationPresets.default;
     this.camera.position.copy(preset.pos);
     this.cameraTarget.copy(preset.target);
     this.controls.target.copy(this.cameraTarget);
+    this.checkCameraObstruction();
   }
 
   resetCameraView() {
@@ -217,7 +299,8 @@ export class LabScene {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const maxRatio = this.quality === 'high' ? 1.5 : 1.0;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxRatio));
   }
 
   onPointerMove(event) {
@@ -303,7 +386,7 @@ export class LabScene {
     this.animationFrameId = requestAnimationFrame(this.animate);
 
     // Pause rendering when tab is hidden to save GPU battery
-    if (this.isTabHidden || document.hidden) return;
+    if (this.isTabHidden) return;
 
     const now = performance.now();
     const dt = Math.min(0.1, (now - this.lastTime) / 1000);
@@ -329,19 +412,24 @@ export class LabScene {
 
       // FPS and Draw Calls counter for debug overlay
       this.frameCount++;
-      if (now - this.fpsTimer >= 500) {
+      if (now - this.fpsTimer >= 1000) {
         const fps = Math.round((this.frameCount * 1000) / (now - this.fpsTimer));
         const drawCalls = this.renderer.info.render.calls;
         state.updateStats({ fps, drawCalls });
 
-        // Auto Quality: If FPS remains under 30 for 3 seconds (6 checks), drop to Low quality
-        if (fps < 30) {
-          this.lowFpsStreak++;
-          if (this.lowFpsStreak >= 6 && this.quality === 'high') {
-            this.setQuality('low', true);
+        // Auto Quality: If average FPS < 25 over a 5s window, step down once to Low quality (never auto-step up)
+        if (!this.autoQualityLocked && !this.hasAutoDowngraded && this.quality === 'high') {
+          this.fpsSamples.push(fps);
+          if (this.fpsSamples.length > 5) {
+            this.fpsSamples.shift();
           }
-        } else {
-          this.lowFpsStreak = 0;
+          if (this.fpsSamples.length >= 5) {
+            const avgFps = this.fpsSamples.reduce((a, b) => a + b, 0) / this.fpsSamples.length;
+            if (avgFps < 25) {
+              this.hasAutoDowngraded = true;
+              this.setQuality('low', true);
+            }
+          }
         }
 
         this.frameCount = 0;
