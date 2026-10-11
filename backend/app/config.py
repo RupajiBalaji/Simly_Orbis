@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     mentor_daily_cap: int = 300
     ai_enabled: bool = True
     allowed_origins: str = "*"
+    trust_proxy: bool = False
     git_sha: str = ""
     app_version: str = "0.1.0-rc1"
 

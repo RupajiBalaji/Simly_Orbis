@@ -55,8 +55,9 @@ class SimSummary(BaseModel):
 class TutorResponse(BaseModel):
     message: str
     source: str  # "ai" | "fallback"
+    provider: str | None = None
+    provider_tag: str = "Rule-based"
     fallback_reason: str | None = None  # e.g. "no_api_key" | "api_error"
-
 
 
 # ---------------------------------------------------------------------------
@@ -112,28 +113,6 @@ async def get_tutor_feedback(body: SimSummary) -> TutorResponse:
     Call Google Gemini (or Anthropic Claude) with a simulation summary and return educational feedback.
     Falls back to a template if API keys are absent, cap is reached, or API calls fail.
     """
-    from app.security import ai_cap_tracker
-
-    can_call, block_reason = ai_cap_tracker.can_call_ai()
-    if not can_call:
-        log.info("AI call blocked (%s) – using template fallback.", block_reason)
-        return TutorResponse(
-            message=_template_response(body),
-            source="fallback",
-            fallback_reason="daily_cap_exceeded" if block_reason == "daily_cap_exceeded" else "ai_disabled",
-        )
-
-    gemini_key = settings.gemini_api_key.strip()
-    anthropic_key = settings.anthropic_api_key.strip()
-
-    if not gemini_key and not anthropic_key:
-        log.info("No AI API key set – using template fallback.")
-        return TutorResponse(
-            message=_template_response(body),
-            source="fallback",
-            fallback_reason="no_api_key",
-        )
-
     user_content = (
         f"Drug: {body.drug_name}\n"
         f"Dose: {body.dose_mg:.0f} mg × {body.n_doses} dose(s)"
@@ -145,50 +124,27 @@ async def get_tutor_feedback(body: SimSummary) -> TutorResponse:
         f"Score: {body.score}/100\n"
     )
 
-    # 1. Try Google Gemini
-    if gemini_key:
-        try:
-            from google import genai
-            from google.genai import types
+    from app.ai import call_ai_assistant
+    ai_res = await call_ai_assistant(
+        system_prompt=_SYSTEM_PROMPT,
+        user_content=user_content,
+        max_tokens=256,
+        timeout=8.0,
+    )
 
-            client = genai.Client(api_key=gemini_key)
-            config = types.GenerateContentConfig(
-                system_instruction=_SYSTEM_PROMPT,
-                max_output_tokens=256,
-                temperature=0.3,
-            )
-            response = await client.aio.models.generate_content(
-                model=settings.gemini_model,
-                contents=user_content,
-                config=config,
-            )
-            text = (response.text or "").strip()
-            if text:
-                return TutorResponse(message=text, source="ai")
-        except Exception as exc:  # noqa: BLE001
-            log.warning("Gemini API call failed (%s) – checking fallback.", exc)
+    if ai_res.text:
+        return TutorResponse(
+            message=ai_res.text,
+            source="ai",
+            provider=ai_res.provider,
+            provider_tag=ai_res.provider_tag,
+        )
 
-    # 2. Try Anthropic Claude if configured
-    if anthropic_key:
-        try:
-            import anthropic  # noqa: PLC0415
-
-            client = anthropic.AsyncAnthropic(api_key=anthropic_key)
-            response = await client.messages.create(
-                model=settings.anthropic_model,
-                max_tokens=256,
-                system=_SYSTEM_PROMPT,
-                messages=[{"role": "user", "content": user_content}],
-            )
-            text = response.content[0].text.strip()
-            return TutorResponse(message=text, source="ai")
-        except Exception as exc:  # noqa: BLE001
-            log.warning("Claude API call failed (%s) – using template fallback.", exc)
-
-    # 3. Rule-based template fallback
     return TutorResponse(
         message=_template_response(body),
         source="fallback",
-        fallback_reason="api_error",
+        provider=None,
+        provider_tag="Rule-based",
+        fallback_reason=ai_res.fallback_reason,
     )
 

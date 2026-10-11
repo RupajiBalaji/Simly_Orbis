@@ -102,15 +102,30 @@ async def test_ai_rate_limiter_triggers_429(client: AsyncClient):
     allowed = rate_limiter.check(test_ip, category="ai")
     assert allowed is False
 
-    # Calling tutor endpoint with header X-Forwarded-For: test_ip should get 429
+    # With TRUST_PROXY=true, calling tutor endpoint with X-Forwarded-For: client_hop, test_ip should extract last hop and get 429
+    settings.trust_proxy = True
+    try:
+        headers = {"X-Forwarded-For": f"10.0.0.1, {test_ip}"}
+        resp = await client.post(
+            "/api/tutor",
+            json={"mode": "hint", "context": {}},
+            headers=headers,
+        )
+        assert resp.status_code == 429
+        assert "Rate limit exceeded" in resp.json()["detail"]
+    finally:
+        settings.trust_proxy = False
+
+    # When TRUST_PROXY=false, X-Forwarded-For is ignored (spoofed header cannot manipulate rate limiting IP)
+    settings.trust_proxy = False
     headers = {"X-Forwarded-For": test_ip}
     resp = await client.post(
         "/api/tutor",
         json={"mode": "hint", "context": {}},
         headers=headers,
     )
-    assert resp.status_code == 429
-    assert "Rate limit exceeded" in resp.json()["detail"]
+    # Ignored X-Forwarded-For -> not throttled on test_ip
+    assert resp.status_code != 429
 
 
 # ---------------------------------------------------------------------------

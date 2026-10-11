@@ -16,6 +16,14 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_MODEL
+        value: gemini-flash-latest
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-4-5-20251001
+      - key: TRUST_PROXY
+        value: "true"
       - key: AI_ENABLED
         value: "true"
       - key: MENTOR_DAILY_CAP

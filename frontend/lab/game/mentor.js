@@ -194,13 +194,15 @@ export class DrOrbisMentor {
       this.callsLeft = res.calls_left ?? this.callsLeft;
 
       this.updateUnderTheHood(mode, this.callsLeft, latency);
-      this.updateSourceBadge(res.source);
+      this.updateSourceBadge(res.source, res.provider_tag || res.provider);
 
       // Render response with typing animation
       await this.appendMessage({
         sender: 'Dr. Orbis',
         text: res.message,
         source: res.source,
+        provider: res.provider,
+        providerTag: res.provider_tag,
         fallbackReason: res.fallback_reason,
         mode: mode,
         question: question,
@@ -215,6 +217,8 @@ export class DrOrbisMentor {
         sender: 'Dr. Orbis',
         text: `Dr. Orbis: Let's focus on current protocol step. Keep glassware stable and follow safety guidelines.`,
         source: 'fallback',
+        provider: null,
+        providerTag: 'Rule-based',
         fallbackReason: 'Network error',
         mode: mode,
       });
@@ -228,7 +232,7 @@ export class DrOrbisMentor {
     }
   }
 
-  async appendMessage({ sender, text, source, fallbackReason, mode, question }) {
+  async appendMessage({ sender, text, source, provider, providerTag, fallbackReason, mode, question }) {
     const list = document.getElementById('mentor-messages-list');
     if (!list) return;
 
@@ -246,7 +250,9 @@ export class DrOrbisMentor {
     const bubble = document.createElement('div');
     bubble.className = `mentor-msg-bubble mentor-response ${source === 'ai' ? 'msg-ai' : 'msg-rule'}`;
 
-    const tagLabel = source === 'ai' ? '🤖 AI Mentor' : '📋 Rule-Based';
+    const tagLabel = source === 'ai'
+      ? (providerTag || (provider === 'gemini' ? 'AI - Gemini' : (provider === 'claude' ? 'AI - Claude' : 'AI')))
+      : 'Rule-based';
     const tagClass = source === 'ai' ? 'badge-ai' : 'badge-rule';
 
     bubble.innerHTML = `
@@ -310,11 +316,11 @@ export class DrOrbisMentor {
     if (latEl) latEl.textContent = `${latencyMs}ms`;
   }
 
-  updateSourceBadge(source) {
+  updateSourceBadge(source, providerTag = null) {
     const badge = document.getElementById('mentor-source-tag');
     if (!badge) return;
     if (source === 'ai') {
-      badge.textContent = '🤖 Claude AI';
+      badge.textContent = providerTag ? `🤖 ${providerTag}` : '🤖 AI';
       badge.className = 'mentor-source-badge badge-ai';
     } else {
       badge.textContent = '📋 Rule-Based';

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import mimetypes
+import os
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -96,8 +97,14 @@ class SecurityAndRateLimitMiddleware(BaseHTTPMiddleware):
             or request.headers.get("host") == "test"
         )
 
-        if forwarded_for:
-            client_ip = forwarded_for.split(",")[0].strip()
+        trust_proxy = (
+            getattr(settings, "trust_proxy", False)
+            or os.environ.get("TRUST_PROXY", "").strip().lower() in ("true", "1", "yes")
+        )
+
+        if trust_proxy and forwarded_for:
+            # Behind trusted proxy (e.g. Render): use the LAST hop added by proxy
+            client_ip = forwarded_for.split(",")[-1].strip()
         elif not is_test_runner and request.client:
             client_ip = request.client.host
         elif not is_test_runner:
@@ -147,12 +154,14 @@ class SecurityAndRateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["X-Frame-Options"] = "DENY"
 
+        # CSP Policy: Tightened with connect-src 'self' only (wildcard removed).
+        # 'unsafe-inline' is retained in script-src/style-src for <script type="importmap"> and dynamic HUD DOM styles.
         csp_policy = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data: blob:; "
-            "connect-src 'self' *; "
+            "connect-src 'self'; "
             "font-src 'self'; "
             "media-src 'self' blob:; "
             "frame-ancestors 'none';"

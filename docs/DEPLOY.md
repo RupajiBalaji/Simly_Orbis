@@ -25,11 +25,17 @@ Your service will build from `Dockerfile` and be live at `https://<service-name>
 | `PORT` | Optional | `8000` (`10000` on Render) | Port on which Uvicorn listens. |
 | `MONGODB_URI` | Optional | `""` | MongoDB Atlas connection string. If omitted, app falls back cleanly to in-memory storage. |
 | `DB_NAME` | Optional | `Simly_Orbis` | Name of the database to use. |
-| `ANTHROPIC_API_KEY` | Optional | `""` | Key for Claude AI Mentor (Dr. Orbis). If omitted, falls back to rule-based mentor. |
-| `GEMINI_API_KEY` | Optional | `""` | Key for Google Gemini Tutor. |
+| `GEMINI_API_KEY` | Optional | `""` | Primary key for Dr. Orbis (Mentor & Tutor). If omitted, falls back to Anthropic key. |
+| `GEMINI_MODEL` | Optional | `gemini-flash-latest` | Google Gemini model identifier. |
+| `ANTHROPIC_API_KEY` | Optional | `""` | Secondary key for Dr. Orbis (Mentor & Tutor). If omitted, falls back to rule-based hints. |
+| `ANTHROPIC_MODEL` | Optional | `claude-haiku-4-5-20251001` | Anthropic Claude model identifier. |
+| `TRUST_PROXY` | Optional | `false` (`true` on Render) | When `true`, rate limiter trusts proxy headers and uses the LAST hop of `X-Forwarded-For`. |
 | `AI_ENABLED` | Optional | `true` | Set to `false` to immediately disable all external LLM calls. |
 | `MENTOR_DAILY_CAP` | Optional | `300` | Maximum AI mentor calls allowed per UTC calendar day. |
 | `ALLOWED_ORIGINS` | Optional | `*` | Comma-separated CORS allowed origins. |
+
+> [!NOTE]
+> **Unified AI Provider Precedence**: Both the in-game 3D lab **Mentor** and the 2D PK simulation **Tutor** use whichever API key exists (`GEMINI_API_KEY` first priority, `ANTHROPIC_API_KEY` second priority). If neither key is provided, both services seamlessly operate using educational rule-based fallback responses.
 
 ---
 

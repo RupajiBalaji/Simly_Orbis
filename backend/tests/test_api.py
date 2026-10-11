@@ -231,7 +231,12 @@ async def test_tutor_feedback_template_fallback(client: AsyncClient):
     assert len(body["message"]) > 0
     assert body["source"] in ("fallback", "ai")
     if body["source"] == "fallback":
-        assert body["fallback_reason"] in ("no_api_key", "api_error")
+        assert body["fallback_reason"] in (
+            "no_api_key",
+            "api_error",
+            "No AI key configured",
+            "AI service timeout or unavailable.",
+        )
         assert "Paracetamol" in body["message"]
 
 

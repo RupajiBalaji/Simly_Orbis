@@ -157,6 +157,8 @@ class MentorResponse(BaseModel):
 
     message: str
     source: Literal["ai", "fallback"]
+    provider: str | None = None
+    provider_tag: str = "Rule-based"
     fallback_reason: str | None = None
     calls_left: int
 
