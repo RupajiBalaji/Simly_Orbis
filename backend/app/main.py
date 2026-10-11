@@ -43,6 +43,7 @@ STATIC_DIR = Path(__file__).parent.parent.parent / "frontend"
 mimetypes.add_type("application/javascript", ".js")
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/json", ".json")
+mimetypes.add_type("application/wasm", ".wasm")
 
 
 # ---------------------------------------------------------------------------

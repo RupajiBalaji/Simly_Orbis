@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: simly-orbis
+    runtime: docker
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: DB_NAME
+        value: Simly_Orbis
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AI_ENABLED
+        value: "true"
+      - key: MENTOR_DAILY_CAP
+        value: "300"
+      - key: ALLOWED_ORIGINS
+        value: "*"
