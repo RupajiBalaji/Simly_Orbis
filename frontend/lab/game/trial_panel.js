@@ -362,6 +362,12 @@ export class TrialPanel {
         );
       }
 
+      // Update Virtual Trial Wall Screen with real result counts and colored matrix
+      const screenObj = this.scene?.getApparatus('virtual_trial_screen');
+      if (screenObj?.userData?.updateResults) {
+        screenObj.userData.updateResults(summary, series.outcomes);
+      }
+
       toast.showSuccess(`Trial completed across ${summary.n_patients} virtual patients!`);
     } catch (err) {
       console.error('Trial execution error:', err);

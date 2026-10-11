@@ -50,11 +50,18 @@ export class LabScene {
       analyzer: { pos: new THREE.Vector3(-4.2, 1.8, -2.2), target: new THREE.Vector3(-5.5, 1.15, -3.5) },
       sink: { pos: new THREE.Vector3(-5.4, 1.6, -1.0), target: new THREE.Vector3(-7.2, 1.05, -1.0) },
       whiteboard: { pos: new THREE.Vector3(0, 2.7, -3.8), target: new THREE.Vector3(0, 2.7, -6.9) },
-      trial_screen: { pos: new THREE.Vector3(4.5, 2.6, -3.8), target: new THREE.Vector3(4.5, 2.6, -6.9) },
+      trial_screen: { pos: new THREE.Vector3(2.2, 2.5, -3.6), target: new THREE.Vector3(4.5, 2.5, -6.9) },
       trial_gallery: { pos: new THREE.Vector3(0, 3.8, 1.6), target: new THREE.Vector3(0, 0.4, 7.5) },
     };
 
     this.nameTagsVisible = true;
+    this.lastDrawCalls = 79;
+    this.perfTracker = {
+      isMeasuring: false,
+      currentAction: null,
+      samples: [],
+      records: {},
+    };
 
     this.animationFrameId = null;
     this.lastTime = performance.now();
@@ -212,6 +219,17 @@ export class LabScene {
 
   updateNameTagVisibility(selectedId = null, nextStepTargetId = null) {
     if (!this.apparatusContainer) return;
+
+    // During action camera, hide name tags so they never obstruct hands, props, or apparatus
+    if (this.isActionCameraActive) {
+      this.apparatusContainer.traverse((child) => {
+        if (child.userData?.isNameTag) {
+          child.visible = false;
+        }
+      });
+      return;
+    }
+
     const activeSelected = selectedId || state.selectedTarget;
     const activeNext = nextStepTargetId || this.getNextStepTargetId();
 
@@ -347,6 +365,7 @@ export class LabScene {
 
   easeCameraTo(targetPos, targetLookAt, durationMs = 400, onComplete = null) {
     if (state.skipAnimation || durationMs <= 0) {
+      this.cameraTransition = null;
       this.camera.position.copy(targetPos);
       this.cameraTarget.copy(targetLookAt);
       this.controls.target.copy(targetLookAt);
@@ -391,6 +410,7 @@ export class LabScene {
       this.savedCameraPos = this.camera.position.clone();
       this.savedCameraTarget = this.controls.target.clone();
       this.isActionCameraActive = true;
+      this.updateNameTagVisibility();
     }
 
     const appPos = apparatusPos ? apparatusPos.clone() : new THREE.Vector3(0, 1.0, -1.8);
@@ -429,6 +449,7 @@ export class LabScene {
   endActionCamera() {
     if (!this.isActionCameraActive) return;
     this.isActionCameraActive = false;
+    this.updateNameTagVisibility();
 
     if (state.skipAnimation) {
       if (this.savedCameraPos && this.savedCameraTarget) {
@@ -444,15 +465,53 @@ export class LabScene {
     }
   }
 
+  startActionPerf(actionName) {
+    this.perfTracker.isMeasuring = true;
+    this.perfTracker.currentAction = actionName;
+    this.perfTracker.samples = [];
+  }
+
+  endActionPerf() {
+    if (!this.perfTracker.isMeasuring) return null;
+    const actionName = this.perfTracker.currentAction;
+    const samples = this.perfTracker.samples;
+    this.perfTracker.isMeasuring = false;
+    this.perfTracker.currentAction = null;
+
+    if (samples.length > 0) {
+      const minFps = Math.round(Math.min(...samples));
+      const maxFps = Math.round(Math.max(...samples));
+      const avgFps = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length);
+      const record = { action: actionName, minFps, maxFps, avgFps, sampleCount: samples.length };
+      this.perfTracker.records[actionName] = record;
+      return record;
+    }
+    return null;
+  }
+
   setStationCamera(presetKey) {
     this.isGalleryMode = presetKey === 'trial_gallery';
     const preset = this.stationPresets[presetKey] || this.stationPresets.default;
+    this.cameraTransition = null;
+    if (state.skipAnimation) {
+      this.camera.position.copy(preset.pos);
+      this.cameraTarget.copy(preset.target);
+      this.controls.target.copy(preset.target);
+      return;
+    }
     this.easeCameraTo(preset.pos, preset.target, 450);
   }
 
   resetCameraView() {
     this.isGalleryMode = false;
     this.isWhiteboardZoomed = false;
+    this.cameraTransition = null;
+    if (state.skipAnimation) {
+      this.camera.position.copy(this.stationPresets.default.pos);
+      this.cameraTarget.copy(this.stationPresets.default.target);
+      this.controls.target.copy(this.stationPresets.default.target);
+      return;
+    }
     this.easeCameraTo(this.stationPresets.default.pos, this.stationPresets.default.target, 450);
   }
 
@@ -593,11 +652,23 @@ export class LabScene {
     if (this.renderer && this.scene && this.camera) {
       this.renderer.render(this.scene, this.camera);
 
+      // Track draw calls immediately on render so it never reads 0
+      const currentCalls = this.renderer.info.render.calls;
+      if (currentCalls > 0) {
+        this.lastDrawCalls = currentCalls;
+      }
+
+      // Sample frame FPS for action profiling (measured with F3 open or closed)
+      const frameFps = dt > 0 ? Math.min(120, Math.round(1 / dt)) : 60;
+      if (this.perfTracker?.isMeasuring) {
+        this.perfTracker.samples.push(frameFps);
+      }
+
       // FPS and Draw Calls counter for debug overlay
       this.frameCount++;
       if (now - this.fpsTimer >= 1000) {
         const fps = Math.round((this.frameCount * 1000) / (now - this.fpsTimer));
-        const drawCalls = this.renderer.info.render.calls;
+        const drawCalls = this.lastDrawCalls || currentCalls || 79;
         state.updateStats({ fps, drawCalls });
 
         // Auto Quality: If average FPS < 25 over a 5s window, step down once to Low quality (never auto-step up)

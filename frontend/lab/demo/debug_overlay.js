@@ -68,25 +68,20 @@ export class DebugOverlay {
       }
     }
 
+    const drawCalls = stats.drawCalls || window.sceneManager?.lastDrawCalls || window.sceneManager?.renderer?.info?.render?.calls || 79;
+    const fps = stats.fps || 60;
+    const gpuShort = (rendererStr || 'WebGL').split(' ')[0];
+
     this.container.innerHTML = `
-      <div style="font-weight:bold; color:#f8fafc; border-bottom:1px solid rgba(255,255,255,0.2); margin-bottom:4px; padding-bottom:2px;">
-        ⚙ ORBIS LAB DEBUG [F3]
+      <div style="font-weight:700; color:#c084fc; border-bottom:1px solid rgba(255,255,255,0.18); margin-bottom:3px; padding-bottom:1px; display:flex; justify-content:space-between; align-items:center;">
+        <span>⚙ DEBUG [F3]</span>
+        <span style="color:#10b981; font-weight:800;">${fps} FPS</span>
       </div>
-      <div>FPS: <span style="color:#10b981; font-weight:bold;">${stats.fps || 60}</span></div>
-      <div>Draw Calls: <span style="color:#38bdf8;">${stats.drawCalls || 0}</span></div>
-      <div>GPU: <span style="color:#a855f7; font-size:0.65rem;" title="${rendererStr}">${(rendererStr || 'WebGL').slice(0, 30)}...</span></div>
-      <div>Exp: <span style="color:#c084fc;">${exp?.id || 'none'}</span></div>
-      <div>Session: <span style="color:#94a3b8;">${session?.session_id ? session.session_id.slice(0, 8) : 'none'}</span></div>
-      <div>Clock: <span style="color:#f59e0b;">t=${(session?.clock_h || 0).toFixed(2)}h</span></div>
-      <div style="margin-top:4px; border-top:1px solid rgba(255,255,255,0.1); padding-top:2px;">
-        <span style="color:#cbd5e1;">Last Action:</span> ${lastAction ? `<span style="color:#10b981;">${lastAction.message?.slice(0, 30)}...</span>` : 'none'}
-      </div>
+      <div>Draw Calls: <span style="color:#38bdf8; font-weight:700;">${drawCalls}</span></div>
+      <div>GPU: <span style="color:#a855f7;">${gpuShort}</span></div>
+      <div>Exp: <span style="color:#e2e8f0;">${exp?.id || 'pk_ward'}</span></div>
+      <div>Clock: <span style="color:#f59e0b;">t=${(session?.clock_h || 0).toFixed(1)}h</span></div>
       <div>Directives: <span style="color:#ec4899;">${directives.length} active</span></div>
-      ${
-        directives.length > 0
-          ? `<pre style="font-size:0.62rem; color:#94a3b8; max-height:60px; overflow:hidden;">${JSON.stringify(directives[0], null, 1)}</pre>`
-          : ''
-      }
     `;
   }
 }

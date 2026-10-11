@@ -42,7 +42,12 @@ export function createVirtualTrialScreen() {
   canvas.height = 576;
   const ctx = canvas.getContext('2d');
 
-  function drawScreenGraphic(statusText = 'READY FOR COHORT RUN') {
+  let lastTrialResults = null;
+
+  function drawScreenGraphic(statusText = 'No trial run yet', resultsData = null) {
+    if (resultsData) lastTrialResults = resultsData;
+    const currentResults = resultsData || lastTrialResults;
+
     ctx.fillStyle = '#090d16';
     ctx.fillRect(0, 0, 1024, 576);
 
@@ -62,58 +67,123 @@ export function createVirtualTrialScreen() {
       ctx.stroke();
     }
 
-    // Top Header
+    // Top Header (Shortened & legible)
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 44px "JetBrains Mono", monospace';
-    ctx.fillText('⬡ VIRTUAL CLINICAL TRIAL ARENA', 48, 70);
+    ctx.font = 'bold 40px "JetBrains Mono", monospace';
+    ctx.fillText('⬡ VIRTUAL TRIAL ARENA', 48, 68);
 
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = 'bold 24px Inter, sans-serif';
-    ctx.fillText('1,000-Patient Population Pharmacokinetics • N=20–1000', 48, 108);
+    ctx.font = 'bold 22px Inter, sans-serif';
+    ctx.fillText('Cohort Population Simulation • N=20–1000', 48, 104);
 
     // Center visual: stylized crowd matrix representation
     ctx.fillStyle = '#1e293b';
-    ctx.fillRect(48, 135, 500, 315);
+    ctx.fillRect(48, 130, 490, 320);
     ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
     ctx.lineWidth = 2;
-    ctx.strokeRect(48, 135, 500, 315);
+    ctx.strokeRect(48, 130, 490, 320);
 
-    // Dot matrix pattern
+    // Dot matrix pattern: neutral grey dots until real trial run completes
+    const outcomes = currentResults?.outcomes || null;
+    let dotIdx = 0;
+
     for (let r = 0; r < 14; r++) {
       for (let c = 0; c < 24; c++) {
-        const dotX = 70 + c * 19.5;
-        const dotY = 160 + r * 19;
-        ctx.fillStyle = (r + c) % 5 === 0 ? '#10b981' : (r + c) % 11 === 0 ? '#ef4444' : '#64748b';
+        const dotX = 68 + c * 19.5;
+        const dotY = 152 + r * 19.5;
+
+        if (outcomes && dotIdx < outcomes.length) {
+          const outcome = outcomes[dotIdx];
+          ctx.fillStyle = outcome === 1 ? '#10b981' : outcome === 2 ? '#ef4444' : '#f59e0b';
+        } else if (outcomes) {
+          ctx.fillStyle = '#64748b';
+        } else {
+          // Neutral grey dots when no trial run yet
+          ctx.fillStyle = '#64748b';
+        }
+        dotIdx++;
+
         ctx.beginPath();
         ctx.arc(dotX, dotY, 4.5, 0, Math.PI * 2);
         ctx.fill();
       }
     }
 
-    // Right Side Info Panel
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 28px Inter, sans-serif';
-    ctx.fillText('Population Trial Engine', 580, 175);
+    // Center badge if no trial run yet
+    if (!currentResults) {
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillRect(150, 260, 280, 50);
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(150, 260, 280, 50);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 20px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('No trial run yet', 290, 292);
+      ctx.textAlign = 'left';
+    }
 
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '21px Inter, sans-serif';
-    ctx.fillText('• Log-normal body weight (CV 18%)', 580, 222);
-    ctx.fillText('• Clearance CV 30% & ka CV 25%', 580, 260);
-    ctx.fillText('• Impaired hepatic clearance (0.6x)', 580, 298);
-    ctx.fillText('• Vectorized Bateman run (< 0.2s)', 580, 336);
-    ctx.fillText('• 3D Instanced 1,000 patient crowd wave', 580, 374);
+    // Right Side Info Panel
+    if (!currentResults) {
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 26px Inter, sans-serif';
+      ctx.fillText('Virtual Cohort Engine', 565, 170);
+
+      ctx.fillStyle = '#e2e8f0';
+      ctx.font = '20px Inter, sans-serif';
+      ctx.fillText('• Demographic Variation (CV 18-30%)', 565, 218);
+      ctx.fillText('• Impaired Liver Subgroup (0.6x)', 565, 256);
+      ctx.fillText('• Vectorized Bateman (< 0.2s)', 565, 294);
+      ctx.fillText('• 1,000-Patient 3D Crowd Arena', 565, 332);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('• Status: No trial run yet', 565, 370);
+    } else {
+      const s = currentResults.summary;
+      const helpedCount = s.group_counts?.in_range ?? s.group_counts?.helped ?? 0;
+      const toxicCount = s.group_counts?.toxic ?? 0;
+      const subCount = s.group_counts?.subtherapeutic ?? 0;
+      const medPeak = s.median_peak ?? s.peak_concentration?.median ?? 0;
+      const avgPeak = s.mean_peak ?? s.peak_concentration?.mean ?? 0;
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 26px Inter, sans-serif';
+      ctx.fillText(`Real Cohort (N=${s.n_patients})`, 565, 170);
+
+      ctx.fillStyle = '#10b981';
+      ctx.font = 'bold 20px Inter, sans-serif';
+      ctx.fillText(`• ${helpedCount} Helped (${s.pct_in_range ?? 0}%)`, 565, 218);
+
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText(`• ${toxicCount} Toxic (${s.pct_toxic ?? 0}%)`, 565, 256);
+
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillText(`• ${subCount} Below (${s.pct_subtherapeutic ?? 0}%)`, 565, 294);
+
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = '20px Inter, sans-serif';
+      ctx.fillText(`• Peak Median: ${Number(medPeak).toFixed(1)} mg/L`, 565, 332);
+      ctx.fillText(`• Peak Mean: ${Number(avgPeak).toFixed(1)} mg/L`, 565, 370);
+    }
 
     // Status / Click prompt banner
     ctx.fillStyle = '#9333ea';
     ctx.fillRect(48, 475, 928, 65);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 26px "JetBrains Mono", monospace';
+    ctx.font = 'bold 24px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(`▶ CLICK TO ENTER VIEWING GALLERY (${statusText})`, 512, 517);
+
+    if (!currentResults) {
+      ctx.fillText(`▶ CLICK TO RUN VIRTUAL TRIAL (${statusText})`, 512, 516);
+    } else {
+      const s = currentResults.summary;
+      const helpedCount = s.group_counts?.in_range ?? s.group_counts?.helped ?? 0;
+      const toxicCount = s.group_counts?.toxic ?? 0;
+      ctx.fillText(`▶ TRIAL COMPLETE: ${helpedCount} HELPED, ${toxicCount} TOXIC`, 512, 516);
+    }
     ctx.textAlign = 'left';
   }
 
-  drawScreenGraphic();
+  drawScreenGraphic('No trial run yet', null);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -127,7 +197,11 @@ export function createVirtualTrialScreen() {
   group.userData.screenCanvas = canvas;
   group.userData.screenTexture = texture;
   group.userData.updateStatus = (msg) => {
-    drawScreenGraphic(msg);
+    drawScreenGraphic(msg, lastTrialResults);
+    texture.needsUpdate = true;
+  };
+  group.userData.updateResults = (summary, outcomes) => {
+    drawScreenGraphic('Trial Finished', { summary, outcomes });
     texture.needsUpdate = true;
   };
 

@@ -49,6 +49,25 @@ export class DirectiveQueue {
           this.sceneManager.startActionCamera(appWorldPos, avWorldPos, durationMs);
         }
 
+        if (this.sceneManager?.startActionPerf) {
+          this.sceneManager.startActionPerf(clipName);
+        }
+
+        const camIndicator = document.getElementById('action-cam-indicator');
+        if (camIndicator) {
+          const actionLabels = {
+            weigh: 'Weighing Active Substance',
+            administer_oral: 'Administering Oral Suspension',
+            label: 'Labeling Apparatus',
+            draw_blood: 'Venous Blood Sampling',
+            wash_hands: 'Washing & Decontaminating Hands',
+            dissolve: 'Dissolving Powder In Water',
+            tare_balance: 'Taring Analytical Balance',
+          };
+          camIndicator.textContent = `🎬 ACTION CAM: ${actionLabels[clipName] || clipName.replace(/_/g, ' ').toUpperCase()}`;
+          camIndicator.style.display = 'flex';
+        }
+
         // Procedural streams and droplets effects
         if (clipName === 'wash_hands' && apparatus) {
           setTimeout(() => {
@@ -65,8 +84,15 @@ export class DirectiveQueue {
         }
 
         const onFinished = () => {
+          if (this.sceneManager?.endActionPerf) {
+            this.sceneManager.endActionPerf();
+          }
           if (this.sceneManager?.endActionCamera) {
             this.sceneManager.endActionCamera();
+          }
+          const camIndicator = document.getElementById('action-cam-indicator');
+          if (camIndicator) {
+            camIndicator.style.display = 'none';
           }
           resolve();
         };
