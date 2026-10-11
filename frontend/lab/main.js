@@ -153,21 +153,31 @@ function setupLobby() {
 
   // About Simly Orbis Modal
   const btnOpenAbout = document.getElementById('btn-open-about');
+  const btnHudOpenAbout = document.getElementById('btn-hud-open-about');
   const modalAbout = document.getElementById('modal-about');
   const btnCloseAbout = document.getElementById('btn-close-about');
   const btnAboutCloseBtn = document.getElementById('btn-about-close-btn');
 
-  if (btnOpenAbout && modalAbout) {
-    btnOpenAbout.onclick = () => modalAbout.classList.remove('hidden');
+  if (modalAbout) {
+    if (btnOpenAbout) btnOpenAbout.onclick = () => modalAbout.classList.remove('hidden');
+    if (btnHudOpenAbout) btnHudOpenAbout.onclick = () => modalAbout.classList.remove('hidden');
     if (btnCloseAbout) btnCloseAbout.onclick = () => modalAbout.classList.add('hidden');
     if (btnAboutCloseBtn) btnAboutCloseBtn.onclick = () => modalAbout.classList.add('hidden');
   }
 
-  // Check Storage Mode & show banner if in-memory
+  // Check Storage Mode & dynamic version metadata
   api.getHealth().then((health) => {
     if (health?.storage_mode === 'memory') {
       const banner = document.getElementById('storage-mode-banner');
       if (banner) banner.classList.remove('hidden');
+    }
+    if (health?.app_version) {
+      const verEl = document.getElementById('about-version');
+      if (verEl) verEl.textContent = health.app_version;
+    }
+    if (health?.git_sha) {
+      const shaEl = document.getElementById('about-git-sha');
+      if (shaEl) shaEl.textContent = health.git_sha.substring(0, 7);
     }
   }).catch(() => {});
 

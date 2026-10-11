@@ -239,6 +239,7 @@
         <div class="hud-volume-wrap" id="hud-volume-wrap" title="Audio Volume">
           <input type="range" id="hud-volume-slider" min="0" max="100" value="40" aria-label="Volume">
         </div>
+        <button type="button" class="hud-btn" id="btn-hud-open-about" title="About Simly Orbis">ℹ️ About</button>
         <button type="button" class="hud-btn" id="btn-toggle-quality" title="Toggle Graphics Quality (High / Low)">⚙️ Quality: High</button>
         <button type="button" class="hud-btn" id="btn-toggle-nametags" title="Toggle 3D labels above apparatus (Key: N)">🏷️ Tags: ON</button>
         <button type="button" class="hud-btn" id="btn-reset-view" title="Reset camera viewpoint">🎥 Reset View</button>
@@ -349,51 +350,62 @@
        SCREEN 6: ABOUT SIMLY ORBIS MODAL
        ═════════════════════════════════════════════════════════════════════ -->
   <div id="modal-about" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:200; background:rgba(12,7,29,0.92);">
-    <div class="brief-modal" style="max-width:680px; max-height:85vh; overflow-y:auto;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
-        <h2 style="font-size:1.5rem; color:#38bdf8; display:flex; align-items:center; gap:8px;">
+    <div class="brief-modal" style="max-width:720px; max-height:85vh; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
+        <h2 style="font-size:1.4rem; color:#38bdf8; display:flex; align-items:center; gap:8px;">
           <span>⬡</span> About Simly Orbis
         </h2>
         <button type="button" class="btn-close-modal" id="btn-close-about" style="background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">✕</button>
       </div>
 
-      <div style="font-size:0.92rem; line-height:1.6; color:#cbd5e1; margin-bottom:18px;">
-        <p style="font-size:1.05rem; font-weight:600; color:#f8fafc; margin-bottom:12px;">
-          Simly Orbis is a simulated world for testing before building. It gives students, scientists, and engineers a sandbox where actions carry physical consequences and mathematical rigor before touching physical equipment or real patients.
+      <div style="font-size:0.9rem; line-height:1.55; color:#cbd5e1; margin-bottom:16px;">
+        <p style="font-size:1rem; font-weight:600; color:#f8fafc; margin-bottom:8px;">
+          A science learning game where you play the scientist, not the spectator.
+        </p>
+        <p style="margin-bottom:12px; color:#94a3b8; font-size:0.84rem;">
+          Step into a fully interactive 3D laboratory where every dose, dilution, and pipetting action carries physical consequences before touching real equipment or human patients.
         </p>
 
-        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:14px; margin-bottom:14px;">
-          <h4 style="color:#10b981; font-size:0.95rem; margin-bottom:6px;">🔬 What is Real:</h4>
-          <ul style="padding-left:18px; margin:0; font-size:0.85rem; color:#cbd5e1;">
-            <li>Exact Bateman two-compartment superposition pharmacokinetics differential equations.</li>
-            <li>Volumetric acid-base titration equivalence equilibrium curves with Henderson-Hasselbalch indicator inflection.</li>
-            <li>Monte Carlo population variation with log-normal clearance distributions and analytical reality check invariants.</li>
-            <li>Deterministic safety rules engine with explicit severity penalties and educational feedback.</li>
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+          <h4 style="color:#38bdf8; font-size:0.9rem; margin-bottom:6px;">🏗️ Architecture in 4 Bullets:</h4>
+          <ul style="padding-left:18px; margin:0; font-size:0.82rem; color:#cbd5e1; line-height:1.5;">
+            <li><strong>FastAPI Backend:</strong> Async Python microservices with token-bucket rate limiting (120/min general, 10/min AI), 20 KB body protection, security headers (CSP, nosniff), and MongoDB Atlas with in-memory fallback.</li>
+            <li><strong>Procedural Three.js 3D Frontend:</strong> 100% procedural geometry and custom materials running at 60 FPS on any laptop with zero external 3D model downloads (instant 2s page load).</li>
+            <li><strong>Deterministic Simulation Engines:</strong> Exact Bateman one-compartment superposition PK equations and Henderson-Hasselbalch acid-base equilibria as the mathematical single source of truth.</li>
+            <li><strong>AI Lab Mentor (Dr. Orbis):</strong> Context-aware Claude pedagogical mentor with strict prompt-injection defenses and deterministic rule-based fallback when quotas or keys expire.</li>
           </ul>
         </div>
 
-        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:14px; margin-bottom:14px;">
-          <h4 style="color:#f59e0b; font-size:0.95rem; margin-bottom:6px;">⚖️ What is Simplified:</h4>
-          <ul style="padding-left:18px; margin:0; font-size:0.85rem; color:#cbd5e1;">
-            <li>Patient vitals (heart rate and SpO2) are illustrative heuristics designed for clinical game feedback.</li>
-            <li>Laboratory apparatus interactions are streamlined to protocol essentials (weigh, dissolve, pipette, titrate).</li>
-            <li>Time progression is quantized for educational walkthroughs.</li>
-          </ul>
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+          <h4 style="color:#10b981; font-size:0.9rem; margin-bottom:4px;">🎯 Why Deterministic First?</h4>
+          <p style="margin:0; font-size:0.82rem; color:#cbd5e1;">
+            Simulations must be reproducible, mathematically rigorous, and independently verifiable. In Simly Orbis, the physics engine calculates exact outcomes; the AI explains <em>why</em> phenomena occur, never inventing numbers or overriding physics.
+          </p>
         </div>
 
-        <div style="background:rgba(56,189,248,0.06); border-left:3px solid #38bdf8; padding:10px 14px; border-radius:4px; margin-bottom:14px;">
-          <h4 style="color:#38bdf8; font-size:0.88rem; margin-bottom:4px;">🚀 Upcoming Simulation Districts:</h4>
-          <p style="margin:0 0 4px; font-size:0.82rem;"><strong>Orbital Mechanics:</strong> Keplerian two-body celestial orbital dynamics, Hohmann transfer windows, and delta-v budgets.</p>
-          <p style="margin:0; font-size:0.82rem;"><strong>Market Microstructure:</strong> Continuous double auctions, limit order books, and multi-agent liquidity equilibrium.</p>
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:12px 14px; margin-bottom:12px;">
+          <h4 style="color:#f59e0b; font-size:0.9rem; margin-bottom:4px;">✅ Verification & Reality Checks:</h4>
+          <p style="margin:0; font-size:0.82rem; color:#cbd5e1;">
+            Inspect the in-game <strong>Reality Check</strong> board on the lab wall to view analytical invariant tests verified against published textbooks. The engine is safeguarded by 90+ automated pytest test cases in CI.
+          </p>
         </div>
 
-        <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:10px 14px; font-size:0.82rem; color:#fca5a5; text-align:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(56,189,248,0.05); border:1px solid rgba(56,189,248,0.2); border-radius:6px; padding:8px 12px; font-size:0.8rem; margin-bottom:12px;">
+          <div>
+            Built by <strong style="color:#f8fafc;">Rupaji Balaji</strong> &bull; <a href="https://github.com/RupajiBalaji/Simly_Orbis" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline;">GitHub Repository</a>
+          </div>
+          <div style="color:#94a3b8; font-family:monospace;" id="about-build-meta">
+            Version: <span id="about-version" style="color:#38bdf8;">0.1.0-rc1</span> (<span id="about-git-sha">RC1</span>)
+          </div>
+        </div>
+
+        <div style="background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:6px; padding:8px 12px; font-size:0.78rem; color:#fca5a5; text-align:center;">
           Educational simulation. Not medical advice. Not clinical evidence.
         </div>
       </div>
 
       <div style="text-align:right;">
-        <button type="button" class="btn-primary" id="btn-about-close-btn" style="padding:8px 18px;">Understood</button>
+        <button type="button" class="btn-primary" id="btn-about-close-btn" style="padding:8px 18px;">Close</button>
       </div>
     </div>
   </div>
