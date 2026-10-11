@@ -1079,10 +1079,10 @@ function buildPhMeter(id) {
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#0f172a';
   ctx.fillRect(0, 0, 128, 64);
-  ctx.fillStyle = '#34d399';
-  ctx.font = 'bold 26px monospace';
+  ctx.fillStyle = '#64748b';
+  ctx.font = 'bold 24px monospace';
   ctx.textAlign = 'center';
-  ctx.fillText('pH 7.00', 64, 42);
+  ctx.fillText('pH --.--', 64, 42);
 
   const tex = new THREE.CanvasTexture(canvas);
   const screenGeo = new THREE.PlaneGeometry(0.16, 0.08);

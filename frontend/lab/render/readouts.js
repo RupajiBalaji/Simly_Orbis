@@ -24,15 +24,15 @@ export function applyReadoutDirective(apparatusGroup, directive) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 20px monospace';
+    ctx.font = canvas.width <= 160 ? 'bold 14px monospace' : 'bold 20px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText(label.toUpperCase(), 16, 32);
+    ctx.fillText(label.toUpperCase(), 10, canvas.width <= 160 ? 20 : 32);
 
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 36px monospace';
+    ctx.fillStyle = '#34d399';
+    ctx.font = canvas.width <= 160 ? 'bold 22px monospace' : 'bold 36px monospace';
     ctx.textAlign = 'right';
     const valText = typeof value === 'number' ? value.toFixed(2) : String(value);
-    ctx.fillText(`${valText} ${unit}`.trim(), canvas.width - 16, canvas.height - 24);
+    ctx.fillText(`${valText} ${unit}`.trim(), canvas.width - 10, canvas.height - (canvas.width <= 160 ? 14 : 20));
 
     tex.needsUpdate = true;
   }

@@ -225,6 +225,8 @@ export class TrialPanel {
     const doseVal = document.getElementById('trial-dose-val');
     const dosesInput = document.getElementById('trial-doses');
     const dosesVal = document.getElementById('trial-doses-val');
+    const intervalInput = document.getElementById('trial-interval');
+    const intervalVal = document.getElementById('trial-interval-val');
 
     if (doses.length > 0 && doseInput && doseVal) {
       const lastDose = doses[doses.length - 1];
@@ -233,9 +235,23 @@ export class TrialPanel {
       doseVal.textContent = `${mg} mg`;
 
       if (dosesInput && dosesVal) {
-        const nD = Math.min(6, doses.length);
+        const nD = Math.max(1, Math.min(6, doses.length > 1 ? doses.length : 4));
         dosesInput.value = nD;
         dosesVal.textContent = `${nD} ${nD === 1 ? 'dose' : 'doses'}`;
+      }
+    } else {
+      // Default instructive mixed regimen within 3g daily: 500 mg x 4 doses q6h (2,000 mg/day)
+      if (doseInput && doseVal) {
+        doseInput.value = 500;
+        doseVal.textContent = '500 mg';
+      }
+      if (dosesInput && dosesVal) {
+        dosesInput.value = 4;
+        dosesVal.textContent = '4 doses';
+      }
+      if (intervalInput && intervalVal) {
+        intervalInput.value = 6;
+        intervalVal.textContent = 'q6h';
       }
     }
   }
@@ -243,6 +259,16 @@ export class TrialPanel {
   open() {
     this.isOpen = true;
     this.prefillCurrentRegimen();
+
+    // Auto-collapse HUD panels (checklist, event log, mentor) to keep viewing gallery unobstructed
+    this.savedPanelStates = {
+      checklist: document.getElementById('hud-protocol-panel')?.classList.contains('collapsed'),
+      log: document.getElementById('hud-right-panel')?.classList.contains('collapsed'),
+      mentor: window.drOrbisMentor?.isCollapsed ?? false,
+    };
+    window.labHUD?.setChecklistCollapsed(true);
+    window.labHUD?.setLogCollapsed(true);
+    window.drOrbisMentor?.setCollapsed(true);
 
     if (this.panelEl) this.panelEl.classList.remove('hidden');
     if (this.crowdHudEl) this.crowdHudEl.classList.remove('hidden');
@@ -264,6 +290,13 @@ export class TrialPanel {
     if (this.panelEl) this.panelEl.classList.add('hidden');
     if (this.crowdHudEl) this.crowdHudEl.classList.add('hidden');
     this.hideCompareModal();
+
+    // Restore HUD panel states on exit
+    if (this.savedPanelStates) {
+      window.labHUD?.setChecklistCollapsed(this.savedPanelStates.checklist);
+      window.labHUD?.setLogCollapsed(this.savedPanelStates.log);
+      window.drOrbisMentor?.setCollapsed(this.savedPanelStates.mentor);
+    }
 
     // Reset camera to default ward view
     if (this.scene) {
@@ -327,22 +360,24 @@ export class TrialPanel {
       document.getElementById('stat-pct-sub').textContent = `${summary.pct_subtherapeutic}%`;
       document.getElementById('stat-mean-peak').textContent = `${summary.mean_peak} mg/L`;
 
-      // AI-Free explanation
+      // Plain-code insight generated from the data (no AI)
       const verdictEl = document.getElementById('trial-verdict-text');
       if (verdictEl) {
-        if (summary.pct_toxic > 5.0) {
-          verdictEl.textContent = `⚠️ High toxicity warning: ${summary.pct_toxic}% of virtual patients exceeded red threshold (30.0 mg/L). Hepatic clearance subgroup toxic rate: ${summary.subgroups.reduced_liver.pct_toxic}%.`;
+        let insight = '';
+        if (summary.median_peak < summary.green_low) {
+          insight = `Median peak ${summary.median_peak.toFixed(1)} mg/L is below the ${summary.green_low.toFixed(1)} mg/L therapeutic minimum, so one ${params.dose_mg} mg dose is too low for most patients.`;
+          verdictEl.style.borderColor = '#f59e0b';
+          verdictEl.style.color = '#fde68a';
+        } else if (summary.pct_toxic > 5.0) {
+          insight = `Median peak ${summary.median_peak.toFixed(1)} mg/L exceeds the ${summary.red_threshold.toFixed(1)} mg/L safety ceiling, causing ${summary.pct_toxic}% toxic exposure across the cohort.`;
           verdictEl.style.borderColor = '#ef4444';
           verdictEl.style.color = '#fca5a5';
-        } else if (summary.pct_in_range >= 70.0) {
-          verdictEl.textContent = `✓ Strong cohort efficacy: ${summary.pct_in_range}% maintained therapeutic window (10.0–20.0 mg/L) with safe peak levels (mean ${summary.mean_peak} mg/L).`;
+        } else {
+          insight = `Median peak ${summary.median_peak.toFixed(1)} mg/L maintains safe therapeutic coverage (green window) for ${summary.pct_in_range}% of virtual patients with 0% toxicity.`;
           verdictEl.style.borderColor = '#10b981';
           verdictEl.style.color = '#6ee7b7';
-        } else {
-          verdictEl.textContent = `ℹ Moderate cohort efficacy: ${summary.pct_in_range}% in therapeutic window, with ${summary.pct_subtherapeutic}% subtherapeutic exposure.`;
-          verdictEl.style.borderColor = '#38bdf8';
-          verdictEl.style.color = '#bae6fd';
         }
+        verdictEl.textContent = insight;
       }
 
       // Redraw canvas charts
@@ -442,6 +477,22 @@ export class TrialPanel {
           <div class="comp-row"><span>Subtherapeutic:</span><strong class="amber-text">${tA.pct_subtherapeutic}%</strong></div>
           <div class="comp-row"><span>Mean Peak Cmax:</span><strong>${tA.mean_peak} mg/L</strong></div>
           <div class="comp-row"><span>In-Range Patients:</span><strong>${tA.group_counts.in_range} pts</strong></div>
+
+          <!-- Distribution Bar -->
+          <div style="margin: 12px 0 6px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:#94a3b8; margin-bottom:4px;">
+              <span>Outcome Distribution</span>
+              <span>${tA.pct_in_range}% in / ${tA.pct_subtherapeutic}% sub / ${tA.pct_toxic}% tox</span>
+            </div>
+            <div style="height:14px; display:flex; border-radius:4px; overflow:hidden; background:#1e293b;">
+              <div style="width:${tA.pct_in_range}%; background:#10b981;" title="In Range ${tA.pct_in_range}%"></div>
+              <div style="width:${tA.pct_subtherapeutic}%; background:#f59e0b;" title="Subtherapeutic ${tA.pct_subtherapeutic}%"></div>
+              <div style="width:${tA.pct_toxic}%; background:#ef4444;" title="Toxic ${tA.pct_toxic}%"></div>
+            </div>
+          </div>
+          <button type="button" class="btn-wave-action" id="btn-wave-a" style="width:100%; padding:7px 12px; margin-top:8px; border-radius:6px; background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#6ee7b7; font-size:0.8rem; font-weight:700; cursor:pointer;">
+            🌊 View Regimen A Crowd Wave
+          </button>
         </div>
 
         <div class="compare-col col-b">
@@ -452,6 +503,22 @@ export class TrialPanel {
           <div class="comp-row"><span>Subtherapeutic:</span><strong class="amber-text">${tB.pct_subtherapeutic}%</strong></div>
           <div class="comp-row"><span>Mean Peak Cmax:</span><strong>${tB.mean_peak} mg/L</strong></div>
           <div class="comp-row"><span>In-Range Patients:</span><strong>${tB.group_counts.in_range} pts</strong></div>
+
+          <!-- Distribution Bar -->
+          <div style="margin: 12px 0 6px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:#94a3b8; margin-bottom:4px;">
+              <span>Outcome Distribution</span>
+              <span>${tB.pct_in_range}% in / ${tB.pct_subtherapeutic}% sub / ${tB.pct_toxic}% tox</span>
+            </div>
+            <div style="height:14px; display:flex; border-radius:4px; overflow:hidden; background:#1e293b;">
+              <div style="width:${tB.pct_in_range}%; background:#10b981;" title="In Range ${tB.pct_in_range}%"></div>
+              <div style="width:${tB.pct_subtherapeutic}%; background:#f59e0b;" title="Subtherapeutic ${tB.pct_subtherapeutic}%"></div>
+              <div style="width:${tB.pct_toxic}%; background:#ef4444;" title="Toxic ${tB.pct_toxic}%"></div>
+            </div>
+          </div>
+          <button type="button" class="btn-wave-action" id="btn-wave-b" style="width:100%; padding:7px 12px; margin-top:8px; border-radius:6px; background:rgba(56,189,248,0.2); border:1px solid #38bdf8; color:#7dd3fc; font-size:0.8rem; font-weight:700; cursor:pointer;">
+            🌊 View Standard Regimen Wave
+          </button>
         </div>
       </div>
 
@@ -474,6 +541,42 @@ export class TrialPanel {
         </div>
       </div>
     `;
+
+    document.getElementById('btn-wave-a')?.addEventListener('click', () => {
+      if (this.trialHall && compData.trial_a?.series?.outcomes) {
+        this.trialHall.startWave(
+          compData.trial_a.series.outcomes,
+          false,
+          (p) => {
+            const cntH = document.getElementById('cnt-helped');
+            const cntB = document.getElementById('cnt-below');
+            const cntT = document.getElementById('cnt-toxic');
+            if (cntH) cntH.textContent = p.helped;
+            if (cntB) cntB.textContent = p.below;
+            if (cntT) cntT.textContent = p.toxic;
+          }
+        );
+        toast.showInfo('Displaying Regimen A cohort wave across gallery crowd.');
+      }
+    });
+
+    document.getElementById('btn-wave-b')?.addEventListener('click', () => {
+      if (this.trialHall && compData.trial_b?.series?.outcomes) {
+        this.trialHall.startWave(
+          compData.trial_b.series.outcomes,
+          false,
+          (p) => {
+            const cntH = document.getElementById('cnt-helped');
+            const cntB = document.getElementById('cnt-below');
+            const cntT = document.getElementById('cnt-toxic');
+            if (cntH) cntH.textContent = p.helped;
+            if (cntB) cntB.textContent = p.below;
+            if (cntT) cntT.textContent = p.toxic;
+          }
+        );
+        toast.showInfo('Displaying Standard Regimen B cohort wave across gallery crowd.');
+      }
+    });
 
     this.compareModalEl.classList.remove('hidden');
   }

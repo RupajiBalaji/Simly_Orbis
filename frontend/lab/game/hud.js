@@ -28,19 +28,45 @@ export class LabHUD {
     const btnToggleChecklist = document.getElementById('btn-toggle-checklist');
     const btnToggleLog = document.getElementById('btn-toggle-log');
 
+    window.labHUD = this;
+
     if (btnToggleChecklist && this.checklistPanel) {
       btnToggleChecklist.onclick = () => {
-        this.checklistPanel.classList.toggle('collapsed');
-        btnToggleChecklist.textContent = this.checklistPanel.classList.contains('collapsed') ? '▶' : '◀';
+        this.setChecklistCollapsed(!this.checklistPanel.classList.contains('collapsed'));
       };
     }
 
     if (btnToggleLog && this.logPanel) {
       btnToggleLog.onclick = () => {
-        this.logPanel.classList.toggle('collapsed');
-        btnToggleLog.textContent = this.logPanel.classList.contains('collapsed') ? '▲' : '▼';
+        this.setLogCollapsed(!this.logPanel.classList.contains('collapsed'));
       };
     }
+
+    if (window.innerWidth < 1200) {
+      this.setChecklistCollapsed(true);
+    }
+
+    window.addEventListener('resize', () => {
+      if (window.innerWidth < 1200) {
+        this.setChecklistCollapsed(true);
+        window.drOrbisMentor?.setCollapsed(true);
+      }
+    });
+  }
+
+  setChecklistCollapsed(collapsed) {
+    if (!this.checklistPanel) return;
+    this.checklistPanel.classList.toggle('collapsed', Boolean(collapsed));
+    const btn = document.getElementById('btn-toggle-checklist');
+    if (btn) btn.textContent = this.checklistPanel.classList.contains('collapsed') ? '▶' : '◀';
+  }
+
+  setLogCollapsed(collapsed) {
+    if (!this.logPanel) return;
+    this.logPanel.classList.toggle('collapsed', Boolean(collapsed));
+    const btn = document.getElementById('btn-toggle-log');
+    if (btn) btn.textContent = this.logPanel.classList.contains('collapsed') ? '▲' : '▼';
+  }
 
     // Subscribe to state changes
     state.subscribe((event, payload) => {

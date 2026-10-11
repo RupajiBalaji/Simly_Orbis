@@ -282,12 +282,12 @@ export class LabScene {
     this.apparatusLookup = lookup;
 
     if (experimentDef?.id === 'pk_ward') {
-      this.camera.fov = 60;
+      this.camera.fov = 82;
       this.camera.updateProjectionMatrix();
-      // First view after Start frames the whole ward: avatar, balance, patient bed, and trial screen
+      // First view after Start frames the whole ward: avatar, balance, patient bed, trial screen, and reality check board
       this.stationPresets.default = {
-        pos: new THREE.Vector3(0.0, 2.30, 1.55),
-        target: new THREE.Vector3(0.10, 1.10, -3.80),
+        pos: new THREE.Vector3(0.0, 2.85, 1.90),
+        target: new THREE.Vector3(0.0, 1.25, -4.20),
       };
       this.cameraDefaultPos.copy(this.stationPresets.default.pos);
       this.cameraTarget.copy(this.stationPresets.default.target);

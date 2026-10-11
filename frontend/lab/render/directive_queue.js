@@ -86,22 +86,91 @@ export class DirectiveQueue {
           }, 33);
         }
 
-        // Procedural streams and droplets effects
-        if (clipName === 'wash_hands' && apparatus) {
+        // Liquid movement tweening and procedural streams/droplets
+        let liquidTweenInterval = null;
+        if (clipName === 'titrate' || clipName === 'turn_stopcock') {
+          const bur = this.sceneManager.getApparatus('burette');
+          const flask = this.sceneManager.getApparatus('conical_flask');
+          const burDir = visuals.find((v) => v.type === 'liquid' && v.target === 'burette');
+          const flaskDir = visuals.find((v) => v.type === 'liquid' && v.target === 'conical_flask');
+
+          setTimeout(() => {
+            if (bur && flask && this.effectManager?.createPourStream) {
+              const bPos = new THREE.Vector3();
+              const fPos = new THREE.Vector3();
+              bur.getWorldPosition(bPos);
+              flask.getWorldPosition(fPos);
+              bPos.y += 0.25; // tip below burette stopcock
+              fPos.y += 0.12; // flask opening
+              this.effectManager.createPourStream(bPos, fPos, durationMs * 0.65, 0xf8fafc);
+              this.effectManager.createDroplets(fPos, durationMs * 0.65, 0xf8fafc);
+            }
+          }, 250);
+
+          if (bur && flask && burDir && flaskDir) {
+            const startBurVol = bur.userData.currentVolume !== undefined ? bur.userData.currentVolume : (burDir.volume_ml + 1.0);
+            const targetBurVol = burDir.volume_ml;
+            const startFlaskVol = flask.userData.currentVolume !== undefined ? flask.userData.currentVolume : Math.max(0, flaskDir.volume_ml - 1.0);
+            const targetFlaskVol = flaskDir.volume_ml;
+            const startTime = performance.now();
+            const tweenDuration = durationMs * 0.7;
+
+            liquidTweenInterval = setInterval(() => {
+              const elapsed = performance.now() - startTime;
+              const p = Math.min(1.0, elapsed / tweenDuration);
+              const curBur = startBurVol + (targetBurVol - startBurVol) * p;
+              const curFlask = startFlaskVol + (targetFlaskVol - startFlaskVol) * p;
+              applyLiquidDirective(bur, { target: 'burette', volume_ml: curBur, hex: burDir.hex || '#f8fafc', opacity: 0.8 });
+              applyLiquidDirective(flask, { target: 'conical_flask', volume_ml: curFlask, hex: flaskDir.hex || '#f8fafc', opacity: 0.9 });
+              bur.userData.currentVolume = curBur;
+              flask.userData.currentVolume = curFlask;
+              if (p >= 1.0) {
+                clearInterval(liquidTweenInterval);
+                liquidTweenInterval = null;
+              }
+            }, 33);
+          }
+        } else if (clipName === 'dissolve' || clipName === 'pour') {
+          const targetApp = apparatus;
+          const targetDir = visuals.find((v) => v.type === 'liquid');
+          setTimeout(() => {
+            if (targetApp && this.effectManager?.createPourStream) {
+              const tPos = new THREE.Vector3();
+              targetApp.getWorldPosition(tPos);
+              const sPos = tPos.clone().add(new THREE.Vector3(0.12, 0.32, 0.05));
+              this.effectManager.createPourStream(sPos, tPos, durationMs * 0.65, targetDir?.hex ? parseInt(targetDir.hex.replace('#', '0x')) : 0x38bdf8);
+            }
+          }, 300);
+
+          if (targetApp && targetDir) {
+            const startVol = targetApp.userData.currentVolume !== undefined ? targetApp.userData.currentVolume : 0.0;
+            const targetVol = targetDir.volume_ml || 50.0;
+            const startTime = performance.now();
+            const tweenDuration = durationMs * 0.7;
+
+            liquidTweenInterval = setInterval(() => {
+              const elapsed = performance.now() - startTime;
+              const p = Math.min(1.0, elapsed / tweenDuration);
+              const curVol = startVol + (targetVol - startVol) * p;
+              applyLiquidDirective(targetApp, { target: targetDir.target, volume_ml: curVol, hex: targetDir.hex, opacity: targetDir.opacity });
+              targetApp.userData.currentVolume = curVol;
+              if (p >= 1.0) {
+                clearInterval(liquidTweenInterval);
+                liquidTweenInterval = null;
+              }
+            }, 33);
+          }
+        } else if (clipName === 'wash_hands' && apparatus) {
           setTimeout(() => {
             this.effectManager?.playEffect(apparatus, { name: 'droplets', duration_ms: 1400, color: '#38bdf8' });
           }, 300);
-        } else if ((clipName === 'dissolve' || clipName === 'pour') && apparatus) {
-          setTimeout(() => {
-            this.effectManager?.playEffect(apparatus, { name: 'stream', duration_ms: 1000, color: '#38bdf8' });
-          }, 400);
-        } else if ((clipName === 'titrate' || clipName === 'turn_stopcock') && apparatus) {
-          setTimeout(() => {
-            this.effectManager?.playEffect(apparatus, { name: 'droplets', duration_ms: 1000, color: '#f8fafc' });
-          }, 400);
         }
 
         const onFinished = () => {
+          if (liquidTweenInterval) {
+            clearInterval(liquidTweenInterval);
+            liquidTweenInterval = null;
+          }
           if (weighInterval) {
             clearInterval(weighInterval);
             weighInterval = null;

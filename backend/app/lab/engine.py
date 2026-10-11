@@ -732,7 +732,14 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
         flask["ph"] = round(new_ph, 2)
         flask["color_hex"] = new_color
 
-        msg = f"Dispensed +{added_ml:.2f} mL NaOH titrant (Total added: {current_titrant:.2f} mL)."
+        overshoot_note = ""
+        if current_titrant > 25.5:
+            overshoot_note = " [Technique note: Volumetric overshoot past the 25.0 mL stoichiometric equivalence point. In analytical chemistry, titrating past the endpoint causes excess titrant volume and overestimates analyte concentration.]"
+            if "overshoot_warning" not in session.protocol_progress:
+                session.protocol_progress.append("overshoot_warning")
+                session.score_parts["technique"] = max(0, session.score_parts.get("technique", 20) - 5)
+
+        msg = f"Dispensed +{added_ml:.2f} mL NaOH titrant (Total added: {current_titrant:.2f} mL).{overshoot_note}"
         anim = CharacterAnimation(name="turn_stopcock", target="burette", duration_ms=1600)
         visuals.append(VisualDirective(type="liquid", target="burette", hex="#f8fafc", volume_ml=round(bur["volume_ml"], 2), opacity=0.8).model_dump())
         visuals.append(VisualDirective(type="liquid", target="conical_flask", hex=new_color, volume_ml=round(flask_vol, 2), opacity=0.9).model_dump())

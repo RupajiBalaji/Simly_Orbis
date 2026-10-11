@@ -2164,6 +2164,12 @@ body.orbis-lab-body {
   color: #94a3b8;
   font-style: italic;
   margin-top: 4px;
+.hidden {
+  display: none !important;
+}
+
+.mentor-typing-indicator.hidden {
+  display: none !important;
 }
 
 .mentor-typing-indicator {

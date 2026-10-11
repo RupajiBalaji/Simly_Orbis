@@ -262,6 +262,19 @@ def _generate_rule_based_mentor_message(
         )
     else:  # ask
         q_lower = (question or "").lower()
+        # Prompt injection defense
+        if any(w in q_lower for w in ["ignore previous", "system prompt", "reveal", "override", "disregard"]):
+            return (
+                "Dr. Orbis: I must decline instructions that attempt to alter laboratory safety protocols or system settings. "
+                f"Let's focus on the active protocol. Currently at step '{step_title}': {step_hint}"
+            )
+        # Off-topic boundary control
+        if any(w in q_lower for w in ["weather", "capital of", "joke", "recipe", "politics", "football", "movie"]):
+            return (
+                "Dr. Orbis: As your laboratory mentor, I can only assist with our active science experiment. "
+                f"Let's steer back to our current protocol step '{step_title}': {step_hint}"
+            )
+
         if session.experiment_id == "pk_ward":
             if any(w in q_lower for w in ["dose", "toxic", "peak", "cmax"]):
                 return (

@@ -57,7 +57,7 @@ export class DrOrbisMentor {
           </div>
 
           <!-- Typing Indicator -->
-          <div class="mentor-typing-indicator hidden" id="mentor-typing-indicator">
+          <div class="mentor-typing-indicator hidden" id="mentor-typing-indicator" style="display: none;">
             <span>Dr. Orbis is thinking</span>
             <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
           </div>
@@ -99,12 +99,16 @@ export class DrOrbisMentor {
     const header = document.getElementById('mentor-header');
     const body = document.getElementById('mentor-body');
 
+    window.drOrbisMentor = this;
+
     header?.addEventListener('click', (e) => {
       if (e.target.closest('#btn-mentor-hint') || e.target.closest('#mentor-ask-form')) return;
-      this.isCollapsed = !this.isCollapsed;
-      body?.classList.toggle('hidden', this.isCollapsed);
-      if (toggleBtn) toggleBtn.textContent = this.isCollapsed ? '▲' : '▼';
+      this.setCollapsed(!this.isCollapsed);
     });
+
+    if (window.innerWidth < 1200) {
+      this.setCollapsed(true);
+    }
 
     // Quick buttons
     document.getElementById('btn-mentor-hint')?.addEventListener('click', () => this.query('hint'));
@@ -178,7 +182,10 @@ export class DrOrbisMentor {
     this.updateUnderTheHood(mode, this.callsLeft, this.lastLatencyMs);
 
     const typingIndicator = document.getElementById('mentor-typing-indicator');
-    if (typingIndicator) typingIndicator.classList.remove('hidden');
+    if (typingIndicator) {
+      typingIndicator.classList.remove('hidden');
+      typingIndicator.style.display = 'flex';
+    }
 
     const tStart = performance.now();
 
@@ -215,7 +222,11 @@ export class DrOrbisMentor {
       });
     } finally {
       this.isTyping = false;
-      if (typingIndicator) typingIndicator.classList.add('hidden');
+      if (typingIndicator) {
+        typingIndicator.classList.add('hidden');
+        typingIndicator.style.display = 'none';
+      }
+      this.updateUnderTheHood('idle', this.callsLeft, this.lastLatencyMs);
     }
   }
 
@@ -281,6 +292,14 @@ export class DrOrbisMentor {
         if (scrollContainer) scrollContainer.scrollTop = scrollContainer.scrollHeight;
       }, speedMs);
     });
+  }
+
+  setCollapsed(collapsed) {
+    this.isCollapsed = Boolean(collapsed);
+    const body = document.getElementById('mentor-body');
+    const toggleBtn = document.getElementById('btn-toggle-mentor');
+    if (body) body.classList.toggle('hidden', this.isCollapsed);
+    if (toggleBtn) toggleBtn.textContent = this.isCollapsed ? '▲' : '▼';
   }
 
   updateUnderTheHood(mode, callsLeft, latencyMs) {
