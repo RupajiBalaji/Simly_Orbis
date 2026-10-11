@@ -100,5 +100,13 @@ export const api = {
   async getModelCard(moduleId) {
     return await request(`/api/modules/${encodeURIComponent(moduleId)}/model-card`);
   },
+
+  async getHealth() {
+    return await request('/api/health');
+  },
+
+  async getPing() {
+    return await request('/api/ping');
+  },
 };
 

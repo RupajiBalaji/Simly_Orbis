@@ -11,6 +11,13 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     anthropic_model: str = "claude-haiku-4-5-20251001"
 
+    # RC1 Hardening & Cost Protection
+    mentor_daily_cap: int = 300
+    ai_enabled: bool = True
+    allowed_origins: str = "*"
+    git_sha: str = ""
+    app_version: str = "0.1.0-rc1"
+
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",

@@ -11,9 +11,16 @@ __pycache__/
 *.so
 .pytest_cache/
 
+# Logs
+*.log
+
+# Node dependencies
+node_modules/
+
 # Environment files
 backend/.env
 .env
+*.env
 *.env.local
 
 # IDE / OS

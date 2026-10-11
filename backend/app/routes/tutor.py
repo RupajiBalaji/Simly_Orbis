@@ -110,8 +110,19 @@ def _template_response(s: SimSummary) -> str:
 async def get_tutor_feedback(body: SimSummary) -> TutorResponse:
     """
     Call Google Gemini (or Anthropic Claude) with a simulation summary and return educational feedback.
-    Falls back to a template if API keys are absent or API calls fail.
+    Falls back to a template if API keys are absent, cap is reached, or API calls fail.
     """
+    from app.security import ai_cap_tracker
+
+    can_call, block_reason = ai_cap_tracker.can_call_ai()
+    if not can_call:
+        log.info("AI call blocked (%s) – using template fallback.", block_reason)
+        return TutorResponse(
+            message=_template_response(body),
+            source="fallback",
+            fallback_reason="daily_cap_exceeded" if block_reason == "daily_cap_exceeded" else "ai_disabled",
+        )
+
     gemini_key = settings.gemini_api_key.strip()
     anthropic_key = settings.anthropic_api_key.strip()
 

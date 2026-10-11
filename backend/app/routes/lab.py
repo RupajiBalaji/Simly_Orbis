@@ -32,6 +32,7 @@ from app.lab.models import (
     MentorResponse,
     Violation,
 )
+from app.security import ai_cap_tracker, sanitize_text
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/lab", tags=["lab"])
@@ -117,7 +118,8 @@ async def start_session(body: CreateSessionRequest) -> dict[str, Any]:
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=f"Experiment '{body.experiment_id}' not found.") from exc
 
-    session = create_session(body.experiment_id, body.nickname)
+    clean_nickname = sanitize_text(body.nickname, max_length=24) or "Researcher"
+    session = create_session(body.experiment_id, clean_nickname)
     session_dict = session.model_dump()
     await _db.upsert_lab_session(session_dict)
     return session_dict
@@ -148,6 +150,9 @@ async def execute_action(session_id: str, body: ActionRequest) -> ActionResult:
     doc = await _db.get_lab_session(session_id)
     if not doc:
         raise HTTPException(status_code=404, detail=f"Lab session '{session_id}' not found.")
+
+    if body.action == "label" and "text" in body.params:
+        body.params["text"] = sanitize_text(body.params.get("text", ""), max_length=60)
 
     session = LabSession(**doc)
     result = apply_action(session, body)
@@ -423,7 +428,17 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
         source: str = "fallback"
         fallback_reason: str | None = None
 
-        if not settings.anthropic_api_key:
+        can_call, block_reason = ai_cap_tracker.can_call_ai()
+        if not can_call:
+            message = _generate_rule_based_mentor_message(
+                session, body.mode, step_title, step_hint, clean_question
+            )
+            source = "fallback"
+            if block_reason == "daily_cap_exceeded":
+                fallback_reason = "AI mentor resting, using rule-based hints"
+            else:
+                fallback_reason = "AI disabled by administrator."
+        elif not settings.anthropic_api_key:
             message = _generate_rule_based_mentor_message(
                 session, body.mode, step_title, step_hint, clean_question
             )
@@ -438,6 +453,7 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
                     clean_question=clean_question,
                 )
                 if ai_text:
+                    ai_cap_tracker.record_call()
                     message = ai_text
                     source = "ai"
                     fallback_reason = None

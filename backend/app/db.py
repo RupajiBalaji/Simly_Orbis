@@ -143,13 +143,22 @@ async def create_indexes() -> None:
         [("experiment_id", pymongo.ASCENDING), ("created_at", pymongo.DESCENDING)],
         name="lab_sessions_exp_created_idx",
     )
+    # TTL index: auto-expire sessions older than 30 days (2,592,000 seconds)
+    try:
+        await lab_sessions.create_index(
+            [("created_at_dt", pymongo.ASCENDING)],
+            expireAfterSeconds=2592000,
+            name="lab_sessions_ttl_30d_idx",
+        )
+    except Exception as e:
+        log.warning("Notice on TTL index creation: %s", e)
 
     lab_reports = database["lab_reports"]
     await lab_reports.create_index(
         [("experiment_id", pymongo.ASCENDING), ("score", pymongo.DESCENDING)],
         name="lab_reports_exp_score_idx",
     )
-    log.info("MongoDB indexes ensured.")
+    log.info("MongoDB indexes ensured (including 30-day session TTL).")
 
 
 

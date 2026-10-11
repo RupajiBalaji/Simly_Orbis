@@ -144,11 +144,32 @@ async function initOrbisLab() {
   // 3. Setup Navigation & District Selection
   setupLobby();
   setupHUDControls();
+  checkServerWakeup();
 }
 
 function setupLobby() {
   const lobbyScreen = document.getElementById('screen-lobby');
   const briefScreen = document.getElementById('screen-brief');
+
+  // About Simly Orbis Modal
+  const btnOpenAbout = document.getElementById('btn-open-about');
+  const modalAbout = document.getElementById('modal-about');
+  const btnCloseAbout = document.getElementById('btn-close-about');
+  const btnAboutCloseBtn = document.getElementById('btn-about-close-btn');
+
+  if (btnOpenAbout && modalAbout) {
+    btnOpenAbout.onclick = () => modalAbout.classList.remove('hidden');
+    if (btnCloseAbout) btnCloseAbout.onclick = () => modalAbout.classList.add('hidden');
+    if (btnAboutCloseBtn) btnAboutCloseBtn.onclick = () => modalAbout.classList.add('hidden');
+  }
+
+  // Check Storage Mode & show banner if in-memory
+  api.getHealth().then((health) => {
+    if (health?.storage_mode === 'memory') {
+      const banner = document.getElementById('storage-mode-banner');
+      if (banner) banner.classList.remove('hidden');
+    }
+  }).catch(() => {});
 
   // District Card Clicks
   const cardPharma = document.getElementById('card-district-pharma');
@@ -648,6 +669,68 @@ function setupHUDControls() {
       }
     };
   }
+}
+
+async function checkServerWakeup() {
+  const wakeupScreen = document.getElementById('screen-wakeup');
+  const progressBar = document.getElementById('wakeup-progress-bar');
+  const statusText = document.getElementById('wakeup-status-text');
+  const retryBtn = document.getElementById('btn-retry-wakeup');
+
+  let isAwake = false;
+  try {
+    const res = await fetch('/api/ping', { signal: AbortSignal.timeout(1200) });
+    if (res.ok) isAwake = true;
+  } catch (_) {}
+
+  if (isAwake) {
+    if (wakeupScreen) wakeupScreen.classList.add('hidden');
+    return;
+  }
+
+  // Cold start detected – display waking up overlay with backoff
+  if (wakeupScreen) wakeupScreen.classList.remove('hidden');
+
+  const startTime = Date.now();
+  const maxWaitMs = 90000;
+  let attempt = 0;
+
+  async function poll() {
+    attempt++;
+    const elapsed = Date.now() - startTime;
+    const progressPct = Math.min(95, Math.round((elapsed / maxWaitMs) * 100));
+    if (progressBar) progressBar.style.width = `${Math.max(15, progressPct)}%`;
+    if (statusText) statusText.textContent = `Pinging simulation engine (attempt ${attempt}, ${Math.round(elapsed / 1000)}s)...`;
+
+    try {
+      const res = await fetch('/api/ping', { signal: AbortSignal.timeout(3000) });
+      if (res.ok) {
+        if (progressBar) progressBar.style.width = '100%';
+        if (statusText) statusText.textContent = 'Connected! Laboratory ready.';
+        setTimeout(() => {
+          if (wakeupScreen) wakeupScreen.classList.add('hidden');
+        }, 600);
+        return;
+      }
+    } catch (_) {}
+
+    if (elapsed >= maxWaitMs) {
+      if (statusText) statusText.textContent = 'Server wake-up timed out. Free hosting instance may take longer to spin up.';
+      if (retryBtn) {
+        retryBtn.style.display = 'block';
+        retryBtn.onclick = () => {
+          retryBtn.style.display = 'none';
+          checkServerWakeup();
+        };
+      }
+      return;
+    }
+
+    const delay = Math.min(4000, 1000 + attempt * 500);
+    setTimeout(poll, delay);
+  }
+
+  poll();
 }
 
 // Boot application when DOM is ready
