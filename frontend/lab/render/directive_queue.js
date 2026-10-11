@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { applyLiquidDirective } from './liquid.js';
 import { applyReadoutDirective, applyVitalsDirective, applyLabelDirective, applyHighlightDirective } from './readouts.js';
 import { state } from '../state.js';
+import { soundFX } from '../audio/sound_fx.js';
 
 export class DirectiveQueue {
   constructor(sceneManager, characterController, effectManager) {
@@ -70,6 +71,17 @@ export class DirectiveQueue {
           camIndicator.style.display = 'flex';
         }
 
+        // Trigger procedural sound effects
+        if (clipName === 'weigh') {
+          soundFX.playClick();
+        } else if (clipName === 'titrate' || clipName === 'turn_stopcock' || clipName === 'pour' || clipName === 'dissolve') {
+          soundFX.playLiquidTrickle(durationMs / 1000);
+        } else if (clipName === 'run_assay') {
+          soundFX.playCentrifugeHum(durationMs / 1000);
+        } else if (['pipette_analyte', 'add_indicator', 'label', 'draw_blood'].includes(clipName)) {
+          soundFX.playGlassClink();
+        }
+
         // Ticking weigh progress (powder pile grows, balance reading rises)
         let weighInterval = null;
         if (clipName === 'weigh' && apparatus?.userData?.updateWeighProgress) {
@@ -82,6 +94,7 @@ export class DirectiveQueue {
             if (p >= 1.0) {
               clearInterval(weighInterval);
               weighInterval = null;
+              soundFX.playBalanceBeep();
             }
           }, 33);
         }

@@ -57,7 +57,11 @@ class VisualDirective(BaseModel):
     hex: str | None = None
     volume_ml: float | None = None
     opacity: float | None = None
-    name: Literal["splash", "bubbles", "smoke", "spark", "alarm", "glow"] | None = None
+    name: Literal[
+        "splash", "bubbles", "smoke", "spark", "alarm", "glow",
+        "fume_puff", "spill_puddle", "runaway_reaction", "foam_eruption",
+        "contamination", "sparkles", "confetti", "camera_shake", "alarm_flash"
+    ] | None = None
     duration_ms: int | None = None
     label: str | None = None
     value: float | str | None = None

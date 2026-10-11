@@ -866,6 +866,23 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
         else:
             session.score_parts["accuracy"] = 10 if flask.get("titrant_added_ml", 0.0) > 0 else 0
 
+    # Append consequence visual directives for safety violations
+    for v in violations:
+        if v.rule_id in ("R1", "R2"):
+            visuals.append(VisualDirective(type="effect", target="avatar", name="fume_puff", duration_ms=2500).model_dump())
+        elif v.rule_id == "R5":
+            visuals.append(VisualDirective(type="liquid", target=target or "conical_flask", hex="#6b5b45", opacity=0.95).model_dump())
+            visuals.append(VisualDirective(type="effect", target=target or "conical_flask", name="contamination", duration_ms=2000).model_dump())
+        elif v.rule_id == "R6":
+            visuals.append(VisualDirective(type="effect", target=target or "conical_flask", name="spill_puddle", duration_ms=5000).model_dump())
+        elif v.rule_id == "R8":
+            visuals.append(VisualDirective(type="effect", target=target or "dosing_cup", name="runaway_reaction", duration_ms=3000).model_dump())
+        elif v.rule_id in ("R9", "R10"):
+            visuals.append(VisualDirective(type="effect", target=target or "chemical_waste_bin", name="foam_eruption", duration_ms=3500).model_dump())
+        if v.severity == "critical":
+            visuals.append(VisualDirective(type="effect", target="camera", name="camera_shake", duration_ms=300).model_dump())
+            visuals.append(VisualDirective(type="effect", target="screen", name="alarm_flash", duration_ms=350).model_dump())
+
     # Record event in event log
     event_entry = {
         "timestamp_h": session.clock_h,

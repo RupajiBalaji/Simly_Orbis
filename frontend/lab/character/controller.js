@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { createHumanoidAvatar } from './avatar.js';
 import { AvatarAnimator } from './animation.js';
+import { soundFX } from '../audio/sound_fx.js';
 
 export class CharacterController {
   constructor(scene) {
@@ -276,6 +277,12 @@ export class CharacterController {
   update(dt) {
     // 1. Locomotion step
     if (this.isWalking) {
+      this.footstepTimer = (this.footstepTimer || 0) + dt;
+      if (this.footstepTimer >= 0.38) {
+        this.footstepTimer = 0;
+        soundFX.playFootstep();
+      }
+
       const currentPos = this.rig.root.position;
       const toTarget = this.targetPos.clone().sub(currentPos);
       toTarget.y = 0;

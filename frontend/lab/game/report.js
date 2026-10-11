@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { state } from '../state.js';
 import { toast } from './toast.js';
+import { soundFX } from '../audio/sound_fx.js';
 
 export class ReportScreen {
   constructor() {
@@ -22,6 +23,11 @@ export class ReportScreen {
     const breakdown = reportData.score_breakdown || { safety: 0, accuracy: 0, technique: 0, protocol: 0 };
     const violations = reportData.violations || [];
     const lessons = reportData.lessons_learned || [];
+
+    if (score >= 85) {
+      soundFX.playFanfare();
+      window.sceneManager?.effectManager?.triggerConfettiShower();
+    }
 
     this.contentEl.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">

@@ -48,6 +48,15 @@ Triggers temporary particle systems, shader flashes, or alarms anchored to an ap
   * `"spark"`: Electrical or static discharge.
   * `"alarm"`: Flashing red ambient light and strobe when critical safety limits are breached.
   * `"glow"`: Subtle cyan/teal bioluminescent or UV fluorescence pulse.
+  * `"fume_puff"`: Toxic chemical fume plume (red/yellow particle puff) + 5s camera blur and shake (Rules R1 / R2: handling chemicals/blood without goggles/gloves).
+  * `"contamination"`: Cross-contamination visual effect turning solution muddy brown/grey `#6b5b45` (Rule R5).
+  * `"spill_puddle"`: Chemical spill puddle decal spreading on benchtop/floor with falling drip particles (Rule R6: hazardous acid/water pouring).
+  * `"runaway_reaction"`: Vigorous boiling effervescence + dense rising steam plume (Rule R8: dose limit exceeded).
+  * `"foam_eruption"`: Violent foaming eruption and smoke from waste receptacle (Rules R9 / R10: incompatible waste mixture).
+  * `"camera_shake"`: 8px high-frequency camera shake for 300ms on critical violations.
+  * `"alarm_flash"`: Vivid red peripheral HUD border flash on critical safety breaches.
+  * `"sparkles"`: Gentle green celebratory sparkle particle burst above apparatus on protocol step completion.
+  * `"confetti"`: Celebratory multi-color confetti particle shower on Grade A report completion.
 * **`duration_ms`** (integer): Lifetime of the effect in milliseconds before auto-culling.
 
 ---

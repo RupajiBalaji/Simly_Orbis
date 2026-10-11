@@ -2596,4 +2596,73 @@ body.orbis-lab-body {
   font-family: var(--font-sans);
 }
 
+/* Sound Controls */
+.hud-volume-wrap {
+  display: flex;
+  align-items: center;
+  width: 64px;
+  pointer-events: auto;
+}
+
+#hud-volume-slider {
+  width: 100%;
+  height: 4px;
+  accent-color: #14b8a6;
+  cursor: pointer;
+}
+
+/* Consequence Animations & Effects */
+@keyframes screenShake {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-8px, 6px); }
+  40% { transform: translate(8px, -6px); }
+  60% { transform: translate(-6px, -4px); }
+  80% { transform: translate(6px, 4px); }
+  100% { transform: translate(0, 0); }
+}
+
+.camera-shake {
+  animation: screenShake 300ms ease-in-out;
+}
+
+@keyframes warningEdgeFlash {
+  0% { box-shadow: inset 0 0 0 0 rgba(239, 68, 68, 0); }
+  30% { box-shadow: inset 0 0 60px 20px rgba(239, 68, 68, 0.85); }
+  100% { box-shadow: inset 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.warning-edge-flash {
+  animation: warningEdgeFlash 350ms ease-out;
+}
+
+@keyframes fumeBlur {
+  0% { filter: blur(0px); }
+  20% { filter: blur(4px); }
+  80% { filter: blur(3px); }
+  100% { filter: blur(0px); }
+}
+
+.fume-blur-active {
+  animation: fumeBlur 5s ease-out;
+}
+
+@keyframes stepPulseGreen {
+  0% { transform: scale(1); border-color: rgba(34, 197, 94, 0.3); }
+  50% { transform: scale(1.05); border-color: #22c55e; box-shadow: 0 0 16px rgba(34, 197, 94, 0.6); }
+  100% { transform: scale(1); border-color: rgba(34, 197, 94, 0.3); }
+}
+
+.step-pulse-green {
+  animation: stepPulseGreen 800ms ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camera-shake,
+  .warning-edge-flash,
+  .fume-blur-active,
+  .step-pulse-green {
+    animation: none !important;
+  }
+}
+
 

@@ -19,6 +19,7 @@ import { TrialPanel } from './game/trial_panel.js';
 import { DrOrbisMentor } from './game/mentor.js';
 import { RealityCheckPanel } from './game/reality_check_panel.js';
 import { toast } from './game/toast.js';
+import { soundFX } from './audio/sound_fx.js';
 
 // WebGL Support Detection
 function isWebGLAvailable() {
@@ -131,6 +132,14 @@ async function initOrbisLab() {
   window.state = state;
   window.api = api;
   window.THREE = THREE;
+  window.soundFX = soundFX;
+
+  // Global UI click audio listener
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('button, .district-card, .btn-primary, .btn-secondary, .hud-btn, .station-item')) {
+      soundFX.playClick();
+    }
+  });
 
   // 3. Setup Navigation & District Selection
   setupLobby();

@@ -4,6 +4,7 @@
  */
 
 import { state } from '../state.js';
+import { soundFX } from '../audio/sound_fx.js';
 
 export class LabHUD {
   constructor() {
@@ -33,12 +34,37 @@ export class LabHUD {
     if (btnToggleChecklist && this.checklistPanel) {
       btnToggleChecklist.onclick = () => {
         this.setChecklistCollapsed(!this.checklistPanel.classList.contains('collapsed'));
+        soundFX.playClick();
       };
     }
 
     if (btnToggleLog && this.logPanel) {
       btnToggleLog.onclick = () => {
         this.setLogCollapsed(!this.logPanel.classList.contains('collapsed'));
+        soundFX.playClick();
+      };
+    }
+
+    // Sound FX Controls
+    this.btnToggleSound = document.getElementById('btn-toggle-sound');
+    this.volumeSlider = document.getElementById('hud-volume-slider');
+    if (this.btnToggleSound) {
+      this.btnToggleSound.textContent = soundFX.isMuted ? '🔇' : '🔊';
+      this.btnToggleSound.onclick = () => {
+        const muted = soundFX.toggleMute();
+        this.btnToggleSound.textContent = muted ? '🔇' : '🔊';
+        soundFX.playClick();
+      };
+    }
+    if (this.volumeSlider) {
+      this.volumeSlider.value = Math.round(soundFX.volume * 100);
+      this.volumeSlider.oninput = (e) => {
+        const val = parseFloat(e.target.value) / 100;
+        soundFX.setVolume(val);
+        if (soundFX.isMuted && val > 0) {
+          soundFX.setMuted(false);
+          if (this.btnToggleSound) this.btnToggleSound.textContent = '🔊';
+        }
       };
     }
 
@@ -50,6 +76,19 @@ export class LabHUD {
       if (window.innerWidth < 1200) {
         this.setChecklistCollapsed(true);
         window.drOrbisMentor?.setCollapsed(true);
+      }
+    });
+
+    this.lastProgressCount = 0;
+
+    // Subscribe to state changes
+    state.subscribe((event, payload) => {
+      if (event === 'session_updated') {
+        this.updateSession(payload);
+      } else if (event === 'experiment_updated') {
+        this.updateExperiment(payload);
+      } else if (event === 'target_selected') {
+        this.updateSelectedTarget(payload);
       }
     });
   }
@@ -68,26 +107,17 @@ export class LabHUD {
     if (btn) btn.textContent = this.logPanel.classList.contains('collapsed') ? '▲' : '▼';
   }
 
-    // Subscribe to state changes
-    state.subscribe((event, payload) => {
-      if (event === 'session_updated') {
-        this.updateSession(payload);
-      } else if (event === 'experiment_updated') {
-        this.updateExperiment(payload);
-      } else if (event === 'target_selected') {
-        this.updateSelectedTarget(payload);
-      }
-    });
-  }
-
   show() {
     if (this.container) this.container.classList.remove('hidden');
     document.getElementById('dr-orbis-container')?.classList.remove('hidden');
+    soundFX.startAmbientHum();
   }
 
   hide() {
     if (this.container) this.container.classList.add('hidden');
     document.getElementById('dr-orbis-container')?.classList.add('hidden');
+    soundFX.stopAmbientHum();
+    soundFX.stopAlarmLoop();
   }
 
   formatStepTitle(stepId) {
@@ -152,6 +182,28 @@ export class LabHUD {
     }
 
     // Protocol progress
+    const curProgressCount = (session.protocol_progress || []).length;
+    if (curProgressCount > this.lastProgressCount) {
+      if (this.lastProgressCount > 0) {
+        soundFX.playSuccessChime();
+        const banner = document.getElementById('hud-next-step-banner');
+        if (banner) {
+          banner.classList.remove('step-pulse-green');
+          void banner.offsetWidth;
+          banner.classList.add('step-pulse-green');
+          setTimeout(() => banner.classList.remove('step-pulse-green'), 850);
+        }
+      }
+      this.lastProgressCount = curProgressCount;
+    }
+
+    const hasCritical = (session.violations || []).some(v => v.severity === 'critical');
+    if (hasCritical) {
+      soundFX.startAlarmLoop();
+    } else {
+      soundFX.stopAlarmLoop();
+    }
+
     if (state.experiment) {
       this.renderProtocol(state.experiment.protocol || [], session.protocol_progress || []);
     }
