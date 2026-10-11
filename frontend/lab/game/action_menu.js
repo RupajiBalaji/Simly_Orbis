@@ -84,6 +84,7 @@ export class ActionMenu {
         { id: 'tube_rack', label: '🧪 Blood Samples', pos: new THREE.Vector3(-3.2, 0, -3.2), face: new THREE.Vector3(-3.0, 0.94, -4.3) },
         { id: 'assay_analyzer', label: '🔬 Centrifuge Assay', pos: new THREE.Vector3(-5.2, 0, -2.6), face: new THREE.Vector3(-5.5, 0.94, -3.5) },
         { id: 'virtual_trial_screen', label: '👥 Virtual Trial', pos: new THREE.Vector3(3.6, 0, -5.2), face: new THREE.Vector3(4.5, 2.6, -6.9), isTrial: true },
+        { id: 'reality_check_board', label: '⚖️ Reality Check', pos: new THREE.Vector3(-4.5, 0, -5.2), face: new THREE.Vector3(-4.5, 2.6, -6.9), isRealityCheck: true },
         { id: 'sink', label: '🚰 Utility Sink', pos: new THREE.Vector3(-6.2, 0, -1.0), face: new THREE.Vector3(-7.2, 0.94, -1.0) },
         { id: 'chemical_waste_bin', label: '🗑️ Waste Disposal', pos: new THREE.Vector3(2.0, 0, -4.2), face: new THREE.Vector3(2.0, 0, -5.2) },
       ];
@@ -94,6 +95,7 @@ export class ActionMenu {
         { id: 'pipette', label: '🧴 Reagents & Pipette', pos: new THREE.Vector3(-0.8, 0, -1.0), face: new THREE.Vector3(-1.0, 0.94, -1.8) },
         { id: 'indicator_bottles', label: '💧 pH Indicators', pos: new THREE.Vector3(0.8, 0, -1.2), face: new THREE.Vector3(1.1, 0.94, -2.2) },
         { id: 'ph_meter', label: '⚡ Digital pH Meter', pos: new THREE.Vector3(-0.5, 0, -1.2), face: new THREE.Vector3(-0.8, 0.94, -2.3) },
+        { id: 'reality_check_board', label: '⚖️ Reality Check', pos: new THREE.Vector3(-4.5, 0, -5.2), face: new THREE.Vector3(-4.5, 2.6, -6.9), isRealityCheck: true },
         { id: 'sink', label: '🚰 Utility Sink', pos: new THREE.Vector3(-6.2, 0, -1.0), face: new THREE.Vector3(-7.2, 0.94, -1.0) },
         { id: 'chemical_waste_bin', label: '🗑️ Waste Disposal', pos: new THREE.Vector3(2.0, 0, -4.2), face: new THREE.Vector3(2.0, 0, -5.2) },
       ];
@@ -127,6 +129,9 @@ export class ActionMenu {
 
         if (st.isTrial) {
           state.emit('open_trial_panel');
+        }
+        if (st.isRealityCheck) {
+          state.emit('open_reality_check_panel');
         }
 
         state.setSelectedTarget(st.id);

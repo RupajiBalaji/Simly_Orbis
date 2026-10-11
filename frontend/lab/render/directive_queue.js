@@ -77,7 +77,7 @@ export class DirectiveQueue {
           setTimeout(() => {
             this.effectManager?.playEffect(apparatus, { name: 'stream', duration_ms: 1000, color: '#38bdf8' });
           }, 400);
-        } else if (clipName === 'titrate' && apparatus) {
+        } else if ((clipName === 'titrate' || clipName === 'turn_stopcock') && apparatus) {
           setTimeout(() => {
             this.effectManager?.playEffect(apparatus, { name: 'droplets', duration_ms: 1000, color: '#f8fafc' });
           }, 400);

@@ -15,7 +15,7 @@ from typing import Any
 import numpy as np
 from pydantic import BaseModel, Field
 
-from app.core.base import RealityCheck, RunResult, SimModule
+from app.core.base import ModelCard, RealityCheck, RunResult, SimModule
 from app.core.version import ENGINE_VERSION
 from app.sim.drugs import get_drug
 from app.sim.models import Patient
@@ -398,4 +398,32 @@ class PharmaTrialModule(SimModule):
             )
         )
 
+        card = self.get_model_card()
+        for c in checks:
+            c.model_card = card
+
         return checks
+
+    def get_model_card(self) -> ModelCard:
+        """Return scientific documentation card for population clinical trial simulation."""
+        return ModelCard(
+            module_id=self.id,
+            name=self.name,
+            underlying_models=[
+                "Monte Carlo population pharmacokinetic simulator (N=20 to 1000 patients).",
+                "Log-normal physiological distributions for patient weight (CV 18%), clearance multiplier (CV 30%), and absorption rate ka (CV 25%).",
+                "Stratified hepatic impairment subgroup scaling elimination clearance by 0.6x.",
+            ],
+            key_assumptions=[
+                "Parameters follow independent log-normal distributions centered on baseline clinical pharmacology values.",
+                "Reduced liver impairment acts as a discrete categorical subgroup with uniform clearance reduction.",
+                "Identical multi-dose Bateman absorption and elimination kinetics applied per individual patient.",
+            ],
+            known_limitations=[
+                "Synthetic virtual population without real patient genomic or demographic covariate correlations.",
+                "Simplified binary liver function stratification without renal impairment or concomitant medication interactions.",
+                "Simulated educational population distributions are not calibrated for individualized patient dosing decisions.",
+            ],
+            disclaimer="Educational simulation only. Not validated for clinical dosing or industrial chemical process control.",
+        )
+

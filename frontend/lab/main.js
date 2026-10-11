@@ -16,6 +16,8 @@ import { ReportScreen } from './game/report.js';
 import { DirectorRunner } from './demo/director.js';
 import { DebugOverlay } from './demo/debug_overlay.js';
 import { TrialPanel } from './game/trial_panel.js';
+import { DrOrbisMentor } from './game/mentor.js';
+import { RealityCheckPanel } from './game/reality_check_panel.js';
 import { toast } from './game/toast.js';
 
 // WebGL Support Detection
@@ -102,18 +104,26 @@ async function initOrbisLab() {
   directorRunner = new DirectorRunner(actionMenu);
   debugOverlay = new DebugOverlay();
   const trialPanel = new TrialPanel(sceneManager.trialHall, sceneManager);
+  const drOrbis = new DrOrbisMentor();
+  const realityCheckPanel = new RealityCheckPanel(sceneManager);
 
   state.subscribe((event, payload) => {
     if (event === 'trial_hall_ready') {
       trialPanel.trialHall = payload;
     } else if (event === 'open_trial_panel') {
       trialPanel.open();
+    } else if (event === 'open_reality_check_panel') {
+      realityCheckPanel.open();
     }
   });
 
   window.reportScreen = reportScreen;
   window.directorRunner = directorRunner;
+  window.actionMenu = actionMenu;
+  window.hud = hud;
   window.trialPanel = trialPanel;
+  window.drOrbis = drOrbis;
+  window.realityCheckPanel = realityCheckPanel;
   window.sceneManager = sceneManager;
   window.characterController = characterController;
   window.debugOverlay = debugOverlay;
@@ -359,6 +369,43 @@ function setupLobby() {
             <div style="margin-top:6px; color:#38bdf8; font-size:12px;">All actions &gt; 45 FPS target (Solid 60 FPS performance)</div>
           `;
           document.body.appendChild(bDiv);
+        } else if (snapMode === 'mentor_hint') {
+          await drOrbis.query('hint');
+        } else if (snapMode === 'mentor_ask') {
+          await drOrbis.query('ask', 'How does clearance affect peak paracetamol concentration?');
+        } else if (snapMode === 'mentor_explain') {
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          await drOrbis.query('explain');
+        } else if (snapMode === 'reality_check_board') {
+          sceneManager.setStationCamera('reality_check_board');
+        } else if (snapMode === 'reality_check_panel') {
+          sceneManager.setStationCamera('reality_check_board');
+          await realityCheckPanel.open();
+        } else if (snapMode === 'mentor_report_debrief') {
+          state.skipAnimation = true;
+          await actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+          await actionMenu.executeAction('tare_balance', 'digital_balance', {});
+          await actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+          await actionMenu.executeAction('dissolve', 'dosing_cup', { substance: 'paracetamol', solvent: 'water' });
+          await actionMenu.executeAction('label', 'dosing_cup', { text: 'Pt: Alex | 500mg' });
+          await actionMenu.executeAction('administer_oral', 'patient_bed', {});
+          await actionMenu.executeAction('advance_time', 'ward_clock', { hours: 1.0 });
+          await actionMenu.executeAction('label', 'tube_1', { text: 't=1.0h' });
+          await actionMenu.executeAction('draw_blood', 'tube_1', {});
+          await actionMenu.executeAction('run_assay', 'tube_1', {});
+          await actionMenu.executeAction('dispose_waste', 'chemical_waste_bin', { item: 'dosing_cup' });
+          await actionMenu.executeAction('wash_hands', 'sink', {});
+          const finRes = await api.finishSession(state.session.session_id, {
+            trial_result: {
+              n_patients: 500,
+              pct_in_range: 82.4,
+              pct_toxic: 1.2,
+              pct_subtherapeutic: 16.4,
+              mean_peak: 14.8,
+            }
+          });
+          hud.hide();
+          reportScreen.show(finRes);
         }
       } catch (e) {
         console.error('Snap mode error:', e);

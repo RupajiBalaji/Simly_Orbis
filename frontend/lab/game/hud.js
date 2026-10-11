@@ -56,10 +56,12 @@ export class LabHUD {
 
   show() {
     if (this.container) this.container.classList.remove('hidden');
+    document.getElementById('dr-orbis-container')?.classList.remove('hidden');
   }
 
   hide() {
     if (this.container) this.container.classList.add('hidden');
+    document.getElementById('dr-orbis-container')?.classList.add('hidden');
   }
 
   formatStepTitle(stepId) {

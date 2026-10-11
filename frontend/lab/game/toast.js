@@ -28,8 +28,20 @@ export class ToastManager {
     }, durationMs);
   }
 
+  showSuccess(message, durationMs = 3000) {
+    this.showInfo(`✓ ${message}`, durationMs);
+  }
+
+  showError(message, durationMs = 4000) {
+    this.showInfo(`⚠️ ${message}`, durationMs);
+  }
+
   showViolation(violation) {
     this.clear(); // At most 1 active toast at any time
+
+    try {
+      window.dispatchEvent(new CustomEvent('lab_violation_toast', { detail: violation }));
+    } catch (_) {}
 
     const toast = document.createElement('div');
     toast.className = 'toast toast-violation';

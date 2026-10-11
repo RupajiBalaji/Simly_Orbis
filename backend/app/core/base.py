@@ -14,6 +14,20 @@ from pydantic import BaseModel, Field
 DistrictType = Literal["pharma", "chemistry", "space", "market"]
 
 
+class ModelCard(BaseModel):
+    """Scientific documentation card detailing model physics, assumptions, and limitations."""
+
+    module_id: str = Field(..., description="Target module identifier")
+    name: str = Field(..., description="Module display name")
+    underlying_models: list[str] = Field(default_factory=list, description="Primary mathematical and physical models")
+    key_assumptions: list[str] = Field(default_factory=list, description="Core physical/biological assumptions")
+    known_limitations: list[str] = Field(default_factory=list, description="Known boundary conditions and constraints")
+    disclaimer: str = Field(
+        default="Educational simulation only. Not validated for clinical dosing or industrial chemical process control.",
+        description="Mandatory regulatory and educational use disclaimer",
+    )
+
+
 class RealityCheck(BaseModel):
     """Scientific or analytical sanity check validating module computation."""
 
@@ -24,6 +38,7 @@ class RealityCheck(BaseModel):
     tolerance: float = Field(..., description="Allowable relative tolerance fraction (e.g. 0.02 for 2%)")
     passed: bool = Field(..., description="Whether the check passed within tolerance")
     source_note: str = Field(..., description="Source citation or derivation for the expected value")
+    model_card: ModelCard | None = Field(default=None, description="Optional associated model card documentation")
 
 
 class RunResult(BaseModel):
@@ -65,3 +80,14 @@ class SimModule(ABC):
     @abstractmethod
     def reality_checks(self) -> list[RealityCheck]:
         """Run benchmark scientific checks and return verification report."""
+
+    def get_model_card(self) -> ModelCard:
+        """Return scientific documentation card for the module."""
+        return ModelCard(
+            module_id=self.id,
+            name=self.name,
+            underlying_models=[self.description],
+            key_assumptions=["Standard baseline laboratory conditions."],
+            known_limitations=["Educational model simplification."],
+        )
+

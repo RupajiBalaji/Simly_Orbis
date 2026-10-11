@@ -81,4 +81,24 @@ export const api = {
   async getLeaderboard(experimentId) {
     return await request(`/api/lab/leaderboard?experiment_id=${encodeURIComponent(experimentId)}`);
   },
+
+  async queryMentor(sessionId, mode, question = null) {
+    return await request(`/api/lab/sessions/${encodeURIComponent(sessionId)}/mentor`, {
+      method: 'POST',
+      body: JSON.stringify({ mode, question }),
+    });
+  },
+
+  async getRealityChecks(moduleId, full = false) {
+    return await request(`/api/modules/${encodeURIComponent(moduleId)}/reality-check${full ? '?full=true' : ''}`);
+  },
+
+  async getAllRealityChecks() {
+    return await request('/api/modules/reality-checks/all');
+  },
+
+  async getModelCard(moduleId) {
+    return await request(`/api/modules/${encodeURIComponent(moduleId)}/model-card`);
+  },
 };
+

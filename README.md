@@ -120,8 +120,16 @@ simly-orbis/
 | `GET` | `/api/lab/sessions/{id}` | Get current session state, apparatus status, clock, violations, protocol |
 | `GET` | `/api/lab/sessions/{id}/available-actions` | Get context-aware valid actions for the current state with hints |
 | `POST` | `/api/lab/sessions/{id}/actions` | Apply player action (`action`, `params`), returns directives & animations |
+| `POST` | `/api/lab/sessions/{id}/mentor` | Dr. Orbis Lab Mentor (`hint`, `explain`, `ask`, `debrief`) with injection defense & cost control |
 | `POST` | `/api/lab/sessions/{id}/finish` | Complete session, calculate multi-factor score card, and record to leaderboard |
 | `GET` | `/api/lab/leaderboard` | View Orbis Lab leaderboard rankings (`experiment_id`, `limit`) |
+
+### Reality Checks & Scientific Model Cards
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/modules/{id}/reality-check` | Execute analytical verification tests for a module (supports `?full=true`) |
+| `GET` | `/api/modules/{id}/model-card` | Retrieve scientific model card (assumptions, equations, limitations, disclaimer) |
+| `GET` | `/api/modules/reality-checks/all` | Run all 11 analytical reality checks across all modules with pass/fail summary |
 
 ### Virtual Clinical Trial (Population PK)
 | Method | Endpoint | Description |
@@ -138,6 +146,55 @@ simly-orbis/
 | `POST` | `/api/score` | Record player score |
 | `GET` | `/api/leaderboard` | Get clinical game leaderboard standings |
 | `POST` | `/api/tutor` | Request Dr. Orbis explanation (`source`: "ai" or "fallback") |
+
+---
+
+## 🤖 Dr. Orbis AI Lab Mentor
+
+Dr. Orbis serves as an embedded AI mentor in the 3D lab environment, providing real-time pedagogical feedback:
+- **Server-Constructed Context:** The client sends only the interaction mode (`hint`, `explain`, `ask`, `debrief`) and an optional question (max 200 characters). The server constructs context strictly from authoritative session state (experiment, protocol step, last 5 events, safety violations, PPE status, numerical score parts, readouts).
+- **Prompt Injection Defense:** Nicknames, apparatus labels, and student questions are treated as untrusted data, enclosed in strict data blocks (`<<<USER_DATA>>>`), preventing prompt escape.
+- **Cost & Concurrency Controls:** Capped at 30 mentor calls per session, enforces single-in-flight concurrency, and caches responses with a 60-second TTL based on session state and mode.
+- **Reliable Fallback:** Seamlessly falls back to deterministic rule-based advice if the Anthropic API key is absent, offline, timed out (8s limit), or the call budget is exhausted. The response specifies `source: "ai" | "fallback"`.
+- **3D UI Experience:** Docked floating chat bubble with an animated pulsing avatar orb, typewriter text reveals (respects Skip Anim), interactive "💡 Step Hint" and "Explain Status" buttons, a 200-character input box, auto-explain popups upon protocol/safety breaches, and debrief analysis on the final report card.
+
+---
+
+## ⚖️ Reality Check Board & Verification Model Cards
+
+A physical 3D wall board in both `pk_ward` and `titration_bench` stations verifies the simulation engines directly against analytical benchmarks:
+- **11 Analytical Reality Checks:**
+  - `pharma.pk`: Single dose peak concentration, steady-state clearance balance, mass conservation.
+  - `pharma.trial`: Zero variability equivalence, median peak within 10% of deterministic patient, RNG seed reproducibility, dose monotonicity.
+  - `chem.titration`: Neutral water pH at $V_b=0$, equivalence point pH, strong acid asymptotic limit, weak acid buffer Henderson-Hasselbalch $pH = pK_a$.
+- **Click-to-Zoom & Interactive Panel:** Clicking the 3D board zooms the camera smoothly. The interactive panel displays live check tables, a "Run all checks" execution button, real-time PASS/FAIL badges, and module-specific Scientific Model Cards detailing assumptions, boundary constraints, and limitations.
+- **Lab Report Tie-In:** Final performance reports certify engine verification status (e.g. `Engine reality checks: 11/11 passed`) and log mentor usage (`Mentor hints used: X`).
+
+---
+
+## 📸 Stage Proofs & Screenshot Gallery
+
+| Proof | Description | Image |
+|---|---|---|
+| **Dr. Orbis Offline Rule Hint** | Deterministic fallback hint with protocol guidance and `[📋 Rule-Based]` badge | ![Dr. Orbis Hint](docs/screenshots/proof_mentor_hint_offline.png) |
+| **Dr. Orbis Student Inquiry** | Question answering with 200-char limit enforcement and latency tracking | ![Dr. Orbis Ask](docs/screenshots/proof_mentor_ask.png) |
+| **Safety Breach Auto-Explain** | Real-time mentor auto-explanation triggered on safety violation | ![Dr. Orbis Violation](docs/screenshots/proof_mentor_explain_violation.png) |
+| **3D Reality Check Board** | High-contrast 3D apparatus wall board with camera zoom preset | ![Reality Check Board](docs/screenshots/proof_reality_check_board.png) |
+| **Verification Panel & Model Card** | 11/11 passed checks table, live execution, and scientific model card | ![Reality Check Panel](docs/screenshots/proof_reality_check_panel_model_card.png) |
+| **Performance Benchmark** | FPS counter measuring $\ge 60$ FPS during mentor interaction | ![Performance FPS](docs/screenshots/proof_mentor_fps.png) |
+| **Complete Final Report** | Lab report integrating trial cohort statistics, reality check certifications, and debrief | ![Final Report Complete](docs/screenshots/proof_final_report_complete.png) |
+| **Step 0 Trial Gallery** | 500-patient crowd before and after color wave | ![Trial Before](docs/screenshots/proof_step0_trial_before.png) ![Trial After](docs/screenshots/proof_step0_trial_after.png) |
+| **Step 0 Titration Drips & Color** | Titration bench burette droplets and indicator color transition | ![Titration Drips](docs/screenshots/proof_step0_titration_drips_color.png) |
+
+---
+
+## 🧪 Running Tests
+
+```bash
+cd backend
+pytest
+```
+All unit tests and integration tests will run using async httpx and in-memory storage (**81 passing tests**).
 
 ---
 
@@ -318,7 +375,7 @@ If you wish to connect a live MongoDB Atlas cluster instead of the in-memory fal
 cd backend
 pytest
 ```
-All unit tests and integration tests will run using async httpx and in-memory storage (65 passing tests).
+All unit tests and integration tests will run using async httpx and in-memory storage (81 passing tests).
 
 ### 🧪 Orbis Lab Dev Console & Scripted Demo
 

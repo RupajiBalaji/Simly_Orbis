@@ -15,7 +15,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.core.base import RealityCheck, RunResult, SimModule
+from app.core.base import ModelCard, RealityCheck, RunResult, SimModule
 from app.core.version import ENGINE_VERSION
 
 KW = 1.0e-14
@@ -274,4 +274,32 @@ class ChemTitrationModule(SimModule):
             )
         )
 
+        card = self.get_model_card()
+        for c in checks:
+            c.model_card = card
+
         return checks
+
+    def get_model_card(self) -> ModelCard:
+        """Return scientific documentation card for acid-base titration simulation."""
+        return ModelCard(
+            module_id=self.id,
+            name=self.name,
+            underlying_models=[
+                "Strong acid (HCl) + Strong base (NaOH) charge-balance quadratic electroneutrality solver.",
+                "Weak acid (acetic acid, pKa=4.76) buffer equilibrium bisection solver with ion product of water Kw=1.0e-14.",
+                "Spectrophotometric chemical indicator absorbance modeling with smooth RGB interpolation.",
+            ],
+            key_assumptions=[
+                "Constant standard temperature (25°C) and pressure (1 atm).",
+                "Ideal solution behavior with unit activity coefficients (gamma = 1.0) and negligible ionic strength effects.",
+                "Instantaneous homogeneous chemical equilibrium upon reagent mixing.",
+            ],
+            known_limitations=[
+                "Does not compute extended Debye-Hückel activity coefficient corrections for concentrated solutions.",
+                "Does not simulate atmospheric CO2 dissolution or carbonic acid buffering over extended time.",
+                "Polyprotic acids with overlapping pKa dissociation constants are not modeled.",
+            ],
+            disclaimer="Educational simulation only. Not validated for clinical dosing or industrial chemical process control.",
+        )
+

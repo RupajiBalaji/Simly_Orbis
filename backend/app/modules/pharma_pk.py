@@ -13,7 +13,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from app.core.base import RealityCheck, RunResult, SimModule
+from app.core.base import ModelCard, RealityCheck, RunResult, SimModule
 from app.core.version import ENGINE_VERSION
 from app.sim.drugs import get_drug
 from app.sim.models import Patient
@@ -214,4 +214,31 @@ class PharmaPKModule(SimModule):
             )
         )
 
+        card = self.get_model_card()
+        for c in checks:
+            c.model_card = card
+
         return checks
+
+    def get_model_card(self) -> ModelCard:
+        """Return scientific documentation card for oral pharmacokinetics."""
+        return ModelCard(
+            module_id=self.id,
+            name=self.name,
+            underlying_models=[
+                "One-compartment open pharmacokinetic model with first-order extravascular/oral absorption (ka) and first-order elimination (ke).",
+                "Analytical Bateman function multi-dose superposition algorithm.",
+            ],
+            key_assumptions=[
+                "Apparent volume of distribution (Vd) is homogeneous and well-stirred across the central compartment.",
+                "First-order elimination with constant metabolic and renal clearance (CL = ke * Vd).",
+                "Complete oral bioavailability fraction (F = 1.0) with instantaneous gastrointestinal dissolution.",
+            ],
+            known_limitations=[
+                "Does not account for non-linear saturable metabolism (Michaelis-Menten kinetics).",
+                "Omits multi-compartmental tissue distribution kinetics and protein-binding equilibria.",
+                "Renal or hepatic clearance impairment is simplified to a constant clearance multiplier.",
+            ],
+            disclaimer="Educational simulation only. Not validated for clinical dosing or industrial chemical process control.",
+        )
+

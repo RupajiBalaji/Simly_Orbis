@@ -141,6 +141,22 @@ class ActionResult(BaseModel):
     status: Literal["active", "completed", "failed"] = "active"
 
 
+class MentorRequest(BaseModel):
+    """Student query payload for Dr. Orbis lab mentor."""
+
+    mode: Literal["hint", "explain", "ask", "debrief"]
+    question: str | None = Field(default=None, max_length=200, description="Optional question up to 200 chars")
+
+
+class MentorResponse(BaseModel):
+    """Dr. Orbis AI or rule-based mentor response."""
+
+    message: str
+    source: Literal["ai", "fallback"]
+    fallback_reason: str | None = None
+    calls_left: int
+
+
 class LabSession(BaseModel):
     """Complete state container for an interactive lab session."""
 
@@ -164,8 +180,11 @@ class LabSession(BaseModel):
     )
     violations: list[Violation] = Field(default_factory=list)
     events: list[dict[str, Any]] = Field(default_factory=list)
+    hints_used: int = 0
+    mentor_calls: int = 0
     status: Literal["active", "completed", "failed"] = "active"
 
     model_config = {
         "arbitrary_types_allowed": True,
     }
+

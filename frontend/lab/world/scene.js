@@ -52,6 +52,7 @@ export class LabScene {
       whiteboard: { pos: new THREE.Vector3(0, 2.7, -3.8), target: new THREE.Vector3(0, 2.7, -6.9) },
       trial_screen: { pos: new THREE.Vector3(2.2, 2.5, -3.6), target: new THREE.Vector3(4.5, 2.5, -6.9) },
       trial_gallery: { pos: new THREE.Vector3(0, 3.8, 1.6), target: new THREE.Vector3(0, 0.4, 7.5) },
+      reality_check_board: { pos: new THREE.Vector3(-4.5, 2.5, -3.8), target: new THREE.Vector3(-4.5, 2.6, -6.9) },
     };
 
     this.nameTagsVisible = true;
@@ -569,6 +570,10 @@ export class LabScene {
       const targetId = this.hoveredObject.userData.targetId;
       if (targetId === 'virtual_trial_screen') {
         state.emit('open_trial_panel');
+      } else if (targetId === 'reality_check_board') {
+        this.setStationCamera('reality_check_board');
+        state.emit('open_reality_check_panel');
+        return;
       } else if (targetId === 'protocol_board') {
         if (this.isWhiteboardZoomed) {
           this.resetCameraView();

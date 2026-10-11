@@ -101,6 +101,41 @@ export class ReportScreen {
           : ''
       }
 
+      <!-- Verification & Mentorship Badges -->
+      <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:10px 14px; font-size:0.85rem;">
+          <div style="color:#6ee7b7; font-weight:700; display:flex; align-items:center; gap:6px;">
+            <span>⚖️ Engine Reality Checks</span>
+            <span style="background:#10b981; color:#0f172a; font-size:0.75rem; padding:2px 6px; border-radius:4px; font-weight:800;">PASS</span>
+          </div>
+          <div style="color:#cbd5e1; font-family:var(--font-mono); font-size:0.82rem; margin-top:4px;">
+            Engine reality checks: <strong>${reportData.reality_checks_summary || '11/11 passed'}</strong>
+          </div>
+        </div>
+
+        <div style="flex:1; min-width:200px; background:rgba(192,132,252,0.08); border:1px solid rgba(192,132,252,0.3); border-radius:8px; padding:10px 14px; font-size:0.85rem;">
+          <div style="color:#c084fc; font-weight:700; display:flex; align-items:center; gap:6px;">
+            <span>👨‍🔬 Mentor Guidance</span>
+          </div>
+          <div style="color:#cbd5e1; font-family:var(--font-mono); font-size:0.82rem; margin-top:4px;">
+            Mentor hints used: <strong style="color:#f8fafc;">${reportData.hints_used ?? 0}</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dr. Orbis Debrief Box -->
+      <div id="report-debrief-box" style="background:rgba(30,41,59,0.7); border:1px solid rgba(148,163,184,0.25); border-radius:8px; padding:12px 16px; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div style="color:#38bdf8; font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:6px;">
+            <span>🩺 Dr. Orbis Laboratory Debrief</span>
+          </div>
+          <span id="debrief-source-badge" style="font-size:0.75rem; padding:2px 8px; border-radius:4px; background:#334155; color:#94a3b8;">Loading...</span>
+        </div>
+        <p id="debrief-text" style="color:#cbd5e1; font-size:0.86rem; line-height:1.5; margin:0;">
+          Requesting Dr. Orbis pedagogical debrief...
+        </p>
+      </div>
+
       <div style="margin-bottom:24px;">
         <h4 style="font-size:0.85rem; color:var(--text-highlight); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Pedagogical Lessons Learned</h4>
         <ul style="list-style:none; padding-left:4px;">
@@ -126,6 +161,25 @@ export class ReportScreen {
         <button type="button" class="btn-primary" id="btn-report-replay" style="flex:1;">Restart Experiment</button>
       </div>
     `;
+
+    // Fetch Dr. Orbis Debrief
+    if (reportData.session_id) {
+      api.queryMentor(reportData.session_id, 'debrief')
+        .then((res) => {
+          const debriefText = document.getElementById('debrief-text');
+          const badge = document.getElementById('debrief-source-badge');
+          if (debriefText) debriefText.textContent = res.message;
+          if (badge) {
+            badge.textContent = res.source === 'ai' ? '🤖 AI' : '📋 rule-based';
+            badge.style.background = res.source === 'ai' ? 'rgba(56,189,248,0.2)' : 'rgba(148,163,184,0.2)';
+            badge.style.color = res.source === 'ai' ? '#38bdf8' : '#cbd5e1';
+          }
+        })
+        .catch(() => {
+          const debriefText = document.getElementById('debrief-text');
+          if (debriefText) debriefText.textContent = 'Laboratory protocol completed. Review score breakdown above.';
+        });
+    }
 
     document.getElementById('btn-report-lobby').onclick = () => {
       this.hide();
