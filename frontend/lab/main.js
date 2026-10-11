@@ -20,6 +20,7 @@ import { DrOrbisMentor } from './game/mentor.js';
 import { RealityCheckPanel } from './game/reality_check_panel.js';
 import { toast } from './game/toast.js';
 import { soundFX } from './audio/sound_fx.js';
+import { runCameraAcceptanceTest } from './world/camera_test.js';
 
 // WebGL Support Detection
 function isWebGLAvailable() {
@@ -589,6 +590,9 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
     state.setExperiment(exp);
     sceneManager.loadExperiment(exp);
     characterController.spawnForExperiment(experimentId);
+    if (sceneManager.cameraRig) {
+      sceneManager.cameraRig.recenter(true);
+    }
 
     // 2. Create stateful session on backend
     const session = await api.createSession(experimentId, nickname);
@@ -624,6 +628,28 @@ function setupHUDControls() {
   const btnToggleTags = document.getElementById('btn-toggle-nametags');
   if (btnToggleTags) {
     btnToggleTags.onclick = () => sceneManager.toggleNameTags();
+  }
+
+  // Camera Follow / Free Toggle Button
+  const btnToggleCamMode = document.getElementById('btn-toggle-camera-mode');
+  if (btnToggleCamMode) {
+    btnToggleCamMode.onclick = () => {
+      if (sceneManager?.cameraRig) {
+        const mode = sceneManager.cameraRig.toggleMode();
+        toast.showInfo(`Camera Mode: ${mode}`);
+      }
+    };
+  }
+
+  // Recenter Camera Button
+  const btnRecenterCam = document.getElementById('btn-recenter-camera');
+  if (btnRecenterCam) {
+    btnRecenterCam.onclick = () => {
+      if (sceneManager?.cameraRig) {
+        sceneManager.cameraRig.recenter();
+        toast.showInfo('Camera: Re-centered');
+      }
+    };
   }
 
   // Reset Camera View Button

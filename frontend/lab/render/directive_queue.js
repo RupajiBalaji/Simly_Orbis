@@ -45,31 +45,33 @@ export class DirectiveQueue {
           appWorldPos = avWorldPos.clone().add(new THREE.Vector3(0, 1.1, -0.6));
         }
 
-        // Trigger Action Camera framing avatar upper body, hands & apparatus
-        if (this.sceneManager?.startActionCamera) {
-          this.sceneManager.startActionCamera(appWorldPos, avWorldPos, durationMs, clipName, animTargetId);
-        }
+        // Relative action camera trigger upon arrival at station
+        const onArrival = () => {
+          if (this.sceneManager?.startActionCamera) {
+            this.sceneManager.startActionCamera(appWorldPos, avWorldPos, durationMs, clipName, animTargetId);
+          }
 
-        if (this.sceneManager?.startActionPerf) {
-          this.sceneManager.startActionPerf(clipName);
-        }
+          if (this.sceneManager?.startActionPerf) {
+            this.sceneManager.startActionPerf(clipName);
+          }
 
-        const camIndicator = document.getElementById('action-cam-indicator');
-        if (camIndicator) {
-          const actionLabels = {
-            weigh: 'Weighing Active Substance',
-            administer_oral: 'Administering Oral Suspension',
-            label: 'Labeling Apparatus',
-            draw_blood: 'Venous Blood Sampling',
-            wash_hands: 'Washing & Decontaminating Hands',
-            dissolve: 'Dissolving Powder In Water',
-            tare_balance: 'Taring Analytical Balance',
-            pipette_analyte: 'Pipetting Acid Analyte',
-            titrate: 'Titrating Acid-Base Solution',
-          };
-          camIndicator.textContent = `🎬 ACTION CAM: ${actionLabels[clipName] || clipName.replace(/_/g, ' ').toUpperCase()}`;
-          camIndicator.style.display = 'flex';
-        }
+          const camIndicator = document.getElementById('action-cam-indicator');
+          if (camIndicator) {
+            const actionLabels = {
+              weigh: 'Weighing Active Substance',
+              administer_oral: 'Administering Oral Suspension',
+              label: 'Labeling Apparatus',
+              draw_blood: 'Venous Blood Sampling',
+              wash_hands: 'Washing & Decontaminating Hands',
+              dissolve: 'Dissolving Powder In Water',
+              tare_balance: 'Taring Analytical Balance',
+              pipette_analyte: 'Pipetting Acid Analyte',
+              titrate: 'Titrating Acid-Base Solution',
+            };
+            camIndicator.textContent = `🎬 ACTION CAM: ${actionLabels[clipName] || clipName.replace(/_/g, ' ').toUpperCase()}`;
+            camIndicator.style.display = 'flex';
+          }
+        };
 
         // Trigger procedural sound effects
         if (clipName === 'weigh') {
@@ -205,9 +207,10 @@ export class DirectiveQueue {
         };
 
         if (apparatus) {
-          this.characterController.executeActionAtStation(apparatus, clipName, durationMs, onFinished);
+          this.characterController.executeActionAtStation(apparatus, clipName, durationMs, onFinished, onArrival);
         } else {
           // Play in place
+          onArrival();
           const prop = this.characterController.createHeldProp ? this.characterController.createHeldProp(clipName) : null;
           if (prop) {
             if (prop.isGroup || prop.isMesh) {

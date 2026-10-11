@@ -246,6 +246,8 @@ export function buildViewingGalleryAndCrowd(parentScene) {
   // 2. Glass Observation Gallery Railing at z = 2.15 (between ward and arena)
   const galleryGroup = new THREE.Group();
   galleryGroup.position.set(0, 0, 2.15);
+  galleryGroup.userData.camBlocker = true;
+  galleryGroup.userData.isRailing = true;
 
   const glassMat = new THREE.MeshStandardMaterial({
     color: 0xe0f2fe,
@@ -266,12 +268,14 @@ export function buildViewingGalleryAndCrowd(parentScene) {
   const railMesh = new THREE.Mesh(railGeo, chromeMat);
   railMesh.rotation.z = Math.PI / 2;
   railMesh.position.set(0, 1.15, 0);
+  railMesh.userData.camBlocker = true;
   galleryGroup.add(railMesh);
 
   // Glass Panels
   const glassGeo = new THREE.BoxGeometry(10.2, 0.95, 0.03);
   const glassMesh = new THREE.Mesh(glassGeo, glassMat);
   glassMesh.position.set(0, 0.6, 0);
+  glassMesh.userData.camBlocker = true;
   galleryGroup.add(glassMesh);
 
   // Vertical Support Posts

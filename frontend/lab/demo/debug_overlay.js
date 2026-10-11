@@ -80,6 +80,7 @@ export class DebugOverlay {
       <div>Draw Calls: <span style="color:#38bdf8; font-weight:700;">${drawCalls}</span></div>
       <div>GPU: <span style="color:#a855f7;">${gpuShort}</span></div>
       <div>Exp: <span style="color:#e2e8f0;">${exp?.id || 'pk_ward'}</span></div>
+      <div>Camera: <span style="color:#f43f5e; font-weight:700;">${window.sceneManager?.cameraRig?.mode || 'FOLLOW'}</span></div>
       <div>Clock: <span style="color:#f59e0b;">t=${(session?.clock_h || 0).toFixed(1)}h</span></div>
       <div>Directives: <span style="color:#ec4899;">${directives.length} active</span></div>
     `;

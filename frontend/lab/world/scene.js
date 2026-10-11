@@ -11,6 +11,7 @@ import { buildApparatus } from './apparatus.js';
 import { applyLiquidDirective } from '../render/liquid.js';
 import { applyReadoutDirective } from '../render/readouts.js';
 import { buildViewingGalleryAndCrowd } from './trial_hall.js';
+import { CameraRig, CameraMode } from './camera_rig.js';
 import { state } from '../state.js';
 
 export class LabScene {
@@ -24,6 +25,7 @@ export class LabScene {
     this.apparatusLookup = {};
     this.apparatusContainer = null;
     this.trialHall = null;
+    this.cameraRig = null;
 
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2(-999, -999);
@@ -116,7 +118,10 @@ export class LabScene {
     // 5. Room geometry & permanent fixtures
     this.roomGroup = buildLabRoom(this.scene);
 
-    // 6. Event listeners
+    // 6. Continuous Follow Camera Rig
+    this.cameraRig = new CameraRig(this);
+
+    // 7. Event listeners
     this.onWindowResize = this.onWindowResize.bind(this);
     this.onPointerMove = this.onPointerMove.bind(this);
     this.onPointerDown = this.onPointerDown.bind(this);
@@ -182,6 +187,16 @@ export class LabScene {
   onKeyDown(event) {
     if (event.key === 'n' || event.key === 'N') {
       this.toggleNameTags();
+    } else if (event.key === 'c' || event.key === 'C') {
+      if (this.cameraRig) {
+        const mode = this.cameraRig.toggleMode();
+        state.showToast?.(`Camera: ${mode}`);
+      }
+    } else if (event.key === 'r' || event.key === 'R') {
+      if (this.cameraRig) {
+        this.cameraRig.recenter();
+        state.showToast?.('Camera: Re-centered');
+      }
     }
   }
 
@@ -310,7 +325,13 @@ export class LabScene {
 
     this.syncApparatusState(experimentDef?.apparatus);
     this.updateNameTagVisibility();
-    this.resetCameraView();
+    if (this.cameraRig) {
+      this.cameraRig.buildCollisionData();
+      this.cameraRig.setMode(CameraMode.FOLLOW);
+      this.cameraRig.recenter(true);
+    } else {
+      this.resetCameraView();
+    }
   }
 
   syncApparatusState(apparatusState) {
@@ -359,6 +380,11 @@ export class LabScene {
 
   checkCameraObstruction() {
     if (!this.camera) return;
+
+    if (this.cameraRig) {
+      this.cameraRig.resolveCollision(this.camera.position, this.controls.target);
+      return;
+    }
 
     // 1. Gallery Railing collision (railing is at z = 2.15)
     // When inside ward, never allow camera to drift into or behind the railing
@@ -425,6 +451,16 @@ export class LabScene {
 
   startActionCamera(apparatusPos, avatarPos, durationMs = 1800, clipName = '', targetId = '') {
     if (state.skipAnimation) return;
+
+    if (this.cameraRig) {
+      let apparatusObj = this.getApparatus(targetId);
+      if (!apparatusObj && apparatusPos) {
+        apparatusObj = new THREE.Object3D();
+        apparatusObj.position.copy(apparatusPos);
+      }
+      this.cameraRig.startRelativeActionCamera(apparatusObj, clipName, durationMs);
+      return;
+    }
 
     if (!this.isActionCameraActive) {
       this.savedCameraPos = this.camera.position.clone();
@@ -506,6 +542,11 @@ export class LabScene {
   }
 
   endActionCamera() {
+    if (this.cameraRig) {
+      this.cameraRig.endRelativeActionCamera();
+      return;
+    }
+
     if (!this.isActionCameraActive) return;
     this.isActionCameraActive = false;
     this.updateNameTagVisibility();
@@ -554,6 +595,9 @@ export class LabScene {
   }
 
   setStationCamera(presetKey) {
+    if (this.cameraRig) {
+      this.cameraRig.setMode(CameraMode.STATION);
+    }
     this.isGalleryMode = presetKey === 'trial_gallery';
     const preset = this.stationPresets[presetKey] || this.stationPresets.default;
     this.cameraTransition = null;
@@ -570,6 +614,11 @@ export class LabScene {
     this.isGalleryMode = false;
     this.isWhiteboardZoomed = false;
     this.cameraTransition = null;
+    if (this.cameraRig) {
+      this.cameraRig.setMode(CameraMode.FOLLOW);
+      this.cameraRig.recenter(state.skipAnimation);
+      return;
+    }
     if (state.skipAnimation) {
       this.camera.position.copy(this.stationPresets.default.pos);
       this.cameraTarget.copy(this.stationPresets.default.target);
@@ -586,6 +635,9 @@ export class LabScene {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     const maxRatio = this.quality === 'high' ? 1.5 : 1.0;
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxRatio));
+    if (this.cameraRig) {
+      this.cameraRig.updateHUDFrustum();
+    }
   }
 
   onPointerMove(event) {
@@ -714,6 +766,11 @@ export class LabScene {
     // Controls update
     if (this.controls) {
       this.controls.update();
+    }
+
+    // Camera Rig follow & collision update
+    if (this.cameraRig) {
+      this.cameraRig.update(dt);
     }
 
     // Render

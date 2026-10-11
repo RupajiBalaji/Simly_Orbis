@@ -1,0 +1,364 @@
+{
+  "test_1080p": {
+    "resolution": "1920x1080",
+    "startTime": 8562,
+    "totalSamples": 551,
+    "insideFreeCount": 551,
+    "outsideFreeCount": 0,
+    "maxMissingMs": 0,
+    "currentMissingMs": 0,
+    "blockerPenetrations": 0,
+    "hudOcclusions": 0,
+    "legs": [
+      {
+        "leg": "start -> digital_balance",
+        "durationMs": 297,
+        "samples": 8,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "digital_balance -> patient_bed",
+        "durationMs": 3434,
+        "samples": 86,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "patient_bed -> tube_rack",
+        "durationMs": 2750,
+        "samples": 69,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "tube_rack -> assay_analyzer",
+        "durationMs": 866,
+        "samples": 22,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "assay_analyzer -> virtual_trial_screen",
+        "durationMs": 3800,
+        "samples": 95,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "virtual_trial_screen -> sink",
+        "durationMs": 4434,
+        "samples": 111,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "sink -> chemical_waste_bin",
+        "durationMs": 3667,
+        "samples": 92,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "chemical_waste_bin -> reality_check_board",
+        "durationMs": 2733,
+        "samples": 68,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      }
+    ],
+    "samples": [],
+    "totalDurationMs": 21981,
+    "freeRectPercent": 100,
+    "passed": true
+  },
+  "test_768p": {
+    "resolution": "1366x768",
+    "startTime": 32161.80000001192,
+    "totalSamples": 559,
+    "insideFreeCount": 559,
+    "outsideFreeCount": 0,
+    "maxMissingMs": 0,
+    "currentMissingMs": 0,
+    "blockerPenetrations": 0,
+    "hudOcclusions": 0,
+    "legs": [
+      {
+        "leg": "start -> digital_balance",
+        "durationMs": 615,
+        "samples": 16,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "digital_balance -> patient_bed",
+        "durationMs": 3434,
+        "samples": 86,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "patient_bed -> tube_rack",
+        "durationMs": 2749,
+        "samples": 69,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "tube_rack -> assay_analyzer",
+        "durationMs": 868,
+        "samples": 22,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "assay_analyzer -> virtual_trial_screen",
+        "durationMs": 3799,
+        "samples": 94,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "virtual_trial_screen -> sink",
+        "durationMs": 4433,
+        "samples": 111,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "sink -> chemical_waste_bin",
+        "durationMs": 3667,
+        "samples": 92,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "chemical_waste_bin -> reality_check_board",
+        "durationMs": 2733,
+        "samples": 69,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      }
+    ],
+    "samples": [],
+    "totalDurationMs": 22299,
+    "freeRectPercent": 100,
+    "passed": true
+  },
+  "test_mobile": {
+    "resolution": "390x844",
+    "startTime": 55278.10000002384,
+    "totalSamples": 559,
+    "insideFreeCount": 559,
+    "outsideFreeCount": 0,
+    "maxMissingMs": 0,
+    "currentMissingMs": 0,
+    "blockerPenetrations": 0,
+    "hudOcclusions": 0,
+    "legs": [
+      {
+        "leg": "start -> digital_balance",
+        "durationMs": 616,
+        "samples": 16,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "digital_balance -> patient_bed",
+        "durationMs": 3434,
+        "samples": 86,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "patient_bed -> tube_rack",
+        "durationMs": 2750,
+        "samples": 69,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "tube_rack -> assay_analyzer",
+        "durationMs": 866,
+        "samples": 22,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "assay_analyzer -> virtual_trial_screen",
+        "durationMs": 3800,
+        "samples": 95,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "virtual_trial_screen -> sink",
+        "durationMs": 4435,
+        "samples": 111,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "sink -> chemical_waste_bin",
+        "durationMs": 3666,
+        "samples": 92,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "chemical_waste_bin -> reality_check_board",
+        "durationMs": 2734,
+        "samples": 68,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      }
+    ],
+    "samples": [],
+    "totalDurationMs": 22301,
+    "freeRectPercent": 100,
+    "passed": true
+  },
+  "test_orbit": {
+    "resolution": "1920x1080",
+    "startTime": 78313.89999997616,
+    "totalSamples": 560,
+    "insideFreeCount": 560,
+    "outsideFreeCount": 0,
+    "maxMissingMs": 0,
+    "currentMissingMs": 0,
+    "blockerPenetrations": 0,
+    "hudOcclusions": 0,
+    "legs": [
+      {
+        "leg": "start -> digital_balance",
+        "durationMs": 616,
+        "samples": 16,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "digital_balance -> patient_bed",
+        "durationMs": 3432,
+        "samples": 86,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "patient_bed -> tube_rack",
+        "durationMs": 2750,
+        "samples": 69,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "tube_rack -> assay_analyzer",
+        "durationMs": 868,
+        "samples": 22,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "assay_analyzer -> virtual_trial_screen",
+        "durationMs": 3800,
+        "samples": 95,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "virtual_trial_screen -> sink",
+        "durationMs": 4433,
+        "samples": 111,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "sink -> chemical_waste_bin",
+        "durationMs": 3666,
+        "samples": 92,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      },
+      {
+        "leg": "chemical_waste_bin -> reality_check_board",
+        "durationMs": 2733,
+        "samples": 69,
+        "freeRectPct": "100.0%",
+        "maxMissingMs": 0,
+        "blockerViolations": 0,
+        "hudViolations": 0
+      }
+    ],
+    "samples": [],
+    "totalDurationMs": 22298,
+    "freeRectPercent": 100,
+    "passed": true
+  },
+  "mode_toggle": {
+    "before": "FOLLOW",
+    "toggled": "FREE",
+    "restored": "FOLLOW"
+  },
+  "distinct_hashes": true
+}

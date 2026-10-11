@@ -23,7 +23,9 @@ frontend/
     ├── world/
     │   ├── room.js            Procedural 3D laboratory architecture, benches, lighting, safety fixtures
     │   ├── apparatus.js       Procedural apparatus builders mapped to backend apparatus IDs
-    │   └── scene.js           Three.js WebGLRenderer, OrbitControls, hover raycasting, camera transitions
+    │   ├── scene.js           Three.js WebGLRenderer, OrbitControls, hover raycasting, camera transitions
+    │   ├── camera_rig.js      Third-person continuous follow rig, collision resolver, relative action poses
+    │   └── camera_test.js     Automated camera acceptance test suite (window.__camTest)
     ├── character/
     │   ├── avatar.js          Procedural humanoid rig with joints and dynamic PPE accessories
     │   ├── ik.js              Two-bone analytical inverse kinematics for reaching apparatus
@@ -94,3 +96,33 @@ If your experiment emits special visual effects, add them to `frontend/lab/rende
 
 ### 5. Unlock District Door in Lobby
 In `frontend/index.html`, remove the `locked` class and add an unlocked card with click handler in `frontend/lab/main.js`. Your new 3D experiment is now fully playable with character navigation and safety enforcement!
+
+---
+
+## 🎥 Third-Person Follow Camera System (`CameraRig`)
+
+The 3D laboratory features a continuous third-person follow camera rig (`frontend/lab/world/camera_rig.js`) designed to keep the player avatar visible and well-framed at all times:
+
+1. **Modes**:
+   - `FOLLOW` (default): Continuously tracks the avatar root with frame-rate independent exponential damping ($k \approx 6$, $1 - e^{-k \cdot dt}$).
+   - `STATION`: Fixed camera presets for district lobby, trial viewing gallery, or zoomed inspection boards.
+   - `FREE`: Unconstrained manual orbit mode (`OrbitControls`). Toggle with key `C` or the top HUD button; recenter with key `R`.
+
+2. **User Orbit Preservation**:
+   - Moving the camera rotates around the character seamlessly: when following locomotion, position and target are shifted by the exact same delta ($\vec{P} \leftarrow \vec{P} + \Delta$, $\vec{T} \leftarrow \vec{T} + \Delta$).
+   - **Chase Assist**: When moving forward without mouse interaction for >2 seconds, the camera smoothly eases yaw behind the character.
+
+3. **HUD-Aware Unoccluded Framing**:
+   - Rather than viewport shearing (`setViewOffset`), `CameraRig` dynamically measures HUD insets (checklist, mentor dock, action bar) and shifts the world look target along the camera's local right and up axes ($m_{\text{pixel}} = 2 D \tan(\theta/2) / H$).
+   - Contains a central 40% dead zone to minimize unnecessary micro-jitter during minor head/arm gestures.
+
+4. **Dynamic Collision Resolution**:
+   - Obstacles marked with `userData.camBlocker = true` (lab benches, partitions, monitors) form collision bounding boxes.
+   - Raycasts from the target to the camera pull the camera forward when sightlines are obstructed, preventing geometry clipping without hardcoded coordinate rectangles.
+
+5. **Relative Action Camera Shots**:
+   - During apparatus interactions (Weigh, Titrate, Pipette, Pour, etc.), action shots compute camera angles in the local frame $(R, F, U)$ of the apparatus and avatar facing.
+   - If the avatar's torso occludes the apparatus, avatar opacity automatically fades to 40% for the shot.
+
+6. **Acceptance Testing**:
+   - Run `window.__camTest()` in the browser or execute `python scripts/verify_camera_rig.py` to sample positions across multiple viewport resolutions (1920x1080, 1366x768, 390x844) and verify $\ge 98\%$ framing clearance with zero blocker penetrations.

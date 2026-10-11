@@ -465,10 +465,10 @@ body.orbis-lab-body {
   z-index: 5;
   pointer-events: none; /* children enable pointer events */
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
   grid-template-columns: 320px 1fr 340px;
   padding: 16px 20px 24px;
-  gap: 16px;
+  gap: 12px;
 }
 
 #lab-hud.hidden {
@@ -802,7 +802,7 @@ body.orbis-lab-body {
 /* Bottom Navigation Dock: Station Strip + Always-Visible Action Bar */
 .hud-bottom-dock {
   grid-column: 1 / -1;
-  grid-row: 3;
+  grid-row: 4;
   pointer-events: auto;
   display: flex;
   flex-direction: column;
@@ -823,6 +823,9 @@ body.orbis-lab-body {
   border-radius: 20px;
   padding: 4px 14px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 95vw;
 }
 
 .station-strip-label {
@@ -1944,9 +1947,10 @@ body.orbis-lab-body {
 .dr-orbis-container {
   position: fixed;
   right: 20px;
-  bottom: 120px;
+  top: 68px;
   width: 340px;
   max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 200px);
   z-index: 50;
   pointer-events: auto;
   font-family: var(--font-sans);

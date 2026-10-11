@@ -467,6 +467,7 @@ function buildWaterJug(id) {
 // ---------------------------------------------------------------------------
 function buildPatientBed(id) {
   const g = new THREE.Group();
+  g.userData.camBlocker = true;
 
   // Metal Frame
   const frameGeo = new THREE.BoxGeometry(2.4, 0.4, 1.2);
@@ -772,6 +773,7 @@ function buildAssayAnalyzer(id) {
 // ---------------------------------------------------------------------------
 function buildWasteBin(id, type) {
   const g = new THREE.Group();
+  g.userData.camBlocker = true;
 
   const isBio = type === 'biohazard';
   const binColor = isBio ? 0xdc2626 : 0xf59e0b;
@@ -816,6 +818,7 @@ function buildWasteBin(id, type) {
 // ---------------------------------------------------------------------------
 function buildSink(id) {
   const g = new THREE.Group();
+  g.userData.camBlocker = true;
 
   // Sink Basin
   const basinGeo = new THREE.BoxGeometry(0.8, 0.3, 0.6);

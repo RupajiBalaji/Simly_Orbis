@@ -109,7 +109,7 @@ export class CharacterController {
     }
   }
 
-  executeActionAtStation(apparatusObject, clipName, durationMs, onFinished) {
+  executeActionAtStation(apparatusObject, clipName, durationMs, onFinished, onArrival = null) {
     const stationPos = apparatusObject.userData.stationPos || new THREE.Vector3(0, 0, 0);
     const apparatusWorldPos = new THREE.Vector3();
     apparatusObject.getWorldPosition(apparatusWorldPos);
@@ -121,6 +121,9 @@ export class CharacterController {
 
     const startGesture = () => {
       this.faceTarget(apparatusWorldPos);
+      if (typeof onArrival === 'function') {
+        onArrival();
+      }
       const props = this.createHeldProp(clipName);
       if (props) {
         if (props.isGroup || props.isMesh) {

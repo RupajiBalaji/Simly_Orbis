@@ -10,7 +10,7 @@ import { toast } from './toast.js';
 
 export class DrOrbisMentor {
   constructor() {
-    this.isCollapsed = false;
+    this.isCollapsed = true;
     this.isTyping = false;
     this.messages = [];
     this.callsLeft = 30;
@@ -106,9 +106,7 @@ export class DrOrbisMentor {
       this.setCollapsed(!this.isCollapsed);
     });
 
-    if (window.innerWidth < 1200) {
-      this.setCollapsed(true);
-    }
+    this.setCollapsed(true);
 
     // Quick buttons
     document.getElementById('btn-mentor-hint')?.addEventListener('click', () => this.query('hint'));

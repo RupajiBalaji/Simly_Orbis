@@ -53,6 +53,8 @@ export function buildLabRoom(scene) {
   const backWall = new THREE.Mesh(wallGeo, wallMat);
   backWall.position.set(0, 2.6, -7);
   backWall.receiveShadow = true;
+  backWall.userData.isWall = true;
+  backWall.userData.camBlocker = true;
   roomGroup.add(backWall);
 
   const sideWallGeo = new THREE.PlaneGeometry(16, 5.2);
@@ -60,12 +62,16 @@ export function buildLabRoom(scene) {
   leftWall.position.set(-8, 2.6, 0);
   leftWall.rotation.y = Math.PI / 2;
   leftWall.receiveShadow = true;
+  leftWall.userData.isWall = true;
+  leftWall.userData.camBlocker = true;
   roomGroup.add(leftWall);
 
   const rightWall = new THREE.Mesh(sideWallGeo, wallMat);
   rightWall.position.set(8, 2.6, 0);
   rightWall.rotation.y = -Math.PI / 2;
   rightWall.receiveShadow = true;
+  rightWall.userData.isWall = true;
+  rightWall.userData.camBlocker = true;
   roomGroup.add(rightWall);
 
   // Ceiling Plane (White reflective ceiling)
@@ -200,6 +206,8 @@ function createBench(parent, topMat, legMat, x, y, z, width, depth, height) {
   topMesh.position.y = height;
   topMesh.castShadow = true;
   topMesh.receiveShadow = true;
+  topMesh.userData.camBlocker = true;
+  bench.userData.camBlocker = true;
   bench.add(topMesh);
 
   // 4 Powder-coated metal legs (castShadow turned off for props to optimize shadow rendering)
@@ -227,6 +235,7 @@ function createBench(parent, topMat, legMat, x, y, z, width, depth, height) {
 function createWhiteboard(parent, x, y, z) {
   const board = new THREE.Group();
   board.position.set(x, y, z);
+  board.userData.camBlocker = true;
 
   // Frame
   const frameGeo = new THREE.BoxGeometry(4.4, 2.3, 0.06);
