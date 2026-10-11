@@ -38,7 +38,31 @@ export class AvatarAnimator {
         this.evaluateWeigh(this.clipTime, this.clipDuration, this.clipTargetPos);
         break;
       case 'pour':
+      case 'dissolve':
         this.evaluatePour(this.clipTime, this.clipDuration, this.clipTargetPos);
+        break;
+      case 'titrate':
+      case 'turn_stopcock':
+        this.evaluateTurnStopcock(this.clipTime, this.clipDuration, this.clipTargetPos);
+        break;
+      case 'pipette':
+      case 'pipette_analyte':
+      case 'add_indicator':
+        this.evaluatePipette(this.clipTime, this.clipDuration, this.clipTargetPos);
+        break;
+      case 'draw_blood':
+        this.evaluateDrawBlood(this.clipTime, this.clipDuration, this.clipTargetPos);
+        break;
+      case 'administer':
+      case 'administer_oral':
+        this.evaluateAdminister(this.clipTime, this.clipDuration, this.clipTargetPos);
+        break;
+      case 'wash_hands':
+        this.evaluateWashHands(this.clipTime, this.clipDuration);
+        break;
+      case 'write_label':
+      case 'label':
+        this.evaluateWriteLabel(this.clipTime, this.clipDuration, this.clipTargetPos);
         break;
       case 'wear_ppe':
         this.evaluateWearPPE(this.clipTime, this.clipDuration);
@@ -75,10 +99,16 @@ export class AvatarAnimator {
         this.evaluateWalk(this.clipTime);
         break;
       case 'pour':
+      case 'dissolve':
         this.evaluatePour(this.clipTime, this.clipDuration, this.clipTargetPos);
         break;
       case 'weigh':
         this.evaluateWeigh(this.clipTime, this.clipDuration, this.clipTargetPos);
+        break;
+      case 'pipette':
+      case 'pipette_analyte':
+      case 'add_indicator':
+        this.evaluatePipette(this.clipTime, this.clipDuration, this.clipTargetPos);
         break;
       case 'write_label':
         this.evaluateWriteLabel(this.clipTime, this.clipDuration, this.clipTargetPos);
@@ -90,11 +120,13 @@ export class AvatarAnimator {
         this.evaluateDrawBlood(this.clipTime, this.clipDuration, this.clipTargetPos);
         break;
       case 'administer':
+      case 'administer_oral':
         this.evaluateAdminister(this.clipTime, this.clipDuration, this.clipTargetPos);
         break;
       case 'swirl':
         this.evaluateSwirl(this.clipTime, this.clipDuration, this.clipTargetPos);
         break;
+      case 'titrate':
       case 'turn_stopcock':
         this.evaluateTurnStopcock(this.clipTime, this.clipDuration, this.clipTargetPos);
         break;
@@ -190,28 +222,33 @@ export class AvatarAnimator {
     const p = Math.min(1.0, Math.max(0.0, t / dur));
     const w = Math.sin(p * Math.PI); // 0 at start, 1.0 at midpoint, 0 at end
 
-    // Non-dominant hand relaxed at side
-    this.rig.leftArm.shoulder.quaternion.identity();
-    this.rig.leftArm.shoulder.rotation.order = 'YXZ';
-    this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
-    this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
-    this.rig.leftArm.hand.rotation.set(0, 0, 0);
-
     if (w > 0.001) {
-      const restPos = this.getRestHandPos(true);
-      const topPos = targetPos ? targetPos.clone() : new THREE.Vector3(0.04, 1.80, -1.85);
-      if (topPos.y < 1.3) topPos.y += 0.85;
+      // Non-dominant left hand holds and steadies receiving container
+      const restLeft = this.getRestHandPos(false);
+      const basePos = targetPos ? targetPos.clone() : new THREE.Vector3(-3.6, 1.02, -4.0);
+      const curLeft = restLeft.lerp(basePos, w);
+      this.rig.leftArm.ik.solve(curLeft);
+      this.rig.leftArm.hand.rotation.set(0.12 * w, 0, 0.1 * w);
 
-      const curTarget = restPos.lerp(topPos, w);
-      this.rig.rightArm.ik.solve(curTarget);
+      // Dominant right hand reaches with pouring vessel above
+      const restRight = this.getRestHandPos(true);
+      const topPos = basePos.clone().add(new THREE.Vector3(0.08, 0.28, 0));
+      const curRight = restRight.lerp(topPos, w);
+      this.rig.rightArm.ik.solve(curRight);
 
       // Wrist pouring tilt during hold phase
       let tilt = 0;
       if (p > 0.25 && p < 0.75) {
-        tilt = Math.sin(((p - 0.25) / 0.5) * Math.PI) * 0.80;
+        tilt = Math.sin(((p - 0.25) / 0.5) * Math.PI) * 0.85;
       }
       this.rig.rightArm.hand.rotation.z = tilt;
     } else {
+      this.rig.leftArm.shoulder.quaternion.identity();
+      this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+      this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
+      this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
+      this.rig.leftArm.hand.rotation.set(0, 0, 0);
+
       this.rig.rightArm.shoulder.quaternion.identity();
       this.rig.rightArm.shoulder.rotation.order = 'YXZ';
       this.rig.rightArm.shoulder.rotation.set(0.02, 0, -0.05);
@@ -224,23 +261,75 @@ export class AvatarAnimator {
     const p = Math.min(1.0, Math.max(0.0, t / dur));
     const w = Math.sin(p * Math.PI); // 0 at start, 1.0 at midpoint, 0 at end
 
-    // Non-dominant hand relaxed at side
-    this.rig.leftArm.shoulder.quaternion.identity();
-    this.rig.leftArm.shoulder.rotation.order = 'YXZ';
-    this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
-    this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
-    this.rig.leftArm.hand.rotation.set(0, 0, 0);
+    const panPos = targetPos ? targetPos.clone() : new THREE.Vector3(-4.5, 1.05, -4.15);
+    if (panPos.y < 1.0) panPos.y += 0.10;
 
     if (w > 0.001) {
-      const restPos = this.getRestHandPos(true);
-      const panPos = targetPos ? targetPos.clone() : new THREE.Vector3(-4.5, 1.05, -4.15);
-      if (panPos.y < 1.0) panPos.y += 0.10;
+      // 1. Left hand holds dosing cup steady beside balance pan
+      const restLeft = this.getRestHandPos(false);
+      const cupHoldPos = panPos.clone().add(new THREE.Vector3(-0.18, 0.06, 0.10));
+      const curLeft = restLeft.lerp(cupHoldPos, w);
+      this.rig.leftArm.ik.solve(curLeft);
+      this.rig.leftArm.hand.rotation.set(0.15 * w, 0, 0.12 * w);
 
-      const curTarget = restPos.lerp(panPos, w);
-      curTarget.y -= Math.sin(p * Math.PI) * 0.025; // delicate spatula transfer dip
-      this.rig.rightArm.ik.solve(curTarget);
-      this.rig.rightArm.hand.rotation.set(0, 0, -w * 0.35);
+      // 2. Right hand holds spatula, dipping between cup and balance pan
+      const restRight = this.getRestHandPos(true);
+      const spatulaTarget = panPos.clone();
+      if (p < 0.35) {
+        // Gathering powder from cup
+        spatulaTarget.copy(cupHoldPos).add(new THREE.Vector3(0.02, 0.02, -0.02));
+      } else if (p < 0.75) {
+        // Transferring onto balance pan
+        spatulaTarget.y -= 0.02; // delicate dip onto pan
+      } else {
+        // Pulling back slightly
+        spatulaTarget.add(new THREE.Vector3(0.05, 0.04, 0.05));
+      }
+      const curRight = restRight.lerp(spatulaTarget, w);
+      this.rig.rightArm.ik.solve(curRight);
+      this.rig.rightArm.hand.rotation.set(0, 0, -w * 0.40);
     } else {
+      this.rig.leftArm.shoulder.quaternion.identity();
+      this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+      this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
+      this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
+      this.rig.leftArm.hand.rotation.set(0, 0, 0);
+
+      this.rig.rightArm.shoulder.quaternion.identity();
+      this.rig.rightArm.shoulder.rotation.order = 'YXZ';
+      this.rig.rightArm.shoulder.rotation.set(0.02, 0, -0.05);
+      this.rig.rightArm.elbow.rotation.set(-0.08, 0, 0);
+      this.rig.rightArm.hand.rotation.set(0, 0, 0);
+    }
+  }
+
+  evaluatePipette(t, dur, targetPos) {
+    const p = Math.min(1.0, Math.max(0.0, t / dur));
+    const w = Math.sin(p * Math.PI);
+
+    const flaskPos = targetPos ? targetPos.clone() : new THREE.Vector3(0.02, 1.15, -1.85);
+
+    if (w > 0.001) {
+      // Left hand steadies the neck of the flask
+      const restLeft = this.getRestHandPos(false);
+      const neckPos = flaskPos.clone().add(new THREE.Vector3(-0.08, -0.05, 0.04));
+      const curLeft = restLeft.lerp(neckPos, w);
+      this.rig.leftArm.ik.solve(curLeft);
+      this.rig.leftArm.hand.rotation.set(0.2 * w, 0, 0.1);
+
+      // Right hand controls pipette vertically above flask
+      const restRight = this.getRestHandPos(true);
+      const pipPos = flaskPos.clone().add(new THREE.Vector3(0, 0.15 - Math.sin(p * Math.PI) * 0.05, 0));
+      const curRight = restRight.lerp(pipPos, w);
+      this.rig.rightArm.ik.solve(curRight);
+      this.rig.rightArm.hand.rotation.set(-0.1 * w, 0, -0.2 * w);
+    } else {
+      this.rig.leftArm.shoulder.quaternion.identity();
+      this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+      this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
+      this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
+      this.rig.leftArm.hand.rotation.set(0, 0, 0);
+
       this.rig.rightArm.shoulder.quaternion.identity();
       this.rig.rightArm.shoulder.rotation.order = 'YXZ';
       this.rig.rightArm.shoulder.rotation.set(0.02, 0, -0.05);
@@ -321,13 +410,25 @@ export class AvatarAnimator {
     const p = Math.min(1.0, t / dur);
     const twist = Math.sin(p * Math.PI) * 1.4;
 
+    // 1. Right arm turns burette stopcock (at stopcock height)
     if (targetPos) {
-      this.rig.rightArm.ik.solve(targetPos);
+      const stopcockPos = targetPos.clone();
+      if (stopcockPos.y < 1.35) stopcockPos.y = 1.45;
+      this.rig.rightArm.ik.solve(stopcockPos);
     } else {
       this.rig.rightArm.shoulder.rotation.set(-0.9, 0, -0.2);
       this.rig.rightArm.elbow.rotation.set(-0.6, 0, 0);
     }
     this.rig.rightArm.hand.rotation.x = twist;
+
+    // 2. Left arm holds / gently swirls conical flask underneath
+    const flaskPos = targetPos ? targetPos.clone() : new THREE.Vector3(0.02, 1.05, -1.85);
+    flaskPos.y = 1.05;
+    const swirlAngle = t * 8.0;
+    flaskPos.x += Math.cos(swirlAngle) * 0.02;
+    flaskPos.z += Math.sin(swirlAngle) * 0.02;
+    this.rig.leftArm.ik.solve(flaskPos);
+    this.rig.leftArm.hand.rotation.set(0.1, 0, -0.15);
   }
 
   evaluateRead(t, dur, targetPos) {

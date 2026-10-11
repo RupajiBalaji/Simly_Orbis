@@ -55,6 +55,7 @@ async function initOrbisLab() {
   // 1. Initialize Scene & Effects
   sceneManager = new LabScene(canvas);
   characterController = new CharacterController(sceneManager.scene);
+  sceneManager.characterController = characterController;
   effectManager = new EffectManager(sceneManager.scene);
   directiveQueue = new DirectiveQueue(sceneManager, characterController, effectManager);
 
@@ -406,6 +407,69 @@ function setupLobby() {
           });
           hud.hide();
           reportScreen.show(finRes);
+        } else if (snapMode === 'ward_overview') {
+          sceneManager.resetCameraView();
+        } else if (snapMode === 'f3_disclaimer') {
+          sceneManager.resetCameraView();
+          if (debugOverlay && !state.debugOverlayActive) {
+            debugOverlay.toggle();
+          }
+        } else if (snapMode === 'trial_wording') {
+          await trialPanel.open();
+          await trialPanel.runTrialSimulation();
+        } else if (snapMode === 'action_pose') {
+          const act = urlParams.get('act') || 'weigh';
+          const prog = parseFloat(urlParams.get('prog') || '0.5');
+
+          if (act === 'weigh') {
+            const bal = sceneManager.getApparatus('digital_balance');
+            const balPos = new THREE.Vector3();
+            if (bal) {
+              bal.getWorldPosition(balPos);
+              if (bal.userData.stationPos) characterController.rig.root.position.copy(bal.userData.stationPos);
+              characterController.faceTarget(balPos);
+              const props = characterController.createHeldProp('weigh');
+              characterController.carryItem(props.right, props.left);
+              if (bal.userData.updateWeighProgress) bal.userData.updateWeighProgress(prog, 0.500);
+            }
+            sceneManager.startActionCamera(balPos, characterController.rig.root.position, 1800, 'weigh', 'digital_balance');
+            characterController.animator.sampleClipAtProgress('weigh', prog, balPos);
+          } else if (act === 'pour') {
+            const cup = sceneManager.getApparatus('dosing_cup');
+            const cupPos = new THREE.Vector3();
+            if (cup) {
+              cup.getWorldPosition(cupPos);
+              if (cup.userData.stationPos) characterController.rig.root.position.copy(cup.userData.stationPos);
+              characterController.faceTarget(cupPos);
+            }
+            const cupProp = sceneManager.getApparatus('dosing_cup');
+            const cupClone = cupProp ? cupProp.clone() : null;
+            if (cupClone) cupClone.scale.set(0.5, 0.5, 0.5);
+            const jugProp = sceneManager.getApparatus('water_jug');
+            const jugClone = jugProp ? jugProp.clone() : null;
+            if (jugClone) jugClone.scale.set(0.35, 0.35, 0.35);
+            characterController.carryItem(jugClone, cupClone);
+            sceneManager.startActionCamera(cupPos, characterController.rig.root.position, 1800, 'pour', 'dosing_cup');
+            characterController.animator.sampleClipAtProgress('pour', prog, cupPos);
+          } else if (act === 'titrate') {
+            const bur = sceneManager.getApparatus('burette');
+            const burPos = new THREE.Vector3(0, 1.4, -2.0);
+            if (bur) bur.getWorldPosition(burPos);
+            characterController.rig.root.position.set(-0.48, 0, -1.65);
+            characterController.faceTarget(new THREE.Vector3(0.02, 1.25, -1.85));
+            sceneManager.startActionCamera(burPos, characterController.rig.root.position, 1800, 'titrate', 'burette');
+            characterController.animator.sampleClipAtProgress('titrate', prog, burPos);
+          } else if (act === 'pipette') {
+            const flask = sceneManager.getApparatus('conical_flask');
+            const flaskPos = new THREE.Vector3(0.02, 1.05, -1.85);
+            if (flask) flask.getWorldPosition(flaskPos);
+            characterController.rig.root.position.set(-0.48, 0, -1.65);
+            characterController.faceTarget(flaskPos);
+            const pipProp = characterController.createHeldProp('pipette_analyte');
+            characterController.carryItem(pipProp);
+            sceneManager.startActionCamera(flaskPos, characterController.rig.root.position, 1800, 'pipette', 'conical_flask');
+            characterController.animator.sampleClipAtProgress('pipette', prog, flaskPos);
+          }
         }
       } catch (e) {
         console.error('Snap mode error:', e);

@@ -146,10 +146,16 @@ export function createHumanoidAvatar() {
   const leftArm = buildArm(true);
   const rightArm = buildArm(false);
 
-  // Held Item Socket (on right hand)
+  // Held Item Sockets (right and left hands)
   const heldItemSocket = new THREE.Group();
+  heldItemSocket.name = 'right_held_item_socket';
   heldItemSocket.position.set(0, -0.08, 0.05);
   rightArm.hand.add(heldItemSocket);
+
+  const leftHeldItemSocket = new THREE.Group();
+  leftHeldItemSocket.name = 'left_held_item_socket';
+  leftHeldItemSocket.position.set(0, -0.08, 0.05);
+  leftArm.hand.add(leftHeldItemSocket);
 
   // 6. Legs & Feet
   function buildLeg(isLeft) {
@@ -199,10 +205,33 @@ export function createHumanoidAvatar() {
     leftLeg,
     rightLeg,
     heldItemSocket,
+    leftHeldItemSocket,
     coatMesh,
     gogglesGroup,
     skinMat,
     gloveMat,
+
+    // Dynamic Opacity / Fade (fades to 40% when camera is occluded)
+    setOpacity(opacity = 1.0) {
+      root.traverse((obj) => {
+        if (obj.isMesh && obj.material) {
+          const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+          mats.forEach((m) => {
+            if (m.userData.origTransparent === undefined) {
+              m.userData.origTransparent = m.transparent;
+              m.userData.origOpacity = m.opacity !== undefined ? m.opacity : 1.0;
+            }
+            if (opacity >= 0.99) {
+              m.transparent = m.userData.origTransparent;
+              m.opacity = m.userData.origOpacity;
+            } else {
+              m.transparent = true;
+              m.opacity = opacity;
+            }
+          });
+        }
+      });
+    },
 
     // PPE State Updater
     updatePPE(ppeSet) {

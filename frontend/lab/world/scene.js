@@ -282,11 +282,30 @@ export class LabScene {
     this.apparatusLookup = lookup;
 
     if (experimentDef?.id === 'pk_ward') {
+      this.camera.fov = 60;
+      this.camera.updateProjectionMatrix();
+      // First view after Start frames the whole ward: avatar, balance, patient bed, and trial screen
+      this.stationPresets.default = {
+        pos: new THREE.Vector3(0.0, 2.30, 1.55),
+        target: new THREE.Vector3(0.10, 1.10, -3.80),
+      };
+      this.cameraDefaultPos.copy(this.stationPresets.default.pos);
+      this.cameraTarget.copy(this.stationPresets.default.target);
+
       this.trialHall = buildViewingGalleryAndCrowd(this.scene);
       this.addUpdateCallback(() => {
         if (this.trialHall) this.trialHall.update(performance.now());
       });
       state.emit('trial_hall_ready', this.trialHall);
+    } else {
+      this.camera.fov = 50;
+      this.camera.updateProjectionMatrix();
+      this.stationPresets.default = {
+        pos: new THREE.Vector3(0, 2.05, 1.55),
+        target: new THREE.Vector3(0, 1.15, -1.85),
+      };
+      this.cameraDefaultPos.copy(this.stationPresets.default.pos);
+      this.cameraTarget.copy(this.stationPresets.default.target);
     }
 
     this.syncApparatusState(experimentDef?.apparatus);
@@ -404,7 +423,7 @@ export class LabScene {
     }
   }
 
-  startActionCamera(apparatusPos, avatarPos, durationMs = 1800) {
+  startActionCamera(apparatusPos, avatarPos, durationMs = 1800, clipName = '', targetId = '') {
     if (state.skipAnimation) return;
 
     if (!this.isActionCameraActive) {
@@ -417,32 +436,71 @@ export class LabScene {
     const appPos = apparatusPos ? apparatusPos.clone() : new THREE.Vector3(0, 1.0, -1.8);
     const avPos = avatarPos ? avatarPos.clone() : new THREE.Vector3(appPos.x, 0, appPos.z + 1.0);
 
-    // Midpoint framing avatar chest/hands and apparatus (~1.15m height)
-    const focusTarget = new THREE.Vector3(
-      avPos.x * 0.45 + appPos.x * 0.55,
-      1.15,
-      avPos.z * 0.45 + appPos.z * 0.55
-    );
+    let chosenPos = null;
+    let focusTarget = null;
+    const action = (clipName || '').toLowerCase();
 
-    const toAvatar = new THREE.Vector3().subVectors(avPos, appPos);
-    toAvatar.y = 0;
-    if (toAvatar.lengthSq() < 0.01) toAvatar.set(0, 0, 1);
-    toAvatar.normalize();
+    if (action.includes('weigh') || action.includes('tare')) {
+      // 1. WEIGH: Place camera to the side framing spatula, cup, powder pile & digital balance display
+      chosenPos = new THREE.Vector3(-3.40, 1.35, -3.65);
+      focusTarget = new THREE.Vector3(-4.50, 1.05, -4.18);
+    } else if (action.includes('pour') || action.includes('dissolve')) {
+      // 2. POUR: Place camera to the side framing both hands, stream, and receiving vessel
+      if (appPos.x < -1.5) {
+        // In pk_ward at dosing cup / water jug
+        chosenPos = new THREE.Vector3(-2.65, 1.35, -3.45);
+        focusTarget = new THREE.Vector3(-3.60, 1.05, -4.00);
+      } else {
+        // In titration bench
+        chosenPos = new THREE.Vector3(0.95, 1.38, -1.45);
+        focusTarget = new THREE.Vector3(0.02, 1.18, -1.85);
+      }
+    } else if (action.includes('titrate') || action.includes('stopcock')) {
+      // 3. TITRATE: Place camera to the side framing burette stopcock, hands, and swirling flask
+      chosenPos = new THREE.Vector3(0.95, 1.40, -1.45);
+      focusTarget = new THREE.Vector3(0.00, 1.25, -1.88);
+    } else if (action.includes('pipette') || action.includes('indicator')) {
+      // 4. PIPETTE: Place camera to the side framing hands squeezing bulb and tip over flask
+      chosenPos = new THREE.Vector3(0.85, 1.35, -1.35);
+      focusTarget = new THREE.Vector3(0.02, 1.15, -1.85);
+    } else {
+      // General action camera: dynamic smart quarter angle
+      focusTarget = new THREE.Vector3(
+        avPos.x * 0.45 + appPos.x * 0.55,
+        1.15,
+        avPos.z * 0.45 + appPos.z * 0.55
+      );
+      const toAvatar = new THREE.Vector3().subVectors(avPos, appPos);
+      toAvatar.y = 0;
+      if (toAvatar.lengthSq() < 0.01) toAvatar.set(0, 0, 1);
+      toAvatar.normalize();
 
-    // Side quarter angle
-    const flank = new THREE.Vector3(-toAvatar.z, 0, toAvatar.x);
-    const testDirA = toAvatar.clone().multiplyScalar(0.7).add(flank.clone().multiplyScalar(0.7)).normalize();
-    const testDirB = toAvatar.clone().multiplyScalar(0.7).sub(flank.clone().multiplyScalar(0.7)).normalize();
-    const posA = focusTarget.clone().add(testDirA.clone().multiplyScalar(1.95));
-    const posB = focusTarget.clone().add(testDirB.clone().multiplyScalar(1.95));
-
-    const chosenPos = Math.abs(posA.x) < Math.abs(posB.x) && posA.z <= 1.70 ? posA : posB;
-    chosenPos.y = 1.38; // Medium close shot framing upper body, hands & apparatus (~2m distance)
+      const flank = new THREE.Vector3(-toAvatar.z, 0, toAvatar.x);
+      const testDirA = toAvatar.clone().multiplyScalar(0.7).add(flank.clone().multiplyScalar(0.7)).normalize();
+      const testDirB = toAvatar.clone().multiplyScalar(0.7).sub(flank.clone().multiplyScalar(0.7)).normalize();
+      const posA = focusTarget.clone().add(testDirA.clone().multiplyScalar(1.95));
+      const posB = focusTarget.clone().add(testDirB.clone().multiplyScalar(1.95));
+      chosenPos = Math.abs(posA.x) < Math.abs(posB.x) && posA.z <= 1.70 ? posA : posB;
+      chosenPos.y = 1.38;
+    }
 
     // Hard collision clamps
     chosenPos.x = Math.max(-6.8, Math.min(6.8, chosenPos.x));
     chosenPos.z = Math.max(-6.2, Math.min(1.70, chosenPos.z));
     chosenPos.y = Math.max(1.10, Math.min(2.4, chosenPos.y));
+
+    // Avatar occlusion check: if avatar torso still occludes line of sight to target apparatus, fade avatar to 40%
+    const camToApp = new THREE.Vector3().subVectors(focusTarget, chosenPos);
+    const camToAv = new THREE.Vector3().subVectors(new THREE.Vector3(avPos.x, 1.25, avPos.z), chosenPos);
+    const proj = camToAv.dot(camToApp.clone().normalize());
+    const perpDist = Math.sqrt(Math.max(0, camToAv.lengthSq() - proj * proj));
+    const isBetween = proj > 0.2 && proj < camToApp.length() - 0.2;
+    const avatarOccludes = isBetween && perpDist < 0.38;
+
+    if (avatarOccludes && this.characterController) {
+      this.characterController.setAvatarOpacity(0.40);
+      this.isAvatarFaded = true;
+    }
 
     this.easeCameraTo(chosenPos, focusTarget, 350);
   }
@@ -451,6 +509,11 @@ export class LabScene {
     if (!this.isActionCameraActive) return;
     this.isActionCameraActive = false;
     this.updateNameTagVisibility();
+
+    if (this.isAvatarFaded && this.characterController) {
+      this.characterController.setAvatarOpacity(1.0);
+      this.isAvatarFaded = false;
+    }
 
     if (state.skipAnimation) {
       if (this.savedCameraPos && this.savedCameraTarget) {

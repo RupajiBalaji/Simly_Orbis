@@ -88,6 +88,9 @@ export class TrialPanel {
 
       <!-- Live Results Area -->
       <div id="trial-results-area" class="trial-results-area hidden">
+        <div class="trial-regimen-banner" id="trial-regimen-banner">
+          Simulated Regimen: Paracetamol 500 mg × 1 dose (Cohort: 500 patients)
+        </div>
         <div class="headline-stats-grid">
           <div class="headline-stat-cell stat-green">
             <span class="h-label">In Range (Efficacy)</span>
@@ -130,22 +133,24 @@ export class TrialPanel {
       this.crowdHudEl.innerHTML = `
         <div class="crowd-hud-container">
           <div class="crowd-legend">
-            <span class="legend-pill pill-green">● In Range (≥60% in 10–20 mg/L)</span>
-            <span class="legend-pill pill-amber">● Below Window</span>
-            <span class="legend-pill pill-red">● Toxic Cmax (>30 mg/L)</span>
+            <span class="legend-pill pill-green">● In range (≥60% in green zone)</span>
+            <span class="legend-pill pill-amber">● Below range</span>
+            <span class="legend-pill pill-red">● Above range (toxic)</span>
           </div>
+          <div class="crowd-legend-desc">In range = concentration in the green zone for at least 60% of the dosing window.</div>
+          <div class="crowd-regimen-badge" id="crowd-regimen-badge">Simulated Regimen: Paracetamol 500 mg × 1 dose</div>
           <div class="crowd-counters">
             <div class="counter-item">
               <span class="counter-num green-text" id="cnt-helped">0</span>
-              <span class="counter-lbl">helped</span>
+              <span class="counter-lbl">In range</span>
             </div>
             <div class="counter-item">
               <span class="counter-num amber-text" id="cnt-below">0</span>
-              <span class="counter-lbl">below</span>
+              <span class="counter-lbl">Below range</span>
             </div>
             <div class="counter-item">
               <span class="counter-num red-text" id="cnt-toxic">0</span>
-              <span class="counter-lbl">toxic</span>
+              <span class="counter-lbl">Above range (toxic)</span>
             </div>
             <div class="counter-item">
               <span class="counter-num total-text" id="cnt-total">500</span>
@@ -309,6 +314,13 @@ export class TrialPanel {
       const resultsArea = document.getElementById('trial-results-area');
       if (resultsArea) resultsArea.classList.remove('hidden');
 
+      // Update regimen banners
+      const regDesc = `Simulated Regimen: Paracetamol ${params.dose_mg} mg × ${params.n_doses} dose(s) q${params.interval_h}h (Cohort: ${summary.n_patients} pts, ${params.pct_reduced_liver}% impaired liver)`;
+      const regBanner = document.getElementById('trial-regimen-banner');
+      if (regBanner) regBanner.textContent = regDesc;
+      const crowdReg = document.getElementById('crowd-regimen-badge');
+      if (crowdReg) crowdReg.textContent = `Simulated Regimen: Paracetamol ${params.dose_mg} mg × ${params.n_doses} dose(s) q${params.interval_h}h`;
+
       // Update headline numbers
       document.getElementById('stat-pct-in-range').textContent = `${summary.pct_in_range}%`;
       document.getElementById('stat-pct-toxic').textContent = `${summary.pct_toxic}%`;
@@ -429,7 +441,7 @@ export class TrialPanel {
           <div class="comp-row"><span>Cohort Toxicity:</span><strong class="red-text">${tA.pct_toxic}%</strong></div>
           <div class="comp-row"><span>Subtherapeutic:</span><strong class="amber-text">${tA.pct_subtherapeutic}%</strong></div>
           <div class="comp-row"><span>Mean Peak Cmax:</span><strong>${tA.mean_peak} mg/L</strong></div>
-          <div class="comp-row"><span>Helped Patients:</span><strong>${tA.group_counts.in_range} pts</strong></div>
+          <div class="comp-row"><span>In-Range Patients:</span><strong>${tA.group_counts.in_range} pts</strong></div>
         </div>
 
         <div class="compare-col col-b">
@@ -439,7 +451,7 @@ export class TrialPanel {
           <div class="comp-row"><span>Cohort Toxicity:</span><strong class="red-text">${tB.pct_toxic}%</strong></div>
           <div class="comp-row"><span>Subtherapeutic:</span><strong class="amber-text">${tB.pct_subtherapeutic}%</strong></div>
           <div class="comp-row"><span>Mean Peak Cmax:</span><strong>${tB.mean_peak} mg/L</strong></div>
-          <div class="comp-row"><span>Helped Patients:</span><strong>${tB.group_counts.in_range} pts</strong></div>
+          <div class="comp-row"><span>In-Range Patients:</span><strong>${tB.group_counts.in_range} pts</strong></div>
         </div>
       </div>
 
@@ -453,7 +465,7 @@ export class TrialPanel {
           <span class="d-val ${cmp.diff_pct_toxic <= 0 ? 'green-text' : 'red-text'}">${diffToxSign}${cmp.diff_pct_toxic}%</span>
         </div>
         <div class="delta-cell">
-          <span class="d-label">Δ Net Helped Patients</span>
+          <span class="d-label">Δ Net In-Range Patients</span>
           <span class="d-val ${cmp.diff_helped_patients >= 0 ? 'green-text' : 'red-text'}">${diffHelpedSign}${cmp.diff_helped_patients}</span>
         </div>
         <div class="delta-cell">

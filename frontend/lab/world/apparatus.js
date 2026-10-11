@@ -320,6 +320,14 @@ function buildDigitalBalance(id) {
   pan.position.y = 0.06;
   g.add(pan);
 
+  // Powder pile on pan (grows with the weight)
+  const powderGeo = new THREE.ConeGeometry(0.065, 0.024, 16);
+  const powderMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });
+  const powderPile = new THREE.Mesh(powderGeo, powderMat);
+  powderPile.position.set(0, 0.072, -0.05);
+  powderPile.scale.set(0.001, 0.001, 0.001); // starts flat/empty
+  g.add(powderPile);
+
   // Draft shield glass
   const shieldGeo = new THREE.BoxGeometry(0.42, 0.35, 0.42);
   const shield = new THREE.Mesh(shieldGeo, glassMat);
@@ -349,9 +357,37 @@ function buildDigitalBalance(id) {
   g.userData.canvas = canvas;
   g.userData.ctx = ctx;
   g.userData.tex = tex;
+  g.userData.powderPile = powderPile;
   g.userData.readoutTarget = 'digital_balance';
+  g.userData.updateWeighProgress = (p, target) => updateBalanceWeighProgress(g, p, target);
 
   return g;
+}
+
+export function updateBalanceWeighProgress(balanceGroup, progress, targetWeightG = 0.500) {
+  if (!balanceGroup || !balanceGroup.userData) return;
+  const p = Math.min(1.0, Math.max(0.0, progress));
+  const currentWeight = (p * targetWeightG).toFixed(3);
+
+  // 1. Scale powder pile on pan
+  if (balanceGroup.userData.powderPile) {
+    const s = Math.max(0.001, p);
+    balanceGroup.userData.powderPile.scale.set(s, s, s);
+  }
+
+  // 2. Rising digital display on balance screen
+  const ctx = balanceGroup.userData.ctx;
+  const canvas = balanceGroup.userData.canvas;
+  const tex = balanceGroup.userData.tex;
+  if (ctx && canvas && tex) {
+    ctx.fillStyle = '#020617';
+    ctx.fillRect(0, 0, 256, 96);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 36px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${currentWeight} g`, 230, 60);
+    tex.needsUpdate = true;
+  }
 }
 
 // ---------------------------------------------------------------------------

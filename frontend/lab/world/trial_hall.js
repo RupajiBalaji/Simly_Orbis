@@ -151,13 +151,13 @@ export function createVirtualTrialScreen() {
 
       ctx.fillStyle = '#10b981';
       ctx.font = 'bold 20px Inter, sans-serif';
-      ctx.fillText(`• ${helpedCount} Helped (${s.pct_in_range ?? 0}%)`, 565, 218);
+      ctx.fillText(`• ${helpedCount} In Range (${s.pct_in_range ?? 0}%)`, 565, 218);
 
       ctx.fillStyle = '#ef4444';
-      ctx.fillText(`• ${toxicCount} Toxic (${s.pct_toxic ?? 0}%)`, 565, 256);
+      ctx.fillText(`• ${toxicCount} Above Range (Toxic) (${s.pct_toxic ?? 0}%)`, 565, 256);
 
       ctx.fillStyle = '#f59e0b';
-      ctx.fillText(`• ${subCount} Below (${s.pct_subtherapeutic ?? 0}%)`, 565, 294);
+      ctx.fillText(`• ${subCount} Below Range (${s.pct_subtherapeutic ?? 0}%)`, 565, 294);
 
       ctx.fillStyle = '#cbd5e1';
       ctx.font = '20px Inter, sans-serif';
@@ -178,7 +178,8 @@ export function createVirtualTrialScreen() {
       const s = currentResults.summary;
       const helpedCount = s.group_counts?.in_range ?? s.group_counts?.helped ?? 0;
       const toxicCount = s.group_counts?.toxic ?? 0;
-      ctx.fillText(`▶ TRIAL COMPLETE: ${helpedCount} HELPED, ${toxicCount} TOXIC`, 512, 516);
+      const subCount = s.group_counts?.subtherapeutic ?? 0;
+      ctx.fillText(`▶ TRIAL COMPLETE: ${helpedCount} IN RANGE, ${subCount} BELOW, ${toxicCount} TOXIC`, 512, 516);
     }
     ctx.textAlign = 'left';
   }

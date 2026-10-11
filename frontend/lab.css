@@ -1359,9 +1359,9 @@ body.orbis-lab-body {
    ═══════════════════════════════════════════════════════════════════════ */
 #debug-overlay {
   position: absolute;
-  bottom: 56px;
+  bottom: 125px;
   left: 14px;
-  background: rgba(15, 23, 42, 0.65);
+  background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(168, 85, 247, 0.35);
@@ -1727,20 +1727,49 @@ body.orbis-lab-body {
 }
 
 .crowd-hud-container {
-  background: rgba(15, 23, 42, 0.88);
+  background: rgba(15, 23, 42, 0.92);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  border-radius: 999px;
-  padding: 8px 20px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 18px;
+  padding: 10px 22px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  gap: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+}
+
+.crowd-legend-desc {
+  font-size: 0.69rem;
+  color: #94a3b8;
+  font-style: italic;
+  text-align: center;
+}
+
+.crowd-regimen-badge {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 6px;
+  padding: 3px 10px;
+}
+
+.trial-regimen-banner {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.74rem;
+  font-family: var(--font-mono);
+  color: #c084fc;
+  margin-bottom: 8px;
 }
 
 .crowd-legend {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
 .legend-pill {

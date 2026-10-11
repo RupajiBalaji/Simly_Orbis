@@ -31,8 +31,8 @@ export class CharacterController {
 
   spawnForExperiment(experimentId) {
     if (experimentId === 'pk_ward') {
-      // Spawn facing the Digital Balance at proper reach distance
-      this.rig.root.position.set(-4.85, 0, -3.75);
+      // Spawn standing at the balance station framing avatar, balance & ward
+      this.rig.root.position.set(-4.15, 0, -3.50);
       this.faceTarget(new THREE.Vector3(-4.5, 0.94, -4.2));
     } else {
       // Spawn to the side of the Burette Stand (unobstructed hero apparatus view & reachable)
@@ -63,27 +63,49 @@ export class CharacterController {
     }
   }
 
-  carryItem(itemMesh) {
-    if (this.heldItem) {
+  carryItem(itemMesh, leftItemMesh = null) {
+    if (this.heldItem || this.leftHeldItem) {
       this.dropHeldItem();
     }
-    this.heldItem = itemMesh;
-    if (itemMesh.parent) {
-      itemMesh.parent.remove(itemMesh);
+    if (itemMesh) {
+      this.heldItem = itemMesh;
+      if (itemMesh.parent) {
+        itemMesh.parent.remove(itemMesh);
+      }
+      itemMesh.position.set(0, 0, 0);
+      itemMesh.rotation.set(0, 0, 0);
+      this.rig.heldItemSocket.add(itemMesh);
     }
-    itemMesh.position.set(0, 0, 0);
-    itemMesh.rotation.set(0, 0, 0);
-    this.rig.heldItemSocket.add(itemMesh);
+    if (leftItemMesh && this.rig.leftHeldItemSocket) {
+      this.leftHeldItem = leftItemMesh;
+      if (leftItemMesh.parent) {
+        leftItemMesh.parent.remove(leftItemMesh);
+      }
+      leftItemMesh.position.set(0, 0, 0);
+      leftItemMesh.rotation.set(0, 0, 0);
+      this.rig.leftHeldItemSocket.add(leftItemMesh);
+    }
   }
 
   dropHeldItem(parentContainer, returnPos) {
-    if (!this.heldItem) return;
-    this.rig.heldItemSocket.remove(this.heldItem);
-    if (parentContainer) {
-      this.heldItem.position.copy(returnPos || new THREE.Vector3());
-      parentContainer.add(this.heldItem);
+    if (this.heldItem) {
+      this.rig.heldItemSocket.remove(this.heldItem);
+      if (parentContainer) {
+        this.heldItem.position.copy(returnPos || new THREE.Vector3());
+        parentContainer.add(this.heldItem);
+      }
+      this.heldItem = null;
     }
-    this.heldItem = null;
+    if (this.leftHeldItem && this.rig.leftHeldItemSocket) {
+      this.rig.leftHeldItemSocket.remove(this.leftHeldItem);
+      this.leftHeldItem = null;
+    }
+  }
+
+  setAvatarOpacity(opacity = 1.0) {
+    if (this.rig && typeof this.rig.setOpacity === 'function') {
+      this.rig.setOpacity(opacity);
+    }
   }
 
   executeActionAtStation(apparatusObject, clipName, durationMs, onFinished) {
@@ -98,9 +120,13 @@ export class CharacterController {
 
     const startGesture = () => {
       this.faceTarget(apparatusWorldPos);
-      const prop = this.createHeldProp(clipName);
-      if (prop) {
-        this.carryItem(prop);
+      const props = this.createHeldProp(clipName);
+      if (props) {
+        if (props.isGroup || props.isMesh) {
+          this.carryItem(props);
+        } else if (props.right || props.left) {
+          this.carryItem(props.right, props.left);
+        }
       }
       this.animator.playClip(clipName, apparatusWorldPos, durationMs, wrappedFinished);
     };
@@ -118,19 +144,40 @@ export class CharacterController {
     const propGroup = new THREE.Group();
 
     if (clipName === 'weigh') {
-      // Weighing dish with powder
-      const dishGeo = new THREE.CylinderGeometry(0.045, 0.035, 0.015, 16);
-      const dishMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 });
-      const dish = new THREE.Mesh(dishGeo, dishMat);
-      dish.position.set(0, -0.01, 0);
-      propGroup.add(dish);
+      // 1. Right Hand: Stainless Steel Laboratory Spatula with blade & powder tip
+      const spatulaGroup = new THREE.Group();
+      const handleGeo = new THREE.CylinderGeometry(0.0035, 0.0035, 0.16, 12);
+      const metalMat = new THREE.MeshStandardMaterial({ color: 0xcfd8dc, metalness: 0.88, roughness: 0.18 });
+      const handle = new THREE.Mesh(handleGeo, metalMat);
+      handle.rotation.x = Math.PI / 2.8;
+      spatulaGroup.add(handle);
 
-      const powderGeo = new THREE.CylinderGeometry(0.032, 0.032, 0.008, 12);
-      const powderMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.9 });
-      const powder = new THREE.Mesh(powderGeo, powderMat);
-      powder.position.set(0, -0.005, 0);
-      propGroup.add(powder);
-      return propGroup;
+      const bladeGeo = new THREE.BoxGeometry(0.015, 0.002, 0.045);
+      const blade = new THREE.Mesh(bladeGeo, metalMat);
+      blade.position.set(0, -0.04, 0.09);
+      blade.rotation.x = Math.PI / 4;
+      spatulaGroup.add(blade);
+
+      const powderTipGeo = new THREE.ConeGeometry(0.007, 0.005, 8);
+      const powderTipMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.95 });
+      const powderTip = new THREE.Mesh(powderTipGeo, powderTipMat);
+      powderTip.position.set(0, -0.038, 0.10);
+      spatulaGroup.add(powderTip);
+
+      // 2. Left Hand: Dosing / Weighing Cup with white powder inside
+      const cupGroup = new THREE.Group();
+      const cupGeo = new THREE.CylinderGeometry(0.036, 0.028, 0.068, 16);
+      const cupMat = new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.72, roughness: 0.15 });
+      const cup = new THREE.Mesh(cupGeo, cupMat);
+      cup.position.set(0, -0.01, 0);
+      cupGroup.add(cup);
+
+      const powderInCupGeo = new THREE.CylinderGeometry(0.026, 0.024, 0.025, 12);
+      const powderInCup = new THREE.Mesh(powderInCupGeo, powderTipMat);
+      powderInCup.position.set(0, -0.022, 0);
+      cupGroup.add(powderInCup);
+
+      return { right: spatulaGroup, left: cupGroup };
     }
 
     if (clipName === 'dissolve' || clipName === 'administer') {

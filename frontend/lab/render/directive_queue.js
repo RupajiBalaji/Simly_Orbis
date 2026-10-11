@@ -46,7 +46,7 @@ export class DirectiveQueue {
 
         // Trigger Action Camera framing avatar upper body, hands & apparatus
         if (this.sceneManager?.startActionCamera) {
-          this.sceneManager.startActionCamera(appWorldPos, avWorldPos, durationMs);
+          this.sceneManager.startActionCamera(appWorldPos, avWorldPos, durationMs, clipName, animTargetId);
         }
 
         if (this.sceneManager?.startActionPerf) {
@@ -63,9 +63,27 @@ export class DirectiveQueue {
             wash_hands: 'Washing & Decontaminating Hands',
             dissolve: 'Dissolving Powder In Water',
             tare_balance: 'Taring Analytical Balance',
+            pipette_analyte: 'Pipetting Acid Analyte',
+            titrate: 'Titrating Acid-Base Solution',
           };
           camIndicator.textContent = `🎬 ACTION CAM: ${actionLabels[clipName] || clipName.replace(/_/g, ' ').toUpperCase()}`;
           camIndicator.style.display = 'flex';
+        }
+
+        // Ticking weigh progress (powder pile grows, balance reading rises)
+        let weighInterval = null;
+        if (clipName === 'weigh' && apparatus?.userData?.updateWeighProgress) {
+          const startTime = performance.now();
+          const targetWeightG = 0.500;
+          weighInterval = setInterval(() => {
+            const elapsed = performance.now() - startTime;
+            const p = Math.min(1.0, elapsed / (durationMs * 0.85));
+            apparatus.userData.updateWeighProgress(p, targetWeightG);
+            if (p >= 1.0) {
+              clearInterval(weighInterval);
+              weighInterval = null;
+            }
+          }, 33);
         }
 
         // Procedural streams and droplets effects
@@ -84,6 +102,13 @@ export class DirectiveQueue {
         }
 
         const onFinished = () => {
+          if (weighInterval) {
+            clearInterval(weighInterval);
+            weighInterval = null;
+          }
+          if (clipName === 'weigh' && apparatus?.userData?.updateWeighProgress) {
+            apparatus.userData.updateWeighProgress(1.0, 0.500);
+          }
           if (this.sceneManager?.endActionPerf) {
             this.sceneManager.endActionPerf();
           }
@@ -102,7 +127,13 @@ export class DirectiveQueue {
         } else {
           // Play in place
           const prop = this.characterController.createHeldProp ? this.characterController.createHeldProp(clipName) : null;
-          if (prop) this.characterController.carryItem(prop);
+          if (prop) {
+            if (prop.isGroup || prop.isMesh) {
+              this.characterController.carryItem(prop);
+            } else if (prop.right || prop.left) {
+              this.characterController.carryItem(prop.right, prop.left);
+            }
+          }
           this.characterController.animator.playClip(clipName, null, durationMs, () => {
             if (this.characterController.dropHeldItem) this.characterController.dropHeldItem();
             onFinished();
