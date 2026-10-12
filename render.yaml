@@ -15,7 +15,7 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
-        value: gemini-flash-latest
+        value: gemini-flash-lite-latest
       - key: TRUST_PROXY
         value: "true"
       - key: AI_ENABLED

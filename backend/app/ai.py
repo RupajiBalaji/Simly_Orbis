@@ -40,11 +40,11 @@ async def call_ai_assistant(
     system_prompt: str,
     user_content: str,
     max_tokens: int = 250,
-    timeout: float = 8.0,
+    timeout: float = 15.0,
 ) -> AIResult:
     """
-    Call Google Gemini AI assistant, falling back gracefully to
-    deterministic rule-based indications when unavailable, exhausted, or offline.
+    Call Google Gemini AI assistant, falling back gracefully across available
+    Gemini models (e.g. flash-lite tiers) before resorting to rule-based fallback.
     """
     # 1. Check daily cap and AI_ENABLED flag
     can_call, block_reason = ai_cap_tracker.can_call_ai()
@@ -66,7 +66,7 @@ async def call_ai_assistant(
             fallback_reason="No AI key configured",
         )
 
-    # 2. Call Google Gemini
+    # 2. Call Google Gemini with model cascading
     try:
         from google import genai
         from google.genai import types
@@ -75,27 +75,57 @@ async def call_ai_assistant(
         config = types.GenerateContentConfig(
             system_instruction=system_prompt,
             max_output_tokens=max_tokens,
-            temperature=0.3,
+            temperature=0.4,
         )
-        response = await asyncio.wait_for(
-            client.aio.models.generate_content(
-                model=settings.gemini_model,
-                contents=user_content,
-                config=config,
-            ),
-            timeout=timeout,
-        )
-        text = (response.text or "").strip()
-        if text:
-            ai_cap_tracker.record_call()
-            return AIResult(
-                text=text,
-                provider="gemini",
-                provider_tag="AI - Gemini",
-                fallback_reason=None,
-            )
+
+        # Prioritize configured model, followed by reliable free-tier lite variants
+        models_to_try: list[str] = []
+        preferred_model = settings.gemini_model.strip()
+        if preferred_model:
+            models_to_try.append(preferred_model)
+        for fallback_model in (
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash-lite",
+            "gemini-3.1-flash-lite",
+            "gemini-2.5-flash",
+        ):
+            if fallback_model not in models_to_try:
+                models_to_try.append(fallback_model)
+
+        last_error: Exception | None = None
+        for model_name in models_to_try:
+            try:
+                response = await asyncio.wait_for(
+                    client.aio.models.generate_content(
+                        model=model_name,
+                        contents=user_content,
+                        config=config,
+                    ),
+                    timeout=timeout,
+                )
+                text = (response.text or "").strip()
+                if text:
+                    ai_cap_tracker.record_call()
+                    return AIResult(
+                        text=text,
+                        provider="gemini",
+                        provider_tag="AI - Gemini",
+                        fallback_reason=None,
+                    )
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                log.warning(
+                    "Gemini model '%s' failed (%s: %s). Trying next candidate if available.",
+                    model_name,
+                    type(exc).__name__,
+                    exc,
+                )
+                continue
+
+        if last_error:
+            log.warning("All Gemini candidate models failed. Last error: %s: %s", type(last_error).__name__, last_error)
     except Exception as exc:  # noqa: BLE001
-        log.warning("Gemini AI call failed (%s: %s) – using rule-based fallback.", type(exc).__name__, exc)
+        log.warning("Gemini AI client initialization failed (%s: %s) – using rule-based fallback.", type(exc).__name__, exc)
 
     # 3. Fallback when key was configured but network / timeout / quota errors occurred
     return AIResult(
