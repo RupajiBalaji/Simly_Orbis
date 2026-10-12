@@ -12,8 +12,6 @@ services:
         sync: false
       - key: DB_NAME
         value: Simly_Orbis
-      - key: ANTHROPIC_API_KEY
-        sync: false
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL
