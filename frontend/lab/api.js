@@ -108,5 +108,10 @@ export const api = {
   async getPing() {
     return await request('/api/ping');
   },
+
+  async getValidationSummary(refresh = false) {
+    return await request(`/api/validation/summary${refresh ? '?refresh=true' : ''}`);
+  },
 };
+
 

@@ -38,6 +38,9 @@ class Drug:
     # Suggested standard dose  (mg)
     standard_dose_mg: float
 
+    # Parameter provenance: citations or "game-balanced"
+    provenance: dict[str, str] = field(default_factory=dict)
+
 
 @dataclass(frozen=True)
 class Patient:

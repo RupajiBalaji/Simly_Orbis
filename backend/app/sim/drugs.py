@@ -31,6 +31,7 @@ def _load_drugs() -> dict[str, Drug]:
             green_high=entry["green_high"],
             red_threshold=entry["red_threshold"],
             standard_dose_mg=entry["standard_dose_mg"],
+            provenance=entry.get("provenance", {}),
         )
         for entry in data
     }

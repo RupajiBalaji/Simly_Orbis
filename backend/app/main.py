@@ -29,7 +29,7 @@ import app.db as _db
 from app.modules.chem_titration import ChemTitrationModule
 from app.modules.pharma_pk import PharmaPKModule
 from app.modules.pharma_trial import PharmaTrialModule
-from app.routes import drugs, lab, levels, modules, runs, scores, simulate, trial, tutor
+from app.routes import drugs, lab, levels, modules, runs, scores, simulate, trial, tutor, validation
 from app.security import rate_limiter, validate_startup_config
 
 logging.basicConfig(
@@ -261,6 +261,7 @@ app.include_router(scores.router)
 app.include_router(tutor.router)
 app.include_router(lab.router)
 app.include_router(trial.router)
+app.include_router(validation.router)
 
 
 # ---------------------------------------------------------------------------

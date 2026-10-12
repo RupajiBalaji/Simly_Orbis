@@ -8,7 +8,17 @@
     "green_low": 2.0,
     "green_high": 20.0,
     "red_threshold": 30.0,
-    "standard_dose_mg": 500.0
+    "standard_dose_mg": 500.0,
+    "provenance": {
+      "ka": "Rawlins MD et al. Eur J Clin Pharmacol. 1977;11(4):283-286. doi:10.1007/BF00607678",
+      "half_life": "Prescott LF. Br J Clin Pharmacol. 1980;10(Suppl 2):291S-298S. doi:10.1111/j.1365-2125.1980.tb01812.x",
+      "vd_per_kg": "Forrest JA et al. Clin Pharmacokinet. 1982;7(2):93-107. doi:10.2165/00003088-198207020-00001",
+      "bioavailability": "Rawlins MD et al. Eur J Clin Pharmacol. 1977;11(4):283-286. doi:10.1007/BF00607678",
+      "green_low": "game-balanced",
+      "green_high": "game-balanced",
+      "red_threshold": "game-balanced",
+      "standard_dose_mg": "FDA Approved Label: Acetaminophen 500 mg Oral Tablet (NDA 019794)"
+    }
   },
   {
     "name": "Ibuprofen",
@@ -19,7 +29,17 @@
     "green_low": 10.0,
     "green_high": 40.0,
     "red_threshold": 60.0,
-    "standard_dose_mg": 400.0
+    "standard_dose_mg": 400.0,
+    "provenance": {
+      "ka": "Albert KS, Gernaat CM. Am J Med. 1984;77(1A):40-46. doi:10.1016/s0002-9343(84)80017-0",
+      "half_life": "Davies NM. Clin Pharmacokinet. 1998;34(2):101-154. doi:10.2165/00003088-199834020-00002",
+      "vd_per_kg": "Davies NM. Clin Pharmacokinet. 1998;34(2):101-154. doi:10.2165/00003088-199834020-00002",
+      "bioavailability": "Albert KS, Gernaat CM. Am J Med. 1984;77(1A):40-46. doi:10.1016/s0002-9343(84)80017-0",
+      "green_low": "game-balanced",
+      "green_high": "game-balanced",
+      "red_threshold": "game-balanced",
+      "standard_dose_mg": "FDA Approved Label: Motrin (Ibuprofen) 400 mg Tablets (NDA 017463)"
+    }
   },
   {
     "name": "Caffeine",
@@ -30,6 +50,16 @@
     "green_low": 3.0,
     "green_high": 8.0,
     "red_threshold": 12.0,
-    "standard_dose_mg": 100.0
+    "standard_dose_mg": 100.0,
+    "provenance": {
+      "ka": "Bonati M et al. Clin Pharmacokinet. 1982;7(1):1-10. doi:10.2165/00003088-198207010-00001",
+      "half_life": "Blanchard J, Sawers SJ. Eur J Clin Pharmacol. 1983;24(1):93-98. doi:10.1007/BF00613933",
+      "vd_per_kg": "Blanchard J, Sawers SJ. Eur J Clin Pharmacol. 1983;24(1):93-98. doi:10.1007/BF00613933",
+      "bioavailability": "Blanchard J, Sawers SJ. Eur J Clin Pharmacol. 1983;24(1):93-98. doi:10.1007/BF00613933",
+      "green_low": "game-balanced",
+      "green_high": "game-balanced",
+      "red_threshold": "game-balanced",
+      "standard_dose_mg": "FDA 21 CFR 340.50 (Over-the-counter stimulant drug products, 100-200 mg)"
+    }
   }
 ]

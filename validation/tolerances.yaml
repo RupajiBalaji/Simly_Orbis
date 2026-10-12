@@ -1,0 +1,43 @@
+# Tolerances for Simly Orbis Simulation Validation Harness
+# Declares per-quantity validation tolerances and reasons.
+# Default is within 2-fold (ratio between 0.5 and 2.0); stricter where justified.
+
+min_verified_pass_rate: 0.85
+
+quantities:
+  cmax:
+    fold_tolerance: 2.0
+    percent_tolerance: 100.0
+    reason: "Standard 2-fold bioequivalence / PBPK acceptable prediction window (FDA/EMA guidance)."
+  tmax:
+    fold_tolerance: 2.5
+    percent_tolerance: 150.0
+    reason: "Gastric emptying and formulation dissolution lag introduce high Tmax variability (0.5-2.5 h) in oral solid dosage forms."
+  half_life:
+    fold_tolerance: 1.5
+    percent_tolerance: 50.0
+    reason: "Elimination half-life is an intrinsic drug clearance property with lower formulation dependence (stricter 1.5-fold)."
+  auc:
+    fold_tolerance: 2.0
+    percent_tolerance: 100.0
+    reason: "Total systemic exposure scaling under linear single-compartment clearance."
+  equivalence_volume:
+    fold_tolerance: 1.05
+    percent_tolerance: 5.0
+    reason: "Stoichiometric equivalence volume is an exact analytical mass conservation law (stricter 1.05-fold)."
+  equivalence_ph:
+    fold_tolerance: 1.10
+    percent_tolerance: 10.0
+    reason: "Exact aqueous equilibrium charge balance at stoichiometric equivalence."
+  half_equivalence_ph:
+    fold_tolerance: 1.05
+    percent_tolerance: 5.0
+    reason: "Henderson-Hasselbalch buffer condition pH = pKa analytically (stricter 1.05-fold)."
+  curve_point_ph:
+    fold_tolerance: 1.15
+    percent_tolerance: 15.0
+    reason: "First-principles aqueous electroneutrality solution across buffer and excess titrant regions."
+  population_band_containment:
+    min_fraction: 0.80
+    percent_tolerance: 20.0
+    reason: "Simulated 5th-95th percentile band covers 90% of population distribution; >=80% of published reference points must fall within."

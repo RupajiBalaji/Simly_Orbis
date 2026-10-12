@@ -24,6 +24,7 @@ async def list_drugs() -> list[dict]:
             "green_high": drug.green_high,
             "red_threshold": drug.red_threshold,
             "standard_dose_mg": drug.standard_dose_mg,
+            "provenance": drug.provenance,
         }
         for key, drug in DRUGS.items()
     ]
