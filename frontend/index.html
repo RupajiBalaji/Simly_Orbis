@@ -235,19 +235,36 @@
       </div>
 
       <div class="hud-right-controls">
-        <button type="button" class="hud-btn" id="btn-toggle-sound" title="Toggle Sound FX (Mute / Unmute)">🔊</button>
-        <div class="hud-volume-wrap" id="hud-volume-wrap" title="Audio Volume">
-          <input type="range" id="hud-volume-slider" min="0" max="100" value="40" aria-label="Volume">
+        <!-- Audio Cluster -->
+        <div class="hud-btn-group hud-audio-group">
+          <button type="button" class="hud-btn hud-icon-btn" id="btn-toggle-sound" title="Toggle Sound FX (Mute / Unmute)">🔊</button>
+          <div class="hud-volume-wrap" id="hud-volume-wrap" title="Audio Volume">
+            <input type="range" id="hud-volume-slider" min="0" max="100" value="40" aria-label="Volume">
+          </div>
         </div>
-        <button type="button" class="hud-btn" id="btn-hud-open-about" title="About Simly Orbis">ℹ️ About</button>
-        <button type="button" class="hud-btn" id="btn-toggle-quality" title="Toggle Graphics Quality (High / Low)">⚙️ Quality: High</button>
-        <button type="button" class="hud-btn" id="btn-toggle-nametags" title="Toggle 3D labels above apparatus (Key: N)">🏷️ Tags: ON</button>
-        <button type="button" class="hud-btn" id="btn-toggle-camera-mode" title="Toggle Camera Follow/Free mode (Key: C)">🎥 Cam: Follow</button>
-        <button type="button" class="hud-btn" id="btn-recenter-camera" title="Re-center camera behind avatar (Key: R)">🎯 Re-center</button>
-        <button type="button" class="hud-btn" id="btn-reset-view" title="Reset camera viewpoint">🎥 Reset View</button>
-        <button type="button" class="hud-btn" id="btn-toggle-skip-anim" title="Toggle animation speed">⚡ Skip Anim: OFF</button>
-        <button type="button" class="hud-btn" id="btn-director-mode" title="Press D for hands-free autoplay">🎬 Director</button>
-        <button type="button" class="hud-btn" id="btn-mistake-demo" title="Intentionally skip goggles to see safety breach">⚠️ Mistake Demo</button>
+
+        <!-- Camera Cluster (Segmented) -->
+        <div class="hud-btn-group hud-cam-group">
+          <button type="button" class="hud-btn" id="btn-toggle-camera-mode" title="Toggle Camera Follow/Free mode (Key: C)">🎥 Cam: Follow</button>
+          <button type="button" class="hud-btn" id="btn-recenter-camera" title="Re-center camera behind avatar (Key: R)">🎯 Re-center</button>
+          <button type="button" class="hud-btn" id="btn-reset-view" title="Reset camera viewpoint">↺ Reset</button>
+        </div>
+
+        <!-- Display & Settings Cluster -->
+        <div class="hud-btn-group hud-settings-group">
+          <button type="button" class="hud-btn" id="btn-toggle-quality" title="Toggle Graphics Quality (High / Low)">⚙️ High</button>
+          <button type="button" class="hud-btn" id="btn-toggle-nametags" title="Toggle 3D labels above apparatus (Key: N)">🏷️ Tags: ON</button>
+          <button type="button" class="hud-btn hud-icon-btn" id="btn-hud-open-about" title="About Simly Orbis">ℹ️</button>
+        </div>
+
+        <!-- Demo Tools Cluster -->
+        <div class="hud-btn-group hud-tools-group">
+          <button type="button" class="hud-btn hud-tool-btn" id="btn-toggle-skip-anim" title="Toggle animation speed">⚡ Skip</button>
+          <button type="button" class="hud-btn hud-tool-btn" id="btn-director-mode" title="Press D for hands-free autoplay">🎬 Director</button>
+          <button type="button" class="hud-btn hud-tool-btn hud-btn-warn" id="btn-mistake-demo" title="Intentionally skip goggles to see safety breach">⚠️ Mistake</button>
+        </div>
+
+        <!-- Primary Action -->
         <button type="button" class="hud-btn btn-finish" id="btn-finish-experiment">✓ Finish Report</button>
       </div>
     </header>

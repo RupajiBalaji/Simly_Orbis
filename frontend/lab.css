@@ -570,40 +570,84 @@ body.orbis-lab-body {
 .hud-right-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.hud-btn-group {
+  display: flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+  padding: 2px 3px;
+  gap: 2px;
 }
 
 .hud-btn {
   pointer-events: auto;
-  padding: 6px 12px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--border-subtle);
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
   color: var(--text-main);
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  white-space: nowrap;
 }
 
-.hud-btn:hover {
-  background: rgba(168, 85, 247, 0.25);
-  border-color: var(--accent-purple);
+.hud-btn-group .hud-btn {
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.hud-btn:hover, .hud-btn-group .hud-btn:hover {
+  background: rgba(168, 85, 247, 0.22);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #ffffff;
+}
+
+.hud-btn.hud-icon-btn {
+  padding: 5px 8px;
+  min-width: 26px;
+  justify-content: center;
+}
+
+.hud-btn.hud-tool-btn {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  padding: 4px 8px;
+}
+
+.hud-btn.hud-tool-btn:hover {
+  color: #e2e8f0;
+}
+
+.hud-btn.hud-btn-warn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
 }
 
 .hud-btn.btn-finish {
-  background: linear-gradient(135deg, var(--accent-teal), #0d9488);
-  border: none;
-  color: white;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 0 12px rgba(20, 184, 166, 0.3);
+  font-size: 0.78rem;
+  padding: 6px 14px;
+  border-radius: 8px;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.35);
 }
 
 .hud-btn.btn-finish:hover {
-  box-shadow: 0 0 18px rgba(20, 184, 166, 0.6);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+  transform: translateY(-1px);
 }
 
 /* Left Panel: Protocol Checklist */
@@ -1469,6 +1513,26 @@ body.orbis-lab-body {
 /* ═══════════════════════════════════════════════════════════════════════
    RESPONSIVE / MOBILE CHECK
    ═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1350px) {
+  .hud-btn-group.hud-tools-group {
+    display: none; /* Secondary demo tools collapse on constrained viewports to prevent crowding */
+  }
+  .hud-btn-group .hud-btn {
+    padding: 4px 7px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 1150px) {
+  .hud-center-stats {
+    display: none;
+  }
+  .dr-orbis-container {
+    width: 310px;
+    right: 12px;
+  }
+}
+
 @media (max-width: 860px) {
   #lab-hud {
     grid-template-columns: 1fr;
@@ -1481,6 +1545,11 @@ body.orbis-lab-body {
   .hud-center-dock {
     grid-column: 1;
     grid-row: 3;
+  }
+  .dr-orbis-container {
+    width: calc(100vw - 24px);
+    right: 12px;
+    top: 60px;
   }
 }
 
@@ -1947,10 +2016,10 @@ body.orbis-lab-body {
 .dr-orbis-container {
   position: fixed;
   right: 20px;
-  top: 68px;
-  width: 340px;
-  max-width: calc(100vw - 40px);
-  max-height: calc(100vh - 200px);
+  top: 72px;
+  width: 350px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 180px);
   z-index: 50;
   pointer-events: auto;
   font-family: var(--font-sans);
@@ -1961,11 +2030,12 @@ body.orbis-lab-body {
 }
 
 .mentor-docked-card {
-  background: rgba(15, 23, 42, 0.94);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  border-radius: 12px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(56, 189, 248, 0.15);
+  background: rgba(13, 17, 28, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65), 0 0 24px rgba(56, 189, 248, 0.12);
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1974,8 +2044,8 @@ body.orbis-lab-body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  padding: 11px 15px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   cursor: pointer;
   user-select: none;
@@ -2021,18 +2091,18 @@ body.orbis-lab-body {
 }
 
 .mentor-name {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #f8fafc;
   line-height: 1.2;
 }
 
 .mentor-role {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   color: #38bdf8;
   font-family: var(--font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .mentor-header-controls {
@@ -2044,15 +2114,20 @@ body.orbis-lab-body {
 .mentor-source-badge {
   font-size: 0.65rem;
   font-family: var(--font-mono);
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 8px;
+  border-radius: 12px;
   font-weight: 600;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .mentor-source-badge.badge-ai {
-  background: rgba(56, 189, 248, 0.2);
+  background: rgba(56, 189, 248, 0.16);
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
 }
 
 .mentor-source-badge.badge-rule {
@@ -2067,12 +2142,23 @@ body.orbis-lab-body {
 }
 
 .btn-toggle-mentor {
-  background: none;
-  border: none;
-  color: #94a3b8;
-  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.72rem;
   cursor: pointer;
-  padding: 2px 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-toggle-mentor:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
 }
 
 .mentor-body {
@@ -2084,40 +2170,62 @@ body.orbis-lab-body {
   display: none !important;
 }
 
+/* Custom Sleek Dark Scrollbar */
 .mentor-messages-list {
-  max-height: 220px;
+  max-height: 230px;
   overflow-y: auto;
-  padding: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   font-size: 0.82rem;
-  line-height: 1.45;
+  line-height: 1.5;
+}
+
+.mentor-messages-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.mentor-messages-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.mentor-messages-list::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 6px;
+}
+
+.mentor-messages-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.5);
 }
 
 .mentor-msg-bubble {
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 9px 13px;
+  border-radius: 12px;
   word-break: break-word;
+  position: relative;
 }
 
 .mentor-msg-bubble.system-msg {
   background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(56, 189, 248, 0.2);
   border-left: 3px solid #38bdf8;
   color: #cbd5e1;
 }
 
 .mentor-msg-bubble.student-msg {
   align-self: flex-end;
-  background: rgba(168, 85, 247, 0.2);
-  border: 1px solid rgba(168, 85, 247, 0.35);
-  color: #f1f5f9;
-  max-width: 85%;
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.25), rgba(79, 70, 229, 0.25));
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-bottom-right-radius: 4px;
+  color: #f8fafc;
+  max-width: 86%;
 }
 
 .mentor-msg-bubble.mentor-response {
-  background: rgba(15, 23, 42, 0.85);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-bottom-left-radius: 4px;
   color: #f8fafc;
 }
 
@@ -2133,13 +2241,14 @@ body.orbis-lab-body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
 .msg-author {
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   color: #38bdf8;
+  letter-spacing: 0.02em;
 }
 
 .student-msg .msg-author {
@@ -2149,27 +2258,30 @@ body.orbis-lab-body {
 .mentor-badge {
   font-size: 0.62rem;
   font-family: var(--font-mono);
-  padding: 1px 4px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
 }
 
 .mentor-badge.badge-ai {
-  background: rgba(56, 189, 248, 0.2);
+  background: rgba(56, 189, 248, 0.18);
   color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.35);
 }
 
 .mentor-badge.badge-rule {
-  background: rgba(148, 163, 184, 0.15);
+  background: rgba(148, 163, 184, 0.14);
   color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.28);
 }
 
 .msg-note {
   font-size: 0.68rem;
   color: #94a3b8;
   font-style: italic;
-  margin-top: 4px;
-.hidden {
-  display: none !important;
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
 .mentor-typing-indicator.hidden {
@@ -2198,41 +2310,51 @@ body.orbis-lab-body {
   40% { opacity: 1; }
 }
 
+/* Stacked Controls Section */
 .mentor-input-controls {
-  padding: 8px 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 11px 14px 13px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.7);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .mentor-quick-bar {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .btn-mentor-hint, .btn-mentor-explain {
   flex: 1;
-  background: rgba(147, 51, 234, 0.15);
-  border: 1px solid rgba(168, 85, 247, 0.35);
-  color: #e9d5ff;
-  font-size: 0.75rem;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  color: #e2e8f0;
+  font-size: 0.76rem;
   font-weight: 600;
-  padding: 6px 10px;
+  padding: 7px 10px;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
 }
 
-.btn-mentor-hint:hover, .btn-mentor-explain:hover {
-  background: rgba(168, 85, 247, 0.28);
-  border-color: var(--accent-magenta);
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+.btn-mentor-hint:hover {
+  background: rgba(56, 189, 248, 0.16);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-mentor-explain:hover {
+  background: rgba(168, 85, 247, 0.16);
+  border-color: rgba(168, 85, 247, 0.45);
+  color: #c084fc;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.25);
   transform: translateY(-1px);
 }
 
@@ -2243,30 +2365,35 @@ body.orbis-lab-body {
 .mentor-ask-form {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .mentor-input-row {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 15, 30, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 10px;
+  padding: 3px 4px 3px 12px;
+  transition: all 0.2s ease;
+}
+
+.mentor-input-row:focus-within {
+  border-color: #38bdf8;
+  background: rgba(10, 15, 30, 0.98);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.3);
 }
 
 .mentor-input-row input {
   flex: 1;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(168, 85, 247, 0.3);
-  color: #f8fafc;
+  background: transparent !important;
+  border: none !important;
+  color: #f8fafc !important;
   font-size: 0.8rem;
-  padding: 7px 12px;
-  border-radius: 8px;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.mentor-input-row input:focus {
-  border-color: var(--accent-magenta);
-  background: rgba(15, 23, 42, 0.9);
-  box-shadow: 0 0 12px rgba(236, 72, 153, 0.35);
+  padding: 6px 0;
+  outline: none !important;
+  font-family: inherit;
 }
 
 .mentor-input-row input::placeholder {
@@ -2274,57 +2401,75 @@ body.orbis-lab-body {
 }
 
 .btn-mentor-send {
-  background: linear-gradient(135deg, var(--accent-magenta), var(--accent-purple));
+  background: linear-gradient(135deg, #0284c7, #7c3aed);
   border: none;
   color: #ffffff;
-  padding: 7px 14px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.35);
+  flex-shrink: 0;
 }
 
 .btn-mentor-send:hover {
-  box-shadow: 0 0 14px rgba(236, 72, 153, 0.6);
-  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+  transform: scale(1.05);
 }
 
 .btn-mentor-send:active {
-  transform: translateY(0);
+  transform: scale(0.95);
 }
 
 .mentor-char-counter {
-  font-size: 0.66rem;
-  color: #94a3b8;
+  font-size: 0.65rem;
+  color: #64748b;
   text-align: right;
   font-family: var(--font-mono);
-  padding-right: 2px;
+  padding-right: 4px;
 }
 
+/* Stacked Telemetry Status Bar */
 .mentor-under-the-hood {
   padding: 8px 14px;
-  background: rgba(10, 6, 24, 0.85);
-  border-top: 1px solid rgba(168, 85, 247, 0.2);
-  font-size: 0.7rem;
+  background: rgba(8, 12, 22, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.68rem;
   font-family: var(--font-mono);
-  color: #94a3b8;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
+  gap: 6px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
 }
 
+.mentor-under-the-hood .uth-chip,
 .mentor-under-the-hood span {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.mentor-under-the-hood .uth-label {
+  color: #64748b;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
 }
 
 .mentor-under-the-hood strong {
-  color: #c084fc;
+  color: #38bdf8;
   font-weight: 700;
 }
 

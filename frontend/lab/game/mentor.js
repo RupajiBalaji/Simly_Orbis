@@ -84,11 +84,11 @@ export class DrOrbisMentor {
             </form>
           </div>
 
-          <!-- Under-The-Hood Area -->
+          <!-- Under-The-Hood Stacked Telemetry Status Bar -->
           <div class="mentor-under-the-hood">
-            <span>Mode: <strong id="uth-mode">idle</strong></span>
-            <span>Calls Left: <strong id="uth-calls-left">30/30</strong></span>
-            <span>Latency: <strong id="uth-latency">0ms</strong></span>
+            <div class="uth-chip"><span class="uth-label">Mode:</span> <strong id="uth-mode">idle</strong></div>
+            <div class="uth-chip"><span class="uth-label">Calls:</span> <strong id="uth-calls-left">30/30</strong></div>
+            <div class="uth-chip"><span class="uth-label">Latency:</span> <strong id="uth-latency">0ms</strong></div>
           </div>
         </div>
       </div>
