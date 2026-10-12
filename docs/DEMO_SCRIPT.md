@@ -39,7 +39,7 @@ This guide provides timed presentation scripts for live hackathon demos and ligh
   1. Click **Step Hint** or ask: *"Why does Cmax spike early?"*
   2. Show the response badge marked **[AI]** with latency and remaining calls.
   3. Point to the **Reality Check board** on the wall screen:
-  > *"How do we prove this simulation is real? Our Reality Check board compares every simulation run against analytical textbook solutions. We run 90+ automated tests on every push."*
+  > *"How do we prove this simulation is real? Our Reality Check board compares every simulation run against analytical equations (checked against textbook equations and internal consistency; not clinical validation). We run 90+ automated tests on every push."*
   4. Click **Finish Report** to display the comprehensive score, safety compliance breakdown, and certificate.
 
 ---
@@ -48,7 +48,7 @@ This guide provides timed presentation scripts for live hackathon demos and ligh
 
 - **0:00 – 0:15**: *"Simly Orbis transforms medical and chemical education from static textbook curves into an interactive 3D laboratory game running at 60 FPS in any browser."* (Click PK Ward, perform Weigh).
 - **0:15 – 0:35**: *"We scale from one patient to an entire clinical trial: watch 500 virtual patients simulated with log-normal pharmacokinetic variance, turning green or red based on liver clearance."* (Trigger 500-patient trial, show crowd color wave).
-- **0:35 – 0:50**: *"Our AI lab mentor, Dr. Orbis, explains the pharmacology behind every outcome without ever hallucinating physics, backed by published analytical reality checks."* (Trigger Dr. Orbis Step Hint).
+- **0:35 – 0:50**: *"Our AI lab mentor, Dr. Orbis, explains the pharmacology behind every outcome without ever hallucinating physics, backed by analytical reality checks checked against textbook equations and internal consistency; not clinical validation."* (Trigger Dr. Orbis Step Hint).
 - **0:50 – 1:00**: *"Built on FastAPI, procedural Three.js, and strict deterministic engines. Ready for students today."* (Finish Report).
 
 ---

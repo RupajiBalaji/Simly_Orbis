@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Simly Orbis is an interactive 3D science laboratory simulation platform where actions carry physical consequences before students or researchers touch physical equipment or real patients. Built with a high-performance **FastAPI** backend executing exact deterministic equations (Bateman pharmacokinetics and Henderson-Hasselbalch acid-base equilibria) and a procedural **Three.js** frontend achieving 60 FPS on standard laptops with zero external 3D model asset downloads (instant 2s page load). Features **Dr. Orbis**, an embedded pedagogical AI mentor powered by Google Gemini with strict prompt-injection defenses and deterministic rule-based fallback, plus a large-scale **Virtual Clinical Trial** engine simulating up to 1,000 patients in under 20 ms.
+Simly Orbis is an interactive 3D science laboratory simulation platform where actions carry physical consequences before students or researchers touch physical equipment or real patients. Built with a high-performance **FastAPI** backend executing exact deterministic equations (Bateman pharmacokinetics and charge-balance equilibrium acid-base solver) and a procedural **Three.js** frontend achieving 60 FPS on our test laptop (AMD Ryzen, integrated graphics) with zero external 3D model asset downloads (free demo server may take up to a minute to wake up). Features **Dr. Orbis**, an embedded pedagogical AI mentor powered by Google Gemini with strict prompt-injection defenses and deterministic rule-based fallback, plus a large-scale **Virtual Clinical Trial** engine simulating up to 1,000 patients in under 20 ms.
 
 ---
 
@@ -52,7 +52,7 @@ Simly Orbis includes built-in in-memory token-bucket rate limiting, 20 KB payloa
 | `GET` | `/api/health` | Service health status, storage mode, collections, and git SHA | 120 req / min |
 | `GET` | `/api/ping` | Low-latency ping endpoint for wake-up polling (`{"ping": "pong"}`) | 120 req / min |
 | `GET` | `/api/modules` | List registered simulation engines (`pharma.pk`, `chem.titration`, `pharma.trial`) | 120 req / min |
-| `GET` | `/api/modules/{id}/reality-check` | Execute analytical invariant verification checks against textbooks | 120 req / min |
+| `GET` | `/api/modules/{id}/reality-check` | Execute analytical invariant verification checks (checked against textbook equations and internal consistency; not clinical validation) | 120 req / min |
 | `GET` | `/api/modules/{id}/model-card` | Retrieve scientific model card (assumptions, equations, boundaries) | 120 req / min |
 | `POST` | `/api/run` | Execute any registered simulation module with parameter validation | 120 req / min |
 | `GET` | `/api/lab/experiments` | List interactive laboratory experiments (`pk_ward`, `titration_bench`) | 120 req / min |
@@ -80,7 +80,7 @@ Analytical Reality Checks: 11 / 11 Passed [PASS]
      with linear superposition across multi-dose intervals.
    - **Reality Checks**: Single-dose $C_{max}$ analytical peak formula equivalence, steady-state clearance rate match, mass balance conservation.
 2. **`chem.titration` (Volumetric Acid-Base Titration)**:
-   - **Equation**: Exact aqueous charge-balance and Henderson-Hasselbalch ionization equilibria with water auto-ionization ($K_w = 1.0 \times 10^{-14}$) and phenolphthalein indicator spectral transition centered at $pK_{ind} = 9.3$.
+   - **Equation**: Exact aqueous charge-balance equilibrium solver with water auto-ionization ($K_w = 1.0 \times 10^{-14}$) and Henderson-Hasselbalch buffer calculations; phenolphthalein indicator spectral transition centered at $pK_{ind} = 9.3$.
    - **Reality Checks**: Neutral water pH at $V_b=0$, equivalence point stoichiometric pH, strong acid asymptotic limit, buffer half-equivalence $pH = pK_a$.
 3. **`pharma.trial` (Virtual Clinical Trial)**:
    - **Engine**: Vectorized NumPy Monte Carlo engine with log-normal demographic distributions (body weight CV 18%, clearance CV 30%, $k_a$ CV 25%) and hepatic impairment subgroup (0.6x clearance).
@@ -133,7 +133,7 @@ pytest backend/tests -v
 ```
 
 - **91 / 91 Tests Green** in CI on every push and pull request.
-- **Textbook Invariants**: 11 dedicated analytical reality checks covering all simulation engines.
+- **Analytical Invariants**: 11 dedicated analytical reality checks (checked against textbook equations and internal consistency; not clinical validation) covering all simulation engines.
 - **Safety Rule Matrix**: Full coverage of PPE violations, chemical waste segregation, and acid-water dilution order.
 - **Abuse Protection**: Automated test coverage for per-IP rate limits (429), body size limits (413), and daily AI caps.
 

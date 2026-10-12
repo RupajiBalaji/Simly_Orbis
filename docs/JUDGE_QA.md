@@ -5,19 +5,19 @@ Fifteen honest, detailed technical answers for hackathon judges, educators, and 
 ---
 
 ### 1. Is this actually real-time 3D or pre-rendered video?
-**Answer**: Real-time 3D rendered live in WebGL via Three.js. Every mesh, avatar limb, beaker, and analytical balance is generated procedurally with custom parametric geometries and dynamic canvas materials. It achieves a stable 60 FPS on standard integrated GPUs (e.g., Intel Iris Xe) with zero external 3D model asset files (.gltf / .obj) to download.
+**Answer**: Real-time 3D rendered live in WebGL via Three.js. Every mesh, avatar limb, beaker, and analytical balance is generated procedurally with custom parametric geometries and dynamic canvas materials. It achieves a stable 60 FPS on our test laptop (AMD Ryzen, integrated graphics) with zero external 3D model asset files (.gltf / .obj) to download.
 
 ---
 
 ### 2. What role does the AI actually play? Does it simulate the physics?
-**Answer**: The AI **never** computes or invents physics, chemistry, or pharmacological outcomes. The physical equations (Bateman PK superposition, Henderson-Hasselbalch equilibria) are executed deterministically on the FastAPI backend. The AI (Dr. Orbis, powered by Google Gemini) acts strictly as a pedagogical mentor: explaining *why* equations behave the way they do, diagnosing student mistakes, and answering conceptual questions.
+**Answer**: The AI **never** computes or invents physics, chemistry, or pharmacological outcomes. The physical equations (Bateman PK superposition, charge-balance equilibrium acid-base solver) are executed deterministically on the FastAPI backend. The AI (Dr. Orbis, powered by Google Gemini) acts strictly as a pedagogical mentor: explaining *why* equations behave the way they do, diagnosing student mistakes, and answering conceptual questions.
 
 ---
 
 ### 3. How do you verify the accuracy of the pharmacokinetic simulations?
 **Answer**: Our `pharma.pk` engine computes the exact analytical Bateman one-compartment oral absorption model:
 $$C(t) = \frac{\text{Dose} \cdot k_a}{V_d \cdot (k_a - k_e)} \cdot (e^{-k_e \cdot t} - e^{-k_a \cdot t})$$
-with analytical superposition for multiple doses. We verify this against standard clinical pharmacology benchmarks (e.g., Rowland & Tozer, Shargel) with 15 dedicated automated invariant tests and our in-game **Reality Check** board.
+with analytical superposition for multiple doses. We check this against textbook equations and internal consistency; not clinical validation, with 15 dedicated automated invariant tests and our in-game **Reality Check** board.
 
 ---
 
@@ -31,7 +31,7 @@ with analytical superposition for multiple doses. We verify this against standar
 
 ### 5. Why use procedural geometry instead of downloading GLTF 3D models?
 **Answer**: 
-- **Instant Page Load**: The entire game bundles in under 2 seconds even over slow 3G mobile connections.
+- **Zero Asset Downloads**: The procedural frontend loads without external 3D model asset downloads; the free demo server on Render may take up to a minute to wake up.
 - **Zero Asset Failures**: No 404s, CORS texture issues, or WebGL shader compile timeouts on external assets.
 - **Dynamic State-Driven Materials**: Apparatus meshes directly reflect simulation state (e.g., burette liquid volume drops, indicator turns faint pink, balance LCD updates live).
 

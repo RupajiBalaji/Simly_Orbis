@@ -251,7 +251,7 @@ export class DrOrbisMentor {
     bubble.className = `mentor-msg-bubble mentor-response ${source === 'ai' ? 'msg-ai' : 'msg-rule'}`;
 
     const tagLabel = source === 'ai'
-      ? (providerTag || (provider === 'gemini' ? 'AI - Gemini' : (provider === 'claude' ? 'AI - Claude' : 'AI')))
+      ? (providerTag || (provider === 'gemini' ? 'AI - Gemini' : 'AI'))
       : 'Rule-based';
     const tagClass = source === 'ai' ? 'badge-ai' : 'badge-rule';
 

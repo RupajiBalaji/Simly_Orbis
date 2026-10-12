@@ -40,28 +40,66 @@ async def test_mentor_fallback_when_no_api_key(client: AsyncClient):
         assert "No AI key configured" in data["fallback_reason"]
         assert data["provider_tag"] == "Rule-based"
         assert "Dr. Orbis" in data["message"]
-        assert data["calls_left"] == 29
+        # Rule-based fallback does NOT decrement mentor calls_left
+        assert data["calls_left"] == 30
+        # Uses real protocol step title and hint, never the placeholder 'Active Experiment'
+        assert "Active Experiment" not in data["message"]
+        assert "Step 1: Wear Personal Protective Equipment (PPE)" in data["message"]
+        assert "Put on all required PPE" in data["message"]
     finally:
         settings.gemini_api_key = orig_gem
 
 
 @pytest.mark.asyncio
-async def test_mentor_call_limit_enforced(client: AsyncClient, monkeypatch: pytest.MonkeyPatch):
-    """Sessions strictly enforce a cap of 30 mentor calls."""
+async def test_mentor_rule_based_does_not_decrement_calls_left(client: AsyncClient, monkeypatch: pytest.MonkeyPatch):
+    """Rule-based mentor answers never decrement calls_left; remains 30 across repeated queries."""
     monkeypatch.setattr(settings, "gemini_api_key", "")
+    create_res = await client.post("/api/lab/sessions", json={"experiment_id": "titration_bench", "nickname": "RuleStudent"})
+    assert create_res.status_code == 201
+    session_id = create_res.json()["session_id"]
+
+    for i in range(5):
+        res = await client.post(
+            f"/api/lab/sessions/{session_id}/mentor",
+            json={"mode": "ask", "question": f"Rule query {i}"},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["source"] == "fallback"
+        assert data["calls_left"] == 30
+        assert "Active Experiment" not in data["message"]
+        assert "Step 1: Wear Personal Protective Equipment (PPE)" in data["message"]
+
+
+@pytest.mark.asyncio
+async def test_mentor_call_limit_enforced(client: AsyncClient, monkeypatch: pytest.MonkeyPatch):
+    """Sessions strictly enforce a cap of 30 AI mentor calls."""
+    from app.ai import AIResult
+    import app.ai as ai_mod
+
+    async def mock_call_ai(*args, **kwargs):
+        return AIResult(
+            text="Dr. Orbis: Real AI pedagogical advice.",
+            provider="gemini",
+            provider_tag="AI - Gemini",
+            fallback_reason=None,
+        )
+
+    monkeypatch.setattr(settings, "gemini_api_key", "test_gemini_key")
+    monkeypatch.setattr(ai_mod, "call_ai_assistant", mock_call_ai)
+
     create_res = await client.post("/api/lab/sessions", json={"experiment_id": "pk_ward", "nickname": "PowerUser"})
     assert create_res.status_code == 201
     session_id = create_res.json()["session_id"]
 
-    # Fast forward session mentor_calls in DB or call 30 times
-    # Let's verify by calling repeatedly or mocking mentor_calls
-    # To keep test fast, we can call with unique questions
+    # 30 AI calls each decrement calls_left
     for i in range(30):
         res = await client.post(
             f"/api/lab/sessions/{session_id}/mentor",
             json={"mode": "ask", "question": f"Question {i}"},
         )
         assert res.status_code == 200
+        assert res.json()["source"] == "ai"
         assert res.json()["calls_left"] == 29 - i
 
     # The 31st call must be blocked by the limit
@@ -77,8 +115,9 @@ async def test_mentor_call_limit_enforced(client: AsyncClient, monkeypatch: pyte
 
 
 @pytest.mark.asyncio
-async def test_mentor_cached_on_same_state(client: AsyncClient):
+async def test_mentor_cached_on_same_state(client: AsyncClient, monkeypatch: pytest.MonkeyPatch):
     """Identical state + query mode within 60s returns cached response without decrementing further."""
+    monkeypatch.setattr(settings, "gemini_api_key", "")
     create_res = await client.post("/api/lab/sessions", json={"experiment_id": "titration_bench", "nickname": "CacheTest"})
     assert create_res.status_code == 201
     session_id = create_res.json()["session_id"]
@@ -101,7 +140,7 @@ async def test_mentor_cached_on_same_state(client: AsyncClient):
 
     assert data1["message"] == data2["message"]
     # Calls left should be consistent
-    assert data2["calls_left"] == 29
+    assert data2["calls_left"] == data1["calls_left"]
 
 
 @pytest.mark.asyncio

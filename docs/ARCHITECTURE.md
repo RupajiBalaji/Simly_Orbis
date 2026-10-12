@@ -41,7 +41,7 @@ Simly Orbis is designed with a **deterministic-first, decoupled architecture** s
 |        v                               v                               v          |
 |  +--------------------+      +--------------------+      +--------------------+   |
 |  |  Core Sim Registry |      |   Lab Engine Core  |      |   AI Mentor Engine |   |
-|  |  - pharma.pk       |      |  - Session State   |      |  - Claude 3.5 API  |   |
+|  |  - pharma.pk       |      |  - Session State   |      |  - Google Gemini API|  |
 |  |  - chem.titration  |      |  - Action Dispatch |      |  - Rule-Based Fall |   |
 |  |  - pharma.trial    |      |  - Safety Violator |      |  - Daily Cap Guard |   |
 |  +--------------------+      +--------------------+      +--------------------+   |
@@ -102,7 +102,7 @@ Mentor Engine (`lab.py`):
    ├──> Checks in-memory 60-second TTL cache for identical session state.
    ├──> Checks session call cap (max 30 calls/session) & global daily cap (300 calls/day).
    ├──> If permitted & GEMINI_API_KEY present:
-   │       Constructs XML-wrapped context prompt; calls Google Gemini API with 8s timeout.
+   │       Constructs XML-wrapped context prompt; calls Google Gemini API with 15s timeout.
    │    Else:
    │       Generates deterministic rule-based hint from current protocol step & score parts.
    │

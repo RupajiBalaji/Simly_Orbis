@@ -65,7 +65,7 @@ class TutorResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 def _template_response(s: SimSummary) -> str:
-    """Generate a rule-based explanation when Claude is unavailable."""
+    """Generate a rule-based explanation when Gemini is unavailable."""
     zone = "therapeutic" if s.pct_green > 50 else ("toxic" if s.pct_red > 20 else "sub-therapeutic")
     peak_note = (
         f"Your peak of {s.peak_concentration:.1f} mg/L was reached at "

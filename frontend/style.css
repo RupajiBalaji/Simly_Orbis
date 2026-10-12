@@ -771,7 +771,8 @@ input[type="range"]::-moz-range-thumb {
   color: var(--text-muted);
   text-transform: uppercase;
 }
-.tutor-source.claude {
+.tutor-source.gemini,
+.tutor-source.ai {
   color: #c084fc;
   border-color: rgba(192, 132, 252, 0.4);
 }

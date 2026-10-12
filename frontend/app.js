@@ -781,7 +781,7 @@ async function fetchTutorFeedback(summary, targetScreen) {
 
     const data = await res.json();
     if (srcEl) {
-      srcEl.textContent = data.source === 'ai' ? 'Claude' : 'Rule-based';
+      srcEl.textContent = data.source === 'ai' ? 'Gemini' : 'Rule-based';
       srcEl.className = `tutor-source ${data.source}`;
     }
 

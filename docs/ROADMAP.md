@@ -16,7 +16,7 @@ An honest technical overview of current capabilities in Release Candidate 1 (RC1
   - Contextual guidance powered by Google Gemini with strict prompt-injection defenses and real-time latency readouts.
   - High-fidelity deterministic rule-based fallback when offline or when daily call caps are reached.
 - **Reality Check Verification Board**:
-  - In-game verification screens comparing simulation outputs against analytical textbook equations.
+  - In-game verification screens comparing simulation outputs against analytical equations (checked against textbook equations and internal consistency; not clinical validation).
 - **Audio & Game Feel**:
   - Synthesized WebAudio sound effects (beeps, liquid bursts, alarms, chimes) with volume and mute controls.
   - Action camera collision and framing system.

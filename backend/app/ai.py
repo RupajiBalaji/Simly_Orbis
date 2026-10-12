@@ -6,7 +6,7 @@ Provider:
 - Rule-based template / heuristic fallback
 
 Guardrails enforced:
-- Maximum 8-second timeout on network calls.
+- Maximum 15-second timeout on network calls.
 - Central daily cap tracking via ai_cap_tracker.
 - Strict prompt-injection defense with user text contained in structured blocks.
 - Output token constraints (max 250 tokens, ~70 words target).

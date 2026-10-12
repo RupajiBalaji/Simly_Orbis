@@ -176,13 +176,15 @@ def _build_mentor_context(session: LabSession) -> tuple[str, str, str]:
         step_idx = len(session.protocol_progress)
         if step_idx < len(exp.protocol):
             curr_step = exp.protocol[step_idx]
-            step_title = curr_step.title
-            step_hint = curr_step.hint
+            raw_title = curr_step.get("title") or f"Step {step_idx + 1}"
+            step_title = f"Step {step_idx + 1}: {raw_title}"
+            step_hint = curr_step.get("hint") or curr_step.get("hint_text") or "Follow standard laboratory safety protocols."
         else:
             step_title = "Experiment Completed"
             step_hint = "All protocol steps completed. Ready to submit final lab report."
     except Exception:
-        step_title = "Active Experiment"
+        step_idx = len(session.protocol_progress)
+        step_title = f"Step {step_idx + 1}: Protocol Step"
         step_hint = "Follow standard laboratory safety protocols."
 
     recent_events = session.events[-5:] if session.events else []
@@ -467,8 +469,9 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
             provider_tag = "Rule-based"
             fallback_reason = ai_res.fallback_reason
 
-        # Increment call counters
-        session.mentor_calls += 1
+        # Increment call counters (AI calls decrement allowance; rule-based fallback is free)
+        if source == "ai":
+            session.mentor_calls += 1
         if body.mode == "hint":
             session.hints_used += 1
 
