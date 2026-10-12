@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Simly Orbis is an interactive 3D science laboratory simulation platform where actions carry physical consequences before students or researchers touch physical equipment or real patients. Built with a high-performance **FastAPI** backend executing exact deterministic equations (Bateman pharmacokinetics and Henderson-Hasselbalch acid-base equilibria) and a procedural **Three.js** frontend achieving 60 FPS on standard laptops with zero external 3D model asset downloads (instant 2s page load). Features **Dr. Orbis**, an embedded pedagogical AI mentor powered by Claude with strict prompt-injection defenses and deterministic rule-based fallback, plus a large-scale **Virtual Clinical Trial** engine simulating up to 1,000 patients in under 20 ms.
+Simly Orbis is an interactive 3D science laboratory simulation platform where actions carry physical consequences before students or researchers touch physical equipment or real patients. Built with a high-performance **FastAPI** backend executing exact deterministic equations (Bateman pharmacokinetics and Henderson-Hasselbalch acid-base equilibria) and a procedural **Three.js** frontend achieving 60 FPS on standard laptops with zero external 3D model asset downloads (instant 2s page load). Features **Dr. Orbis**, an embedded pedagogical AI mentor powered by Google Gemini with strict prompt-injection defenses and deterministic rule-based fallback, plus a large-scale **Virtual Clinical Trial** engine simulating up to 1,000 patients in under 20 ms.
 
 ---
 
@@ -96,7 +96,7 @@ Analytical Reality Checks: 11 / 11 Passed [PASS]
 | **Realistic Weighing & Balance** | Spatula & dosing cup props; growing powder pile on balance pan with live LCD display rising to target weight. | [Weigh Proof](docs/screenshots/proof_action_weigh_100.png) |
 | **Burette Drips & Endpoint Color** | Dynamic meniscus drainage, liquid droplets, and Henderson-Hasselbalch phenolphthalein color transition. | [Titration Proof](docs/screenshots/proof_step0_titration_drips_color.png) |
 | **500-Patient Crowd Wave** | 3D instanced crowd arena displaying real-time color waves (green: in range, amber: subtherapeutic, red: toxic). | [Trial Crowd Wave](docs/screenshots/proof_step0_trial_after.png) |
-| **Dr. Orbis AI Lab Mentor** | Contextual Claude guidance with strict prompt-injection defense, latency tracking, and deterministic rule-based fallback. | [Mentor Inquiry](docs/screenshots/proof_mentor_ask.png) |
+| **Dr. Orbis AI Lab Mentor** | Contextual Google Gemini guidance with strict prompt-injection defense, latency tracking, and deterministic rule-based fallback. | [Mentor Inquiry](docs/screenshots/proof_mentor_ask.png) |
 | **Synthesized WebAudio Engine** | Procedural WebAudio sound effects: balance tare beeps, pour bursts, error alarms, and success chimes. | [Audio Controls](docs/screenshots/proof_rc1_2_1_sound_controls.png) |
 | **Production Hardening** | In-game About modal, rate limiting, and server wake-up flow with health metadata. | [Hardening Proof](docs/screenshots/proof_rc1_3_hardening_about.png) |
 | **Port 10000 Deployment Run** | Verified deployment running smoothly on Render standard port 10000. | [Port 10000 Proof](docs/screenshots/proof_rc1_4_deploy_port10000.png) |
@@ -112,7 +112,7 @@ Browser Client (Three.js 60 FPS, WebAudio Synth, Action Camera, Director)
 FastAPI Backend (Security Middleware, Token Bucket Rate Limiter, 20 KB Body Limit)
        ├── Core Registry (pharma.pk, chem.titration, pharma.trial)
        ├── Lab Engine (Stateful Sessions, Safety Rules R1-R10, Scoring)
-       ├── AI Mentor (Anthropic Claude 3.5 API + Deterministic Fallback)
+       ├── AI Mentor (Google Gemini API + Deterministic Fallback)
        └── Database (MongoDB Atlas + In-Memory Fallback Adapter)
 ```
 *For complete ASCII diagrams and end-to-end data flows, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).*

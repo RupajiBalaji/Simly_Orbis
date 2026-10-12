@@ -13,7 +13,7 @@ An honest technical overview of current capabilities in Release Candidate 1 (RC1
   - Vectorized Monte Carlo simulation testing up to 1,000 virtual patients in under 20 ms.
   - Interactive 3D crowd viewing gallery with dynamic color waves and population subgroup analysis (hepatic clearance impairment).
 - **Dr. Orbis AI Lab Mentor**:
-  - Contextual guidance powered by Anthropic Claude 3.5 with strict prompt-injection defenses and real-time latency readouts.
+  - Contextual guidance powered by Google Gemini with strict prompt-injection defenses and real-time latency readouts.
   - High-fidelity deterministic rule-based fallback when offline or when daily call caps are reached.
 - **Reality Check Verification Board**:
   - In-game verification screens comparing simulation outputs against analytical textbook equations.

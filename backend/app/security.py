@@ -168,7 +168,6 @@ def sanitize_text(text: str | None, max_length: int) -> str:
 def validate_startup_config() -> None:
     """Logs startup configuration safely without printing secret values."""
     has_mongo = bool(settings.mongodb_uri.strip())
-    has_anthropic = bool(settings.anthropic_api_key.strip())
     has_gemini = bool(settings.gemini_api_key.strip())
 
     log.info("=== ORBIS LAB CONFIGURATION VALIDATION ===")
@@ -176,8 +175,7 @@ def validate_startup_config() -> None:
     log.info("Git SHA:           %s", settings.git_sha or "[NOT SET]")
     log.info("Database:          %s", "MongoDB URI configured" if has_mongo else "In-Memory Fallback")
     log.info("Gemini Key:        %s", f"[SET: {settings.gemini_model}]" if has_gemini else "[UNSET]")
-    log.info("Anthropic Key:     %s", f"[SET: {settings.anthropic_model}]" if has_anthropic else "[UNSET]")
-    active_ai = f"Gemini ({settings.gemini_model})" if has_gemini else (f"Anthropic ({settings.anthropic_model})" if has_anthropic else "Rule-based (No AI key configured)")
+    active_ai = f"Gemini ({settings.gemini_model})" if has_gemini else "Rule-based (No AI key configured)"
     log.info("Active AI Mentor:  %s", active_ai)
     log.info("AI Enabled:        %s", settings.ai_enabled)
     log.info("Trust Proxy:       %s", settings.trust_proxy)

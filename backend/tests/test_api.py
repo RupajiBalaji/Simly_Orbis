@@ -210,7 +210,7 @@ async def test_health_counts_after_scores(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_tutor_feedback_template_fallback(client: AsyncClient):
-    """When ANTHROPIC_API_KEY is unset or invalid, returns 200 with template response."""
+    """When GEMINI_API_KEY is unset or invalid, returns 200 with template response."""
     payload = {
         "drug_name": "Paracetamol",
         "dose_mg": 500,

@@ -101,8 +101,8 @@ FastAPI Middleware
 Mentor Engine (`lab.py`):
    ├──> Checks in-memory 60-second TTL cache for identical session state.
    ├──> Checks session call cap (max 30 calls/session) & global daily cap (300 calls/day).
-   ├──> If permitted & ANTHROPIC_API_KEY present:
-   │       Constructs XML-wrapped context prompt; calls Anthropic API with 8s timeout.
+   ├──> If permitted & GEMINI_API_KEY present:
+   │       Constructs XML-wrapped context prompt; calls Google Gemini API with 8s timeout.
    │    Else:
    │       Generates deterministic rule-based hint from current protocol step & score parts.
    │

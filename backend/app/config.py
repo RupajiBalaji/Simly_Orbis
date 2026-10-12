@@ -8,8 +8,6 @@ class Settings(BaseSettings):
     db_name: str = "simly_orbis"
     gemini_api_key: str = ""
     gemini_model: str = "gemini-flash-latest"
-    anthropic_api_key: str = ""
-    anthropic_model: str = "claude-haiku-4-5-20251001"
 
     # RC1 Hardening & Cost Protection
     mentor_daily_cap: int = 300

@@ -303,13 +303,13 @@ def _generate_rule_based_mentor_message(
             )
 
 
-async def _call_anthropic_mentor(
+async def _call_ai_mentor(
     context_text: str,
     clean_nickname: str,
     mode: str,
     clean_question: str | None,
 ) -> str:
-    """Call Anthropic Claude API for Dr. Orbis mentor with strict guardrails."""
+    """Call Google Gemini API for Dr. Orbis mentor with strict guardrails."""
     system_prompt = (
         "You are Dr. Orbis, a friendly, encouraging laboratory mentor for science students in a virtual simulation.\n"
         "Your role is to explain concepts clearly, guide the student safely through laboratory procedures, and explain WHY phenomena occur.\n"
@@ -415,7 +415,7 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
                 calls_left=0,
             )
 
-        ai_res = await _call_anthropic_mentor(
+        ai_res = await _call_ai_mentor(
             context_text=context_text,
             clean_nickname=clean_nickname,
             mode=body.mode,

@@ -1,7 +1,7 @@
 """
 POST /api/tutor – Dr. Orbis AI tutor.
 
-Calls the Anthropic Claude API with a concise pharmacology-tutor system prompt.
+Calls the Google Gemini API with a concise pharmacology-tutor system prompt.
 Falls back to a template-based explanation if the key is missing or the API
 call fails, so the endpoint always returns 200.
 """
@@ -110,7 +110,7 @@ def _template_response(s: SimSummary) -> str:
 @router.post("", response_model=TutorResponse, summary="Get AI tutor feedback")
 async def get_tutor_feedback(body: SimSummary) -> TutorResponse:
     """
-    Call Google Gemini (or Anthropic Claude) with a simulation summary and return educational feedback.
+    Call Google Gemini with a simulation summary and return educational feedback.
     Falls back to a template if API keys are absent, cap is reached, or API calls fail.
     """
     user_content = (

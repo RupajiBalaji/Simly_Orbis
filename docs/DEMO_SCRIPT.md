@@ -34,7 +34,7 @@ This guide provides timed presentation scripts for live hackathon demos and ligh
 ### 2:00 – 3:00 | Minute 3: The AI Mentor & Reality Check (Pedagogy & Proof)
 - **Visual**: Open the **Dr. Orbis AI Mentor** panel and toggle the **Reality Check Board**.
 - **Spoken**:
-  > *"To ensure students never get stuck, we have Dr. Orbis — an AI mentor powered by Google Gemini (with Anthropic Claude fallback). But unlike generic chatbots that hallucinate numbers, Dr. Orbis never invents physics. The deterministic engine is the single source of truth."*
+  > *"To ensure students never get stuck, we have Dr. Orbis — an AI mentor powered by Google Gemini. But unlike generic chatbots that hallucinate numbers, Dr. Orbis never invents physics. The deterministic engine is the single source of truth."*
 - **Action**:
   1. Click **Step Hint** or ask: *"Why does Cmax spike early?"*
   2. Show the response badge marked **[AI]** with latency and remaining calls.

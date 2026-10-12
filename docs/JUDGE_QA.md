@@ -10,7 +10,7 @@ Fifteen honest, detailed technical answers for hackathon judges, educators, and 
 ---
 
 ### 2. What role does the AI actually play? Does it simulate the physics?
-**Answer**: The AI **never** computes or invents physics, chemistry, or pharmacological outcomes. The physical equations (Bateman PK superposition, Henderson-Hasselbalch equilibria) are executed deterministically on the FastAPI backend. The AI (Dr. Orbis, powered by Google Gemini with Anthropic Claude fallback) acts strictly as a pedagogical mentor: explaining *why* equations behave the way they do, diagnosing student mistakes, and answering conceptual questions.
+**Answer**: The AI **never** computes or invents physics, chemistry, or pharmacological outcomes. The physical equations (Bateman PK superposition, Henderson-Hasselbalch equilibria) are executed deterministically on the FastAPI backend. The AI (Dr. Orbis, powered by Google Gemini) acts strictly as a pedagogical mentor: explaining *why* equations behave the way they do, diagnosing student mistakes, and answering conceptual questions.
 
 ---
 
