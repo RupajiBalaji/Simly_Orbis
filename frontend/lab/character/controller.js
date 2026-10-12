@@ -55,6 +55,15 @@ export class CharacterController {
     this.animator.playClip('walk');
   }
 
+  walkToStation(stationId, onArrival = null) {
+    const app = window.sceneManager?.getApparatus(stationId);
+    if (app && app.userData?.stationPos) {
+      this.moveTo(app.userData.stationPos, onArrival);
+      return true;
+    }
+    return false;
+  }
+
   faceTarget(targetWorldPos) {
     const dir = targetWorldPos.clone().sub(this.rig.root.position);
     dir.y = 0;
@@ -110,6 +119,10 @@ export class CharacterController {
   }
 
   executeActionAtStation(apparatusObject, clipName, durationMs, onFinished, onArrival = null) {
+    if (this.isWalking) {
+      this.isWalking = false;
+      this.onArrival = null;
+    }
     const stationPos = apparatusObject.userData.stationPos || new THREE.Vector3(0, 0, 0);
     const apparatusWorldPos = new THREE.Vector3();
     apparatusObject.getWorldPosition(apparatusWorldPos);
@@ -295,7 +308,9 @@ export class CharacterController {
         // Arrived at destination
         this.rig.root.position.copy(this.targetPos);
         this.isWalking = false;
-        this.animator.playClip('idle');
+        if (this.animator.currentClip === 'walk') {
+          this.animator.playClip('idle');
+        }
         const arrivalCallback = this.onArrival;
         this.onArrival = null;
         if (arrivalCallback) arrivalCallback();

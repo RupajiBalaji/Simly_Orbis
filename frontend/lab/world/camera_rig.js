@@ -299,6 +299,14 @@ export class CameraRig {
     const avatar = this.labScene?.characterController?.rig?.root;
     if (!avatar) return;
 
+    this.isActionCameraActive = false;
+    this.activeActionClip = null;
+    this.mode = CameraMode.FOLLOW;
+    if (this.labScene) {
+      this.labScene.isActionCameraActive = false;
+      this.labScene.cameraTransition = null;
+    }
+
     const avPos = avatar.position;
     const heading = avatar.rotation.y;
     // Forward and Right vectors from heading

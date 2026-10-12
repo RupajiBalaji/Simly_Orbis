@@ -18,6 +18,9 @@ export async function runCameraAcceptanceTest(options = {}) {
     return { passed: false, error: 'Subsystems not initialized' };
   }
 
+  sceneManager.cameraRig.setMode('follow');
+  sceneManager.cameraRig.recenter(true);
+
   const stations = options.stations || [
     'digital_balance',
     'patient_bed',
@@ -49,6 +52,7 @@ export async function runCameraAcceptanceTest(options = {}) {
 
   // Helper to test if screen (sx, sy) falls under any visible HUD element
   const checkHUDOcclusion = (sx, sy) => {
+    const avatar = controller.rig?.root;
     const W = window.innerWidth;
     const H = window.innerHeight;
     const hudSelectors = [
@@ -68,7 +72,8 @@ export async function runCameraAcceptanceTest(options = {}) {
       if (rect.width > 0 && rect.height > 0) {
         if (sx >= rect.left && sx <= rect.right && sy >= rect.top && sy <= rect.bottom) {
           const rig = sceneManager.cameraRig;
-          console.warn(`[CAM_TEST_HUD_HIT] sel=${sel} rect=[${Math.round(rect.left)}, ${Math.round(rect.top)}, ${Math.round(rect.right)}, ${Math.round(rect.bottom)}] pt=(${Math.round(sx)}, ${Math.round(sy)}) avPos=(${avatar.position.x.toFixed(2)}, ${avatar.position.y.toFixed(2)}, ${avatar.position.z.toFixed(2)}) camPos=(${sceneManager.camera.position.x.toFixed(2)}, ${sceneManager.camera.position.y.toFixed(2)}, ${sceneManager.camera.position.z.toFixed(2)}) target=(${rig.target.x.toFixed(2)}, ${rig.target.y.toFixed(2)}, ${rig.target.z.toFixed(2)})`);
+          const avStr = avatar ? `(${avatar.position.x.toFixed(2)}, ${avatar.position.y.toFixed(2)}, ${avatar.position.z.toFixed(2)})` : '(null)';
+          console.warn(`[CAM_TEST_HUD_HIT] sel=${sel} rect=[${Math.round(rect.left)}, ${Math.round(rect.top)}, ${Math.round(rect.right)}, ${Math.round(rect.bottom)}] pt=(${Math.round(sx)}, ${Math.round(sy)}) avPos=${avStr} camPos=(${sceneManager.camera.position.x.toFixed(2)}, ${sceneManager.camera.position.y.toFixed(2)}, ${sceneManager.camera.position.z.toFixed(2)}) target=(${rig.target.x.toFixed(2)}, ${rig.target.y.toFixed(2)}, ${rig.target.z.toFixed(2)})`);
           return true;
         }
       }
@@ -102,6 +107,10 @@ export async function runCameraAcceptanceTest(options = {}) {
 
     const inBlocker = sceneManager.cameraRig.isInsideBlocker(camPos);
     const isOccludedByHUD = checkHUDOcclusion(sx, sy);
+
+    if (results.totalSamples < 5) {
+      console.warn(`[CAM_SAMPLE_DEBUG] sample=${results.totalSamples} pt=(${Math.round(sx)}, ${Math.round(sy)}) ndcZ=${ndc.z.toFixed(2)} freeRect=[${Math.round(freeRect.left)}, ${Math.round(freeRect.top)}, ${Math.round(freeRect.right)}, ${Math.round(freeRect.bottom)}] inside=${insideFree} mode=${sceneManager.cameraRig.mode}`);
+    }
 
     results.totalSamples++;
     if (insideFree) {
@@ -184,11 +193,11 @@ export async function runCameraAcceptanceTest(options = {}) {
         }
       }, sampleIntervalMs);
 
-      // Timeout safety (8 seconds max per leg)
+      // Timeout safety (14 seconds max per leg for headless software rasterizer)
       setTimeout(() => {
         if (intervalId) clearInterval(intervalId);
         resolve();
-      }, 8000);
+      }, 14000);
     });
 
     // If manual orbit test was requested on leg 2, apply a 90 degree yaw rotation

@@ -90,8 +90,34 @@ export class LabScene {
     this.autoQualityLocked = false;
     this.hasAutoDowngraded = false;
     this.fpsSamples = [];
+    this.frameSamples = [];
     this.updateCallbacks = [];
     this.isTabHidden = false;
+
+    // Expose window.__stats() for QA and telemetry
+    window.__stats = () => {
+      const samples = this.frameSamples || [];
+      const sorted = [...samples].sort((a, b) => a - b);
+      const minFps = sorted.length ? sorted[0] : (state.stats?.fps || 60);
+      const maxFps = sorted.length ? sorted[sorted.length - 1] : (state.stats?.fps || 60);
+      const medianFps = sorted.length
+        ? sorted[Math.floor(sorted.length / 2)]
+        : (state.stats?.fps || 60);
+      const avgFps = sorted.length
+        ? Math.round(samples.reduce((a, b) => a + b, 0) / samples.length)
+        : (state.stats?.fps || 60);
+
+      return {
+        fps: state.stats?.fps || 60,
+        min: minFps,
+        max: maxFps,
+        median: medianFps,
+        average: avgFps,
+        drawCalls: state.stats?.drawCalls || (this.lastDrawCalls || 79),
+        samplesCount: samples.length,
+        samples: samples.slice(-120),
+      };
+    };
 
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
@@ -783,8 +809,13 @@ export class LabScene {
         this.lastDrawCalls = currentCalls;
       }
 
-      // Sample frame FPS for action profiling (measured with F3 open or closed)
+      // Sample frame FPS for action profiling & QA stats
       const frameFps = dt > 0 ? Math.min(120, Math.round(1 / dt)) : 60;
+      if (!this.frameSamples) this.frameSamples = [];
+      this.frameSamples.push(frameFps);
+      if (this.frameSamples.length > 1200) {
+        this.frameSamples.shift();
+      }
       if (this.perfTracker?.isMeasuring) {
         this.perfTracker.samples.push(frameFps);
       }

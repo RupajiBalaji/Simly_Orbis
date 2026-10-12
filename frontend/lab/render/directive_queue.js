@@ -181,7 +181,16 @@ export class DirectiveQueue {
           }, 300);
         }
 
+        let finishedCalled = false;
+        let safetyTimer = null;
+
         const onFinished = () => {
+          if (finishedCalled) return;
+          finishedCalled = true;
+          if (safetyTimer) {
+            clearTimeout(safetyTimer);
+            safetyTimer = null;
+          }
           if (liquidTweenInterval) {
             clearInterval(liquidTweenInterval);
             liquidTweenInterval = null;
@@ -205,6 +214,8 @@ export class DirectiveQueue {
           }
           resolve();
         };
+
+        safetyTimer = setTimeout(onFinished, durationMs + 600);
 
         if (apparatus) {
           this.characterController.executeActionAtStation(apparatus, clipName, durationMs, onFinished, onArrival);

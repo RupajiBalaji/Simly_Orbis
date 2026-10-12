@@ -69,10 +69,11 @@ export class DirectorRunner {
       { action: 'wash_hands', target: 'sink', params: {} },
     ];
 
+    const stepDelay = this.stepDelay ?? (state.skipAnimation ? 350 : 1200);
     for (const step of steps) {
       if (!this.isRunning) break;
       await this.actionMenu.executeAction(step.action, step.target, step.params);
-      await this.sleep(1200);
+      await this.sleep(stepDelay);
     }
 
     if (this.isRunning) {
@@ -105,10 +106,11 @@ export class DirectorRunner {
       { action: 'wash_hands', target: 'sink', params: {} },
     ];
 
+    const stepDelay = this.stepDelay ?? (state.skipAnimation ? 350 : 1200);
     for (const step of steps) {
       if (!this.isRunning) break;
       await this.actionMenu.executeAction(step.action, step.target, step.params);
-      await this.sleep(1200);
+      await this.sleep(stepDelay);
     }
 
     if (this.isRunning) {

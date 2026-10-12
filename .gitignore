@@ -28,3 +28,7 @@ backend/.env
 .idea/
 .DS_Store
 Thumbs.db
+
+# QA Artifacts
+qa/out/
+

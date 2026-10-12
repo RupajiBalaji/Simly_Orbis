@@ -47,7 +47,7 @@ export class DrOrbisMentor {
         </div>
 
         <!-- Collapsible Content -->
-        <div class="mentor-body" id="mentor-body">
+        <div class="mentor-body hidden" id="mentor-body">
           <!-- Speech Bubble / Message Area -->
           <div class="mentor-messages-list" id="mentor-messages-list">
             <div class="mentor-msg-bubble system-msg">
