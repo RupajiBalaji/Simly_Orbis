@@ -146,6 +146,9 @@ export class DrOrbisMentor {
 
     // 2. State session updates
     state.subscribe((event, payload) => {
+      if (event === 'session_start' || event === 'experiment_selected') {
+        this.setCollapsed(true);
+      }
       if (event === 'session_updated') {
         if (payload.violations && payload.violations.length > 0) {
           const latest = payload.violations[payload.violations.length - 1];

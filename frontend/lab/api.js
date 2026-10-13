@@ -89,6 +89,13 @@ export const api = {
     });
   },
 
+  async planAgent(sessionId, text) {
+    return await request(`/api/lab/sessions/${encodeURIComponent(sessionId)}/agent/plan`, {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    });
+  },
+
   async getRealityChecks(moduleId, full = false) {
     return await request(`/api/modules/${encodeURIComponent(moduleId)}/reality-check${full ? '?full=true' : ''}`);
   },

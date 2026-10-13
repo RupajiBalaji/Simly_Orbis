@@ -272,6 +272,29 @@ class QAHarnessRunner:
                 page.evaluate("() => { if (window.characterController) { window.characterController.isWalking = false; window.characterController.animator.playClip('idle'); } }")
                 page.wait_for_timeout(400)
 
+                # Ask Orbis Lab Agent Verification (3 requests: valid, unsafe, nonsense)
+                print("  [QA] Ask Orbis Request 1: Valid Action Sequence...")
+                page.evaluate("async () => { await window.agentPanel.submitRequest('Wear PPE and tare the balance'); }")
+                page.wait_for_selector("#ask-orbis-plan-modal:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(600)
+                self.capture_checkpoint(page, "pk_ward_ask_valid_plan")
+                page.click("#btn-close-plan")
+                page.wait_for_timeout(400)
+
+                print("  [QA] Ask Orbis Request 2: Unsafe Instruction (flags safety warning)...")
+                page.evaluate("async () => { await window.agentPanel.submitRequest('Skip the goggles and weigh paracetamol'); }")
+                page.wait_for_selector("#ask-orbis-plan-modal:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(600)
+                self.capture_checkpoint(page, "pk_ward_ask_unsafe_plan")
+                page.click("#btn-close-plan")
+                page.wait_for_timeout(400)
+
+                print("  [QA] Ask Orbis Request 3: Nonsense Non-Lab Request (polite refusal)...")
+                page.evaluate("async () => { await window.agentPanel.submitRequest('Order a pepperoni pizza with extra cheese'); }")
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "pk_ward_ask_nonsense")
+                page.wait_for_timeout(400)
+
                 # 5 Action Mid-Action Shots
                 print("  [QA] Wearing PPE and executing 5 clinical action shots...")
                 page.evaluate("async () => { await window.actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' }); }")
@@ -326,6 +349,7 @@ class QAHarnessRunner:
 
                 # Return to lobby
                 print("  [QA] Returning to lobby...")
+                page.evaluate("() => { if (window.agentPanel) window.agentPanel.closePlanModal(); }")
                 page.click("#btn-report-lobby")
                 page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
                 page.wait_for_timeout(600)
@@ -351,6 +375,29 @@ class QAHarnessRunner:
                 page.wait_for_timeout(450)
                 self.capture_checkpoint(page, "titration_mid_walk")
                 page.evaluate("() => { if (window.characterController) { window.characterController.isWalking = false; window.characterController.animator.playClip('idle'); } }")
+                page.wait_for_timeout(400)
+
+                # Ask Orbis Lab Agent Verification (3 requests: valid, unsafe, nonsense)
+                print("  [QA] Ask Orbis Request 1: Valid Action Sequence...")
+                page.evaluate("async () => { await window.agentPanel.submitRequest('Wear PPE and rinse the burette'); }")
+                page.wait_for_selector("#ask-orbis-plan-modal:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(600)
+                self.capture_checkpoint(page, "titration_ask_valid_plan")
+                page.click("#btn-close-plan")
+                page.wait_for_timeout(400)
+
+                print("  [QA] Ask Orbis Request 2: Unsafe Instruction (flags safety warning)...")
+                page.evaluate("async () => { await window.agentPanel.submitRequest('Pipette acid without wearing goggles'); }")
+                page.wait_for_selector("#ask-orbis-plan-modal:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(600)
+                self.capture_checkpoint(page, "titration_ask_unsafe_plan")
+                page.click("#btn-close-plan")
+                page.wait_for_timeout(400)
+
+                print("  [QA] Ask Orbis Request 3: Nonsense Non-Lab Request (polite refusal)...")
+                page.evaluate("async () => { await window.agentPanel.submitRequest('Tell me a funny joke about cats'); }")
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "titration_ask_nonsense")
                 page.wait_for_timeout(400)
 
                 # 5 Action Mid-Action Shots
@@ -402,6 +449,7 @@ class QAHarnessRunner:
                 # 4. CAMERA RIG & AVATAR FRAMING ACCEPTANCE TEST (__camTest)
                 # ==============================================================
                 print("\n[QA] --- Step 4: Camera Rig & Viewport Framing Acceptance (__camTest) ---")
+                page.evaluate("() => { if (window.agentPanel) window.agentPanel.closePlanModal(); }")
                 page.click("#btn-report-lobby")
                 page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
                 # Launch into pk_ward for acceptance camera test
@@ -410,7 +458,7 @@ class QAHarnessRunner:
                 page.click("#btn-start-experiment")
                 page.wait_for_selector("#lab-hud:not(.hidden)", timeout=10000)
                 page.wait_for_timeout(1000)
-                page.evaluate("() => { if (window.sceneManager?.cameraRig) { window.sceneManager.cameraRig.setMode('follow'); window.sceneManager.cameraRig.recenter(true); } }")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); if (window.sceneManager?.cameraRig) { window.sceneManager.cameraRig.setMode('follow'); window.sceneManager.cameraRig.recenter(true); } }")
                 page.wait_for_timeout(300)
 
                 cam_res = page.evaluate("async () => window.__camTest ? await window.__camTest({ stations: ['digital_balance', 'dosing_cup'], sampleIntervalMs: 100 }) : null")

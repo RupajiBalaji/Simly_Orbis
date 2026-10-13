@@ -2849,4 +2849,432 @@ body.orbis-lab-body {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   ASK ORBIS LAB AGENT HUD BAR & PLAN CARD
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.hud-ask-orbis-bar {
+  pointer-events: auto;
+  position: absolute;
+  top: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 620px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 14px;
+  padding: 6px 12px;
+  z-index: 35;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.hud-ask-orbis-bar:focus-within {
+  border-color: #38bdf8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+}
+
+.ask-orbis-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ask-orbis-icon {
+  font-size: 1.15rem;
+  user-select: none;
+}
+
+#ask-orbis-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f8fafc;
+  font-size: 0.85rem;
+  font-family: var(--font-sans);
+}
+
+#ask-orbis-input::placeholder {
+  color: #64748b;
+  font-size: 0.80rem;
+}
+
+.btn-ask-mic {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.btn-ask-mic:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
+.btn-ask-mic.listening {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #f87171;
+  animation: pulseMic 1.2s infinite;
+}
+
+@keyframes pulseMic {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(239, 68, 68, 0.4); }
+  50% { transform: scale(1.1); box-shadow: 0 0 10px rgba(239, 68, 68, 0.8); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(239, 68, 68, 0.4); }
+}
+
+.btn-ask-submit {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  color: #ffffff;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-ask-submit:hover:not(:disabled) {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+.btn-ask-submit:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.ask-orbis-examples-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  overflow-x: auto;
+}
+
+.examples-label {
+  font-size: 0.70rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.example-chips {
+  display: flex;
+  gap: 6px;
+}
+
+.ask-orbis-chip {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  color: #7dd3fc;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 0.70rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.ask-orbis-chip:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+}
+
+/* Proposed Plan Card Modal */
+.ask-orbis-plan-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 7, 29, 0.82);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 160;
+}
+
+.ask-orbis-plan-modal.hidden {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.plan-card {
+  background: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+  max-width: 600px;
+  width: 92%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+}
+
+.plan-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+}
+
+.plan-badge {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.plan-card-header h3 {
+  font-size: 1.15rem;
+  color: #ffffff;
+  margin: 4px 0 0;
+}
+
+.btn-close-plan {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.btn-close-plan:hover {
+  color: #ef4444;
+}
+
+.plan-card-reply {
+  font-size: 0.84rem;
+  color: #cbd5e1;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.plan-steps-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding-right: 4px;
+}
+
+.plan-step-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.2s;
+}
+
+.plan-step-row.active-step {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.plan-step-row.completed-step {
+  opacity: 0.55;
+}
+
+.step-number {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.step-details {
+  flex: 1;
+}
+
+.step-title-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.step-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.step-target {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: #94a3b8;
+}
+
+.step-badge {
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  cursor: help;
+}
+
+.badge-ok {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.badge-critical {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.step-why {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.step-params-hint {
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  color: #64748b;
+}
+
+.step-violation-warning {
+  font-size: 0.72rem;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 3px 6px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+.plan-execution-progress {
+  margin-bottom: 12px;
+}
+
+.plan-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.plan-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #10b981);
+  transition: width 0.3s ease-out;
+}
+
+.plan-progress-label {
+  font-size: 0.76rem;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+}
+
+.plan-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-plan-run {
+  background: #10b981;
+  color: #0f172a;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-plan-run:hover {
+  background: #34d399;
+}
+
+.btn-plan-step {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-plan-step:hover {
+  background: rgba(56, 189, 248, 0.3);
+}
+
+.btn-plan-cancel {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-plan-cancel:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.btn-plan-stop {
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+
 

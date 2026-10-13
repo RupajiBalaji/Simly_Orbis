@@ -188,6 +188,7 @@ class LabSession(BaseModel):
     events: list[dict[str, Any]] = Field(default_factory=list)
     hints_used: int = 0
     mentor_calls: int = 0
+    agent_calls: int = 0
     mentor_history: list[dict[str, str]] = Field(default_factory=list)
     status: Literal["active", "completed", "failed"] = "active"
 

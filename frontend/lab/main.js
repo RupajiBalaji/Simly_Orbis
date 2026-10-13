@@ -18,6 +18,7 @@ import { DebugOverlay } from './demo/debug_overlay.js';
 import { TrialPanel } from './game/trial_panel.js';
 import { DrOrbisMentor } from './game/mentor.js';
 import { RealityCheckPanel } from './game/reality_check_panel.js';
+import { AskOrbisAgentPanel } from './game/agent_panel.js';
 import { toast } from './game/toast.js';
 import { soundFX } from './audio/sound_fx.js';
 import { runCameraAcceptanceTest } from './world/camera_test.js';
@@ -109,6 +110,7 @@ async function initOrbisLab() {
   const trialPanel = new TrialPanel(sceneManager.trialHall, sceneManager);
   const drOrbis = new DrOrbisMentor();
   const realityCheckPanel = new RealityCheckPanel(sceneManager);
+  const agentPanel = new AskOrbisAgentPanel();
 
   state.subscribe((event, payload) => {
     if (event === 'trial_hall_ready') {
@@ -127,6 +129,7 @@ async function initOrbisLab() {
   window.trialPanel = trialPanel;
   window.drOrbis = drOrbis;
   window.realityCheckPanel = realityCheckPanel;
+  window.agentPanel = agentPanel;
   window.sceneManager = sceneManager;
   window.characterController = characterController;
   window.debugOverlay = debugOverlay;

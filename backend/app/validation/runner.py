@@ -20,12 +20,19 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import yaml
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 # Set headless matplotlib backend before importing pyplot
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+except ImportError:
+    matplotlib = None
+    plt = None
 
 from app.modules.chem_titration import TitrationParams, compute_ph_strong, compute_ph_weak
 from app.modules.pharma_pk import PharmaPKModule, PharmaPKParams
@@ -75,8 +82,10 @@ class ValidationRunner:
                     "population_band_containment": {"min_fraction": 0.80, "percent_tolerance": 20.0, "reason": "5th-95th percentile coverage"},
                 },
             }
-        with open(self.tolerances_path, "r", encoding="utf-8") as f:
-            return yaml.safe_load(f)
+        if yaml is not None and self.tolerances_path.exists():
+            with open(self.tolerances_path, "r", encoding="utf-8") as f:
+                return yaml.safe_load(f) or {}
+        return {}
 
     def _load_references(self) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
@@ -402,6 +411,8 @@ class ValidationRunner:
 
     def generate_plots(self, evaluated_summary: dict[str, Any], output_dir: Path | None = None) -> list[str]:
         """Generate publication-quality matplotlib plots."""
+        if plt is None:
+            return []
         out_dir = output_dir or _PLOTS_DIR
         out_dir.mkdir(parents=True, exist_ok=True)
         generated_files: list[str] = []
@@ -721,6 +732,13 @@ def get_validation_summary(force_refresh: bool = False) -> dict[str, Any]:
     """Return cached validation summary dictionary for API routes."""
     global _cached_validation_summary
     if _cached_validation_summary is None or force_refresh:
+        if not force_refresh and _RESULTS_JSON_PATH.exists():
+            try:
+                with open(_RESULTS_JSON_PATH, "r", encoding="utf-8") as f:
+                    _cached_validation_summary = json.load(f)
+                    return _cached_validation_summary
+            except Exception:
+                pass
         runner = ValidationRunner()
         _cached_validation_summary = runner.run_and_save()
     return _cached_validation_summary

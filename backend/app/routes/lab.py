@@ -23,6 +23,7 @@ from app import db as _db
 from app.config import settings
 from app.lab.engine import apply_action, create_session, get_available_actions
 from app.lab.experiments import get_experiment, list_experiments
+from app.lab.agent import AgentPlanRequest, AgentPlanResponse, generate_plan
 from app.lab.models import (
     ActionRequest,
     ActionResult,
@@ -501,6 +502,23 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
 
         return res
 
+
+@router.post(
+    "/sessions/{session_id}/agent/plan",
+    response_model=AgentPlanResponse,
+    summary="Generate natural language lab action plan with dry-run verification",
+)
+async def plan_agent_actions(session_id: str, body: AgentPlanRequest) -> AgentPlanResponse:
+    """Translate student natural language request into a validated, dry-run simulated action plan."""
+    doc = await _db.get_lab_session(session_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail=f"Lab session '{session_id}' not found.")
+
+    session = LabSession(**doc)
+    res = await generate_plan(session, body.text)
+    # Persist updated session (for agent_calls count)
+    await _db.upsert_lab_session(session.model_dump())
+    return res
 
 
 @router.post("/sessions/{session_id}/finish", response_model=LabReportResponse, summary="Finish session and compile report")
