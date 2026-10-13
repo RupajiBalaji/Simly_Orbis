@@ -376,3 +376,98 @@ async def test_agent_plan_teaching_by_consequence_flags_violations(client: Async
         goggles_v = next(v for v in s["predicted_violations"] if v["rule_id"] == "R1_GOGGLES")
         assert goggles_v["severity"] == "critical"
         assert "goggles" in goggles_v["explanation"].lower()
+
+
+@pytest.mark.asyncio
+async def test_agent_plan_fallback_multi_step_ward(client: AsyncClient):
+    """Multi-step ward phrase split into clauses, keeping order and context on digital balance."""
+    create_res = await client.post("/api/lab/sessions", json={"experiment_id": "pk_ward", "nickname": "MultiWard"})
+    session_id = create_res.json()["session_id"]
+
+    with patch("app.lab.agent.call_ai_assistant", new=AsyncMock(return_value=AIResult(
+        text=None,
+        provider=None,
+        provider_tag="Rule-based",
+        fallback_reason="No AI key",
+    ))):
+        res = await client.post(
+            f"/api/lab/sessions/{session_id}/agent/plan",
+            json={"text": "wear ppe, tare the balance, then weigh 0.5 g paracetamol and dissolve in water"},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "success"
+        assert data["source"] == "fallback"
+        assert len(data["steps"]) == 4
+
+        actions = [s["action"] for s in data["steps"]]
+        assert actions == ["wear_ppe", "tare_balance", "weigh", "dissolve"]
+
+        # Context retention: weigh stays on digital balance, dissolve inherits substance
+        assert data["steps"][1]["target"] == "digital_balance"
+        assert data["steps"][2]["target"] == "digital_balance"
+        assert data["steps"][2]["params"]["amount_g"] == 0.5
+        assert data["steps"][2]["params"]["substance"] == "paracetamol"
+        assert data["steps"][3]["params"]["substance"] == "paracetamol"
+        assert data["steps"][3]["params"]["solvent"] == "water"
+
+
+@pytest.mark.asyncio
+async def test_agent_plan_fallback_multi_step_titration(client: AsyncClient):
+    """Multi-step titration phrase parsed sequentially across 5 distinct procedures."""
+    create_res = await client.post("/api/lab/sessions", json={"experiment_id": "titration_bench", "nickname": "MultiTitration"})
+    session_id = create_res.json()["session_id"]
+
+    with patch("app.lab.agent.call_ai_assistant", new=AsyncMock(return_value=AIResult(
+        text=None,
+        provider=None,
+        provider_tag="Rule-based",
+        fallback_reason="No AI key",
+    ))):
+        res = await client.post(
+            f"/api/lab/sessions/{session_id}/agent/plan",
+            json={"text": "rinse burette, fill burette with naoh, pipette 25 ml hcl, and add indicator; then titrate 20 ml"},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "success"
+        assert data["source"] == "fallback"
+        assert len(data["steps"]) == 5
+
+        actions = [s["action"] for s in data["steps"]]
+        assert actions == ["rinse_burette", "fill_burette", "pipette_analyte", "add_indicator", "titrate"]
+
+        assert data["steps"][0]["target"] == "burette"
+        assert data["steps"][1]["target"] == "burette"
+        assert data["steps"][2]["target"] == "conical_flask"
+        assert data["steps"][2]["params"]["volume_ml"] == 25.0
+        assert data["steps"][3]["target"] == "conical_flask"
+        assert data["steps"][4]["target"] == "burette"
+        assert data["steps"][4]["params"]["volume_ml"] == 20.0
+
+
+@pytest.mark.asyncio
+async def test_agent_plan_fallback_skipped_clause_reporting(client: AsyncClient):
+    """Understood clauses are executed while unrecognized clauses are explicitly reported in reply."""
+    create_res = await client.post("/api/lab/sessions", json={"experiment_id": "pk_ward", "nickname": "SkipTest"})
+    session_id = create_res.json()["session_id"]
+
+    with patch("app.lab.agent.call_ai_assistant", new=AsyncMock(return_value=AIResult(
+        text=None,
+        provider=None,
+        provider_tag="Rule-based",
+        fallback_reason="No AI key",
+    ))):
+        res = await client.post(
+            f"/api/lab/sessions/{session_id}/agent/plan",
+            json={"text": "wear ppe, order a pepperoni pizza, and tare the balance"},
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["status"] == "success"
+        assert len(data["steps"]) == 2
+        actions = [s["action"] for s in data["steps"]]
+        assert actions == ["wear_ppe", "tare_balance"]
+
+        # Clarifies which clause was skipped
+        assert "I did not understand: 'order a pepperoni pizza'" in data["reply"]

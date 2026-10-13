@@ -245,6 +245,7 @@ async def health() -> dict:
         },
         "modules": registered_module_ids,
         "app_version": settings.app_version,
+        "version": settings.app_version,
         "git_sha": settings.git_sha or None,
     }
 

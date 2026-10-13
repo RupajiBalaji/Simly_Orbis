@@ -21,6 +21,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy backend and frontend source directories
 COPY backend/ /app/backend/
 COPY frontend/ /app/frontend/
+COPY validation/ /app/validation/
+COPY docs/ /app/docs/
 
 # Create a non-root user and assign ownership
 RUN useradd -m -u 1000 appuser && \

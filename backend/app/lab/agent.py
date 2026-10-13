@@ -202,16 +202,19 @@ def _clean_and_bound_params(action: ActionType, params: dict[str, Any]) -> dict[
 # Fallback Rule-Based Parser (No-AI)
 # ---------------------------------------------------------------------------
 
-def parse_request_rule_based(text: str, session: LabSession) -> list[AgentProposedStep] | None:
+def _parse_single_clause(
+    clause: str, session: LabSession, context: dict[str, Any]
+) -> tuple[list[AgentProposedStep] | None, dict[str, Any]]:
     """
-    Rule-based deterministic parser for common student requests when AI is unavailable.
-    Returns a list of AgentProposedStep or None if phrase is unrecognized.
+    Parse a single natural language clause, referencing and updating context.
+    Returns (steps, updated_context) or (None, context) if unparsed.
     """
-    t = text.strip().lower()
+    t = clause.strip().lower()
     exp_id = session.experiment_id
+    ctx = dict(context)
 
     # 1. Wear PPE
-    if any(k in t for k in ["put on ppe", "wear ppe", "don ppe", "wear gear", "put on goggles", "wear gloves", "wear coat"]) or re.search(r"\bppe\b", t):
+    if any(k in t for k in ["put on ppe", "wear ppe", "don ppe", "wear gear", "put on goggles", "wear gloves", "wear coat", "goggles", "gloves", "lab coat"]) or re.search(r"\bppe\b", t):
         return [
             AgentProposedStep(
                 action=ActionType.wear_ppe,
@@ -219,10 +222,11 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={"item": "all"},
                 why="Put on mandatory laboratory personal protective equipment.",
             )
-        ]
+        ], ctx
 
     # 2. Tare balance
-    if any(k in t for k in ["tare balance", "tare digital balance", "zero balance", "zero the balance", "calibrate balance"]) or re.search(r"\btare\b", t):
+    if any(k in t for k in ["tare balance", "tare digital balance", "zero balance", "zero the balance", "calibrate balance"]) or re.search(r"\btare\b", t) or re.search(r"\bzero\b", t):
+        ctx["target"] = "digital_balance"
         return [
             AgentProposedStep(
                 action=ActionType.tare_balance,
@@ -230,13 +234,13 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={},
                 why="Zero balance display before weighing substance.",
             )
-        ]
+        ], ctx
 
     # 3. Weigh powder
     weigh_match = re.search(r"\bweigh\s+(\d+(?:\.\d+)?)\s*(mg|g)?\s*([a-zA-Z]+)?", t)
     if weigh_match or re.search(r"\bweigh\b", t):
         amount_g = 0.5
-        substance = "paracetamol"
+        substance = ctx.get("substance") or "paracetamol"
         if weigh_match:
             val = float(weigh_match.group(1))
             unit = (weigh_match.group(2) or "g").lower()
@@ -247,31 +251,43 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
             sub = weigh_match.group(3)
             if sub:
                 substance = sub.lower()
+        if "paracetamol" in t:
+            substance = "paracetamol"
+        elif "ibuprofen" in t:
+            substance = "ibuprofen"
+        elif "caffeine" in t:
+            substance = "caffeine"
+
+        ctx["substance"] = substance
+        target = ctx.get("target") or "digital_balance"
+        ctx["target"] = target
         return [
             AgentProposedStep(
                 action=ActionType.weigh,
-                target="digital_balance",
+                target=target,
                 params={"amount_g": amount_g, "substance": substance},
                 why=f"Accurately weigh {amount_g} g of {substance} on analytical balance.",
             )
-        ]
+        ], ctx
 
     # 4. Dissolve
     if re.search(r"\bdissolve\b", t):
+        substance = ctx.get("substance") or "paracetamol"
+        ctx["target"] = "dosing_cup"
         return [
             AgentProposedStep(
                 action=ActionType.dissolve,
                 target="dosing_cup",
-                params={"substance": "paracetamol", "solvent": "water"},
+                params={"substance": substance, "solvent": "water"},
                 why="Aseptically dissolve powder in water with gentle swirling.",
             )
-        ]
+        ], ctx
 
     # 5. Label
     if re.search(r"\blabel\b", t):
         label_match = re.search(r"\blabel(?:ing)?(?:\s+(?:as|with))?\s+[\"']?([^\"']+)[\"']?", t)
-        lbl_text = label_match.group(1).strip() if label_match else "Pt: Alex | 500mg"
-        target = "tube_1" if "tube" in t else "dosing_cup"
+        lbl_text = label_match.group(1).strip() if label_match else ("Pt: Alex | 500mg" if exp_id == "pk_ward" else "Sample A")
+        target = "tube_1" if "tube" in t else (ctx.get("target") or "dosing_cup")
         return [
             AgentProposedStep(
                 action=ActionType.label,
@@ -279,10 +295,11 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={"text": lbl_text},
                 why=f"Affix specimen safety label '{lbl_text}'.",
             )
-        ]
+        ], ctx
 
     # 6. Administer dose
     if any(k in t for k in ["administer", "give dose", "give to patient", "give medication", "dose patient"]) or re.search(r"\badminister\b", t):
+        ctx["target"] = "patient_bed"
         return [
             AgentProposedStep(
                 action=ActionType.administer_oral,
@@ -290,7 +307,7 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={},
                 why="Administer prescribed oral solution to patient Alex.",
             )
-        ]
+        ], ctx
 
     # 7. Advance time / Wait
     adv_match = re.search(r"\b(?:advance|wait|fast forward)(?:\s+time)?(?:\s+by)?\s+(\d+(?:\.\d+)?)\s*(?:h|hr|hour|hours)?\b", t)
@@ -303,10 +320,11 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={"hours": hours},
                 why=f"Advance observation clock by {hours} hours.",
             )
-        ]
+        ], ctx
 
     # 8. Draw blood
     if any(k in t for k in ["draw blood", "blood draw", "take blood", "venous sample", "collect blood", "take sample"]) or (re.search(r"\bblood\b", t) and re.search(r"\bdraw\b", t)):
+        ctx["target"] = "tube_1"
         return [
             AgentProposedStep(
                 action=ActionType.draw_blood,
@@ -314,10 +332,11 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={},
                 why="Collect timed venous blood draw in lithium heparin tube.",
             )
-        ]
+        ], ctx
 
     # 9. Run assay / Centrifuge
     if any(k in t for k in ["run assay", "centrifuge", "analyze blood", "measure plasma", "plasma assay"]) or re.search(r"\bassay\b", t):
+        ctx["target"] = "tube_1"
         return [
             AgentProposedStep(
                 action=ActionType.run_assay,
@@ -325,10 +344,12 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={},
                 why="Centrifuge blood and run quantitative plasma assay.",
             )
-        ]
+        ], ctx
 
     # 10. Rinse burette
-    if "rinse burette" in t or (re.search(r"\brinse\b", t) and re.search(r"\bburette\b", t)):
+    if "rinse burette" in t or (re.search(r"\brinse\b", t) and (re.search(r"\bburette\b", t) or ctx.get("target") == "burette")):
+        ctx["target"] = "burette"
+        ctx["titrant"] = "naoh"
         return [
             AgentProposedStep(
                 action=ActionType.rinse_burette,
@@ -336,37 +357,44 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={"solvent": "naoh"},
                 why="Rinse burette with standard NaOH solution to avoid dilution.",
             )
-        ]
+        ], ctx
 
     # 11. Fill burette
-    if "fill burette" in t or (re.search(r"\bfill\b", t) and re.search(r"\bburette\b", t)):
+    if "fill burette" in t or (re.search(r"\bfill\b", t) and (re.search(r"\bburette\b", t) or ctx.get("target") == "burette")):
+        ctx["target"] = "burette"
+        vol_m = re.search(r"(\d+(?:\.\d+)?)\s*ml", t)
+        vol = float(vol_m.group(1)) if vol_m else 50.0
+        titrant = ctx.get("titrant") or "naoh"
         return [
             AgentProposedStep(
                 action=ActionType.fill_burette,
                 target="burette",
-                params={"titrant": "naoh", "volume_ml": 50.0},
-                why="Fill burette to zero mark with 0.10 M NaOH titrant.",
+                params={"titrant": titrant, "volume_ml": vol},
+                why=f"Fill burette to zero mark with 0.10 M {titrant.upper()} titrant.",
             )
-        ]
+        ], ctx
 
     # 12. Pipette analyte
     pip_match = re.search(r"\bpipette\s+(\d+(?:\.\d+)?)\s*ml\b", t)
     if pip_match or re.search(r"\bpipette\b", t):
         vol = float(pip_match.group(1)) if pip_match else 25.0
+        analyte = "hcl"
+        ctx["target"] = "conical_flask"
+        ctx["analyte"] = analyte
         return [
             AgentProposedStep(
                 action=ActionType.pipette_analyte,
                 target="conical_flask",
-                params={"analyte": "hcl", "volume_ml": vol},
+                params={"analyte": analyte, "volume_ml": vol},
                 why=f"Transfer exactly {vol} mL of hydrochloric acid into flask.",
             )
-        ]
+        ], ctx
 
     # 13. Add indicator
     if re.search(r"\bindicator\b", t):
-        ind_name = "phenolphthalein"
-        if "methyl" in t:
-            ind_name = "methyl_orange"
+        ctx["target"] = "conical_flask"
+        ind_name = "phenolphthalein" if ("phenolphthalein" in t or "methyl" not in t) else "methyl_orange"
+        ctx["indicator"] = ind_name
         return [
             AgentProposedStep(
                 action=ActionType.add_indicator,
@@ -374,12 +402,13 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={"indicator": ind_name, "drops": 3},
                 why=f"Add 3 drops of {ind_name} pH indicator.",
             )
-        ]
+        ], ctx
 
     # 14. Titrate
     tit_match = re.search(r"\btitrate\s+(\d+(?:\.\d+)?)\s*ml\b", t)
     if tit_match or re.search(r"\btitrate\b", t):
         vol = float(tit_match.group(1)) if tit_match else 5.0
+        ctx["target"] = "burette"
         return [
             AgentProposedStep(
                 action=ActionType.titrate,
@@ -387,10 +416,11 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={"volume_ml": vol},
                 why=f"Dispense {vol} mL of sodium hydroxide titrant into flask.",
             )
-        ]
+        ], ctx
 
     # 15. Swirl flask
     if any(k in t for k in ["swirl", "mix flask", "shake flask", "swirl flask"]) or re.search(r"\bswirl\b", t):
+        ctx["target"] = "conical_flask"
         return [
             AgentProposedStep(
                 action=ActionType.swirl,
@@ -398,12 +428,13 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={},
                 why="Swirl conical flask to thoroughly mix solutions.",
             )
-        ]
+        ], ctx
 
     # 16. Record endpoint
     rec_match = re.search(r"\b(?:record|log)\s+(?:endpoint|reading)(?:\s+(\d+(?:\.\d+)?)\s*ml)?\b", t)
     if rec_match or re.search(r"\bendpoint\b", t):
         vol = float(rec_match.group(1)) if (rec_match and rec_match.group(1)) else 25.0
+        ctx["target"] = "conical_flask"
         return [
             AgentProposedStep(
                 action=ActionType.record_endpoint,
@@ -411,7 +442,7 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={"volume_ml": vol},
                 why=f"Record neutralization endpoint volume at {vol} mL.",
             )
-        ]
+        ], ctx
 
     # 17. Dispose waste
     if any(k in t for k in ["dispose", "throw waste", "discard", "waste bin"]) or re.search(r"\b(?:dispose|trash)\b", t):
@@ -423,10 +454,11 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={"item": "reaction_mixture"},
                 why="Safely segregate chemical waste into appropriate container.",
             )
-        ]
+        ], ctx
 
     # 18. Wash hands
     if any(k in t for k in ["wash hands", "wash hand", "clean hands", "wash with soap"]) or (re.search(r"\bwash\b", t) and re.search(r"\bhands?\b", t)):
+        ctx["target"] = "sink"
         return [
             AgentProposedStep(
                 action=ActionType.wash_hands,
@@ -434,7 +466,7 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={},
                 why="Wash hands with soap and water to conclude aseptic protocol.",
             )
-        ]
+        ], ctx
 
     # 19. Submit report / Finish
     if any(k in t for k in ["submit report", "finish experiment", "end experiment", "submit lab report"]):
@@ -445,9 +477,46 @@ def parse_request_rule_based(text: str, session: LabSession) -> list[AgentPropos
                 params={},
                 why="Submit completed experiment data for grading and debrief.",
             )
-        ]
+        ], ctx
 
-    return None
+    return None, ctx
+
+
+def parse_request_rule_based(text: str, session: LabSession) -> tuple[list[AgentProposedStep], list[str]]:
+    """
+    Rule-based deterministic parser for common student requests when AI is unavailable.
+    Splits request into clauses on 'then', 'and then', 'and', commas and semicolons.
+    Parses each clause independently, preserving order and carrying forward context.
+    Returns (understood_steps, skipped_clauses).
+    """
+    delimiters = r"\s*(?:and\s+then|\bthen\b|\band\b|[;,])\s*"
+    clauses = [c.strip() for c in re.split(delimiters, text, flags=re.IGNORECASE) if c.strip()]
+    if not clauses:
+        return [], []
+
+    context: dict[str, Any] = {
+        "target": None,
+        "substance": "paracetamol" if session.experiment_id == "pk_ward" else None,
+        "solvent": "water",
+        "titrant": "naoh",
+        "analyte": "hcl",
+        "indicator": "phenolphthalein",
+    }
+
+    all_steps: list[AgentProposedStep] = []
+    skipped_clauses: list[str] = []
+
+    for clause in clauses:
+        steps, context = _parse_single_clause(clause, session, context)
+        if steps:
+            for step in steps:
+                if all_steps and all_steps[-1].action == step.action and all_steps[-1].params == step.params:
+                    continue
+                all_steps.append(step)
+        else:
+            skipped_clauses.append(clause)
+
+    return all_steps, skipped_clauses
 
 
 # ---------------------------------------------------------------------------
@@ -577,17 +646,32 @@ async def generate_plan(session: LabSession, text: str) -> AgentPlanResponse:
 
     # 4. If AI returned no steps or failed, trigger deterministic fallback parser
     if not raw_steps:
-        fb_steps = parse_request_rule_based(clean_text, session)
+        fb_steps, skipped_clauses = parse_request_rule_based(clean_text, session)
         if fb_steps:
             raw_steps = [s.model_dump() for s in fb_steps]
-            reply_msg = f"I've mapped your request to {len(raw_steps)} lab procedure step(s):"
+            if skipped_clauses:
+                skipped_str = ", ".join(f"'{c}'" for c in skipped_clauses)
+                reply_msg = (
+                    f"I've mapped your request to {len(raw_steps)} lab procedure step(s). "
+                    f"I did not understand: {skipped_str}."
+                )
+            else:
+                reply_msg = f"I've mapped your request to {len(raw_steps)} lab procedure step(s):"
             source = "fallback"
             provider_tag = "Rule-based"
         else:
             # Nonsense, non-lab or harmful request
+            if skipped_clauses:
+                skipped_str = ", ".join(f"'{c}'" for c in skipped_clauses)
+                reply_msg = (
+                    f"I did not understand: {skipped_str}. "
+                    "I can only propose chemistry and pharmacology laboratory procedures. Please ask for a valid lab action."
+                )
+            else:
+                reply_msg = "I can only propose chemistry and pharmacology laboratory procedures. Please ask for a valid lab action."
             return AgentPlanResponse(
                 status="refused",
-                reply="I can only propose chemistry and pharmacology laboratory procedures. Please ask for a valid lab action.",
+                reply=reply_msg,
                 steps=[],
                 source="fallback",
                 provider_tag="Rule-based",

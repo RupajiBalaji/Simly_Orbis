@@ -22,6 +22,11 @@ Per validation rules: **no data may be added without verified provenance.** If a
    - **Potential Source**: Verbeeck RK, Musuamba FT. Pharmacokinetics and dosage adjustment in patients with renal impairment. *Eur J Clin Pharmacol*. 2009;65(8):757-773.
    - **Reason Pending**: Requires renal impairment subgroup module alongside current hepatic impairment subgroup.
 
+4. **Pediatric Paracetamol Trial Population Variance**
+   - **Target Parameters**: Weight-stratified pediatric trial inter-individual variance band.
+   - **Potential Source**: Anderson BJ et al. Pediatric pharmacokinetics of paracetamol. *Paediatr Anaesth*. 1999;9(4):301-309. doi:10.1046/j.1460-9592.1999.00358.x
+   - **Reason Pending**: Extracted raw individual curves required for exact 5th-95th percentile comparison.
+
 ---
 
 ## 2. Acid-Base Equilibrium & Analytical Chemistry (Chemistry District)
