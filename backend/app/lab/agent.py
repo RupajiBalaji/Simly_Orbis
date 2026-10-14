@@ -285,9 +285,39 @@ def _parse_single_clause(
 
     # 5. Label
     if re.search(r"\blabel\b", t):
-        label_match = re.search(r"\blabel(?:ing)?(?:\s+(?:as|with))?\s+[\"']?([^\"']+)[\"']?", t)
-        lbl_text = label_match.group(1).strip() if label_match else ("Pt: Alex | 500mg" if exp_id == "pk_ward" else "Sample A")
-        target = "tube_1" if "tube" in t else (ctx.get("target") or "dosing_cup")
+        if "tube" in t:
+            target = "tube_1"
+        elif "cup" in t:
+            target = "dosing_cup"
+        elif "flask" in t:
+            target = "conical_flask"
+        elif exp_id == "pk_ward":
+            prev_tgt = ctx.get("target")
+            target = prev_tgt if prev_tgt in {"tube_1", "dosing_cup"} else "dosing_cup"
+        else:
+            prev_tgt = ctx.get("target")
+            target = prev_tgt if prev_tgt in {"conical_flask", "beaker", "tube_1"} else "conical_flask"
+
+        custom_match = re.search(r"(?:as|with)\s+[\"']?([^\"']+)[\"']?|[\"']([^\"']+)[\"']", t)
+        raw_text = None
+        if custom_match:
+            raw_text = (custom_match.group(1) or custom_match.group(2) or "").strip()
+            if raw_text.lower() in {"the cup", "cup", "dosing cup", "the dosing cup", "the tube", "tube", "sample tube", "the flask", "flask"}:
+                raw_text = None
+
+        if raw_text:
+            lbl_text = raw_text
+        else:
+            if exp_id == "pk_ward":
+                if "tube" in target or "tube" in t:
+                    lbl_text = "Patient Alex - Venous Sample"
+                else:
+                    sub = (ctx.get("substance") or "paracetamol").capitalize()
+                    lbl_text = f"{sub} 500mg - Patient Alex"
+            else:
+                lbl_text = "0.10M HCl Analyte - Sample A"
+
+        ctx["target"] = target
         return [
             AgentProposedStep(
                 action=ActionType.label,
@@ -391,16 +421,22 @@ def _parse_single_clause(
         ], ctx
 
     # 13. Add indicator
-    if re.search(r"\bindicator\b", t):
+    indicator_keywords = ["phenolphthalein", "methyl orange", "methyl_orange", "indicator"]
+    if any(k in t for k in indicator_keywords):
         ctx["target"] = "conical_flask"
-        ind_name = "phenolphthalein" if ("phenolphthalein" in t or "methyl" not in t) else "methyl_orange"
+        if "methyl" in t or "orange" in t:
+            ind_name = "methyl_orange"
+        else:
+            ind_name = "phenolphthalein"
         ctx["indicator"] = ind_name
+        drops_m = re.search(r"(\d+)\s*drops?", t)
+        drops = int(drops_m.group(1)) if drops_m else 3
         return [
             AgentProposedStep(
                 action=ActionType.add_indicator,
                 target="conical_flask",
-                params={"indicator": ind_name, "drops": 3},
-                why=f"Add 3 drops of {ind_name} pH indicator.",
+                params={"indicator": ind_name, "drops": drops},
+                why=f"Add {drops} drops of {ind_name} pH indicator.",
             )
         ], ctx
 

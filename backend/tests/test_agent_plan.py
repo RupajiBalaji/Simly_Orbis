@@ -471,3 +471,87 @@ async def test_agent_plan_fallback_skipped_clause_reporting(client: AsyncClient)
 
         # Clarifies which clause was skipped
         assert "I did not understand: 'order a pepperoni pizza'" in data["reply"]
+
+
+@pytest.mark.asyncio
+async def test_agent_plan_fallback_indicator_names_alone(client: AsyncClient):
+    """Fallback parser recognizes indicator names alone ('add phenolphthalein', 'add methyl orange')."""
+    create_res = await client.post("/api/lab/sessions", json={"experiment_id": "titration_bench", "nickname": "IndicatorTest"})
+    session_id = create_res.json()["session_id"]
+
+    with patch("app.lab.agent.call_ai_assistant", new=AsyncMock(return_value=AIResult(
+        text=None,
+        provider=None,
+        provider_tag="Rule-based",
+        fallback_reason="No AI key",
+    ))):
+        # 1. Phenolphthalein alone
+        res1 = await client.post(
+            f"/api/lab/sessions/{session_id}/agent/plan",
+            json={"text": "add phenolphthalein"},
+        )
+        assert res1.status_code == 200
+        d1 = res1.json()
+        assert d1["status"] == "success"
+        assert len(d1["steps"]) == 1
+        assert d1["steps"][0]["action"] == "add_indicator"
+        assert d1["steps"][0]["target"] == "conical_flask"
+        assert d1["steps"][0]["params"]["indicator"] == "phenolphthalein"
+        assert d1["steps"][0]["params"]["drops"] == 3
+
+        # 2. Methyl orange alone with custom drop count
+        res2 = await client.post(
+            f"/api/lab/sessions/{session_id}/agent/plan",
+            json={"text": "add 5 drops methyl orange"},
+        )
+        assert res2.status_code == 200
+        d2 = res2.json()
+        assert d2["status"] == "success"
+        assert len(d2["steps"]) == 1
+        assert d2["steps"][0]["action"] == "add_indicator"
+        assert d2["steps"][0]["target"] == "conical_flask"
+        assert d2["steps"][0]["params"]["indicator"] == "methyl_orange"
+        assert d2["steps"][0]["params"]["drops"] == 5
+
+
+@pytest.mark.asyncio
+async def test_agent_plan_fallback_label_cup_standard_text(client: AsyncClient):
+    """Fallback parser uses existing standard label text (patient and medication) for 'label the cup'."""
+    create_res = await client.post("/api/lab/sessions", json={"experiment_id": "pk_ward", "nickname": "LabelCupTest"})
+    session_id = create_res.json()["session_id"]
+
+    with patch("app.lab.agent.call_ai_assistant", new=AsyncMock(return_value=AIResult(
+        text=None,
+        provider=None,
+        provider_tag="Rule-based",
+        fallback_reason="No AI key",
+    ))):
+        # 1. "label the cup" should use standard text with medication and patient, NOT literal "the cup"
+        res1 = await client.post(
+            f"/api/lab/sessions/{session_id}/agent/plan",
+            json={"text": "label the cup"},
+        )
+        assert res1.status_code == 200
+        d1 = res1.json()
+        assert d1["status"] == "success"
+        assert len(d1["steps"]) == 1
+        assert d1["steps"][0]["action"] == "label"
+        assert d1["steps"][0]["target"] == "dosing_cup"
+        label_text = d1["steps"][0]["params"]["text"]
+        assert label_text != "the cup"
+        assert "Paracetamol" in label_text or "paracetamol" in label_text.lower()
+        assert "Alex" in label_text
+
+        # 2. Sequential phrase: weigh 500mg paracetamol and then label the cup
+        res2 = await client.post(
+            f"/api/lab/sessions/{session_id}/agent/plan",
+            json={"text": "weigh 500mg paracetamol and label the cup"},
+        )
+        assert res2.status_code == 200
+        d2 = res2.json()
+        assert d2["status"] == "success"
+        assert len(d2["steps"]) == 2
+        assert d2["steps"][1]["action"] == "label"
+        assert d2["steps"][1]["target"] == "dosing_cup"
+        assert "Paracetamol" in d2["steps"][1]["params"]["text"]
+        assert "Alex" in d2["steps"][1]["params"]["text"]

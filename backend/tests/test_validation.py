@@ -70,7 +70,9 @@ async def test_validation_summary_endpoint(client: AsyncClient):
     assert data["human_verified"] == 0
     assert data["pending_human_check"] >= 20
     assert data["total_references"] == data["human_verified"] + data["pending_human_check"]
-    assert data["pass_rate"] == 0.0
+    assert data["pass_rate"] == "N/A: awaiting human verification"
+    assert data["median_fold_error"] == "N/A: awaiting human verification"
+    assert data["ci_threshold_satisfied"] is False
 
 
 def test_unverified_rows_excluded_from_headline_pass_rate(runner: ValidationRunner):
@@ -98,7 +100,9 @@ def test_unverified_rows_excluded_from_headline_pass_rate(runner: ValidationRunn
         expected_pass_rate = round(res["passed_verified_count"] / verified_count, 4)
         assert res["pass_rate"] == expected_pass_rate
     else:
-        assert res["pass_rate"] == 0.0
+        assert res["pass_rate"] == "N/A: awaiting human verification"
+        assert res["median_fold_error"] == "N/A: awaiting human verification"
+        assert res["ci_threshold_satisfied"] is False
 
     # Test with synthetic references to confirm headline pass rate excludes unverified items
     synthetic_refs = [
@@ -138,14 +142,19 @@ def test_unverified_rows_excluded_from_headline_pass_rate(runner: ValidationRunn
     assert test_res["pending_human_check"] == 1
     assert test_res["pass_rate"] == 1.0
     assert test_res["passed_verified_count"] == 1
+    assert test_res["ci_threshold_satisfied"] is True
 
 
 def test_verified_pass_rate_meets_ci_threshold(runner: ValidationRunner):
-    """Verified pass rate satisfies CI threshold (True when pending human sign-off or pass_rate >= min_required)."""
+    """Verified pass rate satisfies CI threshold only with nonzero verified rows meeting tolerance floor."""
     res = runner.evaluate_all()
     min_required = res["min_verified_pass_rate_required"]
 
-    assert res["ci_threshold_satisfied"] is True
+    # When verified count == 0, never show PASS
+    assert res["human_verified"] == 0
+    assert res["ci_threshold_satisfied"] is False
+    assert res["pass_rate"] == "N/A: awaiting human verification"
+    assert res["status"] == "N/A: awaiting human verification"
 
     synthetic_passing = [
         {
@@ -166,7 +175,9 @@ def test_verified_pass_rate_meets_ci_threshold(runner: ValidationRunner):
     test_runner = ValidationRunner()
     test_runner.references = synthetic_passing
     pass_res = test_runner.evaluate_all()
+    assert pass_res["human_verified"] == 1
     assert pass_res["ci_threshold_satisfied"] is True
+    assert pass_res["status"] == "PASS"
     assert pass_res["pass_rate"] >= min_required
 
 

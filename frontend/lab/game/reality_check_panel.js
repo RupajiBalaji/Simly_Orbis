@@ -258,9 +258,16 @@ export class RealityCheckPanel {
     const val = this.validationData;
     if (!val) return;
 
-    const passPct = (val.pass_rate * 100).toFixed(1);
-    const medianFold = val.median_fold_error ? val.median_fold_error.toFixed(3) : '1.000';
-    const meanPct = val.mean_percent_error ? val.mean_percent_error.toFixed(1) : '0.0';
+    const isVerified = val.human_verified > 0;
+    const passPct = isVerified && typeof val.pass_rate === 'number'
+      ? (val.pass_rate * 100).toFixed(1) + '%'
+      : 'N/A: awaiting human verification';
+    const medianFold = isVerified && typeof val.median_fold_error === 'number'
+      ? val.median_fold_error.toFixed(3) + 'x'
+      : 'N/A: awaiting human verification';
+    const meanPct = isVerified && typeof val.mean_percent_error === 'number'
+      ? val.mean_percent_error.toFixed(1) + '%'
+      : 'N/A: awaiting human verification';
 
     let html = `
       <!-- Mandatory Benchmark Banner -->
@@ -288,17 +295,17 @@ export class RealityCheckPanel {
         </div>
         <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px; text-align: center;">
           <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-family: var(--font-mono);">Verified Pass Rate</div>
-          <div style="font-size: 1.5rem; font-weight: 800; color: #10b981; margin-top: 4px;">${passPct}%</div>
-          <div style="font-size: 0.7rem; color: #10b981;">${val.passed_verified_count}/${val.human_verified} within tolerance</div>
+          <div style="font-size: ${isVerified ? '1.5rem' : '0.82rem'}; font-weight: 700; color: ${isVerified ? '#10b981' : '#eab308'}; margin-top: 4px; line-height: 1.25;">${passPct}</div>
+          <div style="font-size: 0.7rem; color: ${isVerified ? '#10b981' : '#94a3b8'};">${isVerified ? `${val.passed_verified_count}/${val.human_verified} within tolerance` : '0 verified references'}</div>
         </div>
         <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px; text-align: center;">
           <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-family: var(--font-mono);">Median Fold Error</div>
-          <div style="font-size: 1.5rem; font-weight: 800; color: #a855f7; margin-top: 4px;">${medianFold}x</div>
-          <div style="font-size: 0.7rem; color: #c084fc;">Target: &le; 2.0x</div>
+          <div style="font-size: ${isVerified ? '1.5rem' : '0.82rem'}; font-weight: 700; color: ${isVerified ? '#a855f7' : '#eab308'}; margin-top: 4px; line-height: 1.25;">${medianFold}</div>
+          <div style="font-size: 0.7rem; color: #94a3b8;">${isVerified ? 'Target: &le; 2.0x' : 'Target: &le; 2.0x'}</div>
         </div>
         <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 12px; text-align: center;">
           <div style="font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; font-family: var(--font-mono);">Mean % Error</div>
-          <div style="font-size: 1.5rem; font-weight: 800; color: #e2e8f0; margin-top: 4px;">${meanPct}%</div>
+          <div style="font-size: ${isVerified ? '1.5rem' : '0.82rem'}; font-weight: 700; color: ${isVerified ? '#e2e8f0' : '#eab308'}; margin-top: 4px; line-height: 1.25;">${meanPct}</div>
           <div style="font-size: 0.7rem; color: #94a3b8;">Across all quantities</div>
         </div>
         <div style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(234, 179, 8, 0.2); border-radius: 8px; padding: 12px; text-align: center;">
@@ -326,11 +333,12 @@ export class RealityCheckPanel {
             <span class="mod-id-pill">VERIFIED BENCHMARKS</span>
             <h4 style="margin:4px 0 0 0; color:#f8fafc; font-size:1.05rem;">Human-Verified Literature Comparisons (${val.human_verified})</h4>
           </div>
-          <div class="mod-status-tag tag-passed">
-            ✓ ${val.passed_verified_count}/${val.human_verified} PASSED (${passPct}%)
+          <div class="mod-status-tag ${isVerified ? 'tag-passed' : 'tag-pending'}" style="${!isVerified ? 'background:rgba(234, 179, 8, 0.15); color:#facc15; border:1px solid rgba(234, 179, 8, 0.3);' : ''}">
+            ${isVerified ? `✓ ${val.passed_verified_count}/${val.human_verified} PASSED (${passPct})` : '⏳ AWAITING HUMAN VERIFICATION'}
           </div>
         </div>
 
+        ${isVerified && val.verified_results && val.verified_results.length > 0 ? `
         <div class="checks-table-wrap">
           <table class="reality-checks-table">
             <thead>
@@ -385,7 +393,10 @@ export class RealityCheckPanel {
                 .join('')}
             </tbody>
           </table>
-        </div>
+        </div>` : `
+        <div style="padding: 16px; color: #94a3b8; font-size: 0.82rem; text-align: center; background: rgba(15, 23, 42, 0.4); border-radius: 6px; margin: 10px 14px 14px;">
+          No rows currently verified by human reviewer. All <strong>${val.total_references}</strong> benchmark references are sequestered in the review queue below awaiting human check.
+        </div>`}
       </div>
     `;
 

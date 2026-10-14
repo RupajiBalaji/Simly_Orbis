@@ -9,11 +9,11 @@
 
 | Metric | Value | Threshold / Target | Status |
 |---|---|---|---|
-| **Verified Reference Count** | 0 | Owner Sign-Off Required | PENDING HUMAN CHECK |
+| **Verified Reference Count** | 0 | Owner Sign-Off Required | N/A: awaiting human verification |
 | **Pending Human Check (Queue)** | 22 | Separate list | TRACKED |
-| **Verified Pass Rate** | 0.0% (0/0) | >= 85.0% | PASS |
-| **Median Fold Error** | 1.000 | <= 2.000 | PASS |
-| **Mean Absolute % Error** | 0.0% | - | PASS |
+| **Verified Pass Rate** | N/A: awaiting human verification | >= 85.0% | N/A: awaiting human verification |
+| **Median Fold Error** | N/A: awaiting human verification | <= 2.000 | N/A: awaiting human verification |
+| **Mean Absolute % Error** | N/A: awaiting human verification | - | N/A: awaiting human verification |
 
 ---
 

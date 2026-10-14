@@ -80,7 +80,7 @@ Analytical Reality Checks: 11 / 11 Passed [PASS]
      with linear superposition across multi-dose intervals.
    - **Reality Checks**: Single-dose $C_{max}$ analytical peak formula equivalence, steady-state clearance rate match, mass balance conservation.
 2. **`chem.titration` (Volumetric Acid-Base Titration)**:
-   - **Equation**: Exact aqueous charge-balance equilibrium solver with water auto-ionization ($K_w = 1.0 \times 10^{-14}$) and Henderson-Hasselbalch buffer calculations; phenolphthalein indicator spectral transition centered at $pK_{ind} = 9.3$.
+   - **Equation**: Exact aqueous charge-balance equilibrium solver with water auto-ionization ($K_w = 1.0 \times 10^{-14}$), with the Henderson-Hasselbalch relation used only for the half-equivalence check ($pH = pK_a$); indicator color is modeled as a continuous interpolation across the indicator's pH transition range (e.g. phenolphthalein colorless at $pH < 8.2$ transitioning to magenta at $pH > 10.0$ centered at $pK_{ind} = 9.3$).
    - **Reality Checks**: Neutral water pH at $V_b=0$, equivalence point stoichiometric pH, strong acid asymptotic limit, buffer half-equivalence $pH = pK_a$.
 3. **`pharma.trial` (Virtual Clinical Trial)**:
    - **Engine**: Vectorized NumPy Monte Carlo engine with log-normal demographic distributions (body weight CV 18%, clearance CV 30%, $k_a$ CV 25%) and hepatic impairment subgroup (0.6x clearance).
@@ -94,7 +94,7 @@ Analytical Reality Checks: 11 / 11 Passed [PASS]
 |---|---|---|
 | **Action Camera & Collisions** | Smooth camera easing framing upper body, hands, and active apparatus (~2m) with bench and wall collision safety. | [Action Cam Showcase](docs/screenshots/action_camera_showcase.gif) |
 | **Realistic Weighing & Balance** | Spatula & dosing cup props; growing powder pile on balance pan with live LCD display rising to target weight. | [Weigh Proof](docs/screenshots/proof_action_weigh_100.png) |
-| **Burette Drips & Endpoint Color** | Dynamic meniscus drainage, liquid droplets, and Henderson-Hasselbalch phenolphthalein color transition. | [Titration Proof](docs/screenshots/proof_step0_titration_drips_color.png) |
+| **Burette Drips & Endpoint Color** | Dynamic meniscus drainage, liquid droplets, and continuous indicator color interpolation across its pH transition range. | [Titration Proof](docs/screenshots/proof_step0_titration_drips_color.png) |
 | **500-Patient Crowd Wave** | 3D instanced crowd arena displaying real-time color waves (green: in range, amber: subtherapeutic, red: toxic). | [Trial Crowd Wave](docs/screenshots/proof_step0_trial_after.png) |
 | **Dr. Orbis AI Lab Mentor** | Contextual Google Gemini guidance with strict prompt-injection defense, latency tracking, and deterministic rule-based fallback. | [Mentor Inquiry](docs/screenshots/proof_mentor_ask.png) |
 | **Synthesized WebAudio Engine** | Procedural WebAudio sound effects: balance tare beeps, pour bursts, error alarms, and success chimes. | [Audio Controls](docs/screenshots/proof_rc1_2_1_sound_controls.png) |

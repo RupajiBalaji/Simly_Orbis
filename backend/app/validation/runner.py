@@ -155,13 +155,22 @@ class ValidationRunner:
 
         verified_count = len(verified_items)
         passed_verified = sum(1 for it in verified_items if it["passed"])
-        pass_rate = (passed_verified / verified_count) if verified_count > 0 else 0.0
 
-        fold_errors = [it["fold_error"] for it in verified_items if not math.isinf(it["fold_error"])]
-        pct_errors = [it["pct_error"] for it in verified_items]
+        if verified_count > 0:
+            pass_rate = round(passed_verified / verified_count, 4)
+            fold_errors = [it["fold_error"] for it in verified_items if not math.isinf(it["fold_error"])]
+            pct_errors = [it["pct_error"] for it in verified_items]
 
-        median_fold_error = float(np.median(fold_errors)) if fold_errors else 1.0
-        mean_pct_error = float(np.mean(pct_errors)) if pct_errors else 0.0
+            median_fold_error = round(float(np.median(fold_errors)), 4) if fold_errors else 1.0
+            mean_pct_error = round(float(np.mean(pct_errors)), 2) if pct_errors else 0.0
+            ci_threshold_satisfied = bool(pass_rate >= self.tolerances.get("min_verified_pass_rate", 0.85))
+            status_text = "PASS" if ci_threshold_satisfied else "FAIL"
+        else:
+            pass_rate = "N/A: awaiting human verification"
+            median_fold_error = "N/A: awaiting human verification"
+            mean_pct_error = "N/A: awaiting human verification"
+            ci_threshold_satisfied = False
+            status_text = "N/A: awaiting human verification"
 
         # Sensitivity Analysis
         sensitivity = self.run_sensitivity_analysis()
@@ -170,12 +179,13 @@ class ValidationRunner:
             "total_references": len(evaluated_items),
             "human_verified": verified_count,
             "pending_human_check": len(unverified_items),
-            "pass_rate": round(pass_rate, 4),
+            "pass_rate": pass_rate,
             "passed_verified_count": passed_verified,
             "min_verified_pass_rate_required": self.tolerances.get("min_verified_pass_rate", 0.85),
-            "ci_threshold_satisfied": True if verified_count == 0 else bool(pass_rate >= self.tolerances.get("min_verified_pass_rate", 0.85)),
-            "median_fold_error": round(median_fold_error, 4),
-            "mean_percent_error": round(mean_pct_error, 2),
+            "ci_threshold_satisfied": ci_threshold_satisfied,
+            "status": status_text,
+            "median_fold_error": median_fold_error,
+            "mean_percent_error": mean_pct_error,
             "banner": "Compared with published data for the stated conditions. Not clinical validation.",
             "verified_results": verified_items,
             "unverified_results": unverified_items,
@@ -586,6 +596,25 @@ class ValidationRunner:
         validation_items = summary.get("validation_results", [it for it in (verified + unverified) if not it["id"].startswith("titr_")])
         sens = summary["sensitivity_analysis"]
 
+        is_verified = bool(summary["human_verified"] > 0)
+        if is_verified:
+            pass_rate_val = summary["pass_rate"]
+            pass_rate_disp = f"{pass_rate_val * 100:.1f}% ({summary['passed_verified_count']}/{summary['human_verified']})"
+            pass_rate_stat = "PASS" if summary["ci_threshold_satisfied"] else "FAIL"
+            med_fold_disp = f"{summary['median_fold_error']:.3f}"
+            med_fold_stat = "PASS"
+            mean_pct_disp = f"{summary['mean_percent_error']:.1f}%"
+            mean_pct_stat = "PASS"
+            verified_count_stat = "PASS"
+        else:
+            pass_rate_disp = "N/A: awaiting human verification"
+            pass_rate_stat = "N/A: awaiting human verification"
+            med_fold_disp = "N/A: awaiting human verification"
+            med_fold_stat = "N/A: awaiting human verification"
+            mean_pct_disp = "N/A: awaiting human verification"
+            mean_pct_stat = "N/A: awaiting human verification"
+            verified_count_stat = "N/A: awaiting human verification"
+
         lines: list[str] = [
             "# Simly Orbis Simulation Engine Validation & Verification Report",
             "",
@@ -598,11 +627,11 @@ class ValidationRunner:
             "",
             "| Metric | Value | Threshold / Target | Status |",
             "|---|---|---|---|",
-            f"| **Verified Reference Count** | {summary['human_verified']} | Owner Sign-Off Required | {'PASS' if summary['human_verified'] > 0 else 'PENDING HUMAN CHECK'} |",
+            f"| **Verified Reference Count** | {summary['human_verified']} | Owner Sign-Off Required | {verified_count_stat} |",
             f"| **Pending Human Check (Queue)** | {summary['pending_human_check']} | Separate list | TRACKED |",
-            f"| **Verified Pass Rate** | {summary['pass_rate'] * 100:.1f}% ({summary['passed_verified_count']}/{summary['human_verified']}) | >= {summary['min_verified_pass_rate_required'] * 100:.1f}% | {'PASS' if summary['ci_threshold_satisfied'] else 'FAIL'} |",
-            f"| **Median Fold Error** | {summary['median_fold_error']:.3f} | <= 2.000 | PASS |",
-            f"| **Mean Absolute % Error** | {summary['mean_percent_error']:.1f}% | - | PASS |",
+            f"| **Verified Pass Rate** | {pass_rate_disp} | >= {summary['min_verified_pass_rate_required'] * 100:.1f}% | {pass_rate_stat} |",
+            f"| **Median Fold Error** | {med_fold_disp} | <= 2.000 | {med_fold_stat} |",
+            f"| **Mean Absolute % Error** | {mean_pct_disp} | - | {mean_pct_stat} |",
             "",
             "---",
             "",
@@ -781,6 +810,9 @@ def get_validation_summary(force_refresh: bool = False) -> dict[str, Any]:
 if __name__ == "__main__":
     runner = ValidationRunner()
     result = runner.run_and_save()
-    print(f"Validation complete: {result['passed_verified_count']}/{result['human_verified']} verified benchmarks passed ({result['pass_rate']*100:.1f}%).")
-    print(f"Median fold error: {result['median_fold_error']:.3f}. Mean percent error: {result['mean_percent_error']:.1f}%.")
+    if result["human_verified"] > 0:
+        print(f"Validation complete: {result['passed_verified_count']}/{result['human_verified']} verified benchmarks passed ({result['pass_rate']*100:.1f}%).")
+        print(f"Median fold error: {result['median_fold_error']:.3f}. Mean percent error: {result['mean_percent_error']:.1f}%.")
+    else:
+        print("Validation complete: N/A: awaiting human verification (0 verified references).")
     print(f"Pending human check: {result['pending_human_check']}.")
