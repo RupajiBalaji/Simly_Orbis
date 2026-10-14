@@ -73,6 +73,60 @@
   <!-- Reality Check Verification Board & Model Cards Modal -->
   <div id="reality-check-panel" class="reality-check-panel hidden"></div>
 
+  <!-- Proximity Interaction Prompt Floating Indicator (Key: E) -->
+  <div id="hud-proximity-prompt" class="hud-proximity-prompt hidden">
+    <div class="proximity-pill">
+      <span class="key-badge">E</span>
+      <span class="prompt-text" id="proximity-prompt-label">Use Station</span>
+    </div>
+  </div>
+
+  <!-- Radial Action Wheel for Apparatus Stations (Key: E) -->
+  <div id="hud-radial-wheel" class="hud-radial-wheel hidden">
+    <div class="radial-backdrop" id="radial-backdrop"></div>
+    <div class="radial-container">
+      <div class="radial-hub">
+        <div class="radial-hub-title" id="radial-station-title">Station</div>
+        <div class="radial-hub-hint">Press E or Esc to close</div>
+      </div>
+      <div class="radial-items" id="radial-items-container"></div>
+    </div>
+  </div>
+
+  <!-- Keyboard & Gamepad Controls Cheat-Sheet Modal (Key: H) -->
+  <div id="controls-modal" class="controls-modal hidden">
+    <div class="controls-card">
+      <div class="controls-header">
+        <h3>🎮 Laboratory Controls & Shortcuts</h3>
+        <button type="button" class="btn-close-controls" id="btn-close-controls">&times;</button>
+      </div>
+      <div class="controls-grid">
+        <div class="ctrl-row"><span class="ctrl-key">W A S D / Arrows</span><span class="ctrl-desc">Walk avatar</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">Shift</span><span class="ctrl-desc">Sprint (Fast run)</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">E</span><span class="ctrl-desc">Interact / Open Radial Action Menu</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">V</span><span class="ctrl-desc">Toggle 1st / 3rd Person camera</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">C</span><span class="ctrl-desc">Cycle Follow / Free camera</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">R</span><span class="ctrl-desc">Re-center camera behind avatar</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">Shift + D</span><span class="ctrl-desc">Toggle Director Mode autoplay</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">N</span><span class="ctrl-desc">Toggle 3D name tags</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">H</span><span class="ctrl-desc">Toggle this controls cheat-sheet</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">Left Click</span><span class="ctrl-desc">Select station or click-to-walk</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">Right Drag</span><span class="ctrl-desc">Orbit camera around target</span></div>
+        <div class="ctrl-row"><span class="ctrl-key">Scroll</span><span class="ctrl-desc">Zoom camera in / out</span></div>
+      </div>
+      <div class="controls-footer">
+        <span>Click anywhere outside or press <kbd>Esc</kbd> / <kbd>H</kbd> to close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- On-Screen Virtual Touch Joystick (Mobile & Touch Devices) -->
+  <div id="touch-joystick-zone" class="touch-joystick-zone">
+    <div id="touch-joystick-base" class="touch-joystick-base">
+      <div id="touch-joystick-knob" class="touch-joystick-knob"></div>
+    </div>
+  </div>
+
 
   <!-- WebGL Fallback Notification -->
   <div id="webgl-fallback" style="display:none; position:fixed; inset:0; background:#0c071d; z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
@@ -246,13 +300,14 @@
         <!-- Camera Cluster (Segmented) -->
         <div class="hud-btn-group hud-cam-group">
           <button type="button" class="hud-btn" id="btn-toggle-camera-mode" title="Toggle Camera Follow/Free mode (Key: C)">🎥 Cam: Follow</button>
+          <button type="button" class="hud-btn" id="btn-toggle-first-person" title="Toggle First-Person View (Key: V)">👁️ 1st Person</button>
           <button type="button" class="hud-btn" id="btn-recenter-camera" title="Re-center camera behind avatar (Key: R)">🎯 Re-center</button>
           <button type="button" class="hud-btn" id="btn-reset-view" title="Reset camera viewpoint">↺ Reset</button>
         </div>
 
         <!-- Display & Settings Cluster -->
         <div class="hud-btn-group hud-settings-group">
-          <button type="button" class="hud-btn" id="btn-toggle-quality" title="Toggle Graphics Quality (High / Low)">⚙️ High</button>
+          <button type="button" class="hud-btn" id="btn-toggle-quality" title="Toggle Graphics Quality (High / Med / Low)">⚙️ High</button>
           <button type="button" class="hud-btn" id="btn-toggle-nametags" title="Toggle 3D labels above apparatus (Key: N)">🏷️ Tags: ON</button>
           <button type="button" class="hud-btn hud-icon-btn" id="btn-hud-open-about" title="About Simly Orbis">ℹ️</button>
         </div>
@@ -260,8 +315,9 @@
         <!-- Demo Tools Cluster -->
         <div class="hud-btn-group hud-tools-group">
           <button type="button" class="hud-btn hud-tool-btn" id="btn-toggle-skip-anim" title="Toggle animation speed">⚡ Skip</button>
-          <button type="button" class="hud-btn hud-tool-btn" id="btn-director-mode" title="Press D for hands-free autoplay">🎬 Director</button>
+          <button type="button" class="hud-btn hud-tool-btn" id="btn-director-mode" title="Press Shift+D for hands-free autoplay">🎬 Director</button>
           <button type="button" class="hud-btn hud-tool-btn hud-btn-warn" id="btn-mistake-demo" title="Intentionally skip goggles to see safety breach">⚠️ Mistake</button>
+          <button type="button" class="hud-btn hud-tool-btn" id="btn-open-controls" title="Keyboard & mouse controls guide (Key: H)">🎮 Controls</button>
         </div>
 
         <!-- Primary Action -->
@@ -295,11 +351,12 @@
     </aside>
 
     <!-- Bottom Station Navigation Strip & Compact Action Bar -->
-    <div class="hud-bottom-dock">
+    <div class="hud-bottom-dock" id="hud-bottom-dock">
       <!-- Go to Station Strip -->
       <div class="hud-station-strip" id="hud-station-strip">
         <span class="station-strip-label">GO TO STATION:</span>
         <div class="station-strip-buttons" id="station-strip-buttons"></div>
+        <button type="button" class="btn-collapse-dock" id="btn-collapse-bottom-dock" title="Collapse / Expand Action Bar">▼ Minimize</button>
       </div>
 
       <!-- Compact Action Bar (Station-focused with expandable More drawer) -->
@@ -333,7 +390,7 @@
     <footer class="hud-footer">
       <div class="disclaimer-pill">Educational simulation. Simplified models. Not medical advice.</div>
       <div style="font-size:0.75rem; color:#64748b; background:rgba(0,0,0,0.4); padding:4px 8px; border-radius:6px; pointer-events:auto;">
-        Shortcuts: <kbd>[D]</kbd> Director Mode · <kbd>[N]</kbd> Tags · <kbd>[F3]</kbd> Debug
+        Shortcuts: <kbd>[WASD]</kbd> Move · <kbd>[E]</kbd> Use · <kbd>[V]</kbd> 1st Person · <kbd>[Shift+D]</kbd> Director · <kbd>[H]</kbd> Controls · <kbd>[F3]</kbd> Debug
       </div>
     </footer>
   </div>

@@ -64,4 +64,5 @@ This guide provides timed presentation scripts for live hackathon demos and ligh
 - **2D Data Fallback**: The canvas automatically degrades cleanly, and all 2D charts, protocol readouts, and final reports render regardless of WebGL support.
 
 ### 3. Autoplay Director Mode:
-- **Press 'D' or Click 'Director'**: If you want hands-free execution while talking, trigger Director mode. The avatar will autonomously execute the entire protocol step-by-step.
+- **Press 'Shift+D' or Click 'Director'**: If you want hands-free execution while talking, trigger Director mode (`Shift+D` prevents conflicts with WASD movement). The avatar will autonomously execute the entire protocol step-by-step.
+- **Manual Movement & Hands-On Interaction**: Use `WASD` or arrow keys to freely navigate the laboratory, hold `Shift` to sprint (4.0 m/s), press `E` within 1.6m of an apparatus to open the radial action wheel, press `V` for first-person hands view, and press `H` for the in-game controls cheat-sheet.

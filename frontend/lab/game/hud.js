@@ -5,6 +5,7 @@
 
 import { state } from '../state.js';
 import { soundFX } from '../audio/sound_fx.js';
+import { toast } from './toast.js';
 
 export class LabHUD {
   constructor() {
@@ -91,6 +92,12 @@ export class LabHUD {
         this.updateSelectedTarget(payload);
       }
     });
+
+    // Initialize CP3 interaction subsystems
+    this.initProximityAndRadial();
+    this.initControlsModal();
+    this.initCollapsibleDock();
+    this.initTouchJoystick();
   }
 
   setChecklistCollapsed(collapsed) {
@@ -288,5 +295,241 @@ export class LabHUD {
       entry.appendChild(msgSpan);
       this.eventLogListEl.appendChild(entry);
     });
+  }
+
+  initProximityAndRadial() {
+    this.proximityPromptEl = document.getElementById('hud-proximity-prompt');
+    this.proximityPromptLabel = document.getElementById('proximity-prompt-label');
+    this.radialWheelEl = document.getElementById('hud-radial-wheel');
+    this.radialItemsContainer = document.getElementById('radial-items-container');
+    this.radialStationTitle = document.getElementById('radial-station-title');
+    this.radialBackdrop = document.getElementById('radial-backdrop');
+    this.currentProximityStation = null;
+    this.isRadialOpen = false;
+
+    if (this.proximityPromptEl) {
+      this.proximityPromptEl.onclick = () => this.triggerProximityInteract();
+    }
+    if (this.radialBackdrop) {
+      this.radialBackdrop.onclick = () => this.closeRadialWheel();
+    }
+  }
+
+  initControlsModal() {
+    this.controlsModal = document.getElementById('controls-modal');
+    const btnOpenControls = document.getElementById('btn-open-controls');
+    const btnCloseControls = document.getElementById('btn-close-controls');
+    if (btnOpenControls) {
+      btnOpenControls.onclick = () => this.toggleControlsModal();
+    }
+    if (btnCloseControls) {
+      btnCloseControls.onclick = () => this.toggleControlsModal(false);
+    }
+    if (this.controlsModal) {
+      this.controlsModal.onclick = (e) => {
+        if (e.target === this.controlsModal) this.toggleControlsModal(false);
+      };
+    }
+  }
+
+  initCollapsibleDock() {
+    const btnCollapse = document.getElementById('btn-collapse-bottom-dock');
+    const bottomDock = document.getElementById('hud-bottom-dock');
+    if (btnCollapse && bottomDock) {
+      btnCollapse.onclick = () => {
+        bottomDock.classList.toggle('minimized');
+        const isMin = bottomDock.classList.contains('minimized');
+        btnCollapse.textContent = isMin ? '▲ Expand' : '▼ Minimize';
+        soundFX.playClick();
+      };
+    }
+  }
+
+  initTouchJoystick() {
+    const zone = document.getElementById('touch-joystick-zone');
+    const base = document.getElementById('touch-joystick-base');
+    const knob = document.getElementById('touch-joystick-knob');
+    if (!zone || !base || !knob) return;
+
+    let active = false;
+    let baseRect = null;
+    const maxDist = 36;
+
+    const onPointerDown = (e) => {
+      active = true;
+      baseRect = base.getBoundingClientRect();
+      updateKnob(e);
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+    };
+
+    const updateKnob = (e) => {
+      if (!active || !baseRect) return;
+      const cx = baseRect.left + baseRect.width / 2;
+      const cy = baseRect.top + baseRect.height / 2;
+      let dx = e.clientX - cx;
+      let dy = e.clientY - cy;
+      const dist = Math.hypot(dx, dy);
+      if (dist > maxDist) {
+        dx = (dx / dist) * maxDist;
+        dy = (dy / dist) * maxDist;
+      }
+      knob.style.transform = `translate(${dx}px, ${dy}px)`;
+      const nx = dx / maxDist;
+      const ny = -dy / maxDist;
+      window.characterController?.setJoystickInput(nx, ny);
+    };
+
+    const onPointerMove = (e) => {
+      updateKnob(e);
+    };
+
+    const onPointerUp = () => {
+      active = false;
+      knob.style.transform = 'translate(0px, 0px)';
+      window.characterController?.setJoystickInput(0, 0);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+
+    zone.addEventListener('pointerdown', onPointerDown);
+  }
+
+  updateProximity(dt) {
+    const avatar = window.characterController?.rig?.root;
+    const lookup = window.sceneManager?.apparatusLookup;
+    if (!avatar || !lookup) return;
+
+    const avPos = avatar.position;
+    let closestStation = null;
+    let minDistance = Infinity;
+
+    for (const [targetId, appObj] of Object.entries(lookup)) {
+      if (!appObj || !appObj.position) continue;
+      const pos = appObj.userData?.stationPos || appObj.position;
+      const dist = Math.hypot(pos.x - avPos.x, pos.z - avPos.z);
+      if (dist < minDistance && dist <= 1.8) {
+        minDistance = dist;
+        closestStation = { id: targetId, name: this.formatStationName(targetId), obj: appObj, dist };
+      }
+    }
+
+    if (closestStation) {
+      this.currentProximityStation = closestStation;
+      if (this.proximityPromptEl) {
+        this.proximityPromptEl.classList.remove('hidden');
+        if (this.proximityPromptLabel) {
+          this.proximityPromptLabel.textContent = `Use ${closestStation.name}`;
+        }
+      }
+    } else {
+      if (this.proximityPromptEl) {
+        this.proximityPromptEl.classList.add('hidden');
+      }
+      if (this.isRadialOpen && minDistance > 2.4) {
+        this.closeRadialWheel();
+      }
+      this.currentProximityStation = null;
+    }
+  }
+
+  formatStationName(targetId) {
+    const names = {
+      digital_balance: 'Analytical Balance',
+      dosing_cup: 'Dosing Cup',
+      patient_bed: 'Patient Alex',
+      ward_clock: 'Ward Clock',
+      tube_rack: 'Sample Tubes',
+      assay_analyzer: 'Plasma Analyzer',
+      burette: 'Burette Stand',
+      conical_flask: 'Conical Flask',
+      sink: 'Utility Sink',
+      chemical_waste_bin: 'Waste Bin',
+      biohazard_bin: 'Biohazard Bin',
+      virtual_trial_screen: 'Clinical Trial Screen',
+      reality_check_board: 'Reality Check Board',
+    };
+    return names[targetId] || targetId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  triggerProximityInteract() {
+    if (this.isRadialOpen) {
+      this.closeRadialWheel();
+      return;
+    }
+    if (this.currentProximityStation) {
+      this.openRadialWheel(this.currentProximityStation.id, this.currentProximityStation.name);
+    } else {
+      state.showToast?.('Move closer to a station to interact (or use mouse)');
+    }
+  }
+
+  openRadialWheel(stationId, stationName) {
+    if (!this.radialWheelEl || !this.radialItemsContainer) return;
+    this.isRadialOpen = true;
+    this.radialWheelEl.classList.remove('hidden');
+    if (this.radialStationTitle) {
+      this.radialStationTitle.textContent = stationName || this.formatStationName(stationId);
+    }
+    this.radialItemsContainer.innerHTML = '';
+
+    const actions = window.actionMenu?.getActionsForStation(stationId) || [];
+    if (actions.length === 0) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'radial-empty-notice';
+      emptyDiv.textContent = 'No actions available at this step';
+      this.radialItemsContainer.appendChild(emptyDiv);
+      return;
+    }
+
+    const total = actions.length;
+    const radius = total > 4 ? 120 : 100;
+    actions.forEach((act, i) => {
+      const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
+      const x = Math.round(Math.cos(angle) * radius);
+      const y = Math.round(Math.sin(angle) * radius);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'radial-action-item' + (act.enabled ? '' : ' disabled');
+      btn.title = act.enabled ? act.label : (act.reason || 'Action disabled for current step');
+      btn.style.left = `calc(50% + ${x}px)`;
+      btn.style.top = `calc(50% + ${y}px)`;
+      btn.innerHTML = `
+        <span class="radial-item-icon">${act.icon || '⚗️'}</span>
+        <span class="radial-item-label">${act.label}</span>
+      `;
+      if (act.enabled) {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          this.closeRadialWheel();
+          window.actionMenu?.handleActionClick(act.action, stationId);
+        };
+      } else {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          toast.showInfo(act.reason || 'Action disabled for current step');
+        };
+      }
+      this.radialItemsContainer.appendChild(btn);
+    });
+    soundFX.playClick();
+  }
+
+  closeRadialWheel() {
+    if (!this.radialWheelEl) return;
+    this.isRadialOpen = false;
+    this.radialWheelEl.classList.add('hidden');
+  }
+
+  toggleControlsModal(forceState) {
+    if (!this.controlsModal) return;
+    const shouldOpen = forceState !== undefined ? forceState : this.controlsModal.classList.contains('hidden');
+    if (shouldOpen) {
+      this.controlsModal.classList.remove('hidden');
+    } else {
+      this.controlsModal.classList.add('hidden');
+    }
+    soundFX.playClick();
   }
 }

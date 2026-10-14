@@ -22,22 +22,100 @@ export class CharacterController {
 
     // Locomotion state
     this.isWalking = false;
+    this.isManualWalking = false;
     this.targetPos = new THREE.Vector3();
     this.moveSpeed = 2.4; // m/s
     this.onArrival = null;
+
+    // Free WASD & Arrow keyboard input state
+    this.keysDown = {
+      KeyW: false,
+      KeyA: false,
+      KeyS: false,
+      KeyD: false,
+      ArrowUp: false,
+      ArrowLeft: false,
+      ArrowDown: false,
+      ArrowRight: false,
+      ShiftLeft: false,
+      ShiftRight: false,
+    };
+    this.joystickInput = new THREE.Vector2(0, 0);
+
+    this.onKeyDown = (e) => {
+      const tag = e.target?.tagName?.toUpperCase();
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) return;
+      const k = e.key?.toLowerCase();
+      if (e.code === 'KeyW' || k === 'w') this.keysDown.KeyW = true;
+      if (e.code === 'KeyA' || k === 'a') this.keysDown.KeyA = true;
+      if (e.code === 'KeyS' || k === 's') this.keysDown.KeyS = true;
+      if (e.code === 'KeyD' || k === 'd') this.keysDown.KeyD = true;
+      if (e.code === 'ArrowUp' || e.key === 'ArrowUp') this.keysDown.ArrowUp = true;
+      if (e.code === 'ArrowDown' || e.key === 'ArrowDown') this.keysDown.ArrowDown = true;
+      if (e.code === 'ArrowLeft' || e.key === 'ArrowLeft') this.keysDown.ArrowLeft = true;
+      if (e.code === 'ArrowRight' || e.key === 'ArrowRight') this.keysDown.ArrowRight = true;
+      if (e.shiftKey || e.code === 'ShiftLeft' || e.code === 'ShiftRight') this.keysDown.ShiftLeft = true;
+    };
+
+    this.onKeyUp = (e) => {
+      const k = e.key?.toLowerCase();
+      if (e.code === 'KeyW' || k === 'w') this.keysDown.KeyW = false;
+      if (e.code === 'KeyA' || k === 'a') this.keysDown.KeyA = false;
+      if (e.code === 'KeyS' || k === 's') this.keysDown.KeyS = false;
+      if (e.code === 'KeyD' || k === 'd') this.keysDown.KeyD = false;
+      if (e.code === 'ArrowUp' || e.key === 'ArrowUp') this.keysDown.ArrowUp = false;
+      if (e.code === 'ArrowDown' || e.key === 'ArrowDown') this.keysDown.ArrowDown = false;
+      if (e.code === 'ArrowLeft' || e.key === 'ArrowLeft') this.keysDown.ArrowLeft = false;
+      if (e.code === 'ArrowRight' || e.key === 'ArrowRight') this.keysDown.ArrowRight = false;
+      if (!e.shiftKey && (e.code === 'ShiftLeft' || e.code === 'ShiftRight')) this.keysDown.ShiftLeft = false;
+    };
+
+    window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener('keyup', this.onKeyUp);
 
     // Carried mesh
     this.heldItem = null;
   }
 
+  setJoystickInput(x, y) {
+    this.joystickInput.set(x, y);
+  }
+
+  canMoveTo(newPos) {
+    // 1. Room boundaries
+    const maxZ = window.sceneManager?.isGalleryMode ? 7.2 : 1.70;
+    if (newPos.x < -7.1 || newPos.x > 7.1 || newPos.z < -6.3 || newPos.z > maxZ) {
+      return false;
+    }
+
+    // 2. Obstacle boxes from cameraRig
+    const blockerBoxes = window.sceneManager?.cameraRig?.blockerBoxes || [];
+    const r = 0.15;
+    for (let i = 0; i < blockerBoxes.length; i++) {
+      const box = blockerBoxes[i];
+      // Only obstacles that occupy floor/bench height (y <= 0.95) block the avatar
+      if (box.min.y <= 0.95) {
+        if (
+          newPos.x >= box.min.x - r &&
+          newPos.x <= box.max.x + r &&
+          newPos.z >= box.min.z - r &&
+          newPos.z <= box.max.z + r
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   spawnForExperiment(experimentId) {
     if (experimentId === 'pk_ward') {
-      // Spawn standing at the balance station framing avatar, balance & ward
-      this.rig.root.position.set(-4.15, 0, -3.50);
+      // Spawn standing at the balance station framing avatar, balance & ward in clear walkway
+      this.rig.root.position.set(-3.85, 0, -2.85);
       this.faceTarget(new THREE.Vector3(-4.5, 0.94, -4.2));
     } else {
-      // Spawn to the side of the Burette Stand (unobstructed hero apparatus view & reachable)
-      this.rig.root.position.set(-0.48, 0, -1.65);
+      // Spawn to the side of the Burette Stand in clear walkway
+      this.rig.root.position.set(-0.25, 0, -0.90);
       this.faceTarget(new THREE.Vector3(0.02, 1.25, -1.85));
     }
     this.animator.playClip('idle');
@@ -119,6 +197,12 @@ export class CharacterController {
   setAvatarOpacity(opacity = 1.0) {
     if (this.rig && typeof this.rig.setOpacity === 'function') {
       this.rig.setOpacity(opacity);
+    }
+  }
+
+  setFirstPersonHandsMode(enabled) {
+    if (this.rig && typeof this.rig.setFirstPersonHandsMode === 'function') {
+      this.rig.setFirstPersonHandsMode(enabled);
     }
   }
 
@@ -295,8 +379,87 @@ export class CharacterController {
   }
 
   update(dt) {
-    // 1. Locomotion step
-    if (this.isWalking) {
+    // While a plan or action animation runs, player movement is locked and the Stop button still works.
+    const isActionLocked = (this.animator.currentClip !== 'idle' && this.animator.currentClip !== 'walk') ||
+                           Boolean(window.state?.isPending) ||
+                           Boolean(window.agentPanel?.isRunningPlan);
+
+    // 1. Manual keyboard / joystick free locomotion
+    const rawFwd = !isActionLocked ? ((this.keysDown.KeyW || this.keysDown.ArrowUp ? 1 : 0) - (this.keysDown.KeyS || this.keysDown.ArrowDown ? 1 : 0) + this.joystickInput.y) : 0;
+    const rawRight = !isActionLocked ? ((this.keysDown.KeyD || this.keysDown.ArrowRight ? 1 : 0) - (this.keysDown.KeyA || this.keysDown.ArrowLeft ? 1 : 0) + this.joystickInput.x) : 0;
+    const isSprinting = this.keysDown.ShiftLeft || this.keysDown.ShiftRight;
+
+    if (Math.hypot(rawFwd, rawRight) > 0.08) {
+      // User manual control overrides any automated moveTo navigation
+      this.onArrival = null;
+
+      // Determine camera horizontal orientation
+      const cam = window.sceneManager?.camera;
+      let camAngle = 0;
+      if (cam) {
+        camAngle = Math.atan2(cam.position.x - this.rig.root.position.x, cam.position.z - this.rig.root.position.z) + Math.PI;
+      }
+      const fwdX = Math.sin(camAngle);
+      const fwdZ = Math.cos(camAngle);
+      const rightX = Math.cos(camAngle);
+      const rightZ = -Math.sin(camAngle);
+
+      const moveDirX = fwdX * rawFwd + rightX * rawRight;
+      const moveDirZ = fwdZ * rawFwd + rightZ * rawRight;
+      const len = Math.hypot(moveDirX, moveDirZ);
+      const normX = moveDirX / len;
+      const normZ = moveDirZ / len;
+
+      const speed = isSprinting ? 4.0 : 2.4;
+      const stepX = normX * speed * dt;
+      const stepZ = normZ * speed * dt;
+
+      // Smoothly rotate character to face travel heading
+      const targetAngle = Math.atan2(normX, normZ);
+      let diff = targetAngle - this.rig.root.rotation.y;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      this.rig.root.rotation.y += diff * Math.min(1.0, dt * 12.0);
+
+      // Slide-based collision check
+      const cur = this.rig.root.position;
+      const tryBoth = new THREE.Vector3(cur.x + stepX, 0, cur.z + stepZ);
+      if (this.canMoveTo(tryBoth)) {
+        cur.copy(tryBoth);
+      } else {
+        const tryX = new THREE.Vector3(cur.x + stepX, 0, cur.z);
+        if (this.canMoveTo(tryX)) {
+          cur.copy(tryX);
+        } else {
+          const tryZ = new THREE.Vector3(cur.x, 0, cur.z + stepZ);
+          if (this.canMoveTo(tryZ)) {
+            cur.copy(tryZ);
+          }
+        }
+      }
+
+      this.isManualWalking = true;
+      this.isWalking = true;
+      if (this.animator.currentClip !== 'walk') {
+        this.animator.playClip('walk');
+      }
+
+      // Footstep audio cadence
+      const stepInterval = isSprinting ? 0.26 : 0.38;
+      this.footstepTimer = (this.footstepTimer || 0) + dt;
+      if (this.footstepTimer >= stepInterval) {
+        this.footstepTimer = 0;
+        soundFX.playFootstep();
+      }
+    } else if (this.isManualWalking) {
+      // Manual walking stopped
+      this.isManualWalking = false;
+      this.isWalking = false;
+      if (this.animator.currentClip === 'walk') {
+        this.animator.playClip('idle');
+      }
+    } else if (this.isWalking) {
+      // 2. Automated click-to-walk / waypoint navigation
       this.footstepTimer = (this.footstepTimer || 0) + dt;
       if (this.footstepTimer >= 0.38) {
         this.footstepTimer = 0;
@@ -330,7 +493,7 @@ export class CharacterController {
       }
     }
 
-    // 2. Animator update
+    // 3. Animator update
     this.animator.update(dt);
   }
 }

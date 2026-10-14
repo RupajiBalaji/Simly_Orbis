@@ -550,6 +550,28 @@ export function createHumanoidAvatar() {
 
     currentExpression: 'neutral',
     lookTarget: null,
+    isFirstPersonHands: false,
+    _hasCoat: false,
+
+    setFirstPersonHandsMode(enabled) {
+      this.isFirstPersonHands = Boolean(enabled);
+      pelvisMesh.visible = !enabled;
+      torsoMesh.visible = !enabled;
+      neck.visible = !enabled;
+      head.visible = !enabled;
+      leftLeg.hip.visible = !enabled;
+      rightLeg.hip.visible = !enabled;
+      if (blobShadow) {
+        blobShadow.visible = !enabled && (window.sceneManager?.quality === 'low');
+      }
+      if (coatMesh) {
+        coatMesh.visible = !enabled && Boolean(this._hasCoat);
+      }
+      leftArm.shoulder.visible = true;
+      rightArm.shoulder.visible = true;
+      if (heldItemSocket) heldItemSocket.visible = true;
+      if (leftHeldItemSocket) leftHeldItemSocket.visible = true;
+    },
 
     // Dynamic Opacity / Fade (fades to 40% when camera is occluded)
     setOpacity(opacity = 1.0) {
@@ -576,12 +598,13 @@ export function createHumanoidAvatar() {
     // PPE State Updater
     updatePPE(ppeSet) {
       const ppe = ppeSet instanceof Set ? ppeSet : new Set(ppeSet || []);
+      this._hasCoat = ppe.has('coat');
 
       // Goggles
-      gogglesGroup.visible = ppe.has('goggles');
+      gogglesGroup.visible = !this.isFirstPersonHands && ppe.has('goggles');
 
       // Lab Coat
-      coatMesh.visible = ppe.has('coat');
+      coatMesh.visible = !this.isFirstPersonHands && this._hasCoat;
 
       // Nitrile Gloves (recolor palm, fingers, and thumb)
       const hasGloves = ppe.has('gloves');

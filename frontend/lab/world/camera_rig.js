@@ -11,6 +11,7 @@ export const CameraMode = {
   FOLLOW: 'FOLLOW',
   STATION: 'STATION',
   FREE: 'FREE',
+  FIRST_PERSON: 'FIRST_PERSON',
 };
 
 // Relative action camera offsets in local frame of (target apparatus, avatar facing)
@@ -121,13 +122,33 @@ export class CameraRig {
 
   setMode(mode) {
     if (this.mode === mode) return;
+    const oldMode = this.mode;
     this.mode = mode;
+
+    // Restore avatar visibility if leaving first-person
+    if (oldMode === CameraMode.FIRST_PERSON && mode !== CameraMode.FIRST_PERSON) {
+      const controller = this.labScene?.characterController;
+      if (controller) {
+        if (typeof controller.setFirstPersonHandsMode === 'function') {
+          controller.setFirstPersonHandsMode(false);
+        } else {
+          controller.setAvatarOpacity(1.0);
+        }
+        if (controller.rig?.root) controller.rig.root.visible = true;
+      }
+      this.controls.minDistance = 1.0;
+      this.controls.maxDistance = 16.0;
+    }
+
     this.updateHUDModeUI();
     state.notify?.('camera_mode_changed', { mode });
   }
 
   toggleMode() {
-    if (this.mode === CameraMode.FOLLOW) {
+    if (this.mode === CameraMode.FIRST_PERSON) {
+      this.setMode(CameraMode.FOLLOW);
+      this.recenter(true);
+    } else if (this.mode === CameraMode.FOLLOW) {
       this.setMode(CameraMode.FREE);
     } else {
       this.setMode(CameraMode.FOLLOW);
@@ -135,10 +156,57 @@ export class CameraRig {
     return this.mode;
   }
 
+  toggleFirstPerson() {
+    if (this.mode === CameraMode.FIRST_PERSON) {
+      this.setMode(CameraMode.FOLLOW);
+      this.recenter(true);
+      return CameraMode.FOLLOW;
+    } else {
+      const controller = this.labScene?.characterController;
+      if (controller) {
+        if (typeof controller.setFirstPersonHandsMode === 'function') {
+          controller.setFirstPersonHandsMode(true);
+        } else {
+          controller.setAvatarOpacity(0.0);
+        }
+        if (controller.rig?.root) controller.rig.root.visible = true;
+      }
+      this.mode = CameraMode.FIRST_PERSON;
+      this.controls.minDistance = 0.05;
+      this.controls.maxDistance = 8.0;
+
+      const avatar = controller?.rig?.root;
+      if (avatar) {
+        const avPos = avatar.position;
+        const heading = avatar.rotation.y;
+        const fwdX = Math.sin(heading);
+        const fwdZ = Math.cos(heading);
+        const eyePos = new THREE.Vector3(avPos.x - fwdX * 0.04, avPos.y + 1.25, avPos.z - fwdZ * 0.04);
+        const lookTarget = new THREE.Vector3(avPos.x + fwdX * 2.5, avPos.y + 1.05, avPos.z + fwdZ * 2.5);
+        this.camera.position.copy(eyePos);
+        this.controls.target.copy(lookTarget);
+        this.target.copy(lookTarget);
+        this.controls.update();
+      }
+      this.updateHUDModeUI();
+      return CameraMode.FIRST_PERSON;
+    }
+  }
+
   updateHUDModeUI() {
     const btn = document.getElementById('btn-toggle-camera-mode');
     if (btn) {
-      btn.textContent = this.mode === CameraMode.FOLLOW ? '🎥 Cam: Follow' : '🎥 Cam: Free';
+      if (this.mode === CameraMode.FIRST_PERSON) {
+        btn.textContent = '🎥 Cam: 1st Person';
+      } else if (this.mode === CameraMode.FOLLOW) {
+        btn.textContent = '🎥 Cam: Follow';
+      } else {
+        btn.textContent = '🎥 Cam: Free';
+      }
+    }
+    const btnFp = document.getElementById('btn-toggle-first-person');
+    if (btnFp) {
+      btnFp.textContent = this.mode === CameraMode.FIRST_PERSON ? '👁️ 3rd Person' : '👁️ 1st Person';
     }
   }
 
@@ -535,6 +603,24 @@ export class CameraRig {
 
     // 3. FREE mode: OrbitControls only, no avatar tracking
     if (this.mode === CameraMode.FREE) {
+      return;
+    }
+
+    // 3b. FIRST_PERSON mode: Camera locked to avatar eye position, mouse controls look direction
+    if (this.mode === CameraMode.FIRST_PERSON) {
+      const controller = this.labScene?.characterController;
+      const avatar = controller?.rig?.root;
+      if (avatar) {
+        const avPos = avatar.position;
+        const heading = avatar.rotation.y;
+        const fwdX = Math.sin(heading);
+        const fwdZ = Math.cos(heading);
+        const eyePos = this._vChasePos.set(avPos.x - fwdX * 0.04, avPos.y + 1.25, avPos.z - fwdZ * 0.04);
+        const delta = this._vDelta.subVectors(eyePos, this.camera.position);
+        this.camera.position.copy(eyePos);
+        this.controls.target.add(delta);
+        this.target.copy(this.controls.target);
+      }
       return;
     }
 

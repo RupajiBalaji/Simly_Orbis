@@ -250,6 +250,10 @@ export class LabScene {
   }
 
   onKeyDown(event) {
+    const tag = event.target?.tagName?.toUpperCase();
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target?.isContentEditable) {
+      return;
+    }
     if (event.key === 'n' || event.key === 'N') {
       this.toggleNameTags();
     } else if (event.key === 'c' || event.key === 'C') {
@@ -262,6 +266,15 @@ export class LabScene {
         this.cameraRig.recenter();
         state.showToast?.('Camera: Re-centered');
       }
+    } else if (event.key === 'v' || event.key === 'V') {
+      if (this.cameraRig) {
+        const mode = this.cameraRig.toggleFirstPerson();
+        state.showToast?.(`View: ${mode === 'FIRST_PERSON' ? 'First-Person' : 'Third-Person'}`);
+      }
+    } else if (event.key === 'h' || event.key === 'H') {
+      window.hud?.toggleControlsModal();
+    } else if (event.key === 'e' || event.key === 'E') {
+      window.hud?.triggerProximityInteract();
     }
   }
 
@@ -770,6 +783,19 @@ export class LabScene {
       this.isWhiteboardZoomed = false;
       state.setSelectedTarget(targetId);
       this.selectApparatus(this.hoveredObject);
+    } else if (!this.hoveredObject && this.characterController) {
+      // Click-to-walk: raycast ground plane y = 0
+      const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+      const hit = new THREE.Vector3();
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+      if (this.raycaster.ray.intersectPlane(plane, hit)) {
+        if (this.characterController.canMoveTo(hit)) {
+          this.characterController.moveTo(hit);
+          if (window.effectManager?.createDripSplash) {
+            window.effectManager.createDripSplash(hit, '#38bdf8', 10);
+          }
+        }
+      }
     }
   }
 

@@ -170,18 +170,33 @@ export class AvatarAnimator {
     this.rig.pelvis.position.y = 0.95 + breath * 0.008;
     this.rig.torso.rotation.x = breath * 0.01;
 
-    // Both arms relaxed naturally at the sides (slight outward flare and slight elbow bend)
-    this.rig.leftArm.shoulder.quaternion.identity();
-    this.rig.leftArm.shoulder.rotation.order = 'YXZ';
-    this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
-    this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
-    this.rig.leftArm.hand.rotation.set(0, 0, 0);
+    if (this.rig.isFirstPersonHands) {
+      // In first-person hands view, raise arms into view in front of chest/camera
+      this.rig.leftArm.shoulder.quaternion.identity();
+      this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+      this.rig.leftArm.shoulder.rotation.set(-0.62, 0.22, 0.18);
+      this.rig.leftArm.elbow.rotation.set(-0.72, 0, 0);
+      this.rig.leftArm.hand.rotation.set(0.18, 0, 0);
 
-    this.rig.rightArm.shoulder.quaternion.identity();
-    this.rig.rightArm.shoulder.rotation.order = 'YXZ';
-    this.rig.rightArm.shoulder.rotation.set(0.02, 0, -0.05);
-    this.rig.rightArm.elbow.rotation.set(-0.08, 0, 0);
-    this.rig.rightArm.hand.rotation.set(0, 0, 0);
+      this.rig.rightArm.shoulder.quaternion.identity();
+      this.rig.rightArm.shoulder.rotation.order = 'YXZ';
+      this.rig.rightArm.shoulder.rotation.set(-0.62, -0.22, -0.18);
+      this.rig.rightArm.elbow.rotation.set(-0.72, 0, 0);
+      this.rig.rightArm.hand.rotation.set(0.18, 0, 0);
+    } else {
+      // Both arms relaxed naturally at the sides (slight outward flare and slight elbow bend)
+      this.rig.leftArm.shoulder.quaternion.identity();
+      this.rig.leftArm.shoulder.rotation.order = 'YXZ';
+      this.rig.leftArm.shoulder.rotation.set(0.02, 0, 0.05);
+      this.rig.leftArm.elbow.rotation.set(-0.08, 0, 0);
+      this.rig.leftArm.hand.rotation.set(0, 0, 0);
+
+      this.rig.rightArm.shoulder.quaternion.identity();
+      this.rig.rightArm.shoulder.rotation.order = 'YXZ';
+      this.rig.rightArm.shoulder.rotation.set(0.02, 0, -0.05);
+      this.rig.rightArm.elbow.rotation.set(-0.08, 0, 0);
+      this.rig.rightArm.hand.rotation.set(0, 0, 0);
+    }
 
     // Legs straight
     this.rig.leftLeg.hip.rotation.set(0, 0, 0);

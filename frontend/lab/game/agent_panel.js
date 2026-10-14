@@ -169,6 +169,10 @@ export class AskOrbisAgentPanel {
 
     // Shortcut [/] to focus input
     window.addEventListener('keydown', (e) => {
+      const tag = e.target?.tagName?.toUpperCase();
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) {
+        return;
+      }
       if (e.key === '/' && document.activeElement !== input) {
         // Prevent typing '/' into input immediately
         e.preventDefault();

@@ -164,15 +164,15 @@ export function buildApparatus(rawApparatus, scene) {
     if (id === 'digital_balance' || type === 'balance' || type === 'digital_balance') {
       group = buildDigitalBalance(id);
       group.position.set(-4.5, 0.94, -4.2);
-      group.userData.stationPos = new THREE.Vector3(-4.85, 0, -3.75);
+      group.userData.stationPos = new THREE.Vector3(-4.5, 0, -2.85);
     } else if (id === 'dosing_cup' || type === 'cup' || type === 'container' || type === 'dosing_cup') {
       group = buildDosingCup(id);
       group.position.set(-3.6, 0.94, -4.0);
-      group.userData.stationPos = new THREE.Vector3(-3.8, 0, -3.5);
+      group.userData.stationPos = new THREE.Vector3(-3.6, 0, -2.85);
     } else if (id === 'water_jug' || type === 'source' || type === 'water_jug') {
       group = buildWaterJug(id);
       group.position.set(-5.3, 0.94, -4.3);
-      group.userData.stationPos = new THREE.Vector3(-4.5, 0, -3.75);
+      group.userData.stationPos = new THREE.Vector3(-5.0, 0, -2.85);
     } else if (id === 'patient_bed' || type === 'patient_station' || type === 'patient_bed') {
       group = buildPatientBed(id);
       group.position.set(4.5, 0, -3.8);
@@ -181,7 +181,7 @@ export function buildApparatus(rawApparatus, scene) {
       if (!lookup['tube_rack']) {
         const rack = buildTubeRack('tube_rack');
         rack.position.set(-3.0, 0.94, -4.3);
-        rack.userData.stationPos = new THREE.Vector3(-3.2, 0, -3.5);
+        rack.userData.stationPos = new THREE.Vector3(-3.0, 0, -2.85);
         rack.userData.targetId = 'tube_rack';
         rack.userData.title = 'Sample Tube Rack';
         rack.userData.interactive = true;
@@ -200,7 +200,7 @@ export function buildApparatus(rawApparatus, scene) {
     } else if (id === 'label_pen' || type === 'tool' || type === 'label_pen') {
       group = buildLabelPen(id);
       group.position.set(-4.0, 0.94, -3.7);
-      group.userData.stationPos = new THREE.Vector3(-4.0, 0, -3.2);
+      group.userData.stationPos = new THREE.Vector3(-4.0, 0, -2.85);
     } else if (id === 'assay_analyzer' || type === 'analyzer' || type === 'assay_analyzer') {
       group = buildAssayAnalyzer(id);
       group.position.set(-5.5, 0.94, -3.5);

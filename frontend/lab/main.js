@@ -66,6 +66,7 @@ async function initOrbisLab() {
   sceneManager.addUpdateCallback((dt) => {
     characterController.update(dt);
     effectManager.update(dt);
+    hud?.updateProximity(dt);
   });
 
   // State subscriptions for graphics quality & ward clock updates
@@ -673,15 +674,60 @@ function setupHUDControls() {
     };
   }
 
+  // First-Person Mode Button
+  const btnFirstPerson = document.getElementById('btn-toggle-first-person');
+  if (btnFirstPerson) {
+    btnFirstPerson.onclick = () => {
+      sceneManager.cameraRig?.toggleFirstPerson();
+    };
+  }
+
   // Quality Mode Button
   const btnQuality = document.getElementById('btn-toggle-quality');
   if (btnQuality) {
     btnQuality.onclick = () => {
       const newQ = sceneManager.toggleQuality();
+      try { localStorage.setItem('orbis_quality_tier', newQ); } catch (_) {}
       const labels = { low: '⚡ Quality: Low', medium: '✨ Quality: Med', high: '💎 Quality: High' };
       btnQuality.textContent = labels[newQ] || '⚙️ Quality';
       toast.showInfo(`Graphics Quality: ${newQ.toUpperCase()}`);
     };
+  }
+
+  // Quality Tier Initialization & 3s First-Load Benchmark
+  let savedTier = null;
+  try { savedTier = localStorage.getItem('orbis_quality_tier'); } catch (_) {}
+  if (savedTier && ['low', 'medium', 'high'].includes(savedTier)) {
+    sceneManager.setQuality(savedTier);
+    if (btnQuality) {
+      const labels = { low: '⚡ Quality: Low', medium: '✨ Quality: Med', high: '💎 Quality: High' };
+      btnQuality.textContent = labels[savedTier] || '⚙️ Quality';
+    }
+  } else {
+    // Run 3-second initial benchmark on first load
+    const benchmarkSamples = [];
+    const benchmarkStart = performance.now();
+    const benchmarkInterval = setInterval(() => {
+      const elapsed = performance.now() - benchmarkStart;
+      const curFps = state.stats?.fps || 60;
+      benchmarkSamples.push(curFps);
+      if (elapsed >= 3000) {
+        clearInterval(benchmarkInterval);
+        const avg = benchmarkSamples.reduce((a, b) => a + b, 0) / (benchmarkSamples.length || 1);
+        let selectedTier = 'medium';
+        if (avg >= 55) selectedTier = 'high';
+        else if (avg >= 38) selectedTier = 'medium';
+        else selectedTier = 'low';
+
+        try { localStorage.setItem('orbis_quality_tier', selectedTier); } catch (_) {}
+        sceneManager.setQuality(selectedTier);
+        if (btnQuality) {
+          const labels = { low: '⚡ Quality: Low', medium: '✨ Quality: Med', high: '💎 Quality: High' };
+          btnQuality.textContent = labels[selectedTier] || '⚙️ Quality';
+        }
+        toast.showInfo(`Graphics Benchmark: Selected ${selectedTier.toUpperCase()} quality (${Math.round(avg)} FPS avg).`, 3500);
+      }
+    }, 500);
   }
 
   // Director Mode Button

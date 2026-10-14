@@ -125,4 +125,55 @@ The 3D laboratory features a continuous third-person follow camera rig (`fronten
    - If the avatar's torso occludes the apparatus, avatar opacity automatically fades to 40% for the shot.
 
 6. **Acceptance Testing**:
-   - Run `window.__camTest()` in the browser or execute `python scripts/verify_camera_rig.py` to sample positions across multiple viewport resolutions (1920x1080, 1366x768, 390x844) and verify $\ge 98\%$ framing clearance with zero blocker penetrations.
+   - Run `window.__camTest()` in the browser or execute `python qa/run.py` to sample positions across multiple viewport resolutions and verify $\ge 98\%$ framing clearance with zero blocker penetrations.
+
+---
+
+## 🎮 Locomotion, Controls & Interaction System
+
+Simly Orbis features game-feel locomotion and interaction mechanics:
+
+1. **Free Locomotion (`CharacterController`)**:
+   - **WASD & Arrow Keys**: Character moves freely in world space relative to the current camera heading.
+   - **Shift to Sprint**: Accelerates character movement speed from 2.4 m/s (jog) to 4.0 m/s (sprint).
+   - **Touch Joystick**: Dedicated on-screen virtual joystick zone for touchscreens and mobile devices.
+   - **Click-to-Walk**: Pointer raycasting to the laboratory floor navigates the avatar to the clicked destination with a visual ripple splash.
+   - **Slide Collision**: Tests avatar collision radius (0.22m) against apparatus and bench blocker boxes (`min.y <= 0.95m`), sliding along the unblocked axis.
+   - **Rhythmic Footsteps**: Synthesized WebAudio footsteps dynamically timed to gait cadence (0.38s walking, 0.26s sprinting).
+   - **Action & Plan Lock**: While an action animation or Ask Orbis plan runs, player movement is locked and the Stop button remains active.
+
+2. **Game-Style Proximity & Radial Wheel**:
+   - **Proximity Prompt**: Approaching within 1.6m of an apparatus station triggers a floating HUD prompt: `[E] Use <Apparatus>`.
+   - **Radial Action Wheel**: Pressing `E` opens a circular radial action menu centered on screen with station-specific actions. Disabled actions are greyed out with the backend's validation reason displayed on hover.
+   - **Collapsible Bottom Dock**: The persistent action bar and quick buttons can be minimized/expanded via the toggle button in the bottom dock.
+
+3. **Views & Shortcuts**:
+   - **First-Person Hands View (`V`)**: Toggles an over-the-chest hands view displaying only the avatar's arms and held apparatus/props.
+   - **Controls Cheat-Sheet (`H`)**: Displays an on-screen keyboard shortcut modal detailing all navigation, camera, and interaction keys.
+   - **Director Mode (`Shift+D`)**: Autoplay presentation mode remapped to `Shift+D` to avoid conflicts with WASD movement. Key listeners ignore movement and shortcuts whenever focus is inside text inputs or modals.
+
+---
+
+## 💎 Graphics Quality Tiers & Benchmark
+
+Simly Orbis features three procedural graphics tiers optimized for budget laptop integrated GPUs:
+
+| Tier | FPS Target | Shadows | Outlines | Bloom | Description |
+|---|:---:|:---:|:---:|:---:|---|
+| **Low** | 60 FPS | Soft Blob Contact Shadows | Disabled | Off | Maximum performance for low-power devices and SwiftShader WebGL |
+| **Medium** | 45+ FPS | Dynamic Soft Shadow Maps (PCFSoft) | Inverted-Hull Toon Outlines | Off | Balanced visual fidelity with crisp stylized toon borders |
+| **High** | 45+ FPS | Dynamic Soft Shadow Maps (PCFSoft) | Inverted-Hull Toon Outlines | Procedural Bloom | Full post-processed glow on glass, indicators, and readouts |
+
+- **3-Second Initial Benchmark**: On first load, the client samples frame rates for 3 seconds and automatically selects the optimal tier ($\ge 55$ FPS selects High, $\ge 38$ FPS selects Medium, $< 38$ FPS selects Low).
+- **Persistence & Manual Override**: The chosen tier is persisted in `localStorage` (`orbis_quality_tier`) and can be manually toggled anytime via the HUD top bar button.
+
+---
+
+## 🧑‍🔬 Procedural Kerbal-Style Character Rig
+
+The avatar rig (`frontend/lab/character/avatar.js`) is constructed entirely procedurally without external 3D mesh assets:
+
+- **Stylized Toon Shading**: Custom `MeshToonMaterial` paired with a 3-tone gradient map (shadow, midtone, highlight) and inverted-hull back-face silhouette outlines.
+- **Expressive Facial Features**: Spherical eyes with pupil tracking directed toward the active camera or apparatus, articulated eyebrows, and 4 swappable mouth shapes (`neutral`, `smile`, `oh`, `flinch`).
+- **Articulated Hand Rigging**: Five-finger groups that curl inward around held object sockets when gripping apparatus (`setGrip(true)`).
+- **Physical Safety Accessories**: Transparent refractive polycarbonate safety goggles (Fresnel physical transmission), full-length lab coat shell, nitrile gloves (recolored dynamically on PPE change), and dark slate safety shoes with white rubber soles.

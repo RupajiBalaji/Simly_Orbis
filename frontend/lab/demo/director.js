@@ -14,7 +14,11 @@ export class DirectorRunner {
     this.banner = document.getElementById('director-banner');
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'd' || e.key === 'D') {
+      const tag = e.target?.tagName?.toUpperCase();
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) {
+        return;
+      }
+      if ((e.key === 'd' || e.key === 'D') && e.shiftKey) {
         this.toggleDirectorMode();
       }
     });

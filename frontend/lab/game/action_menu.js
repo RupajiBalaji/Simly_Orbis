@@ -211,6 +211,43 @@ export class ActionMenu {
     return map[stepId] || stepId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }
 
+  getActionsForStation(targetId) {
+    let allActions = state.availableActions || [];
+    const expAllowed = state.experiment?.allowed_actions;
+    if (expAllowed && Array.isArray(expAllowed)) {
+      allActions = allActions.filter((item) => expAllowed.includes(item.action));
+    }
+
+    const stationAffinities = {
+      burette: ['rinse_burette', 'fill_burette', 'titrate'],
+      conical_flask: ['pipette_analyte', 'add_indicator', 'titrate', 'swirl', 'record_endpoint'],
+      digital_balance: ['tare_balance', 'weigh'],
+      patient_bed: ['administer_oral', 'draw_blood'],
+      tube_rack: ['label', 'draw_blood', 'run_assay'],
+      assay_analyzer: ['run_assay'],
+      dosing_cup: ['dissolve', 'label'],
+      ward_clock: ['advance_time'],
+      ph_meter: ['read_ph_meter', 'record_endpoint'],
+      sink: ['wash_hands'],
+      chemical_waste_bin: ['dispose_waste'],
+      biohazard_bin: ['dispose_waste'],
+    };
+
+    const validAffinities = targetId && stationAffinities[targetId]
+      ? new Set(stationAffinities[targetId])
+      : null;
+
+    let matched = [];
+    if (validAffinities) {
+      matched = allActions.filter((a) => validAffinities.has(a.action));
+    }
+    if (matched.length === 0) {
+      matched = allActions.filter((a) => a.enabled).slice(0, 4);
+    }
+    matched.sort((a, b) => (b.enabled ? 1 : 0) - (a.enabled ? 1 : 0));
+    return matched;
+  }
+
   renderActions() {
     if (!this.groupsContainer && !this.container) return;
 

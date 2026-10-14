@@ -100,6 +100,8 @@ Analytical Reality Checks: 11 / 11 Passed [PASS]
 | **Synthesized WebAudio Engine** | Procedural WebAudio sound effects: balance tare beeps, pour bursts, error alarms, and success chimes. | [Audio Controls](docs/screenshots/proof_rc1_2_1_sound_controls.png) |
 | **Production Hardening** | In-game About modal, rate limiting, and server wake-up flow with health metadata. | [Hardening Proof](docs/screenshots/proof_rc1_3_hardening_about.png) |
 | **Port 10000 Deployment Run** | Verified deployment running smoothly on Render standard port 10000. | [Port 10000 Proof](docs/screenshots/proof_rc1_4_deploy_port10000.png) |
+| **Game-Feel Locomotion & Interaction** | WASD locomotion, Shift sprint (4.0 m/s), touch joystick, obstacle sliding, [E] proximity radial action wheel, and [V] first-person hands view. | [Controls Guide](docs/frontend_lab.md#locomotion-controls--interaction-system) |
+| **Graphics Quality Tiers & Benchmark** | Procedural Low (60 FPS blob shadows), Medium (45+ FPS soft shadows & toon outlines), High (bloom), with 3s auto-benchmark. | [Quality Tiers](docs/frontend_lab.md#graphics-quality-tiers--benchmark) |
 
 ---
 
