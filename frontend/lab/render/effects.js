@@ -273,13 +273,13 @@ export class EffectManager {
     if (len < 0.04) return;
 
     const mid = new THREE.Vector3().addVectors(s, e).multiplyScalar(0.5);
-    const geo = new THREE.CylinderGeometry(0.010, 0.015, len, 8);
+    const geo = new THREE.CylinderGeometry(0.009, 0.015, len, 12);
     const mat = new THREE.MeshStandardMaterial({
       color: colorHex,
       transparent: true,
-      opacity: 0.8,
-      roughness: 0.1,
-      metalness: 0.1,
+      opacity: 0.82,
+      roughness: 0.08,
+      metalness: 0.05,
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.copy(mid);
@@ -287,13 +287,75 @@ export class EffectManager {
     const up = new THREE.Vector3(0, 1, 0);
     const quat = new THREE.Quaternion().setFromUnitVectors(up, dir.clone().normalize());
     mesh.quaternion.copy(quat);
-
     this.scene.add(mesh);
+
+    // Expanding landing ripples where stream lands on surface
+    const rippleGeo = new THREE.RingGeometry(0.01, 0.028, 24);
+    const rippleMat = new THREE.MeshBasicMaterial({
+      color: colorHex,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const rippleMesh = new THREE.Mesh(rippleGeo, rippleMat);
+    rippleMesh.rotation.x = -Math.PI / 2;
+    rippleMesh.position.copy(e);
+    rippleMesh.position.y += 0.005;
+    this.scene.add(rippleMesh);
+
+    // Drip splash droplets bursting outward
+    this.createDripSplashes(e, durationMs, colorHex);
+
     this.activeEffects.push({
       mesh,
+      rippleMesh,
       startTime: performance.now(),
       durationMs,
       type: 'stream',
+    });
+  }
+
+  createDripSplashes(origin, durationMs = 1200, colorHex = 0x38bdf8) {
+    const count = 16;
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const velocities = [];
+
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = origin.x;
+      positions[i * 3 + 1] = origin.y + 0.01;
+      positions[i * 3 + 2] = origin.z;
+
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 0.35 + 0.15;
+      velocities.push(
+        new THREE.Vector3(
+          Math.cos(angle) * speed,
+          Math.random() * 0.45 + 0.25,
+          Math.sin(angle) * speed
+        )
+      );
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({
+      color: colorHex,
+      size: 0.026,
+      transparent: true,
+      opacity: 0.9,
+    });
+
+    const points = new THREE.Points(geo, mat);
+    this.scene.add(points);
+
+    this.activeEffects.push({
+      mesh: points,
+      velocities,
+      positions,
+      startTime: performance.now(),
+      durationMs,
+      type: 'physics',
     });
   }
 
@@ -520,11 +582,30 @@ export class EffectManager {
           fx.mesh.geometry.dispose();
           fx.mesh.material.dispose();
         }
+        if (fx.rippleMesh) {
+          this.scene.remove(fx.rippleMesh);
+          fx.rippleMesh.geometry.dispose();
+          fx.rippleMesh.material.dispose();
+        }
         if (fx.light) {
           this.scene.remove(fx.light);
         }
         this.activeEffects.splice(i, 1);
         continue;
+      }
+
+      // Stream ripple & pulse animation
+      if (fx.type === 'stream') {
+        const p = Math.min(1.0, elapsed / fx.durationMs);
+        if (fx.rippleMesh) {
+          const s = 1.0 + p * 3.5;
+          fx.rippleMesh.scale.set(s, s, 1.0);
+          fx.rippleMesh.material.opacity = Math.max(0, 0.85 * (1.0 - p));
+        }
+        if (fx.mesh) {
+          const pulse = 1.0 + Math.sin(p * 25.0) * 0.12;
+          fx.mesh.scale.set(pulse, 1.0, pulse);
+        }
       }
 
       // Physics motion

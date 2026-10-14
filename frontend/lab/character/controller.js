@@ -85,6 +85,7 @@ export class CharacterController {
       itemMesh.position.set(0, 0, 0);
       itemMesh.rotation.set(0, 0, 0);
       this.rig.heldItemSocket.add(itemMesh);
+      this.rig?.setGrip?.(true, false);
     }
     if (leftItemMesh && this.rig.leftHeldItemSocket) {
       this.leftHeldItem = leftItemMesh;
@@ -94,6 +95,7 @@ export class CharacterController {
       leftItemMesh.position.set(0, 0, 0);
       leftItemMesh.rotation.set(0, 0, 0);
       this.rig.leftHeldItemSocket.add(leftItemMesh);
+      this.rig?.setGrip?.(true, true);
     }
   }
 
@@ -105,10 +107,12 @@ export class CharacterController {
         parentContainer.add(this.heldItem);
       }
       this.heldItem = null;
+      this.rig?.setGrip?.(false, false);
     }
     if (this.leftHeldItem && this.rig.leftHeldItemSocket) {
       this.rig.leftHeldItemSocket.remove(this.leftHeldItem);
       this.leftHeldItem = null;
+      this.rig?.setGrip?.(false, true);
     }
   }
 

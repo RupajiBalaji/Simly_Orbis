@@ -118,7 +118,14 @@ export function buildLabRoom(scene) {
   createSafetyPoster(roomGroup, 7.85, 2.5, -2);
   createLabDoor(roomGroup, 7.85, 1.8, 3.5);
 
-  // 8. Optimized Laboratory Lighting (High performance & realistic PBR)
+  // 8. Lived-in Laboratory Features (Subway Tiles, Windows & Light Shafts, Reagent Shelves, Lockers, Fume Hood)
+  createWallTiles(roomGroup);
+  createWindowsWithLightShafts(roomGroup);
+  createReagentShelves(roomGroup);
+  createLockers(roomGroup);
+  createFumeHood(roomGroup);
+
+  // 9. Optimized Laboratory Lighting (High performance & realistic PBR)
   // Ambient & sky/floor diffuse fill via HemisphereLight (0 shadow passes, high efficiency)
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcfd8dc, 1.8);
   hemiLight.position.set(0, 6, 0);
@@ -144,6 +151,12 @@ export function buildLabRoom(scene) {
   centerPoint.position.set(0, 4.0, -2.0);
   roomGroup.add(centerPoint);
 
+  // Cozy warm accent point light over prep & weighing station
+  const warmAccentLight = new THREE.PointLight(0xfef08a, 10.0, 9, 2);
+  warmAccentLight.position.set(-4.5, 2.6, -3.8);
+  warmAccentLight.name = 'warm_accent_light';
+  roomGroup.add(warmAccentLight);
+
   // Emergency Alarm Beacon (Normally off; triggers pulsing on critical breaches)
   const alarmLight = new THREE.PointLight(0xef4444, 0, 18, 2);
   alarmLight.position.set(0, 4.5, -3.5);
@@ -153,6 +166,7 @@ export function buildLabRoom(scene) {
   // Save light references for runtime quality adjustments
   roomGroup.userData.dirLight = dirLight;
   roomGroup.userData.alarmLight = alarmLight;
+  roomGroup.userData.warmAccentLight = warmAccentLight;
 
   scene.add(roomGroup);
   return roomGroup;
@@ -494,4 +508,298 @@ function createLabDoor(parent, x, y, z) {
   door.add(handle);
 
   parent.add(door);
+}
+
+// ---------------------------------------------------------------------------
+// Lived-In Laboratory Architecture Fixtures
+// ---------------------------------------------------------------------------
+
+let _cachedTileTexture = null;
+function getOrCreateSubwayTileTexture() {
+  if (_cachedTileTexture) return _cachedTileTexture;
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 0, 256, 256);
+
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 3;
+  const tileW = 64;
+  const tileH = 32;
+
+  for (let y = 0; y <= 256; y += tileH) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(256, y);
+    ctx.stroke();
+
+    const row = Math.floor(y / tileH);
+    const offset = (row % 2) * (tileW / 2);
+    for (let x = offset; x <= 256 + tileW; x += tileW) {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y + tileH);
+      ctx.stroke();
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(8, 2.5);
+  _cachedTileTexture = tex;
+  return tex;
+}
+
+function createWallTiles(parent) {
+  const tileMat = new THREE.MeshStandardMaterial({
+    map: getOrCreateSubwayTileTexture(),
+    roughness: 0.3,
+    metalness: 0.05,
+  });
+
+  // Back wall wainscot (height 1.8m)
+  const backGeo = new THREE.PlaneGeometry(18, 1.8);
+  const backTiles = new THREE.Mesh(backGeo, tileMat);
+  backTiles.position.set(0, 0.9, -6.98);
+  backTiles.receiveShadow = true;
+  parent.add(backTiles);
+
+  // Left wall wainscot
+  const leftGeo = new THREE.PlaneGeometry(16, 1.8);
+  const leftTiles = new THREE.Mesh(leftGeo, tileMat);
+  leftTiles.position.set(-7.98, 0.9, 0);
+  leftTiles.rotation.y = Math.PI / 2;
+  leftTiles.receiveShadow = true;
+  parent.add(leftTiles);
+
+  // Right wall wainscot
+  const rightTiles = new THREE.Mesh(leftGeo, tileMat);
+  rightTiles.position.set(7.98, 0.9, 0);
+  rightTiles.rotation.y = -Math.PI / 2;
+  rightTiles.receiveShadow = true;
+  parent.add(rightTiles);
+
+  // Decorative top wainscot capping rail
+  const railMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.4 });
+  const railGeo = new THREE.BoxGeometry(18, 0.05, 0.06);
+  const backRail = new THREE.Mesh(railGeo, railMat);
+  backRail.position.set(0, 1.82, -6.96);
+  parent.add(backRail);
+}
+
+function createWindowsWithLightShafts(parent) {
+  const winGroup = new THREE.Group();
+  winGroup.position.set(-7.95, 3.2, 0);
+  winGroup.rotation.y = Math.PI / 2;
+
+  // Sky Backdrop outside window
+  const skyGeo = new THREE.PlaneGeometry(6.4, 2.8);
+  const skyMat = new THREE.MeshBasicMaterial({ color: 0x93c5fd });
+  const sky = new THREE.Mesh(skyGeo, skyMat);
+  sky.position.set(0, 0, -0.06);
+  winGroup.add(sky);
+
+  // Window Panes Frame (White powder-coated aluminum)
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+  const outerFrame = new THREE.Mesh(new THREE.BoxGeometry(6.2, 2.6, 0.08), frameMat);
+  winGroup.add(outerFrame);
+
+  // Glass panes
+  const glassMat = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.35,
+    roughness: 0.05,
+    transmission: 0.85,
+    ior: 1.5,
+  });
+  const glass = new THREE.Mesh(new THREE.PlaneGeometry(6.0, 2.4), glassMat);
+  glass.position.set(0, 0, 0.01);
+  winGroup.add(glass);
+
+  // Window mullions (muntin bars)
+  const mullionMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5 });
+  for (let x of [-2.0, 0, 2.0]) {
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.4, 0.09), mullionMat);
+    bar.position.set(x, 0, 0.02);
+    winGroup.add(bar);
+  }
+  const hBar = new THREE.Mesh(new THREE.BoxGeometry(6.0, 0.06, 0.09), mullionMat);
+  hBar.position.set(0, 0, 0.02);
+  winGroup.add(hBar);
+
+  // Volumetric Soft Light Shaft (Tapered polygon angling down towards center)
+  const beamGeo = new THREE.CylinderGeometry(1.6, 3.4, 5.5, 16, 1, true);
+  const beamMat = new THREE.MeshBasicMaterial({
+    color: 0xbae6fd,
+    transparent: true,
+    opacity: 0.12,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const lightShaft = new THREE.Mesh(beamGeo, beamMat);
+  lightShaft.rotation.x = Math.PI / 4.2;
+  lightShaft.rotation.z = -Math.PI / 6;
+  lightShaft.position.set(0, -1.8, 2.4);
+  winGroup.add(lightShaft);
+
+  parent.add(winGroup);
+}
+
+function createReagentShelves(parent) {
+  const shelfGroup = new THREE.Group();
+  shelfGroup.position.set(-2.2, 2.5, -6.92);
+
+  const bracketMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8, roughness: 0.3 });
+  const woodMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 });
+
+  // 2 Shelves
+  for (let y of [0, 0.55]) {
+    const shelf = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.035, 0.28), woodMat);
+    shelf.position.set(0, y, 0.14);
+    shelf.castShadow = true;
+    shelfGroup.add(shelf);
+
+    // Shelf brackets
+    for (let x of [-1.0, 0, 1.0]) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.18, 0.26), bracketMat);
+      b.position.set(x, y - 0.09, 0.13);
+      shelfGroup.add(b);
+    }
+  }
+
+  // Colorful labeled reagent bottles on shelves
+  const bottleColors = [0xd97706, 0x2563eb, 0x0d9488, 0x7c3aed, 0x059669, 0xd97706, 0x2563eb, 0x0284c7];
+  const labelMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+  let idx = 0;
+  for (let y of [0.02, 0.57]) {
+    for (let x = -0.95; x <= 0.95; x += 0.38) {
+      const col = bottleColors[idx % bottleColors.length];
+      idx++;
+      const botMat = new THREE.MeshStandardMaterial({
+        color: col,
+        roughness: 0.15,
+        transparent: true,
+        opacity: 0.85,
+      });
+
+      const bMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.16, 16), botMat);
+      bMesh.position.set(x, y + 0.08, 0.14);
+      bMesh.castShadow = true;
+      shelfGroup.add(bMesh);
+
+      // White paper label strip
+      const lbl = new THREE.Mesh(new THREE.CylinderGeometry(0.046, 0.046, 0.07, 16, 1, true), labelMat);
+      lbl.position.set(x, y + 0.08, 0.14);
+      shelfGroup.add(lbl);
+
+      // Black cap
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.035, 16), bracketMat);
+      cap.position.set(x, y + 0.17, 0.14);
+      shelfGroup.add(cap);
+    }
+  }
+
+  parent.add(shelfGroup);
+}
+
+function createLockers(parent) {
+  const lockersGroup = new THREE.Group();
+  lockersGroup.position.set(7.92, 1.25, -0.6);
+  lockersGroup.rotation.y = -Math.PI / 2;
+
+  const lockerMat = new THREE.MeshStandardMaterial({
+    color: 0x0f766e, // Stylized brand teal lockers
+    roughness: 0.45,
+    metalness: 0.3,
+  });
+  const handleMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.1 });
+  const ventMat = new THREE.MeshBasicMaterial({ color: 0x134e4a });
+
+  // 3 Lockers in a row
+  for (let i = -1; i <= 1; i++) {
+    const x = i * 0.48;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.46, 2.1, 0.52), lockerMat);
+    body.position.set(x, 0, 0.26);
+    body.castShadow = true;
+    lockersGroup.add(body);
+
+    // Handle
+    const h = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.12, 0.03), handleMat);
+    h.position.set(x + 0.16, 0.05, 0.54);
+    lockersGroup.add(h);
+
+    // Ventilation louvers / slits
+    for (let v = 0; v < 3; v++) {
+      const vent = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.015, 0.005), ventMat);
+      vent.position.set(x, 0.85 - v * 0.035, 0.525);
+      lockersGroup.add(vent);
+    }
+  }
+
+  parent.add(lockersGroup);
+}
+
+function createFumeHood(parent) {
+  const hoodGroup = new THREE.Group();
+  hoodGroup.position.set(4.2, 0, -6.85);
+
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3, metalness: 0.2 });
+  const sashGlassMat = new THREE.MeshPhysicalMaterial({
+    color: 0x38bdf8,
+    transparent: true,
+    opacity: 0.35,
+    roughness: 0.05,
+    transmission: 0.85,
+    ior: 1.5,
+  });
+  const worktopMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.25 });
+  const ductMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.2 });
+
+  // Base cabinet (1.6m wide, 0.9m tall, 0.9m deep)
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.9, 0.85), bodyMat);
+  base.position.set(0, 0.45, 0.425);
+  base.castShadow = true;
+  hoodGroup.add(base);
+
+  // Black phenolic workbed inside
+  const bed = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.05, 0.8), worktopMat);
+  bed.position.set(0, 0.925, 0.425);
+  hoodGroup.add(bed);
+
+  // Upper hood canopy & side walls
+  const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.4, 0.85), bodyMat);
+  leftWall.position.set(-0.77, 1.65, 0.425);
+  hoodGroup.add(leftWall);
+
+  const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.06, 1.4, 0.85), bodyMat);
+  rightWall.position.set(0.77, 1.65, 0.425);
+  hoodGroup.add(rightWall);
+
+  const topCanopy = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 0.85), bodyMat);
+  topCanopy.position.set(0, 2.15, 0.425);
+  topCanopy.castShadow = true;
+  hoodGroup.add(topCanopy);
+
+  // Transparent Sliding Sash Glass
+  const sash = new THREE.Mesh(new THREE.PlaneGeometry(1.48, 0.75), sashGlassMat);
+  sash.position.set(0, 1.45, 0.84);
+  hoodGroup.add(sash);
+
+  // Interior overhead light (clean cool white glow)
+  const interiorLight = new THREE.PointLight(0xecfeff, 3.5, 3.5, 2);
+  interiorLight.position.set(0, 2.05, 0.45);
+  hoodGroup.add(interiorLight);
+
+  // Stainless exhaust ventilation duct extending through ceiling
+  const duct = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 2.6, 20), ductMat);
+  duct.position.set(0, 3.6, 0.425);
+  hoodGroup.add(duct);
+
+  parent.add(hoodGroup);
 }

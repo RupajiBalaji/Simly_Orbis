@@ -6,6 +6,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/OrbitControls.js';
+import { SimpleBloomPipeline } from 'three/addons/bloom.js';
 import { buildLabRoom } from './room.js';
 import { buildApparatus } from './apparatus.js';
 import { applyLiquidDirective } from '../render/liquid.js';
@@ -26,6 +27,8 @@ export class LabScene {
     this.apparatusContainer = null;
     this.trialHall = null;
     this.cameraRig = null;
+    this.bloomPipeline = null;
+    this.highTierFpsSamples = [];
 
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2(-999, -999);
@@ -184,29 +187,65 @@ export class LabScene {
 
   setQuality(mode, isAuto = false) {
     this.quality = mode;
+    const isLow = mode === 'low';
+    const isMed = mode === 'medium';
     const isHigh = mode === 'high';
 
-    const maxRatio = isHigh ? 1.5 : 1.0;
+    const maxRatio = isHigh ? 1.5 : (isMed ? 1.25 : 1.0);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxRatio));
-    this.renderer.shadowMap.enabled = isHigh;
-
-    if (this.roomGroup?.userData?.dirLight) {
-      this.roomGroup.userData.dirLight.castShadow = isHigh;
+    this.renderer.shadowMap.enabled = !isLow;
+    if (this.renderer.shadowMap.enabled) {
+      this.renderer.shadowMap.type = isHigh ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     }
 
+    if (this.roomGroup?.userData?.dirLight) {
+      this.roomGroup.userData.dirLight.castShadow = !isLow;
+    }
+
+    // Toggle bloom pipeline
+    if (isHigh) {
+      if (!this.bloomPipeline) {
+        this.bloomPipeline = new SimpleBloomPipeline(
+          this.renderer,
+          this.scene,
+          this.camera,
+          window.innerWidth,
+          window.innerHeight
+        );
+      }
+      this.bloomPipeline.enabled = true;
+    } else if (this.bloomPipeline) {
+      this.bloomPipeline.enabled = false;
+    }
+
+    // Toggle outlines and blob contact shadows across scene
     this.scene.traverse((obj) => {
+      if (obj.userData?.isOutline) {
+        obj.visible = !isLow;
+      }
+      if (obj.userData?.isBlobShadow) {
+        obj.visible = isLow;
+      }
+      if (obj.userData?.avatarRig?.setQualityFeatures) {
+        obj.userData.avatarRig.setQualityFeatures(mode);
+      }
       if (obj.isMesh && obj.material) {
         obj.material.needsUpdate = true;
       }
     });
 
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (this.bloomPipeline) {
+      this.bloomPipeline.setSize(window.innerWidth, window.innerHeight);
+    }
     state.notify('quality_changed', { quality: mode, isAuto });
   }
 
   toggleQuality() {
     this.autoQualityLocked = true; // Manual toggle locks automatic quality adjustment
-    this.setQuality(this.quality === 'high' ? 'low' : 'high', false);
+    const cycle = { low: 'medium', medium: 'high', high: 'low' };
+    const next = cycle[this.quality] || 'medium';
+    this.setQuality(next, false);
     return this.quality;
   }
 
@@ -659,8 +698,11 @@ export class LabScene {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    const maxRatio = this.quality === 'high' ? 1.5 : 1.0;
+    const maxRatio = this.quality === 'high' ? 1.5 : (this.quality === 'medium' ? 1.25 : 1.0);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxRatio));
+    if (this.bloomPipeline) {
+      this.bloomPipeline.setSize(window.innerWidth, window.innerHeight);
+    }
     if (this.cameraRig) {
       this.cameraRig.updateHUDFrustum();
     }
@@ -801,7 +843,11 @@ export class LabScene {
 
     // Render
     if (this.renderer && this.scene && this.camera) {
-      this.renderer.render(this.scene, this.camera);
+      if (this.quality === 'high' && this.bloomPipeline && this.bloomPipeline.enabled) {
+        this.bloomPipeline.render();
+      } else {
+        this.renderer.render(this.scene, this.camera);
+      }
 
       // Track draw calls immediately on render so it never reads 0
       const currentCalls = this.renderer.info.render.calls;
@@ -827,8 +873,22 @@ export class LabScene {
         const drawCalls = this.lastDrawCalls || currentCalls || 79;
         state.updateStats({ fps, drawCalls });
 
+        // High tier bloom guard: if FPS < 45 for 3 consecutive seconds, auto-disable bloom
+        if (this.quality === 'high' && this.bloomPipeline?.enabled) {
+          if (fps < 45) {
+            this.highTierFpsSamples.push(fps);
+            if (this.highTierFpsSamples.length >= 3) {
+              this.bloomPipeline.enabled = false;
+              console.warn('High quality bloom auto-disabled to maintain 45+ FPS target');
+              state.showToast?.('Bloom auto-disabled to protect framerate');
+            }
+          } else {
+            this.highTierFpsSamples = [];
+          }
+        }
+
         // Auto Quality: If average FPS < 25 over a 5s window, step down once to Low quality (never auto-step up)
-        if (!this.autoQualityLocked && !this.hasAutoDowngraded && this.quality === 'high') {
+        if (!this.autoQualityLocked && !this.hasAutoDowngraded && this.quality !== 'low') {
           this.fpsSamples.push(fps);
           if (this.fpsSamples.length > 5) {
             this.fpsSamples.shift();

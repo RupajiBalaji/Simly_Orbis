@@ -93,10 +93,11 @@ async function initOrbisLab() {
     } else if (event === 'quality_changed') {
       const btnQuality = document.getElementById('btn-toggle-quality');
       if (btnQuality) {
-        btnQuality.textContent = payload.quality === 'high' ? '⚙️ Quality: High' : '⚡ Quality: Low';
+        const labels = { low: '⚡ Quality: Low', medium: '✨ Quality: Med', high: '💎 Quality: High' };
+        btnQuality.textContent = labels[payload.quality] || '⚙️ Quality';
       }
       if (payload.isAuto) {
-        toast.showInfo('⚡ Auto Performance: Quality dropped to Low (shadows off, 1x resolution).', 3500);
+        toast.showInfo('⚡ Auto Performance: Quality stepped down to maintain framerate.', 3500);
       }
     }
   });
@@ -132,6 +133,7 @@ async function initOrbisLab() {
   window.agentPanel = agentPanel;
   window.sceneManager = sceneManager;
   window.characterController = characterController;
+  window.effectManager = effectManager;
   window.debugOverlay = debugOverlay;
   window.state = state;
   window.api = api;
@@ -676,7 +678,8 @@ function setupHUDControls() {
   if (btnQuality) {
     btnQuality.onclick = () => {
       const newQ = sceneManager.toggleQuality();
-      btnQuality.textContent = newQ === 'high' ? '⚙️ Quality: High' : '⚡ Quality: Low';
+      const labels = { low: '⚡ Quality: Low', medium: '✨ Quality: Med', high: '💎 Quality: High' };
+      btnQuality.textContent = labels[newQ] || '⚙️ Quality';
       toast.showInfo(`Graphics Quality: ${newQ.toUpperCase()}`);
     };
   }

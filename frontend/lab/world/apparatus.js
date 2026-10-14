@@ -8,14 +8,32 @@ import * as THREE from 'three';
 import { createVirtualTrialScreen } from './trial_hall.js';
 
 // Shared materials cache
-const glassMat = new THREE.MeshStandardMaterial({
+const glassMat = new THREE.MeshPhysicalMaterial({
   color: 0xffffff,
-  roughness: 0.1,
-  metalness: 0.1,
+  roughness: 0.05,
+  metalness: 0.05,
+  transmission: 0.88,
+  ior: 1.5,
+  thickness: 0.12,
+  specularIntensity: 1.0,
+  specularColor: 0xffffff,
   transparent: true,
-  opacity: 0.35,
+  opacity: 0.38,
   depthWrite: false,
 });
+
+export function addHeroOutline(mesh, color = 0x1e1b4b, scale = 1.03) {
+  if (!mesh || !mesh.geometry) return null;
+  const outlineMat = new THREE.MeshBasicMaterial({
+    color,
+    side: THREE.BackSide,
+  });
+  const outlineMesh = new THREE.Mesh(mesh.geometry, outlineMat);
+  outlineMesh.scale.set(scale, scale, scale);
+  outlineMesh.userData.isOutline = true;
+  mesh.add(outlineMesh);
+  return outlineMesh;
+}
 
 const plasticMat = new THREE.MeshStandardMaterial({
   color: 0x334155,
@@ -312,6 +330,7 @@ function buildDigitalBalance(id) {
   // Base
   const baseGeo = new THREE.BoxGeometry(0.5, 0.1, 0.6);
   const base = new THREE.Mesh(baseGeo, plasticMat);
+  addHeroOutline(base, 0x1e1b4b, 1.03);
   g.add(base);
 
   // Pan (Stainless Steel)
@@ -399,6 +418,7 @@ function buildDosingCup(id) {
   const cupGeo = new THREE.CylinderGeometry(0.1, 0.08, 0.16, 24, 1, true);
   const cup = new THREE.Mesh(cupGeo, glassMat);
   cup.position.y = 0.08;
+  addHeroOutline(cup, 0x1e1b4b, 1.035);
   g.add(cup);
 
   // Cup bottom
@@ -417,7 +437,16 @@ function buildDosingCup(id) {
   });
   const liq = new THREE.Mesh(liqGeo, liqMat);
   liq.position.y = 0.01;
+  liq.visible = false;
   g.add(liq);
+
+  // Surface Meniscus Ring
+  const meniscusGeo = new THREE.TorusGeometry(0.088, 0.004, 8, 24);
+  const meniscus = new THREE.Mesh(meniscusGeo, liqMat);
+  meniscus.rotation.x = Math.PI / 2;
+  meniscus.position.y = 0.02;
+  meniscus.visible = false;
+  g.add(meniscus);
 
   // Label text holder
   const lblGeo = new THREE.PlaneGeometry(0.12, 0.04);
@@ -427,6 +456,7 @@ function buildDosingCup(id) {
   g.add(lblMesh);
 
   g.userData.liquidMesh = liq;
+  g.userData.meniscusMesh = meniscus;
   g.userData.labelMesh = lblMesh;
   g.userData.maxVolume = 100;
   g.userData.fullHeight = 0.14;
@@ -879,6 +909,7 @@ function buildBurette(id) {
   const tubeGeo = new THREE.CylinderGeometry(0.020, 0.020, 0.58, 20, 1, true);
   const tube = new THREE.Mesh(tubeGeo, glassMat);
   tube.position.set(0.04, 0.52, 0);
+  addHeroOutline(tube, 0x1e1b4b, 1.04);
   g.add(tube);
 
   // Funnel Rim at Top Opening
@@ -942,11 +973,13 @@ function buildConicalFlask(id) {
   const coneGeo = new THREE.ConeGeometry(0.18, 0.26, 24, 1, true);
   const cone = new THREE.Mesh(coneGeo, glassMat);
   cone.position.y = 0.13;
+  addHeroOutline(cone, 0x1e1b4b, 1.035);
   g.add(cone);
 
   const neckGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.12, 24, 1, true);
   const neck = new THREE.Mesh(neckGeo, glassMat);
   neck.position.y = 0.32;
+  addHeroOutline(neck, 0x1e1b4b, 1.04);
   g.add(neck);
 
   // Base disc
@@ -968,7 +1001,16 @@ function buildConicalFlask(id) {
   liq.visible = false;
   g.add(liq);
 
+  // Surface Meniscus Ring
+  const meniscusGeo = new THREE.TorusGeometry(0.12, 0.005, 8, 24);
+  const meniscus = new THREE.Mesh(meniscusGeo, liqMat);
+  meniscus.rotation.x = Math.PI / 2;
+  meniscus.position.y = 0.02;
+  meniscus.visible = false;
+  g.add(meniscus);
+
   g.userData.liquidMesh = liq;
+  g.userData.meniscusMesh = meniscus;
   g.userData.maxVolume = 250.0;
   g.userData.fullHeight = 0.20;
   g.userData.isConicalFlask = true;

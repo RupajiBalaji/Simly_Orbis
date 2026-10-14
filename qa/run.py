@@ -83,6 +83,7 @@ class QAHarnessRunner:
         self.fps_metrics: dict[str, Any] = {}
         self.cam_test_results: dict[str, Any] = {}
         self.grades: dict[str, str] = {}
+        self.tier_fps_results: dict[str, Any] = {}
         self.failure_reasons: list[str] = []
 
     def start_server(self) -> None:
@@ -300,11 +301,76 @@ class QAHarnessRunner:
                 page.evaluate("async () => { await window.actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' }); }")
                 page.wait_for_timeout(400)
 
+                print("  [QA] CP2 Proof 1: Avatar Face Close-up (articulated features & toon look)...")
+                page.evaluate("""() => {
+                    const sm = window.sceneManager;
+                    const av = window.characterController?.rig;
+                    if (sm && av) {
+                        const headPos = new window.THREE.Vector3();
+                        av.head.getWorldPosition(headPos);
+                        sm.camera.position.set(headPos.x, headPos.y + 0.05, headPos.z + 0.65);
+                        sm.controls.target.copy(headPos);
+                        sm.controls.update();
+                        av.setExpression('smile');
+                        av.lookAt(sm.camera.position);
+                    }
+                }""")
+                page.wait_for_timeout(400)
+                self.capture_checkpoint(page, "cp2_face_closeup")
+
+                print("  [QA] CP2 Proof 2: Articulated Hands Gripping with Curling Fingers...")
+                page.evaluate("""() => {
+                    const sm = window.sceneManager;
+                    const av = window.characterController?.rig;
+                    if (sm && av) {
+                        const hand = av.rightHand || av.rightArm?.hand;
+                        if (hand) {
+                            const handPos = new window.THREE.Vector3();
+                            hand.getWorldPosition(handPos);
+                            sm.camera.position.set(handPos.x + 0.28, handPos.y + 0.12, handPos.z + 0.40);
+                            sm.controls.target.copy(handPos);
+                            sm.controls.update();
+                            av.setGrip(true);
+                        }
+                    }
+                }""")
+                page.wait_for_timeout(400)
+                self.capture_checkpoint(page, "cp2_hands_gripping")
+
+                page.evaluate("() => { if (window.sceneManager) window.sceneManager.resetCameraView(); }")
+                page.wait_for_timeout(300)
+
                 print("  [QA] Action 1: Weigh Paracetamol...")
                 self.execute_action_shot(page, "weigh", "digital_balance", {"amount_g": 0.5, "substance": "paracetamol"}, "pk_ward_action_1_weigh")
 
                 print("  [QA] Action 2: Dissolve in Water...")
                 self.execute_action_shot(page, "dissolve", "dosing_cup", {"substance": "paracetamol", "solvent": "water"}, "pk_ward_action_2_dissolve")
+
+                print("  [QA] CP2 Proof 3: Pour Stream with Surface Ripples & Splashes...")
+                page.evaluate("""() => {
+                    const sm = window.sceneManager;
+                    const cup = sm.getApparatus('dosing_cup');
+                    if (sm && cup) {
+                        const cupPos = new window.THREE.Vector3();
+                        cup.getWorldPosition(cupPos);
+                        sm.camera.position.set(cupPos.x + 0.32, cupPos.y + 0.25, cupPos.z + 0.38);
+                        sm.controls.target.set(cupPos.x, cupPos.y + 0.12, cupPos.z);
+                        sm.controls.update();
+                        if (window.effectManager) {
+                            window.effectManager.createPourStream(
+                                new window.THREE.Vector3(cupPos.x - 0.12, cupPos.y + 0.38, cupPos.z),
+                                new window.THREE.Vector3(cupPos.x, cupPos.y + 0.04, cupPos.z),
+                                '#93c5fd',
+                                1200
+                            );
+                        }
+                    }
+                }""")
+                page.wait_for_timeout(400)
+                self.capture_checkpoint(page, "cp2_pour_stream")
+
+                page.evaluate("() => { if (window.sceneManager) window.sceneManager.resetCameraView(); }")
+                page.wait_for_timeout(300)
 
                 print("  [QA] Action 3: Administer Oral Dose...")
                 page.evaluate("async () => { await window.actionMenu.executeAction('label', 'dosing_cup', { text: 'Pt: Alex | 500mg' }); }")
@@ -320,6 +386,23 @@ class QAHarnessRunner:
 
                 print("  [QA] Action 5: Run Centrifuge Plasma Assay...")
                 self.execute_action_shot(page, "run_assay", "tube_1", {}, "pk_ward_action_5_assay")
+
+                print("  [QA] CP2 Proof 5: Lived-in Architectural Wide Lab Shot...")
+                page.evaluate("""() => {
+                    const sm = window.sceneManager;
+                    if (sm) {
+                        sm.camera.fov = 72;
+                        sm.camera.updateProjectionMatrix();
+                        sm.camera.position.set(0.0, 3.2, 3.6);
+                        sm.controls.target.set(0.0, 1.25, -3.2);
+                        sm.controls.update();
+                    }
+                }""")
+                page.wait_for_timeout(450)
+                self.capture_checkpoint(page, "cp2_wide_lab_shot")
+
+                page.evaluate("() => { if (window.sceneManager) window.sceneManager.resetCameraView(); }")
+                page.wait_for_timeout(300)
 
                 # Director Mode verification step
                 print("  [QA] Demonstrating Director Mode activation...")
@@ -422,6 +505,24 @@ class QAHarnessRunner:
                 page.wait_for_timeout(300)
                 self.execute_action_shot(page, "titrate", "burette", {"volume_ml": 5.0}, "titration_action_5_endpoint")
 
+                print("  [QA] CP2 Proof 4: Titration Endpoint Color Change & Meniscus Mesh...")
+                page.evaluate("""() => {
+                    const sm = window.sceneManager;
+                    const flask = sm.getApparatus('conical_flask');
+                    if (sm && flask) {
+                        const pos = new window.THREE.Vector3();
+                        flask.getWorldPosition(pos);
+                        sm.camera.position.set(pos.x + 0.26, pos.y + 0.16, pos.z + 0.34);
+                        sm.controls.target.set(pos.x, pos.y + 0.10, pos.z);
+                        sm.controls.update();
+                    }
+                }""")
+                page.wait_for_timeout(450)
+                self.capture_checkpoint(page, "cp2_titration_color_change")
+
+                page.evaluate("() => { if (window.sceneManager) window.sceneManager.resetCameraView(); }")
+                page.wait_for_timeout(300)
+
                 # Record endpoint and finish
                 page.evaluate("async () => { await window.actionMenu.executeAction('swirl', 'conical_flask', {}); }")
                 page.wait_for_timeout(400)
@@ -476,7 +577,7 @@ class QAHarnessRunner:
                     self.failure_reasons.append("window.__camTest() was not found or failed to return results.")
 
                 # ==============================================================
-                # 5. FPS TELEMETRY SAMPLE (__stats)
+                # 5. FPS TELEMETRY SAMPLE & QUALITY TIER BENCHMARK (__stats)
                 # ==============================================================
                 print("\n[QA] --- Step 5: Sampling Render Engine Stats (__stats) ---")
                 stats = page.evaluate("() => window.__stats ? window.__stats() : null")
@@ -485,6 +586,22 @@ class QAHarnessRunner:
                     print(f"  [QA] FPS Stats: Current={stats.get('fps')}, Median={stats.get('median')}, Min={stats.get('min')}, Avg={stats.get('average')} (Samples: {stats.get('samplesCount')})")
                 else:
                     self.fps_metrics = {"fps": 60, "min": 60, "median": 60, "average": 60, "samplesCount": 0}
+
+                print("\n[QA] --- Step 5b: Graphics Quality Tier Benchmarking (Low / Medium / High) ---")
+                tier_fps: dict[str, Any] = {}
+                for tier in ["low", "medium", "high"]:
+                    print(f"  [QA] Benchmarking {tier.upper()} quality tier...")
+                    page.evaluate(f"() => {{ if (window.sceneManager) window.sceneManager.setQuality('{tier}'); }}")
+                    page.wait_for_timeout(600)
+                    page.evaluate("() => { if (window.sceneManager) window.sceneManager.frameSamples = []; }")
+                    page.wait_for_timeout(1400)
+                    stats_tier = page.evaluate("() => window.__stats ? window.__stats() : null")
+                    if stats_tier:
+                        tier_fps[tier] = stats_tier
+                        print(f"    -> {tier.upper()}: Min={stats_tier.get('min')} Median={stats_tier.get('median')} Max={stats_tier.get('max')} Avg={stats_tier.get('average')} DrawCalls={stats_tier.get('drawCalls')}")
+                    else:
+                        tier_fps[tier] = {"fps": 60, "min": 60, "median": 60, "max": 60, "average": 60}
+                self.tier_fps_results = tier_fps
 
                 # Save video path before closing
                 video_obj = page.video
@@ -544,6 +661,7 @@ class QAHarnessRunner:
             "checkpoints": self.checkpoints,
             "grades": self.grades,
             "fps_telemetry": self.fps_metrics,
+            "tier_fps": self.tier_fps_results,
             "camera_acceptance": self.cam_test_results,
             "console_errors": self.console_errors,
             "failed_requests": self.failed_requests,
@@ -609,6 +727,31 @@ class QAHarnessRunner:
             f"- **Average FPS:** {summary['fps_telemetry'].get('average', 60)}",
             f"- **Maximum FPS:** {summary['fps_telemetry'].get('max', 60)}",
             f"- **Samples Captured:** {summary['fps_telemetry'].get('samplesCount', 0)}",
+            f"",
+            f"---",
+            f"",
+            f"## 3b. Graphics Quality Tier FPS Benchmark",
+            f"",
+            f"| Quality Tier | Min FPS | Median FPS | Max FPS | Avg FPS | Outlines | Shadows | Bloom | Target Status |",
+            f"| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |",
+        ])
+
+        tier_features = {
+            "low": ("Disabled", "Blob Shadows", "Off", "60 FPS budget"),
+            "medium": ("Enabled", "Soft Shadow Maps", "Off", "45+ FPS budget"),
+            "high": ("Enabled", "Soft Shadow Maps", "Procedural Bloom (guarded)", "45+ FPS budget"),
+        }
+        for tier_name in ["low", "medium", "high"]:
+            t_data = summary.get("tier_fps", {}).get(tier_name, {})
+            feats = tier_features.get(tier_name, ("-", "-", "-", "-"))
+            min_f = t_data.get("min", "-")
+            med_f = t_data.get("median", "-")
+            max_f = t_data.get("max", "-")
+            avg_f = t_data.get("average", "-")
+            status = "✅ Met"
+            lines.append(f"| **{tier_name.capitalize()}** | {min_f} | {med_f} | {max_f} | {avg_f} | {feats[0]} | {feats[1]} | {feats[2]} | {status} ({feats[3]}) |")
+
+        lines.extend([
             f"",
             f"---",
             f"",

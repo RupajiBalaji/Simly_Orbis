@@ -70,4 +70,35 @@ export function applyLiquidDirective(apparatusGroup, directive) {
     liqMesh.material.opacity = 0.85;
     liqMesh.material.transparent = true;
   }
+
+  // Update Surface Meniscus Ring if present
+  const meniscus = apparatusGroup.userData.meniscusMesh;
+  if (meniscus) {
+    if (volume_ml <= 0 || volRatio <= 0.001) {
+      meniscus.visible = false;
+    } else {
+      meniscus.visible = true;
+      let topY = liqMesh.position.y;
+      if (apparatusGroup.userData.isConicalFlask) {
+        const h = Math.max(0.02, Math.min(0.20, volRatio * fullHeight));
+        topY = 0.004 + h;
+        // Dynamically match radius of conical flask at height h
+        const rAtTop = Math.max(0.038, 0.168 * (1.0 - h / 0.26));
+        meniscus.scale.set(rAtTop / 0.12, rAtTop / 0.12, 1.0);
+      } else {
+        const newHeight = Math.max(0.02, volRatio * fullHeight);
+        topY = 0.01 + newHeight;
+      }
+      meniscus.position.y = topY;
+      if (hex) {
+        try {
+          meniscus.material.color.set(hex);
+        } catch (_) {
+          meniscus.material.color.setStyle(hex);
+        }
+      }
+      meniscus.material.opacity = liqMesh.material.opacity;
+      meniscus.material.transparent = liqMesh.material.transparent;
+    }
+  }
 }
