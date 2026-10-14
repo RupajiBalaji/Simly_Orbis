@@ -109,20 +109,29 @@ def _check_r4_tare_first(session: LabSession, req: ActionRequest) -> bool:
 
 
 def _check_r5_label_samples(session: LabSession, req: ActionRequest) -> bool:
-    """R5 LABEL_SAMPLES: Drawing blood or assaying an unlabelled tube, or using an unlabelled dosing cup (major)."""
+    """R5 LABEL_SAMPLES: Drawing blood or assaying an unlabelled tube, or using an unlabelled/dose-pending dosing cup (major)."""
+    if req.action == ActionType.label:
+        text = str(req.params.get("text", "")).lower()
+        if "dose pending" in text or "pending" in text:
+            return True
+
     if req.action == ActionType.draw_blood:
         target = req.target or "tube_1"
         tube = session.apparatus_state.get(target, {})
-        return not tube.get("labeled", False)
+        return not tube.get("labeled", False) or "pending" in str(tube.get("label_text", "")).lower()
 
     if req.action == ActionType.run_assay:
         target = req.target or "tube_1"
         tube = session.apparatus_state.get(target, {})
-        return not tube.get("labeled", False)
+        return not tube.get("labeled", False) or "pending" in str(tube.get("label_text", "")).lower()
 
     if req.action == ActionType.administer_oral:
         cup = session.apparatus_state.get("dosing_cup", {})
-        return not cup.get("labeled", False)
+        if not cup.get("labeled", False):
+            return True
+        lbl = str(cup.get("label_text", "")).lower()
+        if "dose pending" in lbl or "pending" in lbl:
+            return True
 
     return False
 

@@ -259,13 +259,15 @@ def _parse_single_clause(
             substance = "caffeine"
 
         ctx["substance"] = substance
+        ctx["amount_g"] = amount_g
+        ctx["dose_mg"] = amount_g * 1000.0
         target = ctx.get("target") or "digital_balance"
         ctx["target"] = target
         return [
             AgentProposedStep(
                 action=ActionType.weigh,
                 target=target,
-                params={"amount_g": amount_g, "substance": substance},
+                params={"amount_g": amount_g, "substance": substance, "dose_mg": amount_g * 1000.0},
                 why=f"Accurately weigh {amount_g} g of {substance} on analytical balance.",
             )
         ], ctx
@@ -309,11 +311,41 @@ def _parse_single_clause(
             lbl_text = raw_text
         else:
             if exp_id == "pk_ward":
+                patient_name = session.apparatus_state.get("patient_bed", {}).get("patient", {}).get("name", "Alex")
                 if "tube" in target or "tube" in t:
-                    lbl_text = "Patient Alex - Venous Sample"
+                    lbl_text = f"Patient {patient_name} - Venous Sample"
                 else:
-                    sub = (ctx.get("substance") or "paracetamol").capitalize()
-                    lbl_text = f"{sub} 500mg - Patient Alex"
+                    substance = (
+                        ctx.get("substance")
+                        or session.apparatus_state.get("dosing_cup", {}).get("contents", {}).get("substance")
+                        or session.apparatus_state.get("patient_bed", {}).get("patient", {}).get("drug_id")
+                        or "paracetamol"
+                    )
+                    sub = substance.capitalize()
+
+                    # Find amount actually weighed or dissolved in real session state or current request context
+                    recorded_dose_mg: float | None = None
+                    if ctx.get("dose_mg") is not None and float(ctx["dose_mg"]) > 0:
+                        recorded_dose_mg = float(ctx["dose_mg"])
+                    elif ctx.get("amount_g") is not None and float(ctx["amount_g"]) > 0:
+                        recorded_dose_mg = float(ctx["amount_g"]) * 1000.0
+                    else:
+                        cup_contents = session.apparatus_state.get("dosing_cup", {}).get("contents", {})
+                        if cup_contents.get("dose_mg") is not None and float(cup_contents.get("dose_mg", 0)) > 0:
+                            recorded_dose_mg = float(cup_contents["dose_mg"])
+                        else:
+                            bal_reading = session.apparatus_state.get("digital_balance", {}).get("reading_g", 0.0)
+                            if bal_reading > 0:
+                                recorded_dose_mg = float(bal_reading) * 1000.0
+
+                    if recorded_dose_mg is not None and recorded_dose_mg > 0:
+                        if round(recorded_dose_mg, 1).is_integer():
+                            dose_str = f"{int(round(recorded_dose_mg))}mg"
+                        else:
+                            dose_str = f"{recorded_dose_mg:.1f}mg"
+                        lbl_text = f"{sub} {dose_str} - Patient {patient_name}"
+                    else:
+                        lbl_text = f"{sub} - dose pending"
             else:
                 lbl_text = "0.10M HCl Analyte - Sample A"
 

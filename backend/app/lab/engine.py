@@ -494,7 +494,12 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
 
     elif action == ActionType.weigh:
         bal = session.apparatus_state.setdefault("digital_balance", {})
-        dose_mg = float(params.get("dose_mg", 500.0))
+        if "dose_mg" in params:
+            dose_mg = float(params["dose_mg"])
+        elif "amount_g" in params:
+            dose_mg = float(params["amount_g"]) * 1000.0
+        else:
+            dose_mg = 500.0
         dose_g = dose_mg / 1000.0
         bal["reading_g"] = round(dose_g, 3)
 

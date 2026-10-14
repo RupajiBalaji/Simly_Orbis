@@ -516,7 +516,7 @@ async def test_agent_plan_fallback_indicator_names_alone(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_agent_plan_fallback_label_cup_standard_text(client: AsyncClient):
-    """Fallback parser uses existing standard label text (patient and medication) for 'label the cup'."""
+    """Fallback parser builds medication label from real session state (substance, amount, patient)."""
     create_res = await client.post("/api/lab/sessions", json={"experiment_id": "pk_ward", "nickname": "LabelCupTest"})
     session_id = create_res.json()["session_id"]
 
@@ -526,7 +526,7 @@ async def test_agent_plan_fallback_label_cup_standard_text(client: AsyncClient):
         provider_tag="Rule-based",
         fallback_reason="No AI key",
     ))):
-        # 1. "label the cup" should use standard text with medication and patient, NOT literal "the cup"
+        # 1. When no dose has been recorded yet, use "<substance> - dose pending" and dry run flags it
         res1 = await client.post(
             f"/api/lab/sessions/{session_id}/agent/plan",
             json={"text": "label the cup"},
@@ -537,21 +537,42 @@ async def test_agent_plan_fallback_label_cup_standard_text(client: AsyncClient):
         assert len(d1["steps"]) == 1
         assert d1["steps"][0]["action"] == "label"
         assert d1["steps"][0]["target"] == "dosing_cup"
-        label_text = d1["steps"][0]["params"]["text"]
-        assert label_text != "the cup"
-        assert "Paracetamol" in label_text or "paracetamol" in label_text.lower()
-        assert "Alex" in label_text
+        label_text1 = d1["steps"][0]["params"]["text"]
+        assert label_text1 == "Paracetamol - dose pending"
+        # Dry run must flag this pending dose with violation R5_LABEL_SAMPLES
+        vios1 = d1["steps"][0]["predicted_violations"]
+        assert any(v["rule_id"] == "R5_LABEL_SAMPLES" for v in vios1)
 
-        # 2. Sequential phrase: weigh 500mg paracetamol and then label the cup
+        # 2. Sequential phrase with 0.3 g: "weigh 0.3 g paracetamol and label the cup" -> 300mg
         res2 = await client.post(
             f"/api/lab/sessions/{session_id}/agent/plan",
-            json={"text": "weigh 500mg paracetamol and label the cup"},
+            json={"text": "weigh 0.3 g paracetamol and label the cup"},
         )
         assert res2.status_code == 200
         d2 = res2.json()
         assert d2["status"] == "success"
         assert len(d2["steps"]) == 2
+        assert d2["steps"][0]["action"] == "weigh"
+        assert d2["steps"][0]["params"]["amount_g"] == 0.3
         assert d2["steps"][1]["action"] == "label"
         assert d2["steps"][1]["target"] == "dosing_cup"
-        assert "Paracetamol" in d2["steps"][1]["params"]["text"]
-        assert "Alex" in d2["steps"][1]["params"]["text"]
+        label_text2 = d2["steps"][1]["params"]["text"]
+        assert label_text2 == "Paracetamol 300mg - Patient Alex"
+        assert "Alex" in label_text2
+
+        # 3. Sequential phrase with 1.0 g: "weigh 1.0 g paracetamol and label the cup" -> 1000mg
+        res3 = await client.post(
+            f"/api/lab/sessions/{session_id}/agent/plan",
+            json={"text": "weigh 1.0 g paracetamol and label the cup"},
+        )
+        assert res3.status_code == 200
+        d3 = res3.json()
+        assert d3["status"] == "success"
+        assert len(d3["steps"]) == 2
+        assert d3["steps"][0]["action"] == "weigh"
+        assert d3["steps"][0]["params"]["amount_g"] == 1.0
+        assert d3["steps"][1]["action"] == "label"
+        assert d3["steps"][1]["target"] == "dosing_cup"
+        label_text3 = d3["steps"][1]["params"]["text"]
+        assert label_text3 == "Paracetamol 1000mg - Patient Alex"
+        assert "Alex" in label_text3
