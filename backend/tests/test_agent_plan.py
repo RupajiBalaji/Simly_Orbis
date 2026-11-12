@@ -593,6 +593,15 @@ def _load_parser_corpus():
 _CORPUS = _load_parser_corpus()
 
 
+def _load_space_parser_corpus():
+    corpus_file = Path(__file__).parent / "data" / "ask_orbis_phrases_space.json"
+    with open(corpus_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+_SPACE_CORPUS = _load_space_parser_corpus()
+
+
 @pytest.mark.parametrize("item", _CORPUS, ids=[x["id"] for x in _CORPUS])
 def test_fallback_parser_corpus_phrases(item: dict[str, Any]):
     """Run deterministic fallback parser against the phrase corpus."""
@@ -611,4 +620,21 @@ def test_fallback_parser_corpus_phrases(item: dict[str, Any]):
             f"Phrase '{item['text']}' parsed as {actions}, expected {item['expected_actions']}. "
             f"Skipped clauses: {skipped}"
         )
+
+
+@pytest.mark.parametrize("item", _SPACE_CORPUS, ids=[f"space_{x['id']}" for x in _SPACE_CORPUS])
+def test_fallback_parser_space_corpus_phrases(item: dict[str, Any]):
+    """Run deterministic fallback parser against the space phrase corpus."""
+    from app.lab.agent import parse_request_rule_based
+    from app.lab.engine import create_session
+
+    session = create_session("launch_bench", "Astronaut")
+    steps, skipped = parse_request_rule_based(item["text"], session)
+    actions = [s.action.value for s in steps]
+
+    assert actions == item["expected_actions"], (
+        f"Space phrase '{item['text']}' parsed as {actions}, expected {item['expected_actions']}. "
+        f"Skipped clauses: {skipped}"
+    )
+
 

@@ -222,6 +222,18 @@ def _build_mentor_context(session: LabSession) -> tuple[str, str, str]:
             readouts.append(f"pH meter: {ph:.2f}")
         if vol is not None:
             readouts.append(f"Burette volume dispensed: {vol:.1f} mL")
+    elif session.experiment_id == "launch_bench":
+        preset = session.apparatus_state.get("preset_id", "Not selected")
+        payload = session.apparatus_state.get("payload_kg", 0.0)
+        twr = session.apparatus_state.get("twr", 0.0)
+        total_dv = session.apparatus_state.get("total_dv", 0.0)
+        ap = session.apparatus_state.get("apoapsis_km", 0.0)
+        pe = session.apparatus_state.get("periapsis_km", 0.0)
+        flight_status = session.apparatus_state.get("flight_status", "on_pad")
+        readouts.append(
+            f"Vehicle: {preset}, Payload: {payload:.0f} kg, Liftoff TWR: {twr:.2f}, "
+            f"Total Δv: {total_dv:.0f} m/s, Status: {flight_status}, Ap: {ap:.1f} km, Pe: {pe:.1f} km"
+        )
     readout_str = "; ".join(readouts) or "Normal baseline"
 
     context_text = f"""Experiment: {session.experiment_id}
@@ -303,6 +315,42 @@ def _generate_rule_based_mentor_message(
             return (
                 "Dr. Orbis: In clinical pharmacokinetics, therapeutic windows balance efficacy against "
                 f"toxicity. Currently at step '{step_title}': {step_hint}"
+            )
+        elif session.experiment_id == "launch_bench":
+            # Check launch readiness if student asks
+            if any(w in q_lower for w in ["can i launch", "ready to launch", "ready for launch", "should i launch", "can we launch"]):
+                from app.lab.rules import check_safety_rules
+                from app.models.lab import ActionRequest, ActionType
+                violations = check_safety_rules(
+                    session,
+                    ActionRequest(action=ActionType.launch, target="pad_39a", params={}),
+                )
+                if violations:
+                    reasons = "; ".join(v.explanation for v in violations)
+                    return f"Dr. Orbis: Launch hold! Range safety criteria not satisfied: {reasons} Complete those first."
+                return "Dr. Orbis: All preflight go/no-go checks are green! Flight computer and range safety are GO for launch."
+
+            if any(w in q_lower for w in ["delta v", "deltav", "tsiolkovsky", "dv", "specific impulse", "isp"]):
+                return (
+                    "Dr. Orbis: Tsiolkovsky rocket equation gives Δv = Isp · g0 · ln(m0 / mf). "
+                    "To reach Low Earth Orbit you need ~9,300 m/s (~7,800 m/s orbital velocity plus ~1,500 m/s gravity and drag losses). "
+                    f"Current step: {step_hint}"
+                )
+            if any(w in q_lower for w in ["twr", "thrust", "lift", "thrust-to-weight"]):
+                return (
+                    "Dr. Orbis: Liftoff Thrust-to-Weight Ratio (TWR) must exceed 1.15 to clear the pad against Earth gravity. "
+                    "If TWR < 1.0, your engines will ignite but the rocket cannot lift off! "
+                    f"Current step: {step_hint}"
+                )
+            if any(w in q_lower for w in ["hohmann", "transfer", "geo", "apogee", "periapsis"]):
+                return (
+                    "Dr. Orbis: A Hohmann transfer is the two-impulse elliptical maneuver between two circular orbits. "
+                    "Burn prograde at perigee to raise apogee to 35,786 km, then circularize at apogee. "
+                    f"Current step: {step_hint}"
+                )
+            return (
+                "Dr. Orbis: Orbital mechanics requires precise staging, TWR > 1.2 at liftoff, and sufficient Δv for insertion. "
+                f"Currently at step '{step_title}': {step_hint}"
             )
         else:
             if any(w in q_lower for w in ["ph", "titrat", "base", "acid", "color"]):
