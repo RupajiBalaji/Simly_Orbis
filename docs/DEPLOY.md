@@ -84,3 +84,23 @@ Render's free tier spins down web services after 15 minutes of inactivity:
 ### CORS Errors
 - **Symptom**: Browser console logs `CORS policy` blockage.
 - **Fix**: Update `ALLOWED_ORIGINS` in your environment settings with your specific domain or keep `*` for public access.
+
+---
+
+## 6. Live-Site & Deployment Smoke Checker
+
+Simly Orbis includes an automated production and local smoke test script in `scripts/smoke_live.py` that verifies `/api/ping` wake-up latency, `/api/health` configuration, static assets, and security headers using Python standard library only (`urllib`).
+
+### Run Against Production
+```bash
+python scripts/smoke_live.py --base-url https://simly-orbis.onrender.com
+```
+
+### Run Against Local Server
+```bash
+# Start local server
+python -m uvicorn app.main:app --port 8000 --host 127.0.0.1 --app-dir backend
+
+# Run smoke check (allow in-memory database mode for dev)
+python scripts/smoke_live.py --base-url http://127.0.0.1:8000 --allow-memory
+```
