@@ -1,0 +1,106 @@
+[
+  {
+    "id": "sounding_suborbital",
+    "name": "AeroSparrow Suborbital",
+    "description": "Single-stage solid/liquid suborbital sounding rocket for microgravity tests and atmospheric upper-boundary soundings.",
+    "payload_capacity_kg": 50.0,
+    "default_payload_kg": 25.0,
+    "stages": [
+      {
+        "stage_num": 1,
+        "name": "Booster Stage",
+        "dry_mass_kg": 400.0,
+        "propellant_capacity_kg": 1800.0,
+        "default_propellant_kg": 1600.0,
+        "thrust_sea_n": 55000.0,
+        "isp_sea_s": 245.0
+      }
+    ],
+    "provenance": {
+      "payload_capacity_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "default_payload_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_dry_mass_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_propellant_capacity_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_thrust_sea_n": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_isp_sea_s": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data"
+    }
+  },
+  {
+    "id": "orbis_1",
+    "name": "Orbis-1 Educational Launch Vehicle",
+    "description": "Standard two-stage medium orbital launch vehicle capable of inserting up to 1,200 kg into a 200 km Low Earth Orbit.",
+    "payload_capacity_kg": 1500.0,
+    "default_payload_kg": 800.0,
+    "stages": [
+      {
+        "stage_num": 1,
+        "name": "Booster Stage (Kerolox)",
+        "dry_mass_kg": 4200.0,
+        "propellant_capacity_kg": 52000.0,
+        "default_propellant_kg": 50000.0,
+        "thrust_sea_n": 950000.0,
+        "isp_sea_s": 288.0
+      },
+      {
+        "stage_num": 2,
+        "name": "Upper Stage (Hydrolox/Vac)",
+        "dry_mass_kg": 1100.0,
+        "propellant_capacity_kg": 9500.0,
+        "default_propellant_kg": 9000.0,
+        "thrust_sea_n": 120000.0,
+        "isp_sea_s": 365.0
+      }
+    ],
+    "provenance": {
+      "payload_capacity_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "default_payload_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_dry_mass_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_propellant_capacity_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_thrust_sea_n": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_isp_sea_s": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_2_dry_mass_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_2_propellant_capacity_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_2_thrust_sea_n": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_2_isp_sea_s": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data"
+    }
+  },
+  {
+    "id": "orbis_heavy",
+    "name": "Orbis Heavy Orbital Transporter",
+    "description": "High-capacity multi-stage launch vehicle with vacuum-optimized upper stage capable of GTO and GEO orbital transfers.",
+    "payload_capacity_kg": 6000.0,
+    "default_payload_kg": 2500.0,
+    "stages": [
+      {
+        "stage_num": 1,
+        "name": "Core Booster",
+        "dry_mass_kg": 16000.0,
+        "propellant_capacity_kg": 185000.0,
+        "default_propellant_kg": 180000.0,
+        "thrust_sea_n": 3200000.0,
+        "isp_sea_s": 295.0
+      },
+      {
+        "stage_num": 2,
+        "name": "High-Energy Transfer Stage",
+        "dry_mass_kg": 3800.0,
+        "propellant_capacity_kg": 34000.0,
+        "default_propellant_kg": 32000.0,
+        "thrust_sea_n": 440000.0,
+        "isp_sea_s": 420.0
+      }
+    ],
+    "provenance": {
+      "payload_capacity_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "default_payload_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_dry_mass_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_propellant_capacity_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_thrust_sea_n": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_1_isp_sea_s": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_2_dry_mass_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_2_propellant_capacity_kg": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_2_thrust_sea_n": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data",
+      "stage_2_isp_sea_s": "game-balanced, inspired by typical launch vehicle class, not a real vehicle's data"
+    }
+  }
+]
