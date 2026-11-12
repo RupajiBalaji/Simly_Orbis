@@ -37,6 +37,12 @@ import numpy as np
 from PIL import Image
 from playwright.sync_api import ConsoleMessage, Error, Page, Response, sync_playwright
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from scripts.check_proof_unique import check_proof_directory
+
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
 
@@ -904,6 +910,32 @@ class QAHarnessRunner:
             f"- Checkpoint PNGs: {len(summary['checkpoints'])} images",
             f"- JSON Summary: `report.json`",
         ])
+
+        # Section 6: Proof Uniqueness Verification
+        try:
+            p_passed, p_md_table, p_msgs = check_proof_directory(self.out_dir)
+            lines.extend([
+                f"",
+                f"---",
+                f"",
+                f"## 6. Proof Uniqueness Verification",
+                f"",
+                p_md_table,
+            ])
+            if not p_passed:
+                summary["passed"] = False
+                for m in p_msgs:
+                    if "FAILED:" in m:
+                        summary["failure_reasons"].append(f"Proof Uniqueness: {m}")
+        except Exception as e:
+            lines.extend([
+                f"",
+                f"---",
+                f"",
+                f"## 6. Proof Uniqueness Verification",
+                f"",
+                f"Proof uniqueness check failed with error: {e}",
+            ])
 
         if summary["failure_reasons"]:
             lines.extend([
