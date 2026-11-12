@@ -107,6 +107,32 @@ export class ReportScreen {
           : ''
       }
 
+      ${
+        reportData.space_result
+          ? `
+        <div style="background:rgba(124,58,237,0.08); border:1px solid rgba(124,58,237,0.3); border-radius:8px; padding:12px 16px; margin-bottom:20px;">
+          <h4 style="font-size:0.85rem; color:#a78bfa; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+            <span>🚀 Orbital Flight Mission Debrief</span>
+          </h4>
+          <p style="font-size:0.88rem; color:#f8fafc; margin-bottom:6px;">
+            <strong>Mission Outcome:</strong> <span style="color:#38bdf8; font-weight:700;">${(reportData.space_result.outcome || '').toUpperCase()}</span> | 
+            Vehicle: <strong>${reportData.space_result.rocket_name || 'Launch Vehicle'}</strong>
+          </p>
+          <div style="display:flex; gap:16px; font-size:0.8rem; font-family:var(--font-mono); color:#94a3b8; flex-wrap:wrap;">
+            <span>Apoapsis: <strong style="color:#10b981;">${(reportData.space_result.telemetry?.apoapsis_km || 0).toFixed(0)} km</strong></span>
+            <span>Periapsis: <strong style="color:#38bdf8;">${(reportData.space_result.telemetry?.periapsis_km || 0).toFixed(0)} km</strong></span>
+            <span>Speed: <strong style="color:#f59e0b;">${(reportData.space_result.telemetry?.velocity_kms || 0).toFixed(2)} km/s</strong></span>
+          </div>
+          ${
+            reportData.space_result.insight
+              ? `<div style="margin-top:8px; font-size:0.82rem; color:#cbd5e1; font-style:italic;">"${reportData.space_result.insight}"</div>`
+              : ''
+          }
+        </div>
+      `
+          : ''
+      }
+
       <!-- Verification & Mentorship Badges -->
       <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
         <div style="flex:1; min-width:200px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:10px 14px; font-size:0.85rem;">

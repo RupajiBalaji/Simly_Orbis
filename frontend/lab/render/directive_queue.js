@@ -282,6 +282,15 @@ export class DirectiveQueue {
         case 'highlight':
           applyHighlightDirective(apparatus);
           break;
+        case 'rocket':
+        case 'flame':
+        case 'orbit_path':
+        case 'stage_sep':
+        case 'failure':
+          if (this.sceneManager?.spaceScene) {
+            this.sceneManager.spaceScene.applyDirective(d);
+          }
+          break;
         default:
           console.log(`Unknown directive: ${d.type}`);
           break;

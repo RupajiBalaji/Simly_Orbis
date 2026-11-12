@@ -13,6 +13,7 @@ import { applyLiquidDirective } from '../render/liquid.js';
 import { applyReadoutDirective } from '../render/readouts.js';
 import { buildViewingGalleryAndCrowd } from './trial_hall.js';
 import { CameraRig, CameraMode } from './camera_rig.js';
+import { SpaceScene } from './space_scene.js';
 import { state } from '../state.js';
 
 export class LabScene {
@@ -23,6 +24,7 @@ export class LabScene {
     this.renderer = null;
     this.controls = null;
     this.roomGroup = null;
+    this.spaceScene = null;
     this.apparatusLookup = {};
     this.apparatusContainer = null;
     this.trialHall = null;
@@ -146,6 +148,13 @@ export class LabScene {
 
     // 5. Room geometry & permanent fixtures
     this.roomGroup = buildLabRoom(this.scene);
+
+    // 5b. Space Launch Bench 3D Scene
+    this.spaceScene = new SpaceScene(this.scene, this.camera, this.controls);
+    this.spaceScene.init();
+    this.addUpdateCallback((dt) => {
+      if (this.spaceScene?.active) this.spaceScene.update(dt);
+    });
 
     // 6. Continuous Follow Camera Rig
     this.cameraRig = new CameraRig(this);
@@ -374,31 +383,50 @@ export class LabScene {
     this.apparatusContainer = container;
     this.apparatusLookup = lookup;
 
-    if (experimentDef?.id === 'pk_ward') {
-      this.camera.fov = 82;
-      this.camera.updateProjectionMatrix();
-      // First view after Start frames the whole ward: avatar, balance, patient bed, trial screen, and reality check board
-      this.stationPresets.default = {
-        pos: new THREE.Vector3(0.0, 2.85, 1.90),
-        target: new THREE.Vector3(0.0, 1.25, -4.20),
-      };
-      this.cameraDefaultPos.copy(this.stationPresets.default.pos);
-      this.cameraTarget.copy(this.stationPresets.default.target);
-
-      this.trialHall = buildViewingGalleryAndCrowd(this.scene);
-      this.addUpdateCallback(() => {
-        if (this.trialHall) this.trialHall.update(performance.now());
-      });
-      state.emit('trial_hall_ready', this.trialHall);
-    } else {
+    if (experimentDef?.id === 'launch_bench') {
+      if (this.roomGroup) this.roomGroup.visible = false;
+      if (this.spaceScene) this.spaceScene.activate();
+      if (this.characterController?.rig?.root) {
+        this.characterController.rig.root.position.set(-3.5, 0.6, 5.0);
+      }
       this.camera.fov = 50;
       this.camera.updateProjectionMatrix();
       this.stationPresets.default = {
-        pos: new THREE.Vector3(0, 2.05, 1.55),
-        target: new THREE.Vector3(0, 1.15, -1.85),
+        pos: new THREE.Vector3(12.0, 7.5, 16.0),
+        target: new THREE.Vector3(0.0, 5.0, 0.0),
       };
       this.cameraDefaultPos.copy(this.stationPresets.default.pos);
       this.cameraTarget.copy(this.stationPresets.default.target);
+    } else {
+      if (this.spaceScene) this.spaceScene.deactivate();
+      if (this.roomGroup) this.roomGroup.visible = true;
+
+      if (experimentDef?.id === 'pk_ward') {
+        this.camera.fov = 82;
+        this.camera.updateProjectionMatrix();
+        // First view after Start frames the whole ward: avatar, balance, patient bed, trial screen, and reality check board
+        this.stationPresets.default = {
+          pos: new THREE.Vector3(0.0, 2.85, 1.90),
+          target: new THREE.Vector3(0.0, 1.25, -4.20),
+        };
+        this.cameraDefaultPos.copy(this.stationPresets.default.pos);
+        this.cameraTarget.copy(this.stationPresets.default.target);
+
+        this.trialHall = buildViewingGalleryAndCrowd(this.scene);
+        this.addUpdateCallback(() => {
+          if (this.trialHall) this.trialHall.update(performance.now());
+        });
+        state.emit('trial_hall_ready', this.trialHall);
+      } else {
+        this.camera.fov = 50;
+        this.camera.updateProjectionMatrix();
+        this.stationPresets.default = {
+          pos: new THREE.Vector3(0, 2.05, 1.55),
+          target: new THREE.Vector3(0, 1.15, -1.85),
+        };
+        this.cameraDefaultPos.copy(this.stationPresets.default.pos);
+        this.cameraTarget.copy(this.stationPresets.default.target);
+      }
     }
 
     this.syncApparatusState(experimentDef?.apparatus);
@@ -442,6 +470,9 @@ export class LabScene {
 
   getApparatus(targetId) {
     if (!targetId) return null;
+    if (this.spaceScene && this.spaceScene.lookup[targetId]) {
+      return this.spaceScene.lookup[targetId];
+    }
     return this.apparatusLookup[targetId] || null;
   }
 

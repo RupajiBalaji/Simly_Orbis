@@ -48,6 +48,37 @@ export class DirectorRunner {
       await this.runPKWardScript();
     } else if (expId === 'titration_bench') {
       await this.runTitrationScript();
+    } else if (expId === 'launch_bench') {
+      await this.runLaunchBenchScript();
+    }
+  }
+
+  async runLaunchBenchScript() {
+    const steps = [
+      { action: 'choose_rocket', target: 'orbis_1', params: {} },
+      { action: 'declare_payload', target: 'comm_sat_500kg', params: { payload_kg: 500.0 } },
+      { action: 'fuel_rocket', target: 'nominal_fuel', params: {} },
+      { action: 'run_checklist', target: 'flight_computer', params: {} },
+      { action: 'clear_range', target: 'range_control', params: {} },
+      { action: 'launch', target: 'pad_39a', params: { target_alt_km: 200.0 } },
+      { action: 'coast', target: 'parking_orbit', params: {} },
+      { action: 'burn_transfer', target: 'hohmann_geo', params: {} },
+      { action: 'circularize', target: 'circularize_geo', params: {} },
+      { action: 'debrief', target: 'tracking_station', params: {} },
+    ];
+
+    const stepDelay = this.stepDelay ?? (state.skipAnimation ? 350 : 1200);
+    for (const step of steps) {
+      if (!this.isRunning) break;
+      await this.actionMenu.executeAction(step.action, step.target, step.params);
+      await this.sleep(stepDelay);
+    }
+
+    if (this.isRunning) {
+      toast.showInfo('Director Mode: Submitting final space mission report...', 2000);
+      const res = await api.finishSession(state.session.session_id);
+      window.reportScreen.show(res);
+      this.toggleDirectorMode();
     }
   }
 
@@ -126,13 +157,16 @@ export class DirectorRunner {
   }
 
   async runMistakeDemo() {
-    toast.showInfo('Mistake Demo: Intentionally handling chemicals without goggles (violating Rule R1)...', 3500);
-
-    // Skip PPE and directly tare/weigh or pipette analyte
     const expId = state.session?.experiment_id;
-    if (expId === 'pk_ward') {
+    if (expId === 'launch_bench') {
+      toast.showInfo('Mistake Demo: Attempting launch without preflight checklist or range clearance (Rules S1 & S6)...', 3500);
+      await this.actionMenu.executeAction('choose_rocket', 'orbis_1', {});
+      await this.actionMenu.executeAction('launch', 'pad_39a', {});
+    } else if (expId === 'pk_ward') {
+      toast.showInfo('Mistake Demo: Intentionally handling chemicals without goggles (violating Rule R1)...', 3500);
       await this.actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
     } else {
+      toast.showInfo('Mistake Demo: Intentionally handling chemicals without goggles (violating Rule R1)...', 3500);
       await this.actionMenu.executeAction('pipette_analyte', 'conical_flask', { analyte: 'hcl', volume_ml: 25.0 });
     }
   }
