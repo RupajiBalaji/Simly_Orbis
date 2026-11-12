@@ -8,6 +8,15 @@ init_db() runs and app.db.database is populated before any test hits it.
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
+
+# Ensure repo root and backend directory are in sys.path when pytest is invoked bare from repo root
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+for p in (REPO_ROOT, BACKEND_DIR):
+    if str(p) not in sys.path:
+        sys.path.insert(0, str(p))
 
 # Force memory mode before any app module is imported.
 os.environ.setdefault("MONGODB_URI", "")
