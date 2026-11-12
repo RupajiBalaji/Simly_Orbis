@@ -73,10 +73,20 @@ class ValidationRunner:
                     "population_band_containment": {"min_fraction": 0.80, "percent_tolerance": 20.0, "reason": "5th-95th percentile coverage"},
                 },
             }
+        tolerances = {}
         if yaml is not None and self.tolerances_path.exists():
             with open(self.tolerances_path, "r", encoding="utf-8") as f:
-                return yaml.safe_load(f) or {}
-        return {}
+                tolerances = yaml.safe_load(f) or {}
+
+        # Merge space tolerances if space_tolerances.yaml exists
+        space_tol_path = self.tolerances_path.parent / "space_tolerances.yaml"
+        if yaml is not None and space_tol_path.exists():
+            with open(space_tol_path, "r", encoding="utf-8") as f:
+                space_tols = yaml.safe_load(f) or {}
+                if "quantities" in space_tols:
+                    tolerances.setdefault("quantities", {}).update(space_tols["quantities"])
+
+        return tolerances
 
     def _load_references(self) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
@@ -190,7 +200,8 @@ class ValidationRunner:
             "verified_results": verified_items,
             "unverified_results": unverified_items,
             "verification_results": [it for it in evaluated_items if it["id"].startswith("titr_")],
-            "validation_results": [it for it in evaluated_items if not it["id"].startswith("titr_")],
+            "space_results": [it for it in evaluated_items if it["id"].startswith("space_")],
+            "validation_results": [it for it in evaluated_items if not it["id"].startswith("titr_") and not it["id"].startswith("space_")],
             "sensitivity_analysis": sensitivity,
         }
 
@@ -303,6 +314,24 @@ class ValidationRunner:
         elif ref_id == "titr_phenolphthalein_pka_ref":
             # Phenolphthalein center transition pH
             return 9.30
+
+        # 4. Space Orbit references
+        elif ref_id.startswith("space_"):
+            from app.space.orbit import EARTH_MU, EARTH_RADIUS_M, circular_velocity, orbital_period, hohmann_transfer
+            if ref_id == "space_earth_mu":
+                return float(EARTH_MU)
+            elif ref_id == "space_leo_circ_vel_200km":
+                return float(circular_velocity(EARTH_RADIUS_M + 200000.0))
+            elif ref_id == "space_iss_period_400km":
+                return float(orbital_period(EARTH_RADIUS_M + 400000.0))
+            elif ref_id == "space_geo_radius":
+                t_sidereal = 86164.0905
+                r_geo = ((EARTH_MU * (t_sidereal / (2.0 * math.pi)) ** 2) ** (1.0 / 3.0))
+                return float(r_geo / 1000.0)
+            elif ref_id == "space_hohmann_leo_geo_dv":
+                r1 = EARTH_RADIUS_M + 200000.0
+                r2 = 42164000.0
+                return float(hohmann_transfer(r1, r2)["total_dv_ms"])
 
         return 0.0
 

@@ -252,7 +252,28 @@ def test_verified_by_format_guard():
                     f"Must be 'unverified' or match '^[^:]+:\\d{{4}}-\\d{{2}}-\\d{{2}}$'."
                 )
 
-    assert total_checked == 22, f"Expected 22 reference rows, found {total_checked}"
+    assert total_checked == 27, f"Expected 27 reference rows (22 baseline + 5 space), found {total_checked}"
+
+
+def test_space_tolerances_configuration_frozen():
+    """Fails if validation/space_tolerances.yaml changes.
+    Freezes tolerances for orbital mechanics checks.
+    """
+    import hashlib
+
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    tol_file = base_dir / "validation" / "space_tolerances.yaml"
+    assert tol_file.exists(), "validation/space_tolerances.yaml missing"
+
+    content = tol_file.read_bytes()
+    computed_sha256 = hashlib.sha256(content).hexdigest()
+
+    FROZEN_SPACE_TOLERANCES_SHA256 = "fc4ba76cb3ee9d65a48c602f3be2306ba8e24e78c448f30745c03335c8288de2"
+
+    assert computed_sha256 == FROZEN_SPACE_TOLERANCES_SHA256, (
+        f"validation/space_tolerances.yaml has been modified! Expected hash {FROZEN_SPACE_TOLERANCES_SHA256}, "
+        f"got {computed_sha256}."
+    )
 
 
 def test_tolerances_configuration_frozen():

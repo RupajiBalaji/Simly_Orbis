@@ -1,0 +1,27 @@
+# Tolerances for Simly Orbis Space Orbit Engine Validation
+# Declares per-quantity validation tolerances for orbital mechanics benchmarks.
+# All orbital mechanics checks are derived from exact two-body closed forms.
+
+min_verified_pass_rate: 0.85
+
+quantities:
+  standard_gravitational_parameter:
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    reason: "Standard geocentric gravitational parameter (WGS-84 / IERS standard constant)."
+  circular_velocity:
+    fold_tolerance: 1.02
+    percent_tolerance: 2.0
+    reason: "Vis-viva circular orbital speed v = sqrt(mu / r) within two-body analytical tolerance."
+  orbital_period:
+    fold_tolerance: 1.02
+    percent_tolerance: 2.0
+    reason: "Keplerian orbital period T = 2*pi*sqrt(a^3 / mu) within two-body analytical tolerance."
+  orbital_radius:
+    fold_tolerance: 1.02
+    percent_tolerance: 2.0
+    reason: "Semi-major axis calculation for target orbital period."
+  hohmann_delta_v:
+    fold_tolerance: 1.05
+    percent_tolerance: 5.0
+    reason: "Two-impulse coplanar Hohmann transfer velocity summation (Curtis Example 6.1)."
