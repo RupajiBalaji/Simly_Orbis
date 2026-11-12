@@ -40,6 +40,18 @@ class ActionType(str, Enum):
     wash_hands = "wash_hands"
     submit_report = "submit_report"
 
+    # Space actions (Launch & Orbit Bench)
+    choose_rocket = "choose_rocket"
+    fuel_rocket = "fuel_rocket"
+    declare_payload = "declare_payload"
+    run_checklist = "run_checklist"
+    clear_range = "clear_range"
+    launch = "launch"
+    coast = "coast"
+    burn_transfer = "burn_transfer"
+    circularize = "circularize"
+    debrief = "debrief"
+
 
 # ---------------------------------------------------------------------------
 # Visual Directives Contract (Rendered by 3D Client)
@@ -52,7 +64,10 @@ class VisualDirective(BaseModel):
     readouts, alarms, or labels.
     """
 
-    type: Literal["liquid", "effect", "readout", "vitals", "label", "highlight"]
+    type: Literal[
+        "liquid", "effect", "readout", "vitals", "label", "highlight",
+        "rocket", "flame", "orbit_path", "stage_sep", "failure"
+    ]
     target: str | None = None
     hex: str | None = None
     volume_ml: float | None = None
@@ -71,6 +86,13 @@ class VisualDirective(BaseModel):
     spo2: int | None = None
     status: str | None = None
     text: str | None = None
+
+    # Space-specific visual directive fields
+    rocket: dict[str, Any] | None = None
+    flame: dict[str, Any] | None = None
+    orbit_path: list[Any] | None = None
+    stage_sep: int | None = None
+    failure: str | None = None
 
 
 class CharacterAnimation(BaseModel):

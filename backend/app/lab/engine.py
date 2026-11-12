@@ -78,6 +78,117 @@ def get_available_actions(session: LabSession) -> list[AvailableAction]:
     is_active = session.status == "active"
     actions: list[AvailableAction] = []
 
+    if session.experiment_id == "launch_bench":
+        r_state = session.apparatus_state.get("rocket", {})
+        fc = session.apparatus_state.get("flight_computer", {})
+        rc = session.apparatus_state.get("range_control", {})
+        tracking = session.apparatus_state.get("tracking_station", {})
+        has_rocket = r_state.get("preset_id") is not None
+        flight_status = r_state.get("status", "prelaunch")
+
+        # 1. Choose Rocket
+        actions.append(AvailableAction(
+            action=ActionType.choose_rocket,
+            label="Select Launch Vehicle",
+            targets=["orbis_1", "orbis_heavy", "sounding_suborbital"],
+            enabled=is_active and flight_status == "prelaunch",
+            disabled_reason="Flight already underway." if flight_status != "prelaunch" else None,
+        ))
+
+        # 2. Declare Payload
+        actions.append(AvailableAction(
+            action=ActionType.declare_payload,
+            label="Declare Payload Mass",
+            targets=["comm_sat_500kg", "cubesat_50kg", "iss_cargo_800kg", "heavy_payload_1500kg"],
+            enabled=is_active and has_rocket and flight_status == "prelaunch",
+            disabled_reason="Select rocket before declaring payload." if not has_rocket else None,
+        ))
+
+        # 3. Fuel Rocket
+        actions.append(AvailableAction(
+            action=ActionType.fuel_rocket,
+            label="Load Propellant",
+            targets=["nominal_fuel", "max_capacity", "stage_1_only"],
+            enabled=is_active and has_rocket and flight_status == "prelaunch",
+            disabled_reason="Select rocket before fueling." if not has_rocket else None,
+        ))
+
+        # 4. Run Checklist
+        actions.append(AvailableAction(
+            action=ActionType.run_checklist,
+            label="Run Preflight Checklist",
+            targets=["flight_computer"],
+            enabled=is_active and has_rocket and flight_status == "prelaunch",
+            disabled_reason="Select rocket before running checklist." if not has_rocket else None,
+        ))
+
+        # 5. Clear Range
+        actions.append(AvailableAction(
+            action=ActionType.clear_range,
+            label="Clear Range Safety",
+            targets=["range_control"],
+            enabled=is_active and has_rocket and flight_status == "prelaunch",
+            disabled_reason="Select rocket before requesting range clearance." if not has_rocket else None,
+        ))
+
+        # 6. Launch
+        actions.append(AvailableAction(
+            action=ActionType.launch,
+            label="Launch & Orbital Ascent",
+            targets=["pad_39a", "orbit_200km"],
+            enabled=is_active and has_rocket and flight_status == "prelaunch",
+            disabled_reason="Rocket must be selected and positioned on pad." if not has_rocket else None,
+        ))
+
+        # 7. Coast
+        in_orbit_or_flight = flight_status in ("orbit_reached", "orbit_eccentric", "ascent", "in_orbit")
+        actions.append(AvailableAction(
+            action=ActionType.coast,
+            label="Orbital Coast",
+            targets=["parking_orbit", "transfer_apoapsis"],
+            enabled=is_active and in_orbit_or_flight,
+            disabled_reason="Vehicle must be in flight or orbit to coast." if not in_orbit_or_flight else None,
+        ))
+
+        # 8. Burn Transfer
+        can_transfer = flight_status in ("orbit_reached", "orbit_eccentric", "in_orbit", "coast")
+        actions.append(AvailableAction(
+            action=ActionType.burn_transfer,
+            label="Hohmann Transfer Burn",
+            targets=["hohmann_geo", "target_apogee"],
+            enabled=is_active and can_transfer,
+            disabled_reason="Vehicle must be in stable parking orbit to initiate transfer." if not can_transfer else None,
+        ))
+
+        # 9. Circularize
+        can_circ = flight_status in ("in_orbit", "coast", "transfer_complete")
+        actions.append(AvailableAction(
+            action=ActionType.circularize,
+            label="Circularize Orbit",
+            targets=["circularize_geo", "final_orbit"],
+            enabled=is_active and can_circ,
+            disabled_reason="Must execute transfer burn before circularization." if not can_circ else None,
+        ))
+
+        # 10. Debrief
+        can_debrief = flight_status in ("suborbital_fall", "orbit_reached", "orbit_eccentric", "transfer_complete", "transfer_failed", "no_liftoff")
+        actions.append(AvailableAction(
+            action=ActionType.debrief,
+            label="Flight Telemetry Debrief",
+            targets=["tracking_station"],
+            enabled=is_active and can_debrief,
+            disabled_reason="Complete flight maneuvers before debriefing." if not can_debrief else None,
+        ))
+
+        # 11. Submit Report
+        actions.append(AvailableAction(
+            action=ActionType.submit_report,
+            label="Submit Mission Report",
+            targets=["session_report"],
+            enabled=is_active,
+        ))
+        return actions
+
     # 1. Wear PPE
     ppe_missing = [p for p in ["goggles", "gloves", "coat"] if p not in session.ppe]
     actions.append(
@@ -810,6 +921,360 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
         if "submit_report" not in session.protocol_progress:
             session.protocol_progress.append("submit_report")
 
+    # Space actions (Launch & Orbit Bench)
+    elif action == ActionType.choose_rocket:
+        import copy
+        preset_id = target or params.get("preset_id", "orbis_1")
+        from app.space.orbit import get_preset_rockets
+        presets = get_preset_rockets()
+        matched = next((p for p in presets if p["id"] == preset_id), None)
+        if not matched:
+            matched = presets[1]  # default: orbis_1
+
+        stages_copy = copy.deepcopy(matched["stages"])
+        r_state = session.apparatus_state.setdefault("rocket", {})
+        r_state["preset_id"] = matched["id"]
+        r_state["name"] = matched["name"]
+        r_state["payload_capacity_kg"] = matched["payload_capacity_kg"]
+        r_state["default_payload_kg"] = matched["default_payload_kg"]
+        r_state["stages"] = stages_copy
+        r_state["current_stage"] = 1
+        r_state["status"] = "prelaunch"
+
+        if not r_state.get("payload_declared"):
+            r_state["payload_kg"] = matched["default_payload_kg"]
+            r_state["payload_declared"] = True
+
+        total_m = (r_state["payload_kg"] + sum(s["dry_mass_kg"] + s.get("default_propellant_kg", 0.0) for s in stages_copy)) / 1000.0
+        r_state["total_mass_t"] = round(total_m, 2)
+
+        msg = f"Selected {matched['name']}. Payload capacity: {matched['payload_capacity_kg']} kg."
+        anim = CharacterAnimation(name="read", target="launch_pad", duration_ms=1000)
+        stages_summary = [
+            {
+                "mass_t": round((s["dry_mass_kg"] + s.get("default_propellant_kg", 0.0)) / 1000.0, 2),
+                "fuel_pct": 100.0 if s.get("default_propellant_kg", 0) > 0 else 0.0,
+                "active": i == 0,
+            }
+            for i, s in enumerate(stages_copy)
+        ]
+        visuals.append(VisualDirective(
+            type="rocket",
+            target="launch_pad",
+            rocket={"preset_id": matched["id"], "stages": stages_summary, "total_mass_t": total_m},
+        ).model_dump())
+        visuals.append(VisualDirective(
+            type="readout",
+            target="flight_computer",
+            label="VEHICLE SELECT",
+            value=f"{matched['name']}",
+            unit="PAD 39A",
+        ).model_dump())
+        if "choose_rocket" not in session.protocol_progress:
+            session.protocol_progress.append("choose_rocket")
+
+    elif action == ActionType.declare_payload:
+        payload_id = target or params.get("payload_id")
+        inv = session.inventory.get(payload_id, {})
+        payload_mass = float(params.get("payload_kg", inv.get("mass_kg", 800.0)))
+
+        r_state = session.apparatus_state.setdefault("rocket", {})
+        r_state["payload_kg"] = payload_mass
+        r_state["payload_declared"] = True
+
+        msg = f"Mission payload declared: {payload_mass:.0f} kg."
+        anim = CharacterAnimation(name="read", target="flight_computer", duration_ms=1000)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="flight_computer",
+            label="PAYLOAD MASS",
+            value=f"{payload_mass:.0f}",
+            unit="kg",
+        ).model_dump())
+        if "declare_payload" not in session.protocol_progress:
+            session.protocol_progress.append("declare_payload")
+
+    elif action == ActionType.fuel_rocket:
+        r_state = session.apparatus_state.setdefault("rocket", {})
+        stages = r_state.get("stages", [])
+        fuel_mode = target or params.get("mode", "nominal_fuel")
+        for s in stages:
+            cap = s.get("propellant_capacity_kg", 50000.0)
+            if fuel_mode == "stage_1_only" and s.get("stage_num", 1) > 1:
+                s["propellant_kg"] = 0.0
+            elif fuel_mode == "max_capacity":
+                s["propellant_kg"] = cap
+            else:
+                s["propellant_kg"] = s.get("default_propellant_kg", cap * 0.95)
+
+        from app.space.orbit import rocket_liftoff_twr, rocket_total_delta_v
+        payload_kg = float(r_state.get("payload_kg", 800.0))
+        twr = rocket_liftoff_twr(stages, payload_kg)
+        total_dv = rocket_total_delta_v(stages, payload_kg)
+
+        r_state["fueled"] = True
+        r_state["liftoff_twr"] = round(twr, 3)
+        r_state["total_delta_v_ms"] = round(total_dv, 1)
+        total_mass = (payload_kg + sum(s["dry_mass_kg"] + s.get("propellant_kg", 0.0) for s in stages)) / 1000.0
+        r_state["total_mass_t"] = round(total_mass, 2)
+
+        msg = f"Propellant loaded. Liftoff TWR: {twr:.2f}, Total available Delta-V: {total_dv:.0f} m/s."
+        anim = CharacterAnimation(name="read", target="propellant_tanks", duration_ms=1500)
+        stages_summary = [
+            {
+                "mass_t": round((s["dry_mass_kg"] + s.get("propellant_kg", 0.0)) / 1000.0, 2),
+                "fuel_pct": round(100.0 * s.get("propellant_kg", 0.0) / max(1.0, s.get("propellant_capacity_kg", 1.0)), 1),
+                "active": i == 0,
+            }
+            for i, s in enumerate(stages)
+        ]
+        visuals.append(VisualDirective(
+            type="rocket",
+            target="launch_pad",
+            rocket={"preset_id": r_state.get("preset_id", "orbis_1"), "stages": stages_summary, "total_mass_t": total_mass},
+        ).model_dump())
+        visuals.append(VisualDirective(
+            type="readout",
+            target="flight_computer",
+            label="LIFTOFF TWR",
+            value=f"{twr:.2f}",
+            unit=f"(Δv: {total_dv:.0f} m/s)",
+        ).model_dump())
+        if "fuel_rocket" not in session.protocol_progress:
+            session.protocol_progress.append("fuel_rocket")
+
+    elif action == ActionType.run_checklist:
+        session.apparatus_state.setdefault("flight_computer", {})["checklist_complete"] = True
+        msg = "Preflight diagnostic checklist completed: Avionics, INS, PPU, Pyro, Cryo pressure all NOMINAL."
+        anim = CharacterAnimation(name="read", target="flight_computer", duration_ms=1200)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="flight_computer",
+            label="DIAGNOSTIC STATUS",
+            value="ALL SYSTEMS GO",
+            unit="READY",
+        ).model_dump())
+        if "run_checklist" not in session.protocol_progress:
+            session.protocol_progress.append("run_checklist")
+
+    elif action == ActionType.clear_range:
+        session.apparatus_state.setdefault("range_control", {})["cleared"] = True
+        msg = "Range safety cleared: Radar tracking lock acquired, corridor green, airspace clear."
+        anim = CharacterAnimation(name="read", target="range_control", duration_ms=1200)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="range_control",
+            label="RANGE SAFETY",
+            value="CLEARED FOR LAUNCH",
+            unit="EASTWARD 28.5°",
+        ).model_dump())
+        if "clear_range" not in session.protocol_progress:
+            session.protocol_progress.append("clear_range")
+
+    elif action == ActionType.launch:
+        from app.space.orbit import evaluate_mission, kepler_orbit_points
+        r_state = session.apparatus_state.setdefault("rocket", {})
+        stages = r_state.get("stages", [])
+        payload_kg = float(r_state.get("payload_kg", 800.0))
+        target_alt_km = float(params.get("target_alt_km", 200.0))
+        target_geo_km = float(params.get("target_geo_km", 35786.0))
+
+        res = evaluate_mission(
+            stages=stages,
+            payload_mass_kg=payload_kg,
+            target_altitude_m=target_alt_km * 1000.0,
+        )
+        outcome = res["outcome"]
+        achieved_orbit = res["achieved_orbit"]
+        budget = res
+        insight = res["insight"]
+
+        r_state["status"] = outcome
+        tracking = session.apparatus_state.setdefault("tracking_station", {})
+        tracking["outcome"] = outcome
+        tracking["telemetry"] = achieved_orbit
+        tracking["budget"] = budget
+        tracking["insight"] = insight
+
+        anim = CharacterAnimation(name="read", target="launch_pad", duration_ms=2500)
+
+        if outcome == "no_liftoff":
+            msg = "LAUNCH ABORT / FAILURE: Liftoff TWR <= 1.0! Engines ignited but rocket cannot lift off. Pad damage."
+            visuals.append(VisualDirective(
+                type="flame",
+                target="rocket_exhaust",
+                flame={"intensity": 0.5, "exhaust_color_hex": "#ff3300"},
+            ).model_dump())
+            visuals.append(VisualDirective(
+                type="failure",
+                target="launch_pad",
+                failure="no_liftoff",
+            ).model_dump())
+            visuals.append(VisualDirective(
+                type="effect",
+                target="launch_pad",
+                name="smoke",
+                duration_ms=4000,
+            ).model_dump())
+        elif outcome == "suborbital_fall":
+            v_kms = achieved_orbit.get("velocity_kms", 4.2)
+            ap_km = achieved_orbit.get("apoapsis_km", 140.0)
+            msg = f"SUBORBITAL TRAJECTORY: Stage burnout at {v_kms:.2f} km/s. Apogee {ap_km:.1f} km. Vehicle re-enters ocean downrange."
+            visuals.append(VisualDirective(
+                type="flame",
+                target="rocket_exhaust",
+                flame={"intensity": 1.0, "exhaust_color_hex": "#ff6600"},
+            ).model_dump())
+            visuals.append(VisualDirective(
+                type="failure",
+                target="rocket",
+                failure="suborbital_fall",
+            ).model_dump())
+            visuals.append(VisualDirective(
+                type="effect",
+                target="launch_pad",
+                name="camera_shake",
+                duration_ms=2000,
+            ).model_dump())
+        else:
+            ap_km = achieved_orbit.get("apoapsis_km", target_alt_km)
+            pe_km = achieved_orbit.get("periapsis_km", target_alt_km)
+            v_kms = achieved_orbit.get("velocity_kms", 7.78)
+            msg = f"ORBITAL INSERTION CONFIRMED: Orbit reached! Apogee {ap_km:.1f} km, Perigee {pe_km:.1f} km, Speed {v_kms:.2f} km/s."
+
+            pts = kepler_orbit_points(pe_km, ap_km, n_points=64)
+            visuals.append(VisualDirective(
+                type="flame",
+                target="rocket_exhaust",
+                flame={"intensity": 1.0, "exhaust_color_hex": "#ff9900"},
+            ).model_dump())
+            visuals.append(VisualDirective(
+                type="stage_sep",
+                target="rocket",
+                stage_sep=1,
+            ).model_dump())
+            visuals.append(VisualDirective(
+                type="orbit_path",
+                target="earth_orbit",
+                orbit_path=pts,
+            ).model_dump())
+            visuals.append(VisualDirective(
+                type="readout",
+                target="tracking_station",
+                label="ACHIEVED ORBIT",
+                value=f"{pe_km:.0f} x {ap_km:.0f} km",
+                unit=f"({v_kms:.2f} km/s)",
+            ).model_dump())
+
+        if "launch" not in session.protocol_progress:
+            session.protocol_progress.append("launch")
+
+    elif action == ActionType.coast:
+        session.clock_h += 0.75
+        r_state = session.apparatus_state.setdefault("rocket", {})
+        tracking = session.apparatus_state.setdefault("tracking_station", {})
+        telem = tracking.get("telemetry", {})
+        ap_km = telem.get("apoapsis_km", 200.0)
+        msg = f"Coasting along Keplerian trajectory toward apogee ({ap_km:.1f} km). True anomaly advanced."
+        anim = CharacterAnimation(name="read", target="tracking_station", duration_ms=1000)
+        visuals.append(VisualDirective(
+            type="flame",
+            target="rocket_exhaust",
+            flame={"intensity": 0.0, "exhaust_color_hex": "#000000"},
+        ).model_dump())
+        visuals.append(VisualDirective(
+            type="readout",
+            target="tracking_station",
+            label="FLIGHT MODE",
+            value="INERTIAL COAST",
+            unit=f"APOAPSIS {ap_km:.0f} km",
+        ).model_dump())
+        if "coast" not in session.protocol_progress:
+            session.protocol_progress.append("coast")
+
+    elif action == ActionType.burn_transfer:
+        from app.space.orbit import kepler_orbit_points
+        r_state = session.apparatus_state.setdefault("rocket", {})
+        tracking = session.apparatus_state.setdefault("tracking_station", {})
+        telem = tracking.get("telemetry", {})
+        pe_km = telem.get("periapsis_km", 200.0)
+        target_geo = 35786.0
+        telem["apoapsis_km"] = target_geo
+        r_state["status"] = "in_orbit"
+
+        pts = kepler_orbit_points(pe_km, target_geo, n_points=64)
+        msg = f"Hohmann transfer burn completed: Apogee raised to {target_geo:.0f} km (Geostationary transfer orbit)."
+        anim = CharacterAnimation(name="read", target="flight_computer", duration_ms=1800)
+        visuals.append(VisualDirective(
+            type="flame",
+            target="rocket_exhaust",
+            flame={"intensity": 0.85, "exhaust_color_hex": "#00d4ff"},
+        ).model_dump())
+        visuals.append(VisualDirective(
+            type="orbit_path",
+            target="earth_orbit",
+            orbit_path=pts,
+        ).model_dump())
+        visuals.append(VisualDirective(
+            type="readout",
+            target="tracking_station",
+            label="TRANSFER ORBIT",
+            value=f"{pe_km:.0f} x {target_geo:.0f} km",
+            unit="GTO",
+        ).model_dump())
+        if "burn_transfer" not in session.protocol_progress:
+            session.protocol_progress.append("burn_transfer")
+
+    elif action == ActionType.circularize:
+        from app.space.orbit import circular_orbit_speed, kepler_orbit_points
+        tracking = session.apparatus_state.setdefault("tracking_station", {})
+        telem = tracking.get("telemetry", {})
+        target_alt = telem.get("apoapsis_km", 35786.0)
+        telem["periapsis_km"] = target_alt
+        telem["apoapsis_km"] = target_alt
+        v_circ = circular_orbit_speed(target_alt)
+        telem["velocity_kms"] = round(v_circ / 1000.0, 3)
+        tracking["outcome"] = "transfer_complete"
+        session.apparatus_state.setdefault("rocket", {})["status"] = "transfer_complete"
+
+        pts = kepler_orbit_points(target_alt, target_alt, n_points=64)
+        msg = f"Circularization burn complete: Achieved circular orbit at {target_alt:.0f} km ({v_circ / 1000.0:.2f} km/s)."
+        anim = CharacterAnimation(name="read", target="flight_computer", duration_ms=1800)
+        visuals.append(VisualDirective(
+            type="flame",
+            target="rocket_exhaust",
+            flame={"intensity": 0.85, "exhaust_color_hex": "#00d4ff"},
+        ).model_dump())
+        visuals.append(VisualDirective(
+            type="orbit_path",
+            target="earth_orbit",
+            orbit_path=pts,
+        ).model_dump())
+        visuals.append(VisualDirective(
+            type="readout",
+            target="tracking_station",
+            label="CIRCULAR ORBIT",
+            value=f"{target_alt:.0f} km",
+            unit=f"{v_circ / 1000.0:.2f} km/s",
+        ).model_dump())
+        if "circularize" not in session.protocol_progress:
+            session.protocol_progress.append("circularize")
+
+    elif action == ActionType.debrief:
+        tracking = session.apparatus_state.setdefault("tracking_station", {})
+        tracking["debriefed"] = True
+        msg = "Mission telemetry debrief complete: Fuel mass margins, orbital elements, and Keplerian conservation verified."
+        anim = CharacterAnimation(name="read", target="tracking_station", duration_ms=1500)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="tracking_station",
+            label="DEBRIEF STATUS",
+            value="VERIFIED",
+            unit="TELEMETRY REVIEWED",
+        ).model_dump())
+        if "debrief" not in session.protocol_progress:
+            session.protocol_progress.append("debrief")
+
     # Fallback / Pour general
     elif action == ActionType.pour:
         src = params.get("source", "water_jug")
@@ -871,6 +1336,37 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
         else:
             session.score_parts["accuracy"] = 10 if flask.get("titrant_added_ml", 0.0) > 0 else 0
 
+    elif session.experiment_id == "launch_bench":
+        # 1. Accuracy (30 max)
+        tracking = session.apparatus_state.get("tracking_station", {})
+        outcome = tracking.get("outcome")
+        acc_score = 0
+        if outcome in ("orbit_reached", "transfer_complete"):
+            acc_score = 30
+        elif outcome == "orbit_eccentric":
+            acc_score = 22
+        elif outcome == "transfer_failed":
+            acc_score = 18
+        elif outcome == "suborbital_fall":
+            acc_score = 10
+        else:
+            acc_score = 0
+        session.score_parts["accuracy"] = min(30, acc_score)
+
+        # 2. Technique (20 max)
+        t_score = 0
+        r_state = session.apparatus_state.get("rocket", {})
+        fc = session.apparatus_state.get("flight_computer", {})
+        rc = session.apparatus_state.get("range_control", {})
+        if r_state.get("payload_declared"):
+            t_score += 7
+        twr = r_state.get("liftoff_twr")
+        if twr is not None and twr >= 1.2:
+            t_score += 7
+        if fc.get("checklist_complete") and rc.get("cleared"):
+            t_score += 6
+        session.score_parts["technique"] = min(20, t_score)
+
     # Append consequence visual directives for safety violations
     for v in violations:
         if v.rule_id in ("R1", "R2"):
@@ -884,6 +1380,13 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
             visuals.append(VisualDirective(type="effect", target=target or "dosing_cup", name="runaway_reaction", duration_ms=3000).model_dump())
         elif v.rule_id in ("R9", "R10"):
             visuals.append(VisualDirective(type="effect", target=target or "chemical_waste_bin", name="foam_eruption", duration_ms=3500).model_dump())
+        elif v.rule_id == "S3_TWR_LIFTOFF":
+            visuals.append(VisualDirective(type="effect", target="launch_pad", name="smoke", duration_ms=4000).model_dump())
+            visuals.append(VisualDirective(type="failure", target="launch_pad", failure="no_liftoff").model_dump())
+        elif v.rule_id == "S5_STAGING_ORDER":
+            visuals.append(VisualDirective(type="failure", target="rocket", failure="staging_failure").model_dump())
+        elif v.rule_id == "S6_RANGE_SAFETY":
+            visuals.append(VisualDirective(type="effect", target="range_control", name="alarm_flash", duration_ms=3000).model_dump())
         if v.severity == "critical":
             visuals.append(VisualDirective(type="effect", target="camera", name="camera_shake", duration_ms=300).model_dump())
             visuals.append(VisualDirective(type="effect", target="screen", name="alarm_flash", duration_ms=350).model_dump())

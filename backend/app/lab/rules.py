@@ -204,6 +204,106 @@ def _check_r10_clean_finish(session: LabSession, req: ActionRequest) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Space Safety Rule Checkers (S1 - S8)
+# ---------------------------------------------------------------------------
+
+def _check_s1_preflight_checklist(session: LabSession, req: ActionRequest) -> bool:
+    """S1 PREFLIGHT_CHECKLIST: Launch attempted without running flight computer checklist."""
+    if req.action == ActionType.launch:
+        fc = session.apparatus_state.get("flight_computer", {})
+        return not fc.get("checklist_complete", False)
+    return False
+
+
+def _check_s2_propellant_capacity(session: LabSession, req: ActionRequest) -> bool:
+    """S2 PROPELLANT_CAPACITY: Stage fueled beyond tank capacity or <= 0."""
+    if req.action == ActionType.fuel_rocket:
+        rocket_state = session.apparatus_state.get("rocket", {})
+        state_stages = rocket_state.get("stages", [])
+        if "stages" in req.params:
+            for p in req.params["stages"]:
+                fuel_kg = float(p.get("propellant_kg", p.get("fuel_kg", 0.0)))
+                stage_idx = int(p.get("stage", 1)) - 1
+                if fuel_kg <= 0.0:
+                    return True
+                if 0 <= stage_idx < len(state_stages):
+                    cap = float(state_stages[stage_idx].get("propellant_capacity_kg", 1e9))
+                    if fuel_kg > cap:
+                        return True
+        elif "propellant_kg" in req.params:
+            fuel_kg = float(req.params["propellant_kg"])
+            stage_idx = int(req.params.get("stage", 1)) - 1
+            if fuel_kg <= 0.0:
+                return True
+            if 0 <= stage_idx < len(state_stages):
+                cap = float(state_stages[stage_idx].get("propellant_capacity_kg", 1e9))
+                if fuel_kg > cap:
+                    return True
+    return False
+
+
+def _check_s3_twr_liftoff(session: LabSession, req: ActionRequest) -> bool:
+    """S3 TWR_LIFTOFF: Liftoff attempted with TWR <= 1.0."""
+    if req.action == ActionType.launch:
+        rocket_state = session.apparatus_state.get("rocket", {})
+        twr = rocket_state.get("liftoff_twr")
+        if twr is not None and twr <= 1.0:
+            return True
+    return False
+
+
+def _check_s4_payload_declared(session: LabSession, req: ActionRequest) -> bool:
+    """S4 PAYLOAD_DECLARED: Launch without declared payload or payload exceeds stage max."""
+    if req.action == ActionType.launch:
+        rocket_state = session.apparatus_state.get("rocket", {})
+        if not rocket_state.get("payload_declared", False):
+            return True
+        payload_kg = float(rocket_state.get("payload_kg", 0.0))
+        max_payload = float(rocket_state.get("payload_capacity_kg", 0.0))
+        if payload_kg > max_payload or payload_kg <= 0.0:
+            return True
+    return False
+
+
+def _check_s5_staging_order(session: LabSession, req: ActionRequest) -> bool:
+    """S5 STAGING_ORDER: Ignite upper stage before lower stage burns out."""
+    if req.action in (ActionType.burn_transfer, ActionType.circularize):
+        rocket_state = session.apparatus_state.get("rocket", {})
+        stages = rocket_state.get("stages", [])
+        if len(stages) > 1:
+            stage_1 = stages[0]
+            if stage_1.get("fuel_pct", 0.0) > 5.0 and rocket_state.get("current_stage", 1) == 1:
+                return True
+    return False
+
+
+def _check_s6_range_safety(session: LabSession, req: ActionRequest) -> bool:
+    """S6 RANGE_SAFETY: Launch without range clearance."""
+    if req.action == ActionType.launch:
+        rc = session.apparatus_state.get("range_control", {})
+        return not rc.get("cleared", False)
+    return False
+
+
+def _check_s7_dv_margin(session: LabSession, req: ActionRequest) -> bool:
+    """S7 DV_MARGIN: Mission delta-v margin < 5% (warning / technique penalty)."""
+    if req.action == ActionType.launch:
+        rocket_state = session.apparatus_state.get("rocket", {})
+        avail_dv = float(rocket_state.get("total_delta_v_ms", 0.0))
+        req_dv = float(rocket_state.get("required_delta_v_ms", 9300.0))
+        if req_dv > 0 and avail_dv < 1.05 * req_dv:
+            return True
+    return False
+
+
+def _check_s8_debrief_cleanup(session: LabSession, req: ActionRequest) -> bool:
+    """S8 DEBRIEF_CLEANUP: Submit report without debrief."""
+    if req.action == ActionType.submit_report:
+        return "debrief" not in session.protocol_progress
+    return False
+
+
+# ---------------------------------------------------------------------------
 # Registered Safety Rules List
 # ---------------------------------------------------------------------------
 
@@ -321,10 +421,103 @@ SAFETY_RULES: list[SafetyRule] = [
 ]
 
 
+SPACE_RULES: list[SafetyRule] = [
+    SafetyRule(
+        rule_id="S1_PREFLIGHT_CHECKLIST",
+        title="Launch Attempted Without Preflight Checklist",
+        severity="critical",
+        penalty_points=25,
+        explanation=(
+            "Flight computer preflight systems diagnostic checklist must be executed and confirmed "
+            "before initiating terminal launch countdown and engine ignition sequence."
+        ),
+        checker=_check_s1_preflight_checklist,
+    ),
+    SafetyRule(
+        rule_id="S2_PROPELLANT_CAPACITY",
+        title="Propellant Tank Capacity Exceeded or Empty",
+        severity="major",
+        penalty_points=20,
+        explanation=(
+            "Rocket stage propellant tanks must be loaded with positive mass within rated structural "
+            "tank capacity limits to prevent catastrophic tank rupture or dry engine ignition."
+        ),
+        checker=_check_s2_propellant_capacity,
+    ),
+    SafetyRule(
+        rule_id="S3_TWR_LIFTOFF",
+        title="Insufficient Thrust-to-Weight Ratio (TWR <= 1.0)",
+        severity="critical",
+        penalty_points=30,
+        explanation=(
+            "Liftoff thrust must strictly exceed vehicle liftoff weight (TWR > 1.0). An under-powered "
+            "rocket cannot lift off, pinning the vehicle to the pad while exhaust destroys pad infrastructure."
+        ),
+        checker=_check_s3_twr_liftoff,
+    ),
+    SafetyRule(
+        rule_id="S4_PAYLOAD_DECLARED",
+        title="Undeclared or Excessive Payload Mass",
+        severity="major",
+        penalty_points=15,
+        explanation=(
+            "Orbital payload mass must be declared and must not exceed the vehicle's structural "
+            "payload capacity to preserve mission aerodynamic and mass budget stability."
+        ),
+        checker=_check_s4_payload_declared,
+    ),
+    SafetyRule(
+        rule_id="S5_STAGING_ORDER",
+        title="Premature Upper Stage Ignition / Staging Order Breach",
+        severity="critical",
+        penalty_points=25,
+        explanation=(
+            "Lower booster stages must complete their burn before upper stage ignition and interstage "
+            "separation. Igniting upper stages prematurely causes plume impingement and vehicle breakup."
+        ),
+        checker=_check_s5_staging_order,
+    ),
+    SafetyRule(
+        rule_id="S6_RANGE_SAFETY",
+        title="Launch Attempted Without Range Clearance",
+        severity="major",
+        penalty_points=20,
+        explanation=(
+            "Launch operations require affirmative range clearance from tracking radar and downrange "
+            "safety officers to protect airspace, shipping corridors, and populated zones."
+        ),
+        checker=_check_s6_range_safety,
+    ),
+    SafetyRule(
+        rule_id="S7_DV_MARGIN",
+        title="Insufficient Delta-V Margin (<5%)",
+        severity="warning",
+        penalty_points=10,
+        explanation=(
+            "Sound mission planning requires at least a 5% delta-v reserve margin above nominal "
+            "orbital insertion requirements to absorb atmospheric drag and steering losses."
+        ),
+        checker=_check_s7_dv_margin,
+    ),
+    SafetyRule(
+        rule_id="S8_DEBRIEF_CLEANUP",
+        title="Report Submitted Without Mission Debrief",
+        severity="warning",
+        penalty_points=10,
+        explanation=(
+            "Flight telemetry, achieved orbital parameters, and propellant margins must be debriefed "
+            "with tracking station before submitting final mission analytical documentation."
+        ),
+        checker=_check_s8_debrief_cleanup,
+    ),
+]
+
+
 def check_safety_rules(session: LabSession, req: ActionRequest) -> list[Violation]:
-    """Evaluate all active safety rules for the given action and return detected violations."""
+    """Evaluate active safety rules for the given action and return detected violations."""
     violations: list[Violation] = []
-    for rule in SAFETY_RULES:
+    active_rules = SPACE_RULES if session.experiment_id == "launch_bench" else SAFETY_RULES
+    for rule in active_rules:
         v = rule.check(session, req)
         if v:
             violations.append(v)

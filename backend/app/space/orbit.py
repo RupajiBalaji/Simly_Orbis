@@ -51,6 +51,22 @@ class StageConfig:
             raise ValueError(f"Stage {self.stage_num} Isp must be positive, got {self.isp_s}")
 
 
+def _to_stage_config(s: StageConfig | dict[str, Any]) -> StageConfig:
+    if isinstance(s, StageConfig):
+        return s
+    prop = float(s.get("propellant_kg", s.get("default_propellant_kg", s.get("propellant_capacity_kg", 0.0))))
+    thrust = float(s.get("thrust_n", s.get("thrust_sea_n", 100000.0)))
+    isp = float(s.get("isp_s", s.get("isp_sea_s", 300.0)))
+    return StageConfig(
+        stage_num=int(s.get("stage_num", 1)),
+        name=str(s.get("name", "Stage")),
+        dry_mass_kg=float(s.get("dry_mass_kg", 1000.0)),
+        propellant_mass_kg=prop,
+        thrust_n=thrust,
+        isp_s=isp,
+    )
+
+
 # --- A. Tsiolkovsky Rocket Equations ---
 
 def tsiolkovsky_dv(isp_s: float, m0_kg: float, mf_kg: float) -> float:
@@ -135,6 +151,22 @@ def calculate_multistage_dv(
     return total_dv, stage_details
 
 
+def rocket_total_delta_v(stages: Sequence[StageConfig | dict[str, Any]], payload_kg: float) -> float:
+    """Convenience helper to compute total multistage delta-v from dicts or StageConfig objects."""
+    stage_objs = [_to_stage_config(s) for s in stages]
+    dv, _ = calculate_multistage_dv(stage_objs, payload_kg)
+    return dv
+
+
+def rocket_liftoff_twr(stages: Sequence[StageConfig | dict[str, Any]], payload_kg: float) -> float:
+    """Convenience helper to compute liftoff TWR from dicts or StageConfig objects."""
+    if not stages:
+        return 0.0
+    stage_objs = [_to_stage_config(s) for s in stages]
+    total_m = payload_kg + sum(s.dry_mass_kg + s.propellant_mass_kg for s in stage_objs)
+    return liftoff_twr(stage_objs[0].thrust_n, total_m)
+
+
 # --- B. Orbital Mechanics (Vis-Viva, Period, Hohmann) ---
 
 def circular_velocity(radius_m: float) -> float:
@@ -144,6 +176,11 @@ def circular_velocity(radius_m: float) -> float:
     if radius_m <= 0:
         raise ValueError(f"Orbit radius must be positive, got {radius_m}")
     return float(math.sqrt(EARTH_MU / radius_m))
+
+
+def circular_orbit_speed(altitude_km: float) -> float:
+    """Helper returning circular orbital speed in m/s for altitude in km."""
+    return circular_velocity(EARTH_RADIUS_M + altitude_km * 1000.0)
 
 
 def orbital_period(semi_major_axis_m: float) -> float:
@@ -246,7 +283,7 @@ def burn_time(propellant_mass_kg: float, thrust_n: float, isp_s: float) -> float
 # --- D. Mission Evaluation ---
 
 def evaluate_mission(
-    stages: Sequence[StageConfig],
+    stages: Sequence[StageConfig | dict[str, Any]],
     payload_mass_kg: float,
     target_altitude_m: float = 200000.0,  # 200 km default LEO
     transfer_altitude_m: float | None = None,  # Optional transfer orbit altitude
@@ -266,6 +303,8 @@ def evaluate_mission(
             "insight": "Vehicle has no rocket stages defined.",
             "passed": False,
         }
+
+    stages = [_to_stage_config(s) for s in stages]
 
     # Calculate total liftoff mass
     total_liftoff_mass = payload_mass_kg + sum(s.dry_mass_kg + s.propellant_mass_kg for s in stages)
@@ -325,7 +364,9 @@ def evaluate_mission(
         achieved_apogee_km = round((total_avail_dv / req_ascent_dv) * (target_altitude_m / 1000.0), 1)
         achieved_orbit = {
             "perigee_km": -EARTH_RADIUS_M / 1000.0,
+            "periapsis_km": -EARTH_RADIUS_M / 1000.0,
             "apogee_km": achieved_apogee_km,
+            "apoapsis_km": achieved_apogee_km,
             "period_min": 0.0,
         }
         deficit = req_ascent_dv - total_avail_dv
@@ -337,7 +378,9 @@ def evaluate_mission(
         achieved_perigee_km = round(max(0.0, (total_avail_dv - 0.85 * req_ascent_dv) / (0.15 * req_ascent_dv) * (target_altitude_m / 1000.0)), 1)
         achieved_orbit = {
             "perigee_km": achieved_perigee_km,
+            "periapsis_km": achieved_perigee_km,
             "apogee_km": round(target_altitude_m / 1000.0, 1),
+            "apoapsis_km": round(target_altitude_m / 1000.0, 1),
             "period_min": round(orbital_period(EARTH_RADIUS_M + (achieved_perigee_km * 1000 + target_altitude_m) / 2.0) / 60.0, 1),
         }
         insight = f"Eccentric partial orbit: Available delta-v reached apogee at {target_altitude_m/1e3:.0f} km but lacked {req_ascent_dv - total_avail_dv:,.0f} m/s to circularize, leaving an unstable perigee at {achieved_perigee_km:.1f} km."
@@ -349,7 +392,9 @@ def evaluate_mission(
             passed = True
             achieved_orbit = {
                 "perigee_km": round(target_altitude_m / 1000.0, 1),
+                "periapsis_km": round(target_altitude_m / 1000.0, 1),
                 "apogee_km": round(target_altitude_m / 1000.0, 1),
+                "apoapsis_km": round(target_altitude_m / 1000.0, 1),
                 "period_min": target_period_min,
             }
             insight = f"Stable circular orbit achieved: Inserted cleanly at {target_altitude_m/1e3:.1f} km (period: {target_period_min} min) with {margin_pct:.1f}% delta-v propellant reserves."
@@ -361,7 +406,9 @@ def evaluate_mission(
                 final_period_min = round(orbital_period(EARTH_RADIUS_M + transfer_altitude_m) / 60.0, 2)
                 achieved_orbit = {
                     "perigee_km": round(transfer_altitude_m / 1000.0, 1),
+                    "periapsis_km": round(transfer_altitude_m / 1000.0, 1),
                     "apogee_km": round(transfer_altitude_m / 1000.0, 1),
+                    "apoapsis_km": round(transfer_altitude_m / 1000.0, 1),
                     "period_min": final_period_min,
                 }
                 insight = f"Target transfer completed: Hohmann transfer and circularization at {transfer_altitude_m/1e3:,.1f} km accomplished with {margin_pct:.1f}% remaining delta-v margin."
@@ -370,7 +417,9 @@ def evaluate_mission(
                 passed = False
                 achieved_orbit = {
                     "perigee_km": round(target_altitude_m / 1000.0, 1),
+                    "periapsis_km": round(target_altitude_m / 1000.0, 1),
                     "apogee_km": round(target_altitude_m / 1000.0, 1),
+                    "apoapsis_km": round(target_altitude_m / 1000.0, 1),
                     "period_min": target_period_min,
                 }
                 transfer_deficit = total_required_dv - total_avail_dv
@@ -429,6 +478,15 @@ def generate_orbit_path(
         })
 
     return points
+
+
+def kepler_orbit_points(periapsis_km: float, apoapsis_km: float, n_points: int = 64) -> list[dict[str, float]]:
+    """Helper returning 2D Cartesian orbit path points from periapsis and apoapsis altitudes in km."""
+    rp = max(1000.0, periapsis_km * 1000.0 + EARTH_RADIUS_M)
+    ra = max(rp, apoapsis_km * 1000.0 + EARTH_RADIUS_M)
+    a = (rp + ra) / 2.0
+    e = max(0.0, min(0.99, (ra - rp) / (ra + rp)))
+    return generate_orbit_path(a, e, num_points=n_points)
 
 
 def propagate_kepler_rk4(
@@ -560,3 +618,6 @@ def get_rocket_preset(preset_id: str) -> dict[str, Any] | None:
         if p.get("id") == preset_id:
             return p
     return None
+
+
+get_preset_rockets = load_rocket_presets

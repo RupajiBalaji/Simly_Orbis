@@ -70,6 +70,8 @@ class LabReportResponse(BaseModel):
     violations: list[Violation]
     lessons_learned: list[str]
     trial_result: dict[str, Any] | None = None
+    space_result: dict[str, Any] | None = None
+    report_markdown: str | None = None
     hints_used: int = 0
     reality_checks_summary: str = "11/11 passed"
     created_at: str
@@ -556,6 +558,8 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
         lessons.append("Pharmacokinetics: Oral drug peak concentration depends on absorption rate ka vs clearance ke.")
     elif session.experiment_id == "titration_bench":
         lessons.append("Titration: Stoichiometric equivalence point occurs when moles of base equal moles of acid.")
+    elif session.experiment_id == "launch_bench":
+        lessons.append("Orbital Mechanics: Orbital insertion requires tangential velocity matching circular velocity (vis-viva) with staging mass ratios optimized by Tsiolkovsky's equation.")
 
     trial_res = body.trial_result if body else None
     if trial_res:
@@ -565,6 +569,87 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
         lessons.append(
             f"Virtual Clinical Trial: Your regimen achieved {pct_in}% in range and {pct_tox}% toxic across {n_pts} virtual patients."
         )
+
+    space_res = None
+    report_md = None
+    if session.experiment_id == "launch_bench":
+        tracking = session.apparatus_state.get("tracking_station", {})
+        r_state = session.apparatus_state.get("rocket", {})
+        telem = tracking.get("telemetry", {})
+        budget = tracking.get("budget", {})
+        outcome = tracking.get("outcome", "unspecified")
+
+        space_res = {
+            "rocket_name": r_state.get("name", "Launch Vehicle"),
+            "preset_id": r_state.get("preset_id", "orbis_1"),
+            "payload_kg": r_state.get("payload_kg", 0.0),
+            "outcome": outcome,
+            "telemetry": telem,
+            "budget": budget,
+            "insight": tracking.get("insight", ""),
+        }
+
+        stages = r_state.get("stages", [])
+        stage_rows = []
+        for s in stages:
+            dry_m = float(s.get("dry_mass_kg", 0.0))
+            prop_m = float(s.get("propellant_kg", 0.0))
+            stage_rows.append(
+                f"| Stage {s.get('stage_num', 1)} | {dry_m:.0f} kg | {prop_m:.0f} kg | "
+                f"{dry_m + prop_m:.0f} kg | {float(s.get('isp_sea_s', 0)):.1f} s | "
+                f"{float(s.get('thrust_sea_n', 0)) / 1000.0:.1f} kN |"
+            )
+        stages_table = "\n".join(stage_rows) if stage_rows else "| Stage 1 | N/A | N/A | N/A | N/A | N/A |"
+
+        pe = float(telem.get("periapsis_km", 0.0))
+        ap = float(telem.get("apoapsis_km", 0.0))
+        vel = float(telem.get("velocity_kms", 0.0))
+        period = float(telem.get("period_min", 0.0))
+
+        req_leo = float(budget.get("leo_ascent_required_ms", 9300.0))
+        avail_dv = float(budget.get("total_available_ms", r_state.get("total_delta_v_ms", 0.0)))
+        margin_pct = float(budget.get("margin_pct", 0.0))
+
+        report_md = f"""# Orbis Lab Space Mission Analytical Report: Launch & Orbit Bench
+**Mission ID**: {session_id}  
+**Commander**: {session.nickname}  
+**Vehicle**: {r_state.get('name', 'Launch Vehicle')}  
+**Payload**: {float(r_state.get('payload_kg', 0.0)):.0f} kg  
+**Final Outcome**: {outcome.upper()}  
+**Overall Grade**: {grade} ({total_score}/100)
+
+---
+
+## 1. Rocket Design & Mass Budget
+| Stage | Dry Mass | Propellant | Total Stage Mass | Isp | Thrust |
+|---|---|---|---|---|---|
+{stages_table}
+
+- **Total Liftoff Mass**: {float(r_state.get('total_mass_t', 0.0)):.2f} tonnes
+- **Liftoff TWR**: {r_state.get('liftoff_twr', 'N/A')}
+
+---
+
+## 2. Orbital Parameters: Achieved vs Nominal LEO
+| Parameter | Nominal LEO (200 km) | Achieved Mission | Deviation |
+|---|---|---|---|
+| Periapsis Altitude | 200.0 km | {pe:.1f} km | {pe - 200.0:+.1f} km |
+| Apoapsis Altitude | 200.0 km | {ap:.1f} km | {ap - 200.0:+.1f} km |
+| Orbital Speed | 7.78 km/s | {vel:.2f} km/s | {vel - 7.78:+.2f} km/s |
+| Orbital Period | 88.5 min | {period:.1f} min | {period - 88.5:+.1f} min |
+
+---
+
+## 3. Delta-V Budget Breakdown
+- **LEO Insertion Delta-V Required**: {req_leo:.0f} m/s (includes 1,500 m/s gravity/drag losses)
+- **Total Vehicle Available Delta-V**: {avail_dv:.0f} m/s
+- **Mission Delta-V Reserve Margin**: {margin_pct:+.1f}%
+
+---
+
+## 4. Flight Telemetry & Debrief Insights
+{tracking.get('insight', 'Keplerian orbital telemetry recorded and verified under two-body Newtonian gravitation.')}
+"""
 
     report_id = str(uuid.uuid4())
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -580,6 +665,8 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
         "violations": [v.model_dump() for v in session.violations],
         "lessons_learned": lessons,
         "trial_result": trial_res,
+        "space_result": space_res,
+        "report_markdown": report_md,
         "hints_used": getattr(session, "hints_used", 0),
         "reality_checks_summary": "11/11 passed",
         "created_at": now_iso,

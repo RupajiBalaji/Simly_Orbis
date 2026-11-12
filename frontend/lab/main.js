@@ -191,12 +191,16 @@ function setupLobby() {
   // District Card Clicks
   const cardPharma = document.getElementById('card-district-pharma');
   const cardChem = document.getElementById('card-district-chemistry');
+  const cardSpace = document.getElementById('card-district-space');
 
   if (cardPharma) {
     cardPharma.onclick = () => openExperimentBrief('pk_ward');
   }
   if (cardChem) {
     cardChem.onclick = () => openExperimentBrief('titration_bench');
+  }
+  if (cardSpace) {
+    cardSpace.onclick = () => openExperimentBrief('launch_bench');
   }
 
   // Brief modal controls
