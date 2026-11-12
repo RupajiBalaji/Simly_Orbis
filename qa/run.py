@@ -655,6 +655,96 @@ class QAHarnessRunner:
                     self.failure_reasons.append("titration_bench report submitted without a letter grade.")
 
                 # ==============================================================
+                # 3b. LAUNCH & ORBIT BENCH (launch_bench)
+                # ==============================================================
+                print("\n[QA] --- Step 3b: Launch & Orbit Bench (launch_bench) ---")
+                page.evaluate("() => { if (window.agentPanel) window.agentPanel.closePlanModal(); }")
+                page.click("#btn-report-lobby")
+                page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(500)
+
+                # Enter Space District
+                page.click("#card-district-space")
+                page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
+                page.wait_for_timeout(500)
+                self.capture_checkpoint(page, "space_brief")
+
+                page.click("#btn-start-experiment")
+                page.wait_for_selector("#lab-hud:not(.hidden)", timeout=10000)
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "space_first_view_pad")
+
+                # Scenario 1: Select Orbis-1, Payload 500kg, Fuel Nominal, Run Checklist, Clear Range
+                print("  [QA Space] Configuring Orbis-1 and running preflight checklist...")
+                page.evaluate("async () => { await window.actionMenu.executeAction('choose_rocket', 'orbis_1', { preset_id: 'orbis_1' }); }")
+                page.wait_for_timeout(400)
+                page.evaluate("async () => { await window.actionMenu.executeAction('declare_payload', 'flight_computer', { payload_kg: 500 }); }")
+                page.wait_for_timeout(400)
+                page.evaluate("async () => { await window.actionMenu.executeAction('fuel_rocket', 'nominal_fuel', { mode: 'nominal_fuel' }); }")
+                page.wait_for_timeout(400)
+                page.evaluate("async () => { await window.actionMenu.executeAction('run_checklist', 'flight_computer', {}); }")
+                page.wait_for_timeout(400)
+                page.evaluate("async () => { await window.actionMenu.executeAction('clear_range', 'range_control', {}); }")
+                page.wait_for_timeout(400)
+                self.capture_checkpoint(page, "space_preflight_ready")
+
+                # Ask Orbis Space query verification
+                print("  [QA Space] Ask Orbis Space Query: Launch and coast to apogee...")
+                page.evaluate("async () => { await window.agentPanel.submitRequest('Launch and coast to apogee'); }")
+                page.wait_for_selector("#ask-orbis-plan-modal:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(500)
+                self.capture_checkpoint(page, "space_ask_orbis_plan")
+                page.click("#btn-close-plan")
+                page.wait_for_timeout(400)
+
+                # Launch into 200 km LEO
+                print("  [QA Space] Igniting engines and launching into LEO...")
+                page.evaluate("async () => { await window.actionMenu.executeAction('launch', 'pad_39a', { target_alt_km: 200.0 }); }")
+                page.wait_for_timeout(1200)
+                self.capture_checkpoint(page, "space_launch_liftoff")
+
+                # Verify HUD readouts match simulation state
+                hud_speed = page.inner_text("#space-speed-readout").strip() if page.is_visible("#space-speed-readout") else ""
+                hud_alt = page.inner_text("#space-alt-readout").strip() if page.is_visible("#space-alt-readout") else ""
+                print(f"  [QA Space] Telemetry HUD Readouts: Speed={hud_speed}, Alt={hud_alt}")
+
+                # Coast to parking orbit
+                print("  [QA Space] Inertial coast in parking orbit...")
+                page.evaluate("async () => { await window.actionMenu.executeAction('coast', 'parking_orbit', {}); }")
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "space_orbit_view")
+
+                # Hohmann Transfer to GEO
+                print("  [QA Space] Executing Hohmann transfer burn...")
+                page.evaluate("async () => { await window.actionMenu.executeAction('burn_transfer', 'hohmann_geo', {}); }")
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "space_transfer_burn")
+
+                # Circularize at GEO
+                print("  [QA Space] Circularizing at GEO apogee...")
+                page.evaluate("async () => { await window.actionMenu.executeAction('circularize', 'circularize_geo', {}); }")
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "space_circularized_geo")
+
+                # Debrief flight telemetry
+                print("  [QA Space] Debriefing telemetry with ground station...")
+                page.evaluate("async () => { await window.actionMenu.executeAction('debrief', 'tracking_station', {}); }")
+                page.wait_for_timeout(800)
+
+                # Submit space flight debrief report
+                print("  [QA Space] Submitting orbital flight report...")
+                page.evaluate("async () => { const res = await window.api.finishSession(window.state.session.session_id); window.reportScreen.show(res); }")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "space_flight_report")
+
+                space_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                self.grades["launch_bench"] = space_grade
+                print(f"  [QA Space] Launch Bench Final Grade: '{space_grade}'")
+                if not space_grade:
+                    self.failure_reasons.append("launch_bench report submitted without a letter grade.")
+
+                # ==============================================================
                 # 4. CAMERA RIG & AVATAR FRAMING ACCEPTANCE TEST (__camTest)
                 # ==============================================================
                 print("\n[QA] --- Step 4: Camera Rig & Viewport Framing Acceptance (__camTest) ---")
