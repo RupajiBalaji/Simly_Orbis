@@ -15,6 +15,8 @@ Verifies:
 from __future__ import annotations
 
 import json
+from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -576,3 +578,37 @@ async def test_agent_plan_fallback_label_cup_standard_text(client: AsyncClient):
         label_text3 = d3["steps"][1]["params"]["text"]
         assert label_text3 == "Paracetamol 1000mg - Patient Alex"
         assert "Alex" in label_text3
+
+
+# ---------------------------------------------------------------------------
+# Corpus-Driven Fallback Parser Tests (No AI)
+# ---------------------------------------------------------------------------
+
+def _load_parser_corpus():
+    corpus_file = Path(__file__).parent / "data" / "ask_orbis_phrases.json"
+    with open(corpus_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+_CORPUS = _load_parser_corpus()
+
+
+@pytest.mark.parametrize("item", _CORPUS, ids=[x["id"] for x in _CORPUS])
+def test_fallback_parser_corpus_phrases(item: dict[str, Any]):
+    """Run deterministic fallback parser against the phrase corpus."""
+    from app.lab.agent import parse_request_rule_based
+    from app.lab.engine import create_session
+
+    session = create_session(item["experiment_id"], "Tester")
+    steps, skipped = parse_request_rule_based(item["text"], session)
+    actions = [s.action.value for s in steps]
+
+    if item["expect_not_understood"]:
+        assert len(actions) == 0, f"Expected no recognized actions for '{item['text']}', got {actions}"
+        assert len(skipped) > 0, f"Expected skipped clauses for '{item['text']}'"
+    else:
+        assert actions == item["expected_actions"], (
+            f"Phrase '{item['text']}' parsed as {actions}, expected {item['expected_actions']}. "
+            f"Skipped clauses: {skipped}"
+        )
+

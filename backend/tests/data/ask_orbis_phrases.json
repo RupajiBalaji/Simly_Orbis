@@ -1,0 +1,338 @@
+[
+  {
+    "id": "pk_01_simple_ppe",
+    "text": "Put on PPE",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["wear_ppe"],
+    "expect_not_understood": false,
+    "description": "Basic PPE request"
+  },
+  {
+    "id": "pk_02_casual_goggles",
+    "text": "grab goggles and lab coat",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["wear_ppe"],
+    "expect_not_understood": false,
+    "description": "Casual clothing / PPE synonyms"
+  },
+  {
+    "id": "pk_03_tare",
+    "text": "tare the balance",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["tare_balance"],
+    "expect_not_understood": false,
+    "description": "Standard balance tare"
+  },
+  {
+    "id": "pk_04_weigh_paracetamol",
+    "text": "weigh 0.5g paracetamol",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["weigh"],
+    "expect_not_understood": false,
+    "description": "Weigh paracetamol with gram unit"
+  },
+  {
+    "id": "pk_05_weigh_mg",
+    "text": "weigh 500mg paracetamol",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["weigh"],
+    "expect_not_understood": false,
+    "description": "Weigh paracetamol with mg unit"
+  },
+  {
+    "id": "pk_06_tare_and_weigh",
+    "text": "tare balance then weigh 0.5 g paracetamol",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["tare_balance", "weigh"],
+    "expect_not_understood": false,
+    "description": "Multi-step clause with 'then'"
+  },
+  {
+    "id": "pk_07_dissolve_water",
+    "text": "dissolve paracetamol in water",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["dissolve"],
+    "expect_not_understood": false,
+    "description": "Dissolve in dosing cup"
+  },
+  {
+    "id": "pk_08_weigh_and_dissolve",
+    "text": "weigh 0.5g paracetamol and dissolve it",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["weigh", "dissolve"],
+    "expect_not_understood": false,
+    "description": "Multi-step weigh and dissolve with pronoun"
+  },
+  {
+    "id": "pk_09_label_cup",
+    "text": "label the cup",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["label"],
+    "expect_not_understood": false,
+    "description": "Standard medication label for dosing cup"
+  },
+  {
+    "id": "pk_10_administer_dose",
+    "text": "administer dose to patient Alex",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["administer_oral"],
+    "expect_not_understood": false,
+    "description": "Administer oral solution to patient"
+  },
+  {
+    "id": "pk_11_give_medication",
+    "text": "give medication to patient",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["administer_oral"],
+    "expect_not_understood": false,
+    "description": "Casual administer phrasing"
+  },
+  {
+    "id": "pk_12_advance_time",
+    "text": "advance time by 1 hour",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["advance_time"],
+    "expect_not_understood": false,
+    "description": "Advance clock 1 hour"
+  },
+  {
+    "id": "pk_13_wait_time",
+    "text": "wait 2 hours",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["advance_time"],
+    "expect_not_understood": false,
+    "description": "Wait synonym for advance time"
+  },
+  {
+    "id": "pk_14_draw_blood",
+    "text": "draw blood from patient",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["draw_blood"],
+    "expect_not_understood": false,
+    "description": "Venous blood collection"
+  },
+  {
+    "id": "pk_15_label_tube",
+    "text": "label sample tube",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["label"],
+    "expect_not_understood": false,
+    "description": "Tube specimen labeling"
+  },
+  {
+    "id": "pk_16_run_assay",
+    "text": "run centrifuge plasma assay",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["run_assay"],
+    "expect_not_understood": false,
+    "description": "Plasma assay centrifugation"
+  },
+  {
+    "id": "pk_17_dispose_and_wash",
+    "text": "dispose waste and wash hands",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["dispose_waste", "wash_hands"],
+    "expect_not_understood": false,
+    "description": "Disposal and hygiene multi-step"
+  },
+  {
+    "id": "pk_18_submit_report",
+    "text": "submit lab report",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["submit_report"],
+    "expect_not_understood": false,
+    "description": "Report submission"
+  },
+  {
+    "id": "pk_19_triple_step",
+    "text": "wear PPE, tare balance, and weigh 0.5g paracetamol",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["wear_ppe", "tare_balance", "weigh"],
+    "expect_not_understood": false,
+    "description": "Three-step comma separated sequence"
+  },
+  {
+    "id": "pk_20_unsafe_administer_direct",
+    "text": "administer dose without dissolving",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["administer_oral"],
+    "expect_not_understood": false,
+    "description": "Validly parsed action that dry run will evaluate for clinical safety"
+  },
+  {
+    "id": "chem_01_rinse_burette",
+    "text": "rinse burette with naoh",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["rinse_burette"],
+    "expect_not_understood": false,
+    "description": "Rinse burette with titrant"
+  },
+  {
+    "id": "chem_02_rinse_simple",
+    "text": "rinse burette",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["rinse_burette"],
+    "expect_not_understood": false,
+    "description": "Simple rinse command"
+  },
+  {
+    "id": "chem_03_fill_burette_50",
+    "text": "fill burette to 50 ml",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["fill_burette"],
+    "expect_not_understood": false,
+    "description": "Fill burette with volume"
+  },
+  {
+    "id": "chem_04_fill_burette_naoh",
+    "text": "fill burette with naoh",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["fill_burette"],
+    "expect_not_understood": false,
+    "description": "Fill burette with titrant specified"
+  },
+  {
+    "id": "chem_05_pipette_analyte",
+    "text": "pipette 25 ml hcl into conical flask",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["pipette_analyte"],
+    "expect_not_understood": false,
+    "description": "Pipette analyte with volume"
+  },
+  {
+    "id": "chem_06_pipette_simple",
+    "text": "pipette 25 ml",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["pipette_analyte"],
+    "expect_not_understood": false,
+    "description": "Pipette with volume alone"
+  },
+  {
+    "id": "chem_07_add_phenolphthalein",
+    "text": "add phenolphthalein",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["add_indicator"],
+    "expect_not_understood": false,
+    "description": "Add phenolphthalein indicator alone"
+  },
+  {
+    "id": "chem_08_add_indicator_drops",
+    "text": "add 3 drops of indicator",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["add_indicator"],
+    "expect_not_understood": false,
+    "description": "Add indicator with drop count"
+  },
+  {
+    "id": "chem_09_add_methyl_orange",
+    "text": "add methyl orange",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["add_indicator"],
+    "expect_not_understood": false,
+    "description": "Add methyl orange indicator"
+  },
+  {
+    "id": "chem_10_titrate_volume",
+    "text": "titrate 5 ml",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["titrate"],
+    "expect_not_understood": false,
+    "description": "Titrate specified volume"
+  },
+  {
+    "id": "chem_11_titrate_simple",
+    "text": "titrate",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["titrate"],
+    "expect_not_understood": false,
+    "description": "Titrate with default volume"
+  },
+  {
+    "id": "chem_12_swirl_flask",
+    "text": "swirl the conical flask",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["swirl"],
+    "expect_not_understood": false,
+    "description": "Swirl flask to mix"
+  },
+  {
+    "id": "chem_13_mix_flask",
+    "text": "mix flask",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["swirl"],
+    "expect_not_understood": false,
+    "description": "Mix synonym for swirl"
+  },
+  {
+    "id": "chem_14_record_endpoint",
+    "text": "record endpoint at 25 ml",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["record_endpoint"],
+    "expect_not_understood": false,
+    "description": "Record endpoint with volume"
+  },
+  {
+    "id": "chem_15_log_reading",
+    "text": "log reading",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["record_endpoint"],
+    "expect_not_understood": false,
+    "description": "Log reading endpoint synonym"
+  },
+  {
+    "id": "chem_16_multi_step_titration",
+    "text": "pipette 25 ml then add phenolphthalein",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["pipette_analyte", "add_indicator"],
+    "expect_not_understood": false,
+    "description": "Multi-step analyte transfer and indicator addition"
+  },
+  {
+    "id": "chem_17_titrate_and_swirl",
+    "text": "titrate 10 ml and swirl",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["titrate", "swirl"],
+    "expect_not_understood": false,
+    "description": "Titrate and swirl compound sentence"
+  },
+  {
+    "id": "chem_18_dispose_waste_chem",
+    "text": "dispose waste",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["dispose_waste"],
+    "expect_not_understood": false,
+    "description": "Dispose chemical waste"
+  },
+  {
+    "id": "chem_19_unsafe_no_ppe_titration",
+    "text": "fill burette to 50 ml",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["fill_burette"],
+    "expect_not_understood": false,
+    "description": "Action proposed before PPE; dry run will flag safety violation"
+  },
+  {
+    "id": "neg_01_nonsense_food",
+    "text": "order a pizza for lunch",
+    "experiment_id": "pk_ward",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Nonsense non-laboratory request"
+  },
+  {
+    "id": "neg_02_nonsense_weather",
+    "text": "what is the weather outside today?",
+    "experiment_id": "titration_bench",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Non-laboratory small talk query"
+  },
+  {
+    "id": "neg_03_nonsense_gibberish",
+    "text": "asdfghjkl qwerty 12345",
+    "experiment_id": "pk_ward",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Keyboard mash nonsense"
+  }
+]
