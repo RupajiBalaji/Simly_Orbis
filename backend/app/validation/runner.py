@@ -619,7 +619,7 @@ class ValidationRunner:
             "# Simly Orbis Simulation Engine Validation & Verification Report",
             "",
             "> **Evidence for the Reality Check Board & Analytical Invariant Audit**  ",
-            "> *Engine Version: 0.2.0-dev | Verification vs Validation Split Protocol*",
+            "> *Engine Version: 0.2.0 | Verification vs Validation Split Protocol*",
             "",
             "## 1. Executive Summary & Headline Metrics",
             "",

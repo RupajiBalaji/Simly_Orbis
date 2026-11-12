@@ -34,7 +34,7 @@ def get_local_version() -> str:
             parts = line.split('"')
             if len(parts) >= 2:
                 return parts[1]
-    return "0.2.0-dev"
+    return "0.2.0"
 
 
 def main() -> int:
