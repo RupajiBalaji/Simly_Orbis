@@ -11,6 +11,22 @@ Simly Orbis is an interactive 3D science laboratory simulation platform where ac
 
 ---
 
+## 🔍 Honest Status & Credibility Baseline
+
+- **Current Version:** `v0.2.0-dev` (educational simulation prototype; see [CHANGELOG.md](CHANGELOG.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)).
+- **What is Simulated:**
+  - **Pharmacokinetics Ward (`pk_ward`)**: 2-compartment open oral pharmacokinetic model (Bateman absorption, distribution, and first-order elimination). Evaluates tare/weighing, dissolution, dosing, timed blood sampling, and plasma centrifuge assay.
+  - **Titration Bench (`titration_bench`)**: Monoprotic strong/weak acid-base neutralization solved via rigorous aqueous charge-balance electroneutrality with water auto-ionization; continuous indicator color transitions (phenolphthalein / methyl orange).
+  - **Virtual Population Trial (`pharma.trial`)**: Vectorized NumPy Monte Carlo cohort simulation (log-normal clearance and volume variance with hepatic impairment subgroup).
+- **What is NOT Validated:**
+  - Simulation numbers are educational benchmarks, not medical advice or diagnostic cutoff tools. All 22 literature reference rows in `validation/data/*.csv` are currently marked `unverified` pending expert human full-text verification ([docs/validation/VERIFICATION_WORKSHEET.md](docs/validation/VERIFICATION_WORKSHEET.md)).
+  - Therapeutic green/red safety bands are `game-balanced` for educational pacing, not clinical diagnostic standards.
+  - Does NOT replace in vivo animal studies or clinical drug trials.
+- **What is Locked:**
+  - Space District (Orbital Mechanics) and Market District (Market Microstructure) are locked ("🔒 Coming Soon"). Active simulation is concentrated on Pharma and Chemistry.
+
+---
+
 ## 🚀 Quickstart & Demo
 
 ### Live Deployment
