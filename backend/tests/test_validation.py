@@ -229,3 +229,53 @@ def test_artifacts_generated_on_disk():
     assert (plots_dir / "pk_curves_with_references.png").exists()
     assert (plots_dir / "sensitivity_tornado.png").exists()
     assert (plots_dir / "population_percentile_bands.png").exists()
+
+
+def test_verified_by_format_guard():
+    """All validation rows must have verified_by as 'unverified' or matching '^[^:]+:\\d{4}-\\d{2}-\\d{2}$'."""
+    import csv
+    import re
+
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    data_dir = base_dir / "validation" / "data"
+    verified_pattern = re.compile(r"^[^:]+:\d{4}-\d{2}-\d{2}$")
+
+    total_checked = 0
+    for csv_file in data_dir.glob("*.csv"):
+        with open(csv_file, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                total_checked += 1
+                v_by = row.get("verified_by", "").strip()
+                assert v_by == "unverified" or verified_pattern.match(v_by), (
+                    f"Row '{row.get('id')}' in {csv_file.name} has invalid verified_by='{v_by}'. "
+                    f"Must be 'unverified' or match '^[^:]+:\\d{{4}}-\\d{{2}}-\\d{{2}}$'."
+                )
+
+    assert total_checked == 22, f"Expected 22 reference rows, found {total_checked}"
+
+
+def test_tolerances_configuration_frozen():
+    """Fails if validation/tolerances.yaml changes.
+
+    The validation tolerances represent agreed scientific bounds declared before
+    running tests. Freezing this SHA-256 prevents silent loosening of error thresholds
+    to pass failing benchmarks.
+    """
+    import hashlib
+
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    tol_file = base_dir / "validation" / "tolerances.yaml"
+    assert tol_file.exists(), "validation/tolerances.yaml missing"
+
+    content = tol_file.read_bytes()
+    computed_sha256 = hashlib.sha256(content).hexdigest()
+
+    # Frozen baseline hash computed from validation/tolerances.yaml
+    FROZEN_TOLERANCES_SHA256 = "5b5d857ed4862b5172062aa492541aaafc73eaf99e701fc39ddbd13ff8f71d59"
+
+    assert computed_sha256 == FROZEN_TOLERANCES_SHA256, (
+        f"validation/tolerances.yaml has been modified! Expected hash {FROZEN_TOLERANCES_SHA256}, "
+        f"got {computed_sha256}. Tolerances are frozen to prevent loosening thresholds."
+    )
+
