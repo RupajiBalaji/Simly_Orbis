@@ -19,6 +19,7 @@ This document records the audit of quantitative, performance, scientific, and ca
 | **"Clinical Validation" or "Empirical Validation"** | `docs/VALIDATION_REPORT.md` | Risk | Literature comparison against 22 published benchmark points. All currently marked `unverified`. | Labeled with prominent mandatory banner: *"Compared with published data for the stated conditions. Not clinical validation."* |
 | **"10x faster / one tenth early cost"** | Pitch / Target claims | Target | Conceptual educational goals for simulation-based preparatory training before wet-lab access. | Audited: Any future mention must carry an explicit "target" label. Platform does not claim animal study replacement. |
 | **"FDA Product Labels"** | `docs/VALIDATION_REPORT.md:27` | Fact with Source | Reference literature citations in `validation/data/pharma_pk_references.csv` sourced from published clinical literature and monograph parameters. | Verified factual citation provenance; explicitly tagged unverified until human review. |
+| **"Orbital Mechanics & Launch Trajectory (`space.orbit`)"** | `docs/space_physics.md` | Feature Description / Model | Pure-Python Tsiolkovsky $\Delta v$, vis-viva, and Hohmann transfer equations evaluated against standard Earth $\mu$ ($3.986004418 \times 10^{14}\text{ m}^3/\text{s}^2$) and $R_\oplus = 6,371\text{ km}$. | Labeled as educational simulation targets and game-balanced ascent loss ($1,500\text{ m/s}$), not flight-readiness mission software. |
 
 ---
 

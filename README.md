@@ -13,17 +13,18 @@ Simly Orbis is an interactive 3D science laboratory simulation platform where ac
 
 ## 🔍 Honest Status & Credibility Baseline
 
-- **Current Version:** `v0.2.0` (educational simulation prototype; see [CHANGELOG.md](CHANGELOG.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)).
+- **Current Version:** `v0.2.0-space` (educational simulation prototype; see [CHANGELOG.md](CHANGELOG.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)).
 - **What is Simulated:**
   - **Pharmacokinetics Ward (`pk_ward`)**: 2-compartment open oral pharmacokinetic model (Bateman absorption, distribution, and first-order elimination). Evaluates tare/weighing, dissolution, dosing, timed blood sampling, and plasma centrifuge assay.
   - **Titration Bench (`titration_bench`)**: Monoprotic strong/weak acid-base neutralization solved via rigorous aqueous charge-balance electroneutrality with water auto-ionization; continuous indicator color transitions (phenolphthalein / methyl orange).
   - **Virtual Population Trial (`pharma.trial`)**: Vectorized NumPy Monte Carlo cohort simulation (log-normal clearance and volume variance with hepatic impairment subgroup).
+  - **Launch & Orbit Bench (`launch_bench`)**: Multi-stage Tsiolkovsky $\Delta v$, vis-viva equation, Keplerian orbital period, Hohmann transfer to GEO, TWR safety bounds, and RK4 numerical state propagation ([docs/space_physics.md](docs/space_physics.md)).
 - **What is NOT Validated:**
-  - Simulation numbers are educational benchmarks, not medical advice or diagnostic cutoff tools. All 22 literature reference rows in `validation/data/*.csv` are currently marked `unverified` pending expert human full-text verification ([docs/validation/VERIFICATION_WORKSHEET.md](docs/validation/VERIFICATION_WORKSHEET.md)).
-  - Therapeutic green/red safety bands are `game-balanced` for educational pacing, not clinical diagnostic standards.
-  - Does NOT replace in vivo animal studies or clinical drug trials.
+  - Simulation numbers are educational benchmarks, not medical advice or flight-readiness mission software. All literature reference rows in `validation/data/*.csv` are currently marked `unverified` pending expert human full-text verification ([docs/validation/VERIFICATION_WORKSHEET.md](docs/validation/VERIFICATION_WORKSHEET.md)).
+  - Therapeutic green/red safety bands and rocket staging parameters are `game-balanced` for educational pacing.
+  - Does NOT replace in vivo animal studies, clinical drug trials, or mission-planning flight software.
 - **What is Locked:**
-  - Space District (Orbital Mechanics) and Market District (Market Microstructure) are locked ("🔒 Coming Soon"). Active simulation is concentrated on Pharma and Chemistry.
+  - Market District (Market Microstructure) is locked ("🔒 Coming Soon"). Active simulation spans Pharma, Chemistry, and Space.
 
 ---
 

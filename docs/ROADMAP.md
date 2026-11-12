@@ -6,9 +6,10 @@ An honest technical overview of current capabilities in Release Candidate 1 (RC1
 
 ## 1. What is Done Today (v0.1 / RC1)
 
-- **Two Full 3D Interactive Experiments**:
+- **Three Full 3D Interactive Experiments**:
   - `pk_ward`: Pharmacokinetics clinical dosing, analytical balance weighing, oral administration, blood sampling, and therapeutic window monitoring.
   - `titration_bench`: Acid-base neutralization titration with burette control, phenolphthalein indicator inflection, and pH electrode telemetry.
+  - `launch_bench`: Orbital Mechanics launch bench with Pad 39A rocket staging, preflight checklists, liftoff TWR evaluation, Keplerian orbits, and Hohmann GEO transfer.
 - **Large-Scale Virtual Clinical Trial**:
   - Vectorized Monte Carlo simulation testing up to 1,000 virtual patients in under 20 ms.
   - Interactive 3D crowd viewing gallery with dynamic color waves and population subgroup analysis (hepatic clearance impairment).

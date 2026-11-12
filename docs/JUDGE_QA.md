@@ -103,3 +103,12 @@ All randomness uses seeded NumPy generators for 100% reproducibility.
 
 ### 15. Is Simly Orbis intended for actual medical or clinical diagnosis?
 **Answer**: **Strictly no.** Simly Orbis is an educational simulator designed to teach students laboratory intuition and scientific principles. It prominently displays a medical disclaimer on every screen, report, and export: *"Educational simulation. Not medical advice. Not clinical evidence."*
+
+---
+
+### 16. What is the newly unlocked Space District, and how accurate is its physics?
+**Answer**: The Space District features the **Launch & Orbit Bench (`launch_bench`)**, modeling multi-stage rocket ascents from Pad 39A into Low Earth Orbit and geostationary transfer:
+1. **Analytical Engines**: Tsiolkovsky $\Delta v$ staging equation, vis-viva equation for orbital velocity, Kepler's 3rd law for orbital period, and two-impulse Hohmann transfers.
+2. **Numerical Propagation**: 4th-order Runge-Kutta (RK4) integration conserving specific mechanical energy and angular momentum to within $10^{-6}$ relative error over a full Keplerian orbit.
+3. **Safety & Consequences**: 8 safety rules (S1-S8) check preflight checklists, range clearance, and liftoff TWR > 1.0 (under-powered rockets experience pad damage; under-fueled rockets fail to reach orbit and burn up).
+4. **Target Labeling**: Educational simulation targets; parameters are game-balanced for student pacing and do not represent certified flight-readiness mission software.

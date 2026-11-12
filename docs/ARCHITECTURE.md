@@ -130,3 +130,23 @@ PharmaTrialModule (`pharma_trial.py`):
 Client Response:
    └──> Three.js crowd gallery triggers color wave across 500 avatar dots; updates summary charts.
 ```
+
+---
+
+### Flow D: Orbital Mechanics & Launch Trajectory (`space.orbit`)
+```
+User clicks "Launch" on Pad 39A
+   │
+   ├──> Client: Dispatches POST /api/lab/sessions/{id}/actions {action: "launch", target: "pad_39a"}
+   │
+   ▼
+Lab Engine (`engine.py`) -> Space Orbit Module (`space/orbit.py`):
+   ├──> Evaluates stage dry masses, propellant fractions, and payload mass via Tsiolkovsky rocket equation.
+   ├──> Checks liftoff TWR > 1.0 (prevents engine ignition failure) and total Δv budget against 9,300 m/s LEO threshold.
+   ├──> Propagates Keplerian ascent trajectory; computes vis-viva orbital velocity, apoapsis/periapsis, and orbital period.
+   ├──> Emits visual directives: 'flame', 'rocket' ascent translation, 'stage_sep', and 'orbit_path' LineLoop.
+   │
+   ▼
+Client Response:
+   └──> Three.js SpaceScene animates pad liftoff, camera transitions to Orbit View, and draws glowing Keplerian trajectory around 3D Earth globe.
+```

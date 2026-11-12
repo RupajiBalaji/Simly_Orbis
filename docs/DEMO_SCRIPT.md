@@ -66,3 +66,20 @@ This guide provides timed presentation scripts for live hackathon demos and ligh
 ### 3. Autoplay Director Mode:
 - **Press 'Shift+D' or Click 'Director'**: If you want hands-free execution while talking, trigger Director mode (`Shift+D` prevents conflicts with WASD movement). The avatar will autonomously execute the entire protocol step-by-step.
 - **Manual Movement & Hands-On Interaction**: Use `WASD` or arrow keys to freely navigate the laboratory, hold `Shift` to sprint (4.0 m/s), press `E` within 1.6m of an apparatus to open the radial action wheel, press `V` for first-person hands view, and press `H` for the in-game controls cheat-sheet.
+
+---
+
+## 4-Minute Orbital Mechanics Demo (Space District)
+
+### Minute 4: Space District – Launch & Orbit Bench
+- **Visual**: From the lobby, click the newly unlocked **Space District: Orbital Mechanics**.
+- **Spoken**:
+  > *"Beyond medicine and chemistry, Simly Orbis now explores aerospace engineering. Here on Pad 39A, students stage multi-stage rockets and execute orbital insertions governed by Tsiolkovsky $\Delta v$ and Keplerian orbital mechanics."*
+- **Action**:
+  1. Select **Orbis-1** launch vehicle and declare a 500 kg payload.
+  2. Ask Dr. Orbis: *"Can I launch now?"* Show Dr. Orbis enforcing range safety holds: *"Range safety criteria not satisfied: Preflight checklist not completed; Range clearance not granted."*
+  3. Run the **Preflight Checklist** and obtain **Range Safety Clearance**.
+  4. Ask Dr. Orbis again: *"All preflight go/no-go checks are green! Flight computer and range safety are GO for launch."*
+  5. Click **Launch**: watch the procedural smoke and engine flame plumes ignite, stage separation occur, and the camera glide seamlessly from Pad 39A into Orbit View.
+  6. Execute a **Hohmann Transfer Burn** and **Circularize at GEO (35,786 km)**. Point out the glowing Keplerian orbit ellipse and orbital period telemetry.
+  7. Click **Mission Debrief**: examine the orbital flight telemetry, specific mechanical energy conservation ($< 10^{-6}$ error), and receive your astronaut flight evaluation grade.
