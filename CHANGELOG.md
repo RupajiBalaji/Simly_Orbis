@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0-dev] - 2026-11-12
+
+### Added
+- **Space District: Launch & Orbit Bench (`launch_bench`)**:
+  - Deterministic orbital mechanics engine (`backend/app/space/orbit.py`) implementing multi-stage Tsiolkovsky $\Delta v$, vis-viva equation, circular velocity, Keplerian orbital period, and Hohmann transfer maneuvers.
+  - 4th-order Runge-Kutta (RK4) numerical state propagator with specific mechanical energy and angular momentum conservation verified to within $10^{-6}$ relative error.
+  - Three rocket presets: Orbis-1 (two-stage orbital), Orbis-Heavy (three-stage GEO capable), and Sounding Rocket (suborbital).
+  - 8 space safety rules (S1-S8): preflight checklist, range safety clearance, liftoff TWR > 1.0, propellant loading bounds, and apogee burns.
+  - Visual directives and procedural Three.js SpaceScene: Launch Pad 39A, launch umbilical tower, hold-down clamps, multi-stage rocket, particle flame and smoke plumes, 3D Earth globe, glowing Keplerian orbit LineLoop, smooth Pad View <-> Orbit View transitions, and flight failure mode animations.
+  - Ask Orbis Space capability: phrase parsing for 10 space actions with 55 phrase benchmark (100% pass rate).
+  - Dr. Orbis Space Mentor: launch readiness dry-run preflight checks, TWR and $\Delta v$ mechanics explanations, and flight debriefings.
+  - 5 space validation rows in `validation/data/space_orbit_references.csv` and frozen tolerance guard in `validation/space_tolerances.yaml`.
+  - Space playthrough scenario added to QA test harness (`qa/run.py`), generating 48 verified unique proof assets.
+
 ## [0.2.0] - 2026-10-14
 
 ### Added
