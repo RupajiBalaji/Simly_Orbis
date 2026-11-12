@@ -143,6 +143,7 @@ pytest backend/tests -v
 
 ## 📚 Documentation Index
 
+- [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md): Transparent register of known limitations, unverified rows, and technical caveats.
 - [docs/DEPLOY.md](docs/DEPLOY.md): 5-click deployment to Render via Blueprint, Docker setup, and troubleshooting.
 - [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md): 3-minute hackathon presentation script, 60-second lightning talk, and contingency guide.
 - [docs/JUDGE_QA.md](docs/JUDGE_QA.md): 15 honest questions and answers for hackathon judges and technical reviewers.
