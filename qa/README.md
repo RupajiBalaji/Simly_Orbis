@@ -12,10 +12,11 @@ Run the full end-to-end playthrough suite with one command:
 python qa/run.py
 ```
 
-### CLI Options
+### CLI Options & Environment Variables
 - `--headful`: Launch a visible Chromium browser window instead of headless mode.
 - `--port <PORT>`: Bind the local FastAPI backend to a specific port (defaults to a dynamic free port).
 - `--ci`: CI execution mode (reports FPS metrics without performance gating).
+- `QA_TIMEOUT_MS`: Configurable navigation and element timeout in milliseconds (default: `30000`). Recommended for software WebGL / CPU-only environments.
 
 ---
 
@@ -44,7 +45,8 @@ python qa/run.py
      - Dissolve in water solvent (`pk_ward_action_2_dissolve.png`)
      - Label cup and administer oral dose to patient Alex (`pk_ward_action_3_administer.png`)
      - Advance ward clock 1.0 h and draw blood sample (`pk_ward_action_4_blood.png`)
-     - Run plasma assay on centrifuge (`pk_ward_action_5_assay.png`)
+     - Run plasma assay on centrifuge (pk_ward_action_5_assay.png)
+   - FREE camera close-up verification: switches camera to FREE mode, positions camera within 0.55 m of avatar face, asserts distance < 1.0 m, and captures free_camera_face_closeup.png.
    - Completes waste disposal and hand washing, submits final report -> captures `pk_ward_report.png` and verifies assigned letter grade.
 4. **Titration Bench (`titration_bench`)**:
    - Returns to lobby and opens chemistry brief -> captures `titration_brief.png`.

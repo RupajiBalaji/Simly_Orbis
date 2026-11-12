@@ -125,6 +125,18 @@ export class CameraRig {
     const oldMode = this.mode;
     this.mode = mode;
 
+    if (this.mode === CameraMode.FREE) {
+      // In FREE mode, allow close inspection of character head/apparatus down to 0.25m
+      this.controls.minDistance = 0.25;
+      this.controls.maxDistance = 20.0;
+    } else if (this.mode === CameraMode.FIRST_PERSON) {
+      this.controls.minDistance = 0.05;
+      this.controls.maxDistance = 8.0;
+    } else {
+      this.controls.minDistance = 1.0;
+      this.controls.maxDistance = 16.0;
+    }
+
     // Restore avatar visibility if leaving first-person
     if (oldMode === CameraMode.FIRST_PERSON && mode !== CameraMode.FIRST_PERSON) {
       const controller = this.labScene?.characterController;
@@ -136,8 +148,6 @@ export class CameraRig {
         }
         if (controller.rig?.root) controller.rig.root.visible = true;
       }
-      this.controls.minDistance = 1.0;
-      this.controls.maxDistance = 16.0;
     }
 
     this.updateHUDModeUI();

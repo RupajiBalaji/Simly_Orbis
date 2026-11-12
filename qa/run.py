@@ -70,6 +70,7 @@ class QAHarnessRunner:
         self.is_ci = is_ci
         self.headless = headless
         self.base_url = f"http://127.0.0.1:{self.port}"
+        self.timeout_ms = int(os.environ.get("QA_TIMEOUT_MS", "30000"))
 
         self.root_dir = Path(__file__).resolve().parent.parent
         self.backend_dir = self.root_dir / "backend"
@@ -258,6 +259,7 @@ class QAHarnessRunner:
                 )
 
                 page = context.new_page()
+                page.set_default_timeout(self.timeout_ms)
                 page.on("console", self.on_console_message)
                 page.on("response", self.on_response)
 
@@ -265,8 +267,8 @@ class QAHarnessRunner:
                 # 1. LOBBY
                 # ==============================================================
                 print("\n[QA] --- Step 1: Navigating to World Lobby ---")
-                page.goto(f"{self.base_url}/", wait_until="domcontentloaded")
-                page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=10000)
+                page.goto(f"{self.base_url}/", wait_until="domcontentloaded", timeout=self.timeout_ms)
+                page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=self.timeout_ms)
                 page.wait_for_timeout(800)
                 self.capture_checkpoint(page, "lobby")
 
@@ -276,15 +278,15 @@ class QAHarnessRunner:
                 print("\n[QA] --- Step 2: Pharmacokinetics Ward (pk_ward) ---")
                 # Open brief
                 page.click("#card-district-pharma")
-                page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
+                page.wait_for_selector("#screen-brief:not(.hidden)", timeout=self.timeout_ms)
                 page.wait_for_timeout(500)
                 self.capture_checkpoint(page, "pk_ward_brief")
 
                 # Launch 3D laboratory
                 page.click("#btn-start-experiment")
-                page.wait_for_selector("#lab-hud:not(.hidden)", timeout=10000)
+                page.wait_for_selector("#lab-hud:not(.hidden)", timeout=self.timeout_ms)
                 # Wait for 3D apparatus and character to mount
-                page.wait_for_function("() => window.sceneManager && window.sceneManager.apparatusContainer.children.length > 0", timeout=15000)
+                page.wait_for_function("() => window.sceneManager && window.sceneManager.apparatusContainer.children.length > 0", timeout=self.timeout_ms)
                 page.wait_for_timeout(1000)
                 self.capture_checkpoint(page, "pk_ward_first_view")
 
@@ -324,6 +326,45 @@ class QAHarnessRunner:
                 self.capture_checkpoint(page, "cp3_first_person_view")
                 page.keyboard.press("KeyV")
                 page.wait_for_timeout(400)
+
+                # FREE-camera close-up check
+                print("  [QA] Demonstrating FREE Camera Mode Face Close-up Assertion...")
+                # Switch camera to FREE mode using the HUD button (#btn-toggle-camera-mode)
+                cam_mode_before = page.evaluate("() => window.sceneManager?.cameraRig?.mode")
+                page.click("#btn-toggle-camera-mode")
+                page.wait_for_timeout(300)
+                cam_mode_after = page.evaluate("() => window.sceneManager?.cameraRig?.mode")
+                if cam_mode_after != "FREE":
+                    # If it was in FOLLOW, toggleMode sets it to FREE. If not, explicitly invoke toggleMode/setMode
+                    page.evaluate("() => window.sceneManager?.cameraRig?.setMode('FREE')")
+                    page.wait_for_timeout(200)
+
+                # Position camera directly in front of avatar head in FREE mode
+                free_cam_dist = page.evaluate("""() => {
+                    const sm = window.sceneManager;
+                    const av = window.characterController?.rig;
+                    if (!sm || !av || !sm.cameraRig) return 999.0;
+                    const headPos = new window.THREE.Vector3();
+                    av.head.getWorldPosition(headPos);
+                    // Position camera 0.55m in front of face along avatar heading
+                    const heading = av.root ? av.root.rotation.y : 0;
+                    const fwdX = Math.sin(heading);
+                    const fwdZ = Math.cos(heading);
+                    sm.camera.position.set(headPos.x + fwdX * 0.55, headPos.y + 0.05, headPos.z + fwdZ * 0.55);
+                    sm.controls.target.copy(headPos);
+                    sm.controls.update();
+                    return sm.camera.position.distanceTo(headPos);
+                }""")
+                page.wait_for_timeout(400)
+                print(f"    -> FREE Mode Camera-to-Head Distance: {free_cam_dist:.3f}m (Target: < 1.0m)")
+                if free_cam_dist >= 1.0:
+                    self.failure_reasons.append(f"FREE camera close-up assertion failed: distance {free_cam_dist:.3f}m >= 1.0m")
+
+                self.capture_checkpoint(page, "free_camera_face_closeup")
+
+                # Restore follow camera mode
+                page.evaluate("() => { if (window.sceneManager?.cameraRig) { window.sceneManager.cameraRig.setMode('FOLLOW'); window.sceneManager.cameraRig.recenter(true); } }")
+                page.wait_for_timeout(300)
 
                 print("  [QA] Initiating character walking motion toward patient bed...")
                 page.evaluate("() => { if (window.characterController) window.characterController.walkToStation('patient_bed'); }")
