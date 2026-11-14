@@ -27,6 +27,18 @@ jobs:
         run: |
           pytest backend/tests
 
+      - name: Run Claims Grep Gate
+        run: |
+          python scripts/check_claims.py
+
+      - name: Run Stage Gates Self-Audit
+        run: |
+          python scripts/self_audit.py --skip-venv
+
+      - name: Dependency Security Audit (pip-audit)
+        run: |
+          pip-audit --desc || true
+
   qa:
     name: End-to-End Browser QA Playthrough
     runs-on: ubuntu-latest
