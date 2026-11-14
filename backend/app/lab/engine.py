@@ -189,6 +189,136 @@ def get_available_actions(session: LabSession) -> list[AvailableAction]:
         ))
         return actions
 
+    elif session.experiment_id == "dose_lab":
+        mon = session.apparatus_state.get("patient_monitor", {})
+        pump = session.apparatus_state.get("infusion_pump", {})
+        sched = session.apparatus_state.get("sampling_schedule", {})
+        pred = session.apparatus_state.get("prediction_slate", {})
+        deb = session.apparatus_state.get("debrief_station", {})
+
+        patient_declared = mon.get("patient_declared", False)
+        drug_selected = pump.get("drug_id") is not None
+        route_selected = pump.get("route") is not None
+        dose_set = pump.get("dose_mg", 0.0) > 0.0
+        sched_declared = sched.get("schedule_declared", False)
+
+        # 1. Select Patient
+        actions.append(AvailableAction(
+            action=ActionType.select_patient,
+            label="Declare Patient Profile",
+            targets=["preset_standard_70kg", "preset_renal_impairment", "preset_elderly", "preset_obese"],
+            enabled=is_active,
+        ))
+
+        # 2. Set Patient Covariates
+        actions.append(AvailableAction(
+            action=ActionType.set_covariates,
+            label="Adjust Patient Covariates",
+            targets=["patient_monitor"],
+            enabled=is_active,
+        ))
+
+        # 3. Check Renal
+        crcl = float(mon.get("crcl_ml_min", 100.0))
+        actions.append(AvailableAction(
+            action=ActionType.check_renal,
+            label="Acknowledge Renal Clearance",
+            targets=["patient_monitor"],
+            enabled=is_active and patient_declared,
+            disabled_reason="Declare patient profile first." if not patient_declared else None,
+        ))
+
+        # 4. Select Drug
+        actions.append(AvailableAction(
+            action=ActionType.select_drug,
+            label="Select Formulary Drug",
+            targets=["paracetamol", "gentamicin", "vancomycin", "metformin", "amoxicillin", "theophylline"],
+            enabled=is_active,
+        ))
+
+        # 5. Set Route
+        actions.append(AvailableAction(
+            action=ActionType.set_route,
+            label="Select Administration Route",
+            targets=["oral", "iv_bolus", "iv_infusion"],
+            enabled=is_active and drug_selected,
+            disabled_reason="Select drug from formulary first." if not drug_selected else None,
+        ))
+
+        # 6. Set Dose
+        actions.append(AvailableAction(
+            action=ActionType.set_dose,
+            label="Set Dose (mg)",
+            targets=["infusion_pump"],
+            enabled=is_active and drug_selected,
+            disabled_reason="Select drug from formulary first." if not drug_selected else None,
+        ))
+
+        # 7. Set Regimen
+        actions.append(AvailableAction(
+            action=ActionType.set_regimen,
+            label="Configure Regimen & Timing",
+            targets=["infusion_pump"],
+            enabled=is_active and dose_set,
+            disabled_reason="Set dose amount first." if not dose_set else None,
+        ))
+
+        # 8. Set Sampling Schedule
+        actions.append(AvailableAction(
+            action=ActionType.set_sampling,
+            label="Design Sampling Schedule",
+            targets=["sampling_schedule"],
+            enabled=is_active,
+        ))
+
+        # 9. Predict Target Window
+        actions.append(AvailableAction(
+            action=ActionType.predict_window,
+            label="Submit Scientific Prediction",
+            targets=["prediction_slate"],
+            enabled=is_active and patient_declared and dose_set,
+            disabled_reason="Declare patient and configure dose before predicting." if not (patient_declared and dose_set) else None,
+        ))
+
+        # 10. Run Simulation
+        can_run = patient_declared and drug_selected and route_selected and dose_set and sched_declared
+        actions.append(AvailableAction(
+            action=ActionType.run_simulation,
+            label="Execute PK/PD Simulation",
+            targets=["pkpd_chart_display"],
+            enabled=is_active and can_run,
+            disabled_reason="Declare patient, drug, route, dose, and sampling schedule before running." if not can_run else None,
+        ))
+
+        # 11. Compare Regimens
+        chart = session.apparatus_state.get("pkpd_chart_display", {})
+        has_sim = chart.get("last_result") is not None
+        actions.append(AvailableAction(
+            action=ActionType.compare_regimens,
+            label="Compare to Second Regimen",
+            targets=["pkpd_chart_display"],
+            enabled=is_active and has_sim,
+            disabled_reason="Run at least one simulation first." if not has_sim else None,
+        ))
+
+        # 12. Debrief PK/PD
+        actions.append(AvailableAction(
+            action=ActionType.debrief_pkpd,
+            label="Debrief Pharmacometrics",
+            targets=["debrief_station"],
+            enabled=is_active and has_sim,
+            disabled_reason="Run simulation before debriefing." if not has_sim else None,
+        ))
+
+        # 13. Submit Report
+        actions.append(AvailableAction(
+            action=ActionType.submit_report,
+            label="Submit Pharmacotherapy Report",
+            targets=["session_report"],
+            enabled=is_active,
+        ))
+        return actions
+
     # 1. Wear PPE
     ppe_missing = [p for p in ["goggles", "gloves", "coat"] if p not in session.ppe]
     actions.append(
@@ -1275,6 +1405,338 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
         if "debrief" not in session.protocol_progress:
             session.protocol_progress.append("debrief")
 
+    # -----------------------------------------------------------------------
+    # Dose Response Lab Actions
+    # -----------------------------------------------------------------------
+    elif action == ActionType.select_patient:
+        patient_id = target or params.get("patient_id", "preset_standard_70kg")
+        presets = {
+            "preset_standard_70kg": {"name": "Jordan", "weight_kg": 70.0, "age_yr": 35.0, "crcl_ml_min": 100.0},
+            "preset_renal_impairment": {"name": "Morgan", "weight_kg": 72.0, "age_yr": 62.0, "crcl_ml_min": 35.0},
+            "preset_elderly": {"name": "Eleanor", "weight_kg": 58.0, "age_yr": 78.0, "crcl_ml_min": 50.0},
+            "preset_obese": {"name": "Marcus", "weight_kg": 125.0, "age_yr": 42.0, "crcl_ml_min": 130.0},
+        }
+        chosen = presets.get(patient_id, presets["preset_standard_70kg"])
+        mon = session.apparatus_state.setdefault("patient_monitor", {})
+        mon["patient_declared"] = True
+        mon["patient_name"] = chosen["name"]
+        mon["weight_kg"] = chosen["weight_kg"]
+        mon["age_yr"] = chosen["age_yr"]
+        mon["crcl_ml_min"] = chosen["crcl_ml_min"]
+        mon["renal_check_acknowledged"] = False
+
+        msg = f"Patient {chosen['name']} selected: Weight {chosen['weight_kg']} kg, Age {chosen['age_yr']} yr, CrCl {chosen['crcl_ml_min']} mL/min."
+        anim = CharacterAnimation(name="read", target="patient_monitor", duration_ms=1000)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="patient_monitor",
+            label="PATIENT PROFILE",
+            value=f"{chosen['name']} ({chosen['weight_kg']} kg)",
+            unit=f"CrCl: {chosen['crcl_ml_min']} mL/min",
+            covariate_card=chosen,
+        ).model_dump())
+        if "select_patient" not in session.protocol_progress:
+            session.protocol_progress.append("select_patient")
+
+    elif action == ActionType.set_covariates:
+        mon = session.apparatus_state.setdefault("patient_monitor", {})
+        raw_wt = float(params.get("weight_kg", mon.get("weight_kg", 70.0)))
+        raw_age = float(params.get("age_yr", mon.get("age_yr", 35.0)))
+        raw_crcl = float(params.get("crcl_ml_min", mon.get("crcl_ml_min", 100.0)))
+
+        # Reject out-of-bounds at boundary (age 18-90, weight 40-150, CrCl 15-150)
+        wt = max(40.0, min(150.0, raw_wt))
+        age = max(18.0, min(90.0, raw_age))
+        crcl = max(15.0, min(150.0, raw_crcl))
+        from app.pharma.pkpd.engine import AdultCovariates
+        cov = AdultCovariates(weight_kg=wt, age_yr=age, crcl_ml_min=crcl)
+        cov.validate()
+
+        mon["weight_kg"] = wt
+        mon["age_yr"] = age
+        mon["crcl_ml_min"] = crcl
+        mon["patient_declared"] = True
+        mon["renal_check_acknowledged"] = False if crcl < 60.0 else True
+
+        msg = f"Covariates updated: Weight {wt:.1f} kg, Age {age:.0f} yr, CrCl {crcl:.1f} mL/min."
+        if raw_wt != wt or raw_age != age or raw_crcl != crcl:
+            msg += " (Parameters clamped to adult physiological boundary limits)."
+        anim = CharacterAnimation(name="read", target="patient_monitor", duration_ms=1000)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="patient_monitor",
+            label="COVARIATES",
+            value=f"{wt:.0f}kg | {age:.0f}yr",
+            unit=f"{crcl:.0f} mL/min",
+            covariate_card={"weight_kg": wt, "age_yr": age, "crcl_ml_min": crcl},
+        ).model_dump())
+
+    elif action == ActionType.check_renal:
+        mon = session.apparatus_state.setdefault("patient_monitor", {})
+        crcl = float(mon.get("crcl_ml_min", 100.0))
+        mon["renal_check_acknowledged"] = True
+        if crcl < 60.0:
+            msg = f"Renal impairment acknowledged (CrCl {crcl:.1f} mL/min). Renal elimination fraction adjusted."
+        else:
+            msg = f"Renal function verified within normal adult parameters (CrCl {crcl:.1f} mL/min)."
+        anim = CharacterAnimation(name="read", target="patient_monitor", duration_ms=1000)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="patient_monitor",
+            label="RENAL CHECK",
+            value="ACKNOWLEDGED",
+            unit=f"{crcl:.0f} mL/min",
+        ).model_dump())
+        if "check_renal" not in session.protocol_progress:
+            session.protocol_progress.append("check_renal")
+
+    elif action == ActionType.select_drug:
+        drug_id = target or params.get("drug_id", "paracetamol")
+        import json
+        from pathlib import Path
+        drugs_v2_path = Path(__file__).resolve().parent.parent / "pharma" / "pkpd" / "drugs_v2.json"
+        with open(drugs_v2_path, "r", encoding="utf-8") as f:
+            drugs_catalog = json.load(f)
+        drug_data = drugs_catalog.get(drug_id, drugs_catalog["paracetamol"])
+
+        pump = session.apparatus_state.setdefault("infusion_pump", {})
+        pump["drug_id"] = drug_id
+        pump["drug_name"] = drug_data["name"]
+        pump["routes_allowed"] = drug_data["routes_allowed"]
+        pump["model_type"] = drug_data["model_type"]
+        pump["target_window_low"] = drug_data["target_window_low"]
+        pump["target_window_high"] = drug_data["target_window_high"]
+        pump["max_game_dose_mg"] = drug_data["max_game_dose_mg"]
+        pump["what_this_drug_teaches"] = drug_data["what_this_drug_teaches"]
+
+        # Default route to first allowed route
+        if pump.get("route") not in drug_data["routes_allowed"]:
+            pump["route"] = drug_data["routes_allowed"][0]
+
+        msg = f"Selected {drug_data['name']} ({drug_data['model_type'].replace('_', ' ')}). Allowed routes: {', '.join(drug_data['routes_allowed'])}."
+        anim = CharacterAnimation(name="read", target="infusion_pump", duration_ms=1200)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="infusion_pump",
+            label="DRUG SELECT",
+            value=drug_data["name"],
+            unit=pump["route"].upper(),
+        ).model_dump())
+        if "select_drug" not in session.protocol_progress:
+            session.protocol_progress.append("select_drug")
+
+    elif action == ActionType.set_route:
+        route = target or params.get("route", "oral")
+        pump = session.apparatus_state.setdefault("infusion_pump", {})
+        allowed = pump.get("routes_allowed", ["oral", "iv_bolus", "iv_infusion"])
+        pump["route"] = route
+        msg = f"Administration route set to {route}."
+        anim = CharacterAnimation(name="read", target="infusion_pump", duration_ms=1000)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="infusion_pump",
+            label="ROUTE",
+            value=route.upper(),
+            unit="ADMIN",
+        ).model_dump())
+
+    elif action == ActionType.set_dose:
+        dose_mg = float(params.get("dose_mg", target or 500.0))
+        pump = session.apparatus_state.setdefault("infusion_pump", {})
+        pump["dose_mg"] = dose_mg
+        msg = f"Dose set to {dose_mg:.1f} mg."
+        anim = CharacterAnimation(name="weigh", target="infusion_pump", duration_ms=1000)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="infusion_pump",
+            label="DOSE",
+            value=f"{dose_mg:.0f}",
+            unit="mg",
+        ).model_dump())
+        if "set_dose" not in session.protocol_progress:
+            session.protocol_progress.append("set_dose")
+
+    elif action == ActionType.set_regimen:
+        pump = session.apparatus_state.setdefault("infusion_pump", {})
+        n_doses = int(params.get("n_doses", pump.get("n_doses", 1)))
+        interval_h = float(params.get("interval_h", pump.get("interval_h", 8.0)))
+        dur_h = float(params.get("infusion_duration_h", pump.get("infusion_duration_h", 1.0)))
+
+        pump["n_doses"] = max(1, n_doses)
+        pump["interval_h"] = max(1.0, interval_h)
+        pump["infusion_duration_h"] = max(0.1, dur_h)
+
+        msg = f"Regimen configured: {pump['n_doses']} doses q{pump['interval_h']:.0f}h"
+        if pump.get("route") == "iv_infusion":
+            msg += f" (Infusion duration {pump['infusion_duration_h']:.1f}h)"
+        anim = CharacterAnimation(name="read", target="infusion_pump", duration_ms=1000)
+
+    elif action == ActionType.set_sampling:
+        sched = session.apparatus_state.setdefault("sampling_schedule", {})
+        sched["schedule_declared"] = True
+        times_str = params.get("schedule", "0,1,2,4,8,12,24")
+        sched["sample_times_h"] = [float(x.strip()) for x in str(times_str).split(",") if x.strip()]
+        msg = "Blood sampling schedule confirmed for PK profile analysis."
+        anim = CharacterAnimation(name="draw_blood", target="patient_monitor", duration_ms=1200)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="patient_monitor",
+            label="SAMPLING",
+            value="ACTIVE",
+            unit="0-24h",
+        ).model_dump())
+        if "set_sampling" not in session.protocol_progress:
+            session.protocol_progress.append("set_sampling")
+
+    elif action == ActionType.predict_window:
+        pred_cmax = float(params.get("predicted_cmax", 15.0))
+        pred_time = float(params.get("predicted_time_in_window_h", 6.0))
+        slate = session.apparatus_state.setdefault("prediction_slate", {})
+        slate["predicted_cmax"] = pred_cmax
+        slate["predicted_time_in_window_h"] = pred_time
+        slate["submitted"] = True
+
+        msg = f"Prediction recorded: Expected Cmax {pred_cmax:.1f} mg/L, expected window duration {pred_time:.1f} h."
+        anim = CharacterAnimation(name="write_label", target="prediction_slate", duration_ms=1500)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="prediction_slate",
+            label="PREDICTION",
+            value=f"{pred_cmax:.1f} mg/L",
+            unit=f"{pred_time:.1f} h",
+        ).model_dump())
+        if "predict_window" not in session.protocol_progress:
+            session.protocol_progress.append("predict_window")
+
+    elif action == ActionType.run_simulation:
+        from app.pharma.pkpd.engine import (
+            PKPDParams,
+            AdultCovariates,
+            apply_covariates,
+            simulate_pkpd,
+            ModelType,
+            RouteType,
+        )
+        import json
+        from pathlib import Path
+
+        mon = session.apparatus_state.get("patient_monitor", {})
+        pump = session.apparatus_state.get("infusion_pump", {})
+        drug_id = pump.get("drug_id", "paracetamol")
+
+        drugs_v2_path = Path(__file__).resolve().parent.parent / "pharma" / "pkpd" / "drugs_v2.json"
+        with open(drugs_v2_path, "r", encoding="utf-8") as f:
+            drugs_catalog = json.load(f)
+        d_cfg = drugs_catalog.get(drug_id, drugs_catalog["paracetamol"])
+
+        route_str = pump.get("route", d_cfg["routes_allowed"][0])
+        route = RouteType(route_str)
+        model_type = ModelType(d_cfg["model_type"])
+
+        base_params = PKPDParams(
+            model_type=model_type,
+            route=route,
+            dose_mg=float(pump.get("dose_mg", 500.0)),
+            n_doses=int(pump.get("n_doses", 1)),
+            interval_h=float(pump.get("interval_h", 8.0)),
+            cl=float(d_cfg["cl"]),
+            v1=float(d_cfg["v1"]),
+            q=float(d_cfg.get("q", 0.0)),
+            v2=float(d_cfg.get("v2", 0.0)),
+            ka=float(d_cfg.get("ka", 1.5)),
+            f_bioav=float(d_cfg.get("f_bioav", 1.0)),
+            t_lag=float(d_cfg.get("t_lag", 0.0)),
+            infusion_duration_h=float(pump.get("infusion_duration_h", 1.0)),
+            fe=float(d_cfg.get("fe", 0.0)),
+            pd_enabled=True,
+            e0=0.0,
+            emax=100.0,
+            ec50=float(d_cfg.get("target_window_low", 10.0)),
+            hill_n=1.5,
+            target_window_low=float(d_cfg.get("target_window_low", 10.0)),
+            target_window_high=float(d_cfg.get("target_window_high", 20.0)),
+        )
+
+        cov = AdultCovariates(
+            weight_kg=float(mon.get("weight_kg", 70.0)),
+            age_yr=float(mon.get("age_yr", 35.0)),
+            crcl_ml_min=float(mon.get("crcl_ml_min", 100.0)),
+        )
+        scaled_params = apply_covariates(base_params, cov)
+        sim_res = simulate_pkpd(scaled_params, t_end_h=24.0, dt_h=0.1)
+
+        chart = session.apparatus_state.setdefault("pkpd_chart_display", {})
+        chart["sim_count"] = chart.get("sim_count", 0) + 1
+
+        curve_data = [{"t": t, "c": round(c, 4)} for t, c in zip(sim_res.times, sim_res.concentrations)]
+        effect_data = [{"t": t, "e": round(e, 2)} for t, e in zip(sim_res.times, sim_res.effect)]
+
+        res_dict = {
+            "cmax": round(sim_res.cmax, 3),
+            "tmax": round(sim_res.tmax, 2),
+            "auc": round(sim_res.auc_analytic, 2),
+            "half_life_h": round(sim_res.terminal_half_life_h, 2),
+            "time_in_target_h": round(sim_res.time_in_target_h, 2),
+            "time_above_target_h": round(sim_res.time_above_target_h, 2),
+            "time_below_target_h": round(sim_res.time_below_target_h, 2),
+            "accumulation_ratio": round(sim_res.accumulation_ratio, 2),
+            "target_window_low": scaled_params.target_window_low,
+            "target_window_high": scaled_params.target_window_high,
+            "drug_name": d_cfg["name"],
+            "route": route.value,
+            "dose_mg": scaled_params.dose_mg,
+        }
+        chart["last_result"] = res_dict
+        chart["last_curve"] = curve_data
+
+        msg = (
+            f"PK/PD simulation complete for {d_cfg['name']}: Cmax = {sim_res.cmax:.2f} mg/L at Tmax = {sim_res.tmax:.1f}h. "
+            f"Time in target window: {sim_res.time_in_target_h:.1f}h. Half-life: {sim_res.terminal_half_life_h:.1f}h."
+        )
+        anim = CharacterAnimation(name="read", target="pkpd_chart_display", duration_ms=2000)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="pkpd_chart_display",
+            label="PK/PD RESULTS",
+            value=f"Cmax: {sim_res.cmax:.2f} mg/L",
+            unit=f"AUC: {sim_res.auc_analytic:.1f}",
+            curve=curve_data,
+            effect_curve=effect_data,
+            window={"low": scaled_params.target_window_low, "high": scaled_params.target_window_high},
+        ).model_dump())
+        if "run_simulation" not in session.protocol_progress:
+            session.protocol_progress.append("run_simulation")
+
+    elif action == ActionType.compare_regimens:
+        chart = session.apparatus_state.setdefault("pkpd_chart_display", {})
+        last = chart.get("last_result", {})
+        chart["comparison_result"] = dict(last)
+        msg = f"Active regimen saved for comparison overlay. Adjust dose or patient covariates to see comparative curves."
+        anim = CharacterAnimation(name="read", target="pkpd_chart_display", duration_ms=1000)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="pkpd_chart_display",
+            label="COMPARISON",
+            value="BASELINE PINNED",
+            unit="OVERLAY ACTIVE",
+            regimen_comparison=last,
+        ).model_dump())
+
+    elif action == ActionType.debrief_pkpd:
+        deb = session.apparatus_state.setdefault("debrief_station", {})
+        deb["debriefed"] = True
+        msg = "Pharmacometric debrief complete: Observed curves, accumulation factors, and clearance adjustments reviewed."
+        anim = CharacterAnimation(name="read", target="debrief_station", duration_ms=1500)
+        visuals.append(VisualDirective(
+            type="readout",
+            target="debrief_station",
+            label="DEBRIEF",
+            value="COMPLETE",
+            unit="PHARMA DEPTH",
+        ).model_dump())
+        if "debrief_pkpd" not in session.protocol_progress:
+            session.protocol_progress.append("debrief_pkpd")
+
     # Fallback / Pour general
     elif action == ActionType.pour:
         src = params.get("source", "water_jug")
@@ -1367,6 +1829,55 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
             t_score += 6
         session.score_parts["technique"] = min(20, t_score)
 
+    elif session.experiment_id == "dose_lab":
+        # 1. Accuracy (30 max): predicted vs simulated Cmax and time in window
+        chart = session.apparatus_state.get("pkpd_chart_display", {})
+        last_res = chart.get("last_result", {})
+        slate = session.apparatus_state.get("prediction_slate", {})
+        acc_score = 0
+        if last_res and slate.get("submitted"):
+            sim_cmax = float(last_res.get("cmax", 0.0))
+            pred_cmax = float(slate.get("predicted_cmax", 0.0))
+            sim_time_in_win = float(last_res.get("time_in_target_h", 0.0))
+            pred_time_in_win = float(slate.get("predicted_time_in_window_h", 0.0))
+
+            cmax_err = abs(sim_cmax - pred_cmax) / max(0.01, sim_cmax)
+            win_err = abs(sim_time_in_win - pred_time_in_win) / max(0.01, sim_time_in_win)
+
+            if cmax_err <= 0.15:
+                acc_score += 15
+            elif cmax_err <= 0.30:
+                acc_score += 10
+            elif cmax_err <= 0.50:
+                acc_score += 5
+
+            if win_err <= 0.20:
+                acc_score += 15
+            elif win_err <= 0.40:
+                acc_score += 10
+            elif win_err <= 0.60:
+                acc_score += 5
+        elif last_res:
+            acc_score = 10
+        session.score_parts["accuracy"] = min(30, acc_score)
+
+        # 2. Technique (20 max): dose adjustment + renal check + multi-point sampling
+        t_score = 0
+        pump = session.apparatus_state.get("infusion_pump", {})
+        mon = session.apparatus_state.get("patient_monitor", {})
+        sched = session.apparatus_state.get("sampling_schedule", {})
+
+        if pump.get("dose_mg") is not None:
+            t_score += 7
+        if mon.get("renal_check_acknowledged"):
+            t_score += 7
+        n_pts = len(sched.get("sample_times_h", []))
+        if n_pts >= 3:
+            t_score += 6
+        elif n_pts >= 1:
+            t_score += 3
+        session.score_parts["technique"] = min(20, t_score)
+
     # Append consequence visual directives for safety violations
     for v in violations:
         if v.rule_id in ("R1", "R2"):
@@ -1387,6 +1898,12 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
             visuals.append(VisualDirective(type="failure", target="rocket", failure="staging_failure").model_dump())
         elif v.rule_id == "S6_RANGE_SAFETY":
             visuals.append(VisualDirective(type="effect", target="range_control", name="alarm_flash", duration_ms=3000).model_dump())
+        elif v.rule_id == "D1":
+            visuals.append(VisualDirective(type="effect", target="infusion_pump", name="alarm", duration_ms=2500).model_dump())
+        elif v.rule_id == "D2":
+            visuals.append(VisualDirective(type="effect", target="patient_monitor", name="alarm_flash", duration_ms=2500).model_dump())
+        elif v.rule_id == "D8":
+            visuals.append(VisualDirective(type="effect", target="patient_bed", name="alarm", duration_ms=3500).model_dump())
         if v.severity == "critical":
             visuals.append(VisualDirective(type="effect", target="camera", name="camera_shake", duration_ms=300).model_dump())
             visuals.append(VisualDirective(type="effect", target="screen", name="alarm_flash", duration_ms=350).model_dump())

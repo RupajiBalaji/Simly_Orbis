@@ -8,6 +8,7 @@ be used for real clinical diagnosis, medical prescribing, or hazardous chemical 
 
 from __future__ import annotations
 
+import json
 from typing import Any, Callable
 
 from app.lab.models import ActionRequest, ActionType, LabSession, Violation
@@ -513,10 +514,271 @@ SPACE_RULES: list[SafetyRule] = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Dose Response Lab Rules (D1 - D8)
+# ---------------------------------------------------------------------------
+
+def _load_drugs_v2_catalog() -> dict[str, Any]:
+    from pathlib import Path
+    drugs_path = Path(__file__).resolve().parent.parent / "pharma" / "pkpd" / "drugs_v2.json"
+    if drugs_path.exists():
+        with open(drugs_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def _check_d1_max_dose(session: LabSession, req: ActionRequest) -> bool:
+    """D1: Dose exceeds adult max single dose for selected drug (from drugs_v2.json max_game_dose_mg)."""
+    catalog = _load_drugs_v2_catalog()
+    pump = session.apparatus_state.get("infusion_pump", {})
+    drug_id = pump.get("drug_id", "paracetamol")
+    d_cfg = catalog.get(drug_id, {})
+    max_dose = float(d_cfg.get("max_game_dose_mg", 1000.0))
+
+    if req.action == ActionType.set_dose:
+        dose = float(req.params.get("dose_mg", 0.0))
+        return dose > max_dose
+    elif req.action == ActionType.run_simulation:
+        dose = float(pump.get("dose_mg", 0.0))
+        return dose > max_dose
+    return False
+
+
+def _check_d2_renal_impairment(session: LabSession, req: ActionRequest) -> bool:
+    """D2: Unadjusted dose in renal impairment: CrCl < 60 mL/min, drug fe > 0.4, dose > recommended."""
+    catalog = _load_drugs_v2_catalog()
+    mon = session.apparatus_state.get("patient_monitor", {})
+    pump = session.apparatus_state.get("infusion_pump", {})
+    drug_id = pump.get("drug_id", "paracetamol")
+    d_cfg = catalog.get(drug_id, {})
+
+    crcl = float(mon.get("crcl_ml_min", 100.0))
+    fe = float(d_cfg.get("fe", 0.0))
+    max_dose = float(d_cfg.get("max_game_dose_mg", 1000.0))
+    recommended_renal_dose = max_dose * (crcl / 120.0)
+
+    if crcl < 60.0 and fe > 0.4:
+        if req.action == ActionType.set_dose:
+            dose = float(req.params.get("dose_mg", 0.0))
+            return dose > recommended_renal_dose or not mon.get("renal_check_acknowledged", False)
+        elif req.action == ActionType.run_simulation:
+            dose = float(pump.get("dose_mg", 0.0))
+            return dose > recommended_renal_dose or not mon.get("renal_check_acknowledged", False)
+    return False
+
+
+def _check_d3_route_mismatch(session: LabSession, req: ActionRequest) -> bool:
+    """D3: Route mismatch: oral dose given to patient with oral bioavailability F == 0 or not allowed."""
+    catalog = _load_drugs_v2_catalog()
+    pump = session.apparatus_state.get("infusion_pump", {})
+    drug_id = pump.get("drug_id", "paracetamol")
+    d_cfg = catalog.get(drug_id, {})
+    f_bioav = float(d_cfg.get("f_bioav", 1.0))
+    routes_allowed = d_cfg.get("routes_allowed", ["oral", "iv_bolus", "iv_infusion"])
+
+    if req.action == ActionType.set_route:
+        route = req.params.get("route") or req.target or "oral"
+        if route == "oral" and (f_bioav <= 0.05 or "oral" not in routes_allowed):
+            return True
+        if route not in routes_allowed:
+            return True
+    elif req.action == ActionType.run_simulation:
+        route = pump.get("route", "oral")
+        if route == "oral" and (f_bioav <= 0.05 or "oral" not in routes_allowed):
+            return True
+        if route not in routes_allowed:
+            return True
+    return False
+
+
+def _check_d4_covariate_bounds(session: LabSession, req: ActionRequest) -> bool:
+    """D4: Out-of-bounds covariate requested: reject at boundary (age 18-90, weight 40-150, CrCl 15-150)."""
+    if req.action == ActionType.set_covariates:
+        params = req.params
+        wt = params.get("weight_kg")
+        age = params.get("age_yr")
+        crcl = params.get("crcl_ml_min")
+        if wt is not None and (float(wt) < 40.0 or float(wt) > 150.0):
+            return True
+        if age is not None and (float(age) < 18.0 or float(age) > 90.0):
+            return True
+        if crcl is not None and (float(crcl) < 15.0 or float(crcl) > 150.0):
+            return True
+    return False
+
+
+def _check_d5_nti_sampling(session: LabSession, req: ActionRequest) -> bool:
+    """D5: Narrow therapeutic index (NTI) drug with sampling count < 3."""
+    if req.action == ActionType.run_simulation:
+        catalog = _load_drugs_v2_catalog()
+        pump = session.apparatus_state.get("infusion_pump", {})
+        drug_id = pump.get("drug_id", "paracetamol")
+        d_cfg = catalog.get(drug_id, {})
+        c_low = float(d_cfg.get("target_window_low", 1.0))
+        c_high = float(d_cfg.get("target_window_high", 2.0))
+        is_nti = drug_id in ("theophylline", "gentamicin", "vancomycin", "digoxin") or (c_high / max(0.001, c_low) <= 2.5)
+
+        if is_nti:
+            sched = session.apparatus_state.get("sampling_schedule", {})
+            times = sched.get("sample_times_h", [])
+            return len(times) < 3
+    return False
+
+
+def _check_d6_infusion_rate(session: LabSession, req: ActionRequest) -> bool:
+    """D6: Infusion rate exceeds max recommended (infusion duration < 15 min for rate-limited drugs)."""
+    if req.action == ActionType.set_regimen:
+        dur = req.params.get("infusion_duration_h")
+        if dur is not None and float(dur) < 0.25:
+            return True
+    elif req.action == ActionType.run_simulation:
+        pump = session.apparatus_state.get("infusion_pump", {})
+        if pump.get("route") == "iv_infusion":
+            dur = float(pump.get("infusion_duration_h", 1.0))
+            return dur < 0.25
+    return False
+
+
+def _check_d7_window_prediction(session: LabSession, req: ActionRequest) -> bool:
+    """D7: Missing target window prediction before running simulation."""
+    if req.action == ActionType.run_simulation:
+        slate = session.apparatus_state.get("prediction_slate", {})
+        return not bool(slate.get("submitted", False))
+    return False
+
+
+def _check_d8_toxic_peak(session: LabSession, req: ActionRequest) -> bool:
+    """D8: Toxic peak: simulated Cmax > target_window.c_toxic."""
+    if req.action == ActionType.run_simulation:
+        pump = session.apparatus_state.get("infusion_pump", {})
+        mon = session.apparatus_state.get("patient_monitor", {})
+        drug_id = pump.get("drug_id", "paracetamol")
+        catalog = _load_drugs_v2_catalog()
+        d_cfg = catalog.get(drug_id, {})
+        c_high = float(d_cfg.get("target_window_high", 20.0))
+        c_toxic = c_high * 1.5
+        dose_mg = float(pump.get("dose_mg", 0.0))
+        if dose_mg <= 0:
+            return False
+
+        try:
+            from app.pharma.pkpd.engine import (
+                PKPDParams,
+                AdultCovariates,
+                apply_covariates,
+                simulate_pkpd,
+                ModelType,
+                RouteType,
+            )
+            route = RouteType(pump.get("route", d_cfg.get("routes_allowed", ["oral"])[0]))
+            model_type = ModelType(d_cfg.get("model_type", "one_compartment"))
+            base_params = PKPDParams(
+                model_type=model_type,
+                route=route,
+                dose_mg=dose_mg,
+                n_doses=int(pump.get("n_doses", 1)),
+                interval_h=float(pump.get("interval_h", 8.0)),
+                cl=float(d_cfg.get("cl", 10.0)),
+                v1=float(d_cfg.get("v1", 40.0)),
+                q=float(d_cfg.get("q", 0.0)),
+                v2=float(d_cfg.get("v2", 0.0)),
+                ka=float(d_cfg.get("ka", 1.5)),
+                f_bioav=float(d_cfg.get("f_bioav", 1.0)),
+                t_lag=float(d_cfg.get("t_lag", 0.0)),
+                infusion_duration_h=float(pump.get("infusion_duration_h", 1.0)),
+                fe=float(d_cfg.get("fe", 0.0)),
+            )
+            cov = AdultCovariates(
+                weight_kg=float(mon.get("weight_kg", 70.0)),
+                age_yr=float(mon.get("age_yr", 35.0)),
+                crcl_ml_min=float(mon.get("crcl_ml_min", 100.0)),
+            )
+            scaled = apply_covariates(base_params, cov)
+            sim_res = simulate_pkpd(scaled, t_end_h=24.0, dt_h=0.1)
+            return sim_res.cmax > c_toxic
+        except Exception:
+            v1 = float(d_cfg.get("v1", 40.0))
+            return (dose_mg / max(1.0, v1)) > c_toxic
+    return False
+
+
+DOSE_LAB_RULES: list[SafetyRule] = [
+    SafetyRule(
+        rule_id="D1",
+        title="Dose Exceeds Maximum Safe Single Dose",
+        severity="major",
+        penalty_points=15,
+        explanation="Administered dose exceeds the maximum recommended adult single dose from drug specifications.",
+        checker=_check_d1_max_dose,
+    ),
+    SafetyRule(
+        rule_id="D2",
+        title="Unadjusted Dose in Renal Impairment",
+        severity="critical",
+        penalty_points=20,
+        explanation="Patients with renal impairment (CrCl < 60 mL/min) receiving renally cleared drugs (fe > 0.4) require dose reduction.",
+        checker=_check_d2_renal_impairment,
+    ),
+    SafetyRule(
+        rule_id="D3",
+        title="Route Mismatch (Incompatible Bioavailability)",
+        severity="major",
+        penalty_points=10,
+        explanation="Selected administration route is incompatible with drug bioavailability (e.g. oral route for aminoglycosides or glycopeptides).",
+        checker=_check_d3_route_mismatch,
+    ),
+    SafetyRule(
+        rule_id="D4",
+        title="Out-of-Bounds Adult Covariates Requested",
+        severity="warning",
+        penalty_points=5,
+        explanation="Patient parameters must remain within adult boundary limits (Age 18-90, Weight 40-150 kg, CrCl 15-150 mL/min).",
+        checker=_check_d4_covariate_bounds,
+    ),
+    SafetyRule(
+        rule_id="D5",
+        title="Inadequate Sampling Count for Narrow Therapeutic Index Drug",
+        severity="warning",
+        penalty_points=10,
+        explanation="Narrow therapeutic index drugs require at least 3 blood sampling observation timepoints to characterize PK curve.",
+        checker=_check_d5_nti_sampling,
+    ),
+    SafetyRule(
+        rule_id="D6",
+        title="Excessive Infusion Rate / Duration Too Short",
+        severity="major",
+        penalty_points=15,
+        explanation="Intravenous infusions must not be administered in under 15 minutes (< 0.25h) to avoid adverse infusion reactions.",
+        checker=_check_d6_infusion_rate,
+    ),
+    SafetyRule(
+        rule_id="D7",
+        title="Missing Target Window Prediction",
+        severity="warning",
+        penalty_points=5,
+        explanation="Enter your predicted peak concentration and target window duration before executing simulation.",
+        checker=_check_d7_window_prediction,
+    ),
+    SafetyRule(
+        rule_id="D8",
+        title="Toxic Peak Concentration Exceeded",
+        severity="critical",
+        penalty_points=25,
+        explanation="Simulated Cmax exceeds the toxic concentration threshold (toxicity risk). Regimen adjustment required.",
+        checker=_check_d8_toxic_peak,
+    ),
+]
+
+
 def check_safety_rules(session: LabSession, req: ActionRequest) -> list[Violation]:
     """Evaluate active safety rules for the given action and return detected violations."""
     violations: list[Violation] = []
-    active_rules = SPACE_RULES if session.experiment_id == "launch_bench" else SAFETY_RULES
+    if session.experiment_id == "launch_bench":
+        active_rules = SPACE_RULES
+    elif session.experiment_id == "dose_lab":
+        active_rules = DOSE_LAB_RULES
+    else:
+        active_rules = SAFETY_RULES
     for rule in active_rules:
         v = rule.check(session, req)
         if v:

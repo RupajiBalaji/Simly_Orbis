@@ -608,6 +608,8 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
         lessons.append("Titration: Stoichiometric equivalence point occurs when moles of base equal moles of acid.")
     elif session.experiment_id == "launch_bench":
         lessons.append("Orbital Mechanics: Orbital insertion requires tangential velocity matching circular velocity (vis-viva) with staging mass ratios optimized by Tsiolkovsky's equation.")
+    elif session.experiment_id == "dose_lab":
+        lessons.append("Pharmacometrics: Drug concentration-time curves scale with clearance and volume of distribution, influenced by weight allometry and renal function.")
 
     trial_res = body.trial_result if body else None
     if trial_res:
@@ -697,6 +699,68 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
 
 ## 4. Flight Telemetry & Debrief Insights
 {tracking.get('insight', 'Keplerian orbital telemetry recorded and verified under two-body Newtonian gravitation.')}
+"""
+
+    elif session.experiment_id == "dose_lab":
+        chart = session.apparatus_state.get("pkpd_chart_display", {})
+        last_res = chart.get("last_result", {})
+        slate = session.apparatus_state.get("prediction_slate", {})
+        mon = session.apparatus_state.get("patient_monitor", {})
+        pump = session.apparatus_state.get("infusion_pump", {})
+
+        pred_cmax = float(slate.get("predicted_cmax", 0.0))
+        sim_cmax = float(last_res.get("cmax", 0.0))
+        pred_win_t = float(slate.get("predicted_time_in_window_h", 0.0))
+        sim_win_t = float(last_res.get("time_in_target_h", 0.0))
+        w_low = float(last_res.get("target_window_low", 10.0))
+        w_high = float(last_res.get("target_window_high", 20.0))
+
+        v_section = ""
+        if session.violations:
+            v_rows = [f"- **{v.rule_id} ({v.severity.upper()})**: {v.title} – {v.explanation} (-{v.penalty_points} pts)" for v in session.violations]
+            v_section = "\n".join(v_rows)
+        else:
+            v_section = "- Flawless protocol adherence: No safety rule violations triggered."
+
+        drug_name = pump.get("drug_name", "Selected Drug")
+        route_str = pump.get("route", "oral").upper()
+        dose_mg = float(pump.get("dose_mg", 500.0))
+        pt_name = mon.get("name", "Adult Virtual Patient")
+        pt_wt = float(mon.get("weight_kg", 70.0))
+        pt_age = float(mon.get("age_yr", 35.0))
+        pt_crcl = float(mon.get("crcl_ml_min", 100.0))
+
+        report_md = f"""# Orbis Lab Pharmacometric Analytical Report: Dose Response Lab
+**Session ID**: {session_id}  
+**Pharmacometrician**: {session.nickname}  
+**Patient**: {pt_name} ({pt_age:.0f}y, {pt_wt:.0f}kg, CrCl {pt_crcl:.0f} mL/min)  
+**Regimen**: {drug_name} {dose_mg:.0f} mg via {route_str}  
+**Overall Grade**: {grade} ({total_score}/100)
+
+---
+
+## 1. Simulated vs. Predicted Metrics
+| Metric | Student Prediction | Simulated Engine Result | Discrepancy |
+|---|---|---|---|
+| Peak Concentration (Cmax) | {pred_cmax:.2f} mg/L | {sim_cmax:.2f} mg/L | {abs(pred_cmax - sim_cmax):.2f} mg/L |
+| Time in Target Window | {pred_win_t:.1f} h | {sim_win_t:.1f} h | {abs(pred_win_t - sim_win_t):.1f} h |
+| Target Therapeutic Window | {w_low:.1f} – {w_high:.1f} mg/L | AUC: {float(last_res.get('auc', 0.0)):.1f} mg·h/L | Half-life: {float(last_res.get('half_life_h', 0.0)):.1f} h |
+
+---
+
+## 2. Safety Rule Triggers & Protocol Violations
+{v_section}
+
+---
+
+## 3. Clinical Significance & Recommendations for Improvement
+- **Exposure Target**: {'Target therapeutic exposure achieved within safe window.' if sim_cmax >= w_low and sim_cmax <= w_high else ('Potential toxicity risk from supratherapeutic Cmax; decrease dose or lengthen dosing interval.' if sim_cmax > w_high else 'Subtherapeutic exposure observed; consider dose titration.')}
+- **Pharmacokinetic Principles**: Clearance scales allometrically with weight $(WT/70)^{{0.75}}$ and renal function $(CrCl/120)$ for renally cleared medications.
+- **Recommendations**: Confirm renal status before dosing renally eliminated compounds, and use multi-point sampling schedules for narrow therapeutic index (NTI) drugs.
+
+---
+> [!NOTE]
+> **Educational Simulation**: Educational simulation, not medical advice, not clinical evidence. Adult simulation only (ages 18–90, weight 40–150 kg, CrCl 15–150 mL/min).
 """
 
     report_id = str(uuid.uuid4())

@@ -52,6 +52,20 @@ class ActionType(str, Enum):
     circularize = "circularize"
     debrief = "debrief"
 
+    # Dose Response Lab actions (Stage 3 Pharma Depth)
+    select_patient = "select_patient"
+    select_drug = "select_drug"
+    set_route = "set_route"
+    set_dose = "set_dose"
+    set_regimen = "set_regimen"
+    set_covariates = "set_covariates"
+    check_renal = "check_renal"
+    set_sampling = "set_sampling"
+    predict_window = "predict_window"
+    run_simulation = "run_simulation"
+    compare_regimens = "compare_regimens"
+    debrief_pkpd = "debrief_pkpd"
+
 
 # ---------------------------------------------------------------------------
 # Visual Directives Contract (Rendered by 3D Client)
@@ -94,6 +108,13 @@ class VisualDirective(BaseModel):
     stage_sep: int | None = None
     failure: str | None = None
 
+    # Dose Response Lab visual directive fields (ADD fields only)
+    curve: list[dict[str, Any]] | None = None
+    effect_curve: list[dict[str, Any]] | None = None
+    window: dict[str, Any] | None = None
+    covariate_card: dict[str, Any] | None = None
+    regimen_comparison: dict[str, Any] | None = None
+
 
 class CharacterAnimation(BaseModel):
     """Avatar animation directive informing 3D client which gesture to trigger."""
@@ -129,6 +150,10 @@ class Violation(BaseModel):
     severity: Literal["info", "warning", "major", "critical"]
     penalty_points: int
     explanation: str
+
+    @property
+    def penalty(self) -> int:
+        return self.penalty_points
 
 
 # ---------------------------------------------------------------------------
