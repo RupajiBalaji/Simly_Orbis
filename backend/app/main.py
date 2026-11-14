@@ -240,6 +240,14 @@ async def health() -> dict:
         or None
     )
 
+    ai_status = {
+        "enabled": bool(settings.ai_enabled),
+        "has_api_key": bool(settings.gemini_api_key.strip()),
+        "model": settings.gemini_model,
+        "daily_cap": settings.mentor_daily_cap,
+        "active_mode": "gemini" if (settings.ai_enabled and bool(settings.gemini_api_key.strip())) else "rule_based_fallback",
+    }
+
     return {
         "status": "ok",
         "storage_mode": _db.STORAGE_MODE,
@@ -254,6 +262,7 @@ async def health() -> dict:
         "app_version": settings.app_version,
         "version": settings.app_version,
         "git_sha": git_sha,
+        "ai_status": ai_status,
     }
 
 

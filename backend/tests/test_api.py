@@ -26,6 +26,12 @@ async def test_health(client: AsyncClient):
     assert "scores" in body["collections"]
     assert "runs" in body["collections"]
     assert "pharma.pk" in body["modules"]
+    assert "version" in body
+    assert "git_sha" in body
+    assert "ai_status" in body
+    assert "enabled" in body["ai_status"]
+    assert "has_api_key" in body["ai_status"]
+    assert "daily_cap" in body["ai_status"]
 
 
 @pytest.mark.asyncio
@@ -49,6 +55,12 @@ async def test_health_git_sha_resolution(client: AsyncClient, monkeypatch: pytes
     r3 = await client.get("/api/health")
     assert r3.status_code == 200
     assert r3.json()["git_sha"] == "customgitsha789"
+
+
+def test_validate_startup_config_runs():
+    """Verify validate_startup_config executes cleanly."""
+    from app.security import validate_startup_config
+    validate_startup_config()  # must not raise an exception
 
 
 

@@ -24,14 +24,22 @@ Your service will build from `Dockerfile` and be live at `https://<service-name>
 |---|---|---|---|
 | `PORT` | Optional | `8000` (`10000` on Render) | Port on which Uvicorn listens. |
 | `MONGODB_URI` | Optional | `""` | MongoDB Atlas connection string. If omitted, app falls back cleanly to in-memory storage. |
-| `DB_NAME` | Optional | `Simly_Orbis` | Name of the database to use. |
+| `DB_NAME` | Optional | `simly_orbis` | Name of the database to use. |
 | `GEMINI_API_KEY` | Optional | `""` | Google Gemini API key for Dr. Orbis (Mentor & Tutor). If omitted, falls back to rule-based hints. |
-| `GEMINI_MODEL` | Optional | `gemini-flash-latest` | Google Gemini model identifier. |
+| `GEMINI_MODEL` | Optional | `gemini-flash-lite-latest` | Google Gemini model identifier. |
 | `TRUST_PROXY` | Optional | `false` (`true` on Render) | When `true`, rate limiter trusts proxy headers and uses the LAST hop of `X-Forwarded-For`. |
-| `AI_ENABLED` | Optional | `true` | Set to `false` to immediately disable all external LLM calls. |
+| `AI_ENABLED` | Optional | `true` | Set to `false` to immediately disable all external LLM calls (kill switch). |
 | `MENTOR_DAILY_CAP` | Optional | `300` | Maximum AI mentor calls allowed per UTC calendar day. |
 | `ALLOWED_ORIGINS` | Optional | `*` | Comma-separated CORS allowed origins. |
 | `GIT_SHA` | Optional | `""` | Git commit SHA reported in `/api/health`. Falls back to Render's built-in `RENDER_GIT_COMMIT`, else null. |
+| `APP_VERSION` | Optional | `0.4.1-dev` | Application version declared in configuration. |
+
+### Startup Validation
+At application launch, `validate_startup_config()` runs automatically in lifespan startup:
+1. Validates that `MENTOR_DAILY_CAP` is positive (> 0).
+2. Checks `AI_ENABLED`: if enabled but `GEMINI_API_KEY` is empty, emits an informational warning and routes all mentor/assistant requests through the deterministic rule-based fallback parser.
+3. Checks database connection: verifies connection to MongoDB Atlas, otherwise logs clean activation of the in-memory fallback store.
+4. Redacts sensitive credentials from all system logs.
 
 > [!NOTE]
 > **AI Provider Configuration**: Dr. Orbis (Mentor & Tutor) is powered by **Google Gemini**. If `GEMINI_API_KEY` is not provided, both services seamlessly operate using educational rule-based fallback responses.
