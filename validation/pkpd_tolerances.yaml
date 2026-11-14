@@ -1,0 +1,27 @@
+# Tolerances for Simly Orbis PK/PD Engine Validation
+# Declares per-quantity validation tolerances for one- and two-compartment PK/PD analytical benchmarks.
+# All benchmarks reflect exact analytical identities from standard pharmacometrics textbooks.
+
+min_verified_pass_rate: 0.85
+
+quantities:
+  initial_concentration:
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    reason: "Exact analytical dilution C0 = Dose / V1."
+  steady_state_concentration:
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    reason: "Exact analytical infusion steady-state Css = R0 / CL."
+  macro_rate_sum:
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    reason: "Exact analytical identity alpha + beta = k10 + k12 + k21."
+  macro_rate_product:
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    reason: "Exact analytical identity alpha * beta = k10 * k21."
+  effect_at_ec50:
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    reason: "Exact analytical direct Emax property: E(EC50) = Emax / 2."

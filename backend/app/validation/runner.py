@@ -86,6 +86,14 @@ class ValidationRunner:
                 if "quantities" in space_tols:
                     tolerances.setdefault("quantities", {}).update(space_tols["quantities"])
 
+        # Merge PK/PD tolerances if pkpd_tolerances.yaml exists
+        pkpd_tol_path = self.tolerances_path.parent / "pkpd_tolerances.yaml"
+        if yaml is not None and pkpd_tol_path.exists():
+            with open(pkpd_tol_path, "r", encoding="utf-8") as f:
+                pkpd_tols = yaml.safe_load(f) or {}
+                if "quantities" in pkpd_tols:
+                    tolerances.setdefault("quantities", {}).update(pkpd_tols["quantities"])
+
         return tolerances
 
     def _load_references(self) -> list[dict[str, Any]]:
@@ -201,7 +209,8 @@ class ValidationRunner:
             "unverified_results": unverified_items,
             "verification_results": [it for it in evaluated_items if it["id"].startswith("titr_")],
             "space_results": [it for it in evaluated_items if it["id"].startswith("space_")],
-            "validation_results": [it for it in evaluated_items if not it["id"].startswith("titr_") and not it["id"].startswith("space_")],
+            "pkpd_results": [it for it in evaluated_items if it["id"].startswith("pkpd_")],
+            "validation_results": [it for it in evaluated_items if not it["id"].startswith("titr_") and not it["id"].startswith("space_") and not it["id"].startswith("pkpd_")],
             "sensitivity_analysis": sensitivity,
         }
 
@@ -332,6 +341,36 @@ class ValidationRunner:
                 r1 = EARTH_RADIUS_M + 200000.0
                 r2 = 42164000.0
                 return float(hohmann_transfer(r1, r2)["total_dv_ms"])
+
+        # 5. PK/PD references
+        elif ref_id.startswith("pkpd_"):
+            from app.pharma.pkpd.engine import (
+                PKPDParams,
+                ModelType,
+                RouteType,
+                simulate_pkpd,
+                compute_biexponential_coefficients,
+            )
+            if ref_id == "pkpd_iv_bolus_initial_conc":
+                p = PKPDParams(model_type=ModelType.one_compartment, route=RouteType.iv_bolus, dose_mg=500.0, cl=10.0, v1=50.0)
+                res = simulate_pkpd(p, t_end_h=2.0)
+                return float(res.concentrations[0])
+            elif ref_id == "pkpd_iv_infusion_steady_state":
+                p = PKPDParams(model_type=ModelType.one_compartment, route=RouteType.iv_infusion, dose_mg=4000.0, infusion_duration_h=40.0, cl=20.0, v1=100.0)
+                res = simulate_pkpd(p, t_end_h=40.0)
+                return float(res.concentrations[-1])
+            elif ref_id == "pkpd_two_comp_alpha_beta_sum":
+                p = PKPDParams(model_type=ModelType.two_compartment, route=RouteType.iv_bolus, dose_mg=600.0, cl=12.0, v1=24.0, q=18.0, v2=36.0)
+                biexp = compute_biexponential_coefficients(p)
+                return float(biexp.alpha + biexp.beta)
+            elif ref_id == "pkpd_two_comp_alpha_beta_prod":
+                p = PKPDParams(model_type=ModelType.two_compartment, route=RouteType.iv_bolus, dose_mg=600.0, cl=12.0, v1=24.0, q=18.0, v2=36.0)
+                biexp = compute_biexponential_coefficients(p)
+                return float(biexp.alpha * biexp.beta)
+            elif ref_id == "pkpd_emax_ec50_effect":
+                p = PKPDParams(model_type=ModelType.one_compartment, route=RouteType.iv_bolus, dose_mg=500.0, cl=10.0, v1=50.0, pd_enabled=True, e0=0.0, emax=100.0, ec50=10.0)
+                res = simulate_pkpd(p, t_end_h=2.0)
+                return float(res.effect[0])
 
         return 0.0
 

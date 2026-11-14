@@ -252,7 +252,28 @@ def test_verified_by_format_guard():
                     f"Must be 'unverified' or match '^[^:]+:\\d{{4}}-\\d{{2}}-\\d{{2}}$'."
                 )
 
-    assert total_checked == 27, f"Expected 27 reference rows (22 baseline + 5 space), found {total_checked}"
+    assert total_checked == 32, f"Expected 32 reference rows (22 baseline + 5 space + 5 pkpd), found {total_checked}"
+
+
+def test_pkpd_tolerances_configuration_frozen():
+    """Fails if validation/pkpd_tolerances.yaml changes.
+    Freezes tolerances for PK/PD engine benchmarks.
+    """
+    import hashlib
+
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    tol_file = base_dir / "validation" / "pkpd_tolerances.yaml"
+    assert tol_file.exists(), "validation/pkpd_tolerances.yaml missing"
+
+    content = tol_file.read_bytes()
+    computed_sha256 = hashlib.sha256(content).hexdigest()
+
+    FROZEN_PKPD_TOLERANCES_SHA256 = "443d18ab90e60b43e7070779c6b0ba2d5aea431a3f7ec3373ca0349ad1064e75"
+
+    assert computed_sha256 == FROZEN_PKPD_TOLERANCES_SHA256, (
+        f"validation/pkpd_tolerances.yaml has been modified! Expected hash {FROZEN_PKPD_TOLERANCES_SHA256}, "
+        f"got {computed_sha256}."
+    )
 
 
 def test_space_tolerances_configuration_frozen():
