@@ -968,7 +968,7 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
             target="flight_computer",
             label="VEHICLE SELECT",
             value=f"{matched['name']}",
-            unit="PAD 39A",
+            unit="LAUNCH PAD A",
         ).model_dump())
         if "choose_rocket" not in session.protocol_progress:
             session.protocol_progress.append("choose_rocket")

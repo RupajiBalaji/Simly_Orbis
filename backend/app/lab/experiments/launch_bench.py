@@ -16,7 +16,7 @@ LAUNCH_BENCH_EXPERIMENT = ExperimentDefinition(
     district="space",
     description=(
         "Design rocket staging, verify Tsiolkovsky delta-v budgets and liftoff TWR, "
-        "execute preflight safety checklists, launch into low Earth orbit from Pad 39A, "
+        "execute preflight safety checklists, launch into low Earth orbit from Launch Pad A, "
         "and execute precision Hohmann orbital transfer maneuvers."
     ),
     learning_goals=[

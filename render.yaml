@@ -24,3 +24,5 @@ services:
         value: "300"
       - key: ALLOWED_ORIGINS
         value: "*"
+      - key: GIT_SHA
+        value: "" # Optional override; defaults to Render's RENDER_GIT_COMMIT if unset

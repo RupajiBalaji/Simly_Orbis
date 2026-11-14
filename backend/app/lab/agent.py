@@ -673,7 +673,7 @@ def _parse_single_clause(
                 action=ActionType.launch,
                 target="pad_39a",
                 params={"target_alt_km": 200.0},
-                why="Ignite engines and initiate orbital ascent from Pad 39A.",
+                why="Ignite engines and initiate orbital ascent from Launch Pad A.",
             )
         ], ctx
 

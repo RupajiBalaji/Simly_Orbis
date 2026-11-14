@@ -31,6 +31,7 @@ Your service will build from `Dockerfile` and be live at `https://<service-name>
 | `AI_ENABLED` | Optional | `true` | Set to `false` to immediately disable all external LLM calls. |
 | `MENTOR_DAILY_CAP` | Optional | `300` | Maximum AI mentor calls allowed per UTC calendar day. |
 | `ALLOWED_ORIGINS` | Optional | `*` | Comma-separated CORS allowed origins. |
+| `GIT_SHA` | Optional | `""` | Git commit SHA reported in `/api/health`. Falls back to Render's built-in `RENDER_GIT_COMMIT`, else null. |
 
 > [!NOTE]
 > **AI Provider Configuration**: Dr. Orbis (Mentor & Tutor) is powered by **Google Gemini**. If `GEMINI_API_KEY` is not provided, both services seamlessly operate using educational rule-based fallback responses.

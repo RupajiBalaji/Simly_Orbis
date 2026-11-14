@@ -28,6 +28,29 @@ async def test_health(client: AsyncClient):
     assert "pharma.pk" in body["modules"]
 
 
+@pytest.mark.asyncio
+async def test_health_git_sha_resolution(client: AsyncClient, monkeypatch: pytest.MonkeyPatch):
+    """Verify git_sha resolves from GIT_SHA env, then RENDER_GIT_COMMIT, else None."""
+    # 1. When unset
+    monkeypatch.delenv("GIT_SHA", raising=False)
+    monkeypatch.delenv("RENDER_GIT_COMMIT", raising=False)
+    r1 = await client.get("/api/health")
+    assert r1.status_code == 200
+    assert r1.json()["git_sha"] is None
+
+    # 2. When RENDER_GIT_COMMIT is set
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "render123456")
+    r2 = await client.get("/api/health")
+    assert r2.status_code == 200
+    assert r2.json()["git_sha"] == "render123456"
+
+    # 3. When GIT_SHA is set, it overrides RENDER_GIT_COMMIT
+    monkeypatch.setenv("GIT_SHA", "customgitsha789")
+    r3 = await client.get("/api/health")
+    assert r3.status_code == 200
+    assert r3.json()["git_sha"] == "customgitsha789"
+
+
 
 # ---------------------------------------------------------------------------
 # /api/drugs

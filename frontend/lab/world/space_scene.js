@@ -1,6 +1,6 @@
 /**
  * Simly Orbis 3D Space Scene: Launch & Orbit Bench (frontend/lab/world/space_scene.js)
- * Procedural Launch Pad (Pad 39A), Umbilical Tower, Multi-Stage Rocket,
+ * Procedural Launch Pad (Launch Pad A), Umbilical Tower, Multi-Stage Rocket,
  * Procedural Engine Flame & Exhaust, 3D Earth Globe, Keplerian Orbit Paths,
  * and 5 Failure Mode Visualizations.
  */

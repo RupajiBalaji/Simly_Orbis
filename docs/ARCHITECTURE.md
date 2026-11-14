@@ -135,7 +135,7 @@ Client Response:
 
 ### Flow D: Orbital Mechanics & Launch Trajectory (`space.orbit`)
 ```
-User clicks "Launch" on Pad 39A
+User clicks "Launch" on Launch Pad A
    │
    ├──> Client: Dispatches POST /api/lab/sessions/{id}/actions {action: "launch", target: "pad_39a"}
    │

@@ -80,7 +80,7 @@ A 55-phrase space corpus was authored in `backend/tests/data/ask_orbis_phrases_s
 The end-to-end QA harness (`python qa/run.py`) successfully executed playthroughs across all three districts:
 1. **Pharmacokinetics Ward**: Dosing, weighing, administration, blood sampling, centrifuge assay. Final Grade: **C** (penalized for realistic protocol pacing).
 2. **Titration Bench**: Burette rinsing, filling, indicator addition, titration, endpoint swirl. Final Grade: **A**.
-3. **Launch & Orbit Bench**: Pad 39A vehicle configuration, payload declaration, propellant fueling, diagnostic checklist, range clearance, orbital launch, parking orbit coast, Hohmann GEO transfer burn, apogee circularization, and flight telemetry debrief. Final Grade: **A**.
+3. **Launch & Orbit Bench**: Launch Pad A vehicle configuration, payload declaration, propellant fueling, diagnostic checklist, range clearance, orbital launch, parking orbit coast, Hohmann GEO transfer burn, apogee circularization, and flight telemetry debrief. Final Grade: **A**.
 
 ### Camera & Graphics Acceptance
 - **Free Viewport Framing (`__camTest`):** 100.0% (Target: $\ge 98.0\%$)

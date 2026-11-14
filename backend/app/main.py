@@ -233,6 +233,13 @@ async def health() -> dict:
     lab_reports_count = await db["lab_reports"].count_documents({})
     registered_module_ids = [m.id for m in list_modules()]
 
+    git_sha = (
+        os.environ.get("GIT_SHA", "").strip()
+        or os.environ.get("RENDER_GIT_COMMIT", "").strip()
+        or (settings.git_sha.strip() if settings.git_sha else "")
+        or None
+    )
+
     return {
         "status": "ok",
         "storage_mode": _db.STORAGE_MODE,
@@ -246,7 +253,7 @@ async def health() -> dict:
         "modules": registered_module_ids,
         "app_version": settings.app_version,
         "version": settings.app_version,
-        "git_sha": settings.git_sha or None,
+        "git_sha": git_sha,
     }
 
 
