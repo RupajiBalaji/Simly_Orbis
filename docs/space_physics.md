@@ -62,13 +62,13 @@ For coplanar circular orbits between initial radius $r_1$ and final radius $r_2$
 
 ## 3. Ascent Losses & Mission Evaluation
 
-Launching from Earth's surface into Low Earth Orbit (LEO, 200 km) requires more than the bare orbital velocity ($v_{\text{circ}} \approx 7,784\text{ m/s}$). Gravity drag, atmospheric aerodynamic drag, and steering losses consume propellant:
+Launching from Earth's surface into Low Earth Orbit (LEO, 200 km) requires more than the bare orbital velocity ($v_{\text{circ}} \approx 7,788\text{ m/s}$ at mean spherical radius $r = R_\oplus + 200\text{ km} = 6,571\text{ km}$). Gravity drag, atmospheric aerodynamic drag, and steering losses consume propellant:
 
 $$\Delta v_{\text{losses}} = 1,500\text{ m/s}$$
-$$\Delta v_{\text{req}} = v_{\text{circ}}(200\text{ km}) + \Delta v_{\text{losses}} \approx 7,784 + 1,500 = 9,284\text{ m/s}$$
+$$\Delta v_{\text{req}} = v_{\text{circ}}(200\text{ km}) + \Delta v_{\text{losses}} \approx 7,788 + 1,500 = 9,288\text{ m/s}$$
 
 ### Liftoff Thrust-to-Weight Ratio (TWR)
-To safely clear Launch Pad 39A:
+To safely clear Launch Pad A:
 
 $$\text{TWR} = \frac{F_{\text{thrust}}}{m_0 \cdot g_0}$$
 
