@@ -44,6 +44,8 @@ Simly Orbis is designed with a **deterministic-first, decoupled architecture** s
 |  |  - pharma.pk       |      |  - Session State   |      |  - Google Gemini API|  |
 |  |  - chem.titration  |      |  - Action Dispatch |      |  - Rule-Based Fall |   |
 |  |  - pharma.trial    |      |  - Safety Violator |      |  - Daily Cap Guard |   |
+|  |  - space.orbit     |      |  - dose_lab Game   |      |  - Deterministic Ref|  |
+|  |  - pharma.pkpd     |      |  - Visual Contract |      |                    |  |
 |  +--------------------+      +--------------------+      +--------------------+   |
 |                                        |                                          |
 |                                        v                                          |
@@ -149,4 +151,25 @@ Lab Engine (`engine.py`) -> Space Orbit Module (`space/orbit.py`):
    ▼
 Client Response:
    └──> Three.js SpaceScene animates pad liftoff, camera transitions to Orbit View, and draws glowing Keplerian trajectory around 3D Earth globe.
+```
+
+---
+
+### Flow E: Dose Response Lab & PK/PD Engine (`pharma.pkpd`)
+```
+User configures regimen and clicks "Run Simulation"
+   │
+   ├──> Client: Dispatches POST /api/lab/sessions/{id}/actions {action: "run_simulation", target: "pkpd_chart_display"}
+   │
+   ▼
+Lab Engine (`engine.py`) -> PK/PD Engine (`pharma/pkpd/engine.py`):
+   ├──> Evaluates patient covariates (weight, age, CrCl) with allometry and Cockcroft-Gault renal scaling.
+   ├──> Selects compartmental solver: 1-comp oral (Bateman), 1-comp IV, or 2-comp IV infusion/bolus.
+   ├──> Computes analytical concentration-time profile C(t) with linear superposition for multi-dose intervals.
+   ├──> Evaluates Hill sigmoidal Emax pharmacodynamic model E(C) across time points.
+   ├──> Emits visual directives: 'readout' with curve data, effect curve, and target therapeutic window.
+   │
+   ▼
+Client Response (`dose_panel.js`):
+   └──> Renders dual concentration & effect curves, updates Cmax/Tmax/AUC badges, and checks toxicity thresholds.
 ```

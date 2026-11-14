@@ -112,3 +112,21 @@ All randomness uses seeded NumPy generators for 100% reproducibility.
 2. **Numerical Propagation**: 4th-order Runge-Kutta (RK4) integration conserving specific mechanical energy and angular momentum to within $10^{-6}$ relative error over a full Keplerian orbit.
 3. **Safety & Consequences**: 8 safety rules (S1-S8) check preflight checklists, range clearance, and liftoff TWR > 1.0 (under-powered rockets experience pad damage; under-fueled rockets fail to reach orbit and burn up).
 4. **Target Labeling**: Educational simulation targets; parameters are game-balanced for student pacing and do not represent certified flight-readiness mission software.
+
+---
+
+### 17. How does Stage 3 "Pharma Depth" expand beyond simple one-compartment models?
+**Answer**: Stage 3 adds the pure-Python `pharma.pkpd` engine and the interactive **Dose Response Lab (`dose_lab`)**:
+1. **Multi-Compartment & Routes**: Full analytical and RK4 ODE support for 1-compartment oral absorption, 1-compartment IV infusion/bolus, and 2-compartment mammillary models with rapid distribution ($\alpha$) and terminal elimination ($\beta$).
+2. **Pharmacodynamics**: Sigmoidal Hill $E_{\max}$ model computing real-time therapeutic response curves alongside plasma concentration profiles.
+3. **Multiple-Dose Regimens**: Exact analytical superposition with accumulation ratio calculation ($R_{accum} = 1/(1 - e^{-k_{el}\tau})$).
+4. **Regimen Comparison**: In-lab ability to pin a baseline regimen and overlay alternative dosing schedules or altered patient covariates in real time.
+
+---
+
+### 18. How do you handle patient covariate scaling and pediatric safety guardrails?
+**Answer**:
+1. **Allometric Body Mass Scaling**: Volume of distribution scales linearly ($V \propto (WT/70)^{1.0}$) and metabolic clearance scales by $3/4$ allometric power ($CL \propto (WT/70)^{0.75}$).
+2. **Renal Clearance Modeling**: Creatinine clearance ($CrCl$) scales drug clearance using drug-specific fraction excreted unchanged ($f_e$).
+3. **Strict Adult-Only Guardrails**: Covariates are strictly bounded: Age 18–90 years, Weight 40–150 kg, CrCl 15–150 mL/min. Pediatric scenarios are explicitly prohibited and rejected with deterministic safety disclaimers.
+4. **No Medical Advice**: Dr. Orbis and Ask Orbis deterministically refuse personal medical diagnosis, reiterating that Orbis Lab is an educational simulator only.

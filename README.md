@@ -3,28 +3,29 @@
 > **A science learning game where you play the scientist, not the spectator.**
 
 [![CI](https://github.com/RupajiBalaji/Simly_Orbis/actions/workflows/ci.yml/badge.svg)](https://github.com/RupajiBalaji/Simly_Orbis/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-91%20passed-success.svg)](https://github.com/RupajiBalaji/Simly_Orbis)
+[![Tests](https://img.shields.io/badge/tests-401%20passed-success.svg)](https://github.com/RupajiBalaji/Simly_Orbis)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Simly Orbis is an interactive 3D science laboratory simulation platform where actions carry physical consequences before students or researchers touch physical equipment or real patients. Built with a high-performance **FastAPI** backend executing exact deterministic equations (Bateman pharmacokinetics and charge-balance equilibrium acid-base solver) and a procedural **Three.js** frontend achieving 60 FPS on our test laptop (AMD Ryzen, integrated graphics) with zero external 3D model asset downloads (free demo server may take up to a minute to wake up). Features **Dr. Orbis**, an embedded pedagogical AI mentor powered by Google Gemini with strict prompt-injection defenses and deterministic rule-based fallback, plus a large-scale **Virtual Clinical Trial** engine simulating up to 1,000 patients in under 20 ms.
+Simly Orbis is an interactive 3D science laboratory simulation platform where actions carry physical consequences before students or researchers touch physical equipment or real patients. Built with a high-performance **FastAPI** backend executing exact deterministic equations (Bateman pharmacokinetics, multi-compartment PK/PD, orbital mechanics, and charge-balance equilibrium acid-base solver) and a procedural **Three.js** frontend achieving 60 FPS on our test laptop (AMD Ryzen, integrated graphics) with zero external 3D model asset downloads (free demo server may take up to a minute to wake up). Features **Dr. Orbis**, an embedded pedagogical AI mentor powered by Google Gemini with strict prompt-injection defenses and deterministic rule-based fallback, plus a large-scale **Virtual Clinical Trial** engine simulating up to 1,000 patients in under 20 ms.
 
 ---
 
 ## 🔍 Honest Status & Credibility Baseline
 
-- **Current Version:** `v0.2.0-space` (educational simulation prototype; see [CHANGELOG.md](CHANGELOG.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)).
+- **Current Version:** `v0.4.0-dev` (educational simulation prototype; see [CHANGELOG.md](CHANGELOG.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)).
 - **What is Simulated:**
-  - **Pharmacokinetics Ward (`pk_ward`)**: 2-compartment open oral pharmacokinetic model (Bateman absorption, distribution, and first-order elimination). Evaluates tare/weighing, dissolution, dosing, timed blood sampling, and plasma centrifuge assay.
+  - **Pharmacokinetics Ward (`pk_ward`)**: 1-compartment open oral pharmacokinetic model (Bateman absorption, distribution, and first-order elimination). Evaluates tare/weighing, dissolution, dosing, timed blood sampling, and plasma centrifuge assay.
   - **Titration Bench (`titration_bench`)**: Monoprotic strong/weak acid-base neutralization solved via rigorous aqueous charge-balance electroneutrality with water auto-ionization; continuous indicator color transitions (phenolphthalein / methyl orange).
-  - **Virtual Population Trial (`pharma.trial`)**: Vectorized NumPy Monte Carlo cohort simulation (log-normal clearance and volume variance with hepatic impairment subgroup).
   - **Launch & Orbit Bench (`launch_bench`)**: Multi-stage Tsiolkovsky $\Delta v$, vis-viva equation, Keplerian orbital period, Hohmann transfer to GEO, TWR safety bounds, and RK4 numerical state propagation ([docs/space_physics.md](docs/space_physics.md)).
+  - **Dose Response Lab (`dose_lab`)**: 1-compartment and 2-compartment open models across oral, IV bolus, and IV infusion routes; multi-dose regimens, Hill $E_{\max}$ pharmacodynamics, adult covariate allometry, Cockcroft-Gault renal adjustment, and regimen comparison overlays ([docs/pkpd_models.md](docs/pkpd_models.md)).
+  - **Virtual Population Trial (`pharma.trial`)**: Vectorized NumPy Monte Carlo cohort simulation (log-normal clearance and volume variance with hepatic impairment subgroup).
 - **What is NOT Validated:**
   - Simulation numbers are educational benchmarks, not medical advice or flight-readiness mission software. All literature reference rows in `validation/data/*.csv` are currently marked `unverified` pending expert human full-text verification ([docs/validation/VERIFICATION_WORKSHEET.md](docs/validation/VERIFICATION_WORKSHEET.md)).
   - Therapeutic green/red safety bands and rocket staging parameters are `game-balanced` for educational pacing.
-  - Does NOT replace in vivo animal studies, clinical drug trials, or mission-planning flight software.
+  - Does NOT replace in vivo animal studies, clinical drug trials, or mission-planning flight software. Pediatric inputs are strictly prohibited.
 - **What is Locked:**
-  - Market District (Market Microstructure) is locked ("🔒 Coming Soon"). Active simulation spans Pharma, Chemistry, and Space.
+  - Market District (Market Microstructure) is locked ("🔒 Coming Soon"). Active simulation spans Pharma (Ward & Dose Lab), Chemistry, and Space.
 
 ---
 
@@ -68,11 +69,11 @@ Simly Orbis includes built-in in-memory token-bucket rate limiting, 20 KB payloa
 |---|---|---|---|
 | `GET` | `/api/health` | Service health status, storage mode, collections, and git SHA | 120 req / min |
 | `GET` | `/api/ping` | Low-latency ping endpoint for wake-up polling (`{"ping": "pong"}`) | 120 req / min |
-| `GET` | `/api/modules` | List registered simulation engines (`pharma.pk`, `chem.titration`, `pharma.trial`) | 120 req / min |
+| `GET` | `/api/modules` | List registered simulation engines (`pharma.pk`, `chem.titration`, `pharma.trial`, `space.orbit`, `pharma.pkpd`) | 120 req / min |
 | `GET` | `/api/modules/{id}/reality-check` | Execute analytical invariant verification checks (checked against textbook equations and internal consistency; not clinical validation) | 120 req / min |
 | `GET` | `/api/modules/{id}/model-card` | Retrieve scientific model card (assumptions, equations, boundaries) | 120 req / min |
 | `POST` | `/api/run` | Execute any registered simulation module with parameter validation | 120 req / min |
-| `GET` | `/api/lab/experiments` | List interactive laboratory experiments (`pk_ward`, `titration_bench`) | 120 req / min |
+| `GET` | `/api/lab/experiments` | List interactive laboratory experiments (`pk_ward`, `titration_bench`, `launch_bench`, `dose_lab`) | 120 req / min |
 | `POST` | `/api/lab/sessions` | Create a new stateful laboratory session (`nickname`, `experiment_id`) | 20 req / min |
 | `GET` | `/api/lab/sessions/{id}` | Retrieve current session state, clock, apparatus, and checklist | 120 req / min |
 | `POST` | `/api/lab/sessions/{id}/actions` | Apply laboratory action (`weigh`, `dissolve`, `titrate`, etc.) | 120 req / min |
@@ -102,6 +103,11 @@ Analytical Reality Checks: 11 / 11 Passed [PASS]
 3. **`pharma.trial` (Virtual Clinical Trial)**:
    - **Engine**: Vectorized NumPy Monte Carlo engine with log-normal demographic distributions (body weight CV 18%, clearance CV 30%, $k_a$ CV 25%) and hepatic impairment subgroup (0.6x clearance).
    - **Reality Checks**: Zero-variance deterministic equivalence, median peak within 10% of individual baseline, RNG seed reproducibility, dose monotonicity.
+4. **`space.orbit` (Orbital Mechanics & Launch Staging)**:
+   - **Engine**: Multi-stage Tsiolkovsky $\Delta v$ staging, vis-viva equation, Keplerian period, and Hohmann transfer equations with RK4 state propagation conserving specific mechanical energy to $< 10^{-6}$ relative error ([docs/space_physics.md](docs/space_physics.md)).
+5. **`pharma.pkpd` (Deep PK/PD & Covariate Allometry)**:
+   - **Engine**: 1- and 2-compartment open models across oral and IV infusion/bolus routes with Hill $E_{\max}$ pharmacodynamics, adult covariate allometry, and Cockcroft-Gault renal adjustment ([docs/pkpd_models.md](docs/pkpd_models.md)).
+   - **Reality Checks**: Analytical vs RK4 solver agreement ($< 1\%$), accumulation ratio consistency, dose linearity, adult-only bounds enforcement (Age 18–90, Weight 40–150 kg, CrCl 15–150 mL/min).
 
 ---
 

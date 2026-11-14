@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.4.0-dev] - 2026-11-14
+
+### Added
+- **Stage 3 "Pharma Depth": Deep PK/PD Engine (`pharma.pkpd`)**:
+  - Deterministic 1-compartment oral absorption (Bateman), 1-compartment IV infusion/bolus, and 2-compartment open mammillary models with analytical solutions and Runge-Kutta 4th-order (RK4) numerical ODE solvers.
+  - Multi-dose linear superposition across arbitrary intervals with analytical accumulation ratio ($R_{accum} = 1/(1 - e^{-k_{el}\tau})$).
+  - Sigmoidal Hill $E_{\max}$ pharmacodynamic model ($E(C) = E_0 + \frac{E_{\max} \cdot C^\gamma}{EC_{50}^\gamma + C^\gamma}$).
+  - Adult covariate scaling: body weight allometric powers ($V \propto (WT/70)^{1.0}$, $CL \propto (WT/70)^{0.75}$) and Cockcroft-Gault renal clearance adjustment ($f_e$ fraction excreted unchanged).
+  - Adult-only guardrails (Age 18–90, Weight 40–150 kg, CrCl 15–150 mL/min). Pediatric requests strictly rejected.
+  - Calibrated Drug Library v2: Theophylline, Vancomycin, and Gentamicin with frozen reference SHA-256 hashes (`validation/pkpd_tolerances.yaml`).
+  - Analytical engine tests with 400+ green tests in full test suite.
+- **Dose Response Lab District (`dose_lab`)**:
+  - Fourth interactive district in world lobby featuring patient selection, drug library, route options, infusion pump parameters, and sampling slates.
+  - Real-time concentration-time and pharmacodynamic response curves, target window shading, and live DOM metric badges (Cmax, Tmax, AUC).
+  - Regimen comparison overlay: pins a baseline schedule and plots comparative response curves.
+  - 8 Dose Lab safety rules (D1-D8): patient selection, route compatibility, pump priming, sampling interval, and toxic overdose alarms.
+  - Ask Orbis & Dr. Orbis Dose Lab integration: 62-phrase corpus with regression suite, deterministic medical advice refusals, and paediatric disclaimers.
+  - Automated QA harness integration: 4 distinct scenarios (Theophylline oral titration, Vancomycin 2-comp IV, Gentamicin renal impairment, and Overdose alarm) with 51 verified unique proof screenshots.
+
 ## [0.3.0-dev] - 2026-11-12
 
 ### Added

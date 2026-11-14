@@ -44,6 +44,21 @@ This guide provides timed presentation scripts for live hackathon demos and ligh
 
 ---
 
+### Minute 4 (Optional Deep Dive): Stage 3 "Dose Response Lab" Walkthrough
+- **Visual**: Navigate to **Dose Response Lab** (`dose_lab`) from the district lobby.
+- **Spoken**:
+  > *"Beyond one-compartment oral absorption, drug developers must grapple with multi-compartment tissue distribution and patient variability. In our new Dose Response Lab, students explore multi-dose IV and oral regimens with real-time pharmacodynamic response curves."*
+- **Action**:
+  1. Select **Alex (Standard Adult)**, choose **Theophylline**, and run standard oral titration ($300\text{ mg}$ q12h).
+  2. Point to the HUD badges displaying simulated $C_{\max}$, $T_{\max}$, and $\text{AUC}$.
+  3. Switch to **Vancomycin (2-compartment IV infusion)**:
+  > *"Notice the biexponential curve: rapid initial tissue distribution ($\alpha$) followed by slow terminal elimination ($\beta$)."*
+  4. Pin the baseline with **Compare Regimens**, switch to **Gentamicin** in a renal impairment patient ($CrCl = 30\text{ mL/min}$):
+  > *"Watch how renal dysfunction causes steep drug accumulation across successive doses, pushing concentrations past the toxicity threshold."*
+  5. Demonstrate **Rule D8 Consequence**: Administer a toxic dose ($1600\text{ mg}$) and watch the 3D scene alarm and monitor alert immediately.
+
+---
+
 ## 60-Second Lightning Talk Version
 
 - **0:00 – 0:15**: *"Simly Orbis transforms medical and chemical education from static textbook curves into an interactive 3D laboratory game running at 60 FPS in any browser."* (Click PK Ward, perform Weigh).

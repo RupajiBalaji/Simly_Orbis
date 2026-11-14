@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     allowed_origins: str = "*"
     trust_proxy: bool = False
     git_sha: str = ""
-    app_version: str = "0.3.0-dev"
+    app_version: str = "0.4.0-dev"
 
     model_config = SettingsConfigDict(
         env_file=("backend/.env", ".env"),
