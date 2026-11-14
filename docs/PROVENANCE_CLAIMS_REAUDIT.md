@@ -33,9 +33,9 @@ All Markdown files, UI source files, and configuration strings were scanned usin
 | Target Term | Prohibited Context | Result in Repository | Compliance Finding |
 | :--- | :--- | :---: | :--- |
 | **"validated"** | Asserting platform / clinical validation | 3 occurrences | **PASS**: All 3 occurrences are explicitly hedged disclaimers ("What is NOT Validated", "not clinically validated"). |
-| **"clinically proven"** | Claiming medical efficacy | 0 occurrences | **PASS**: Zero occurrences found. |
-| **"replaces animal testing"** | Claiming total replacement of animal tests | 0 occurrences | **PASS**: Zero occurrences found. Formulated per G3 as "helps reduce, refine and prioritise experiments". |
-| **"fda-approved"** | Asserting medical device clearance | 0 occurrences | **PASS**: Zero occurrences found. |
+| **"clinically proven"** | Claiming medical efficacy | 0 occurrences | **PASS**: Not used in repository. Zero occurrences found. |
+| **"replaces animal testing"** | Claiming total replacement of animal tests | 0 occurrences | **PASS**: Platform does not claim to replace animal testing. Formulated per G3 as "helps reduce, refine and prioritise experiments". |
+| **"fda-approved"** | Asserting medical device clearance | 0 occurrences | **PASS**: Not FDA-approved. Zero occurrences found. |
 
 ---
 
