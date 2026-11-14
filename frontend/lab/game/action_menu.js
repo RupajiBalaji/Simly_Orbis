@@ -744,12 +744,19 @@ export class ActionMenu {
       // Process directives in queue
       await this.directiveQueue.processActionResult(result, targetId);
 
+      // Route PK/PD simulation result to dose panel if active
+      if (window.dosePanel && result?.visuals?.some((v) => v.label === 'PK/PD RESULTS' || v.curve)) {
+        window.dosePanel.processSimulationResult(result);
+      }
+
       // Refresh session & available actions
       const updatedSession = await api.getSession(state.session.session_id);
       state.setSession(updatedSession);
 
       const updatedActions = await api.getAvailableActions(state.session.session_id);
       state.setAvailableActions(updatedActions);
+
+      return result;
     } catch (err) {
       toast.showInfo(`Action Failed: ${err.message}`, 4000);
       console.error(err);

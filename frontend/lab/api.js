@@ -57,6 +57,10 @@ export const api = {
     });
   },
 
+  async submitAction(sessionId, action, target = null, params = {}) {
+    return await this.applyAction(sessionId, action, target, params);
+  },
+
   async finishSession(sessionId, payload = null) {
     return await request(`/api/lab/sessions/${encodeURIComponent(sessionId)}/finish`, {
       method: 'POST',

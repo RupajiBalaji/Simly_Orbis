@@ -745,6 +745,115 @@ class QAHarnessRunner:
                     self.failure_reasons.append("launch_bench report submitted without a letter grade.")
 
                 # ==============================================================
+                # 3c. DOSE RESPONSE LAB (dose_lab)
+                # ==============================================================
+                print("\n[QA] --- Step 3c: Dose Response Lab (dose_lab) ---")
+                page.evaluate("() => { if (window.agentPanel) window.agentPanel.closePlanModal(); }")
+                page.click("#btn-report-lobby")
+                page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(500)
+
+                # Enter Dose Response Lab brief
+                page.evaluate("() => { const el = document.getElementById('card-district-dose-lab'); if (el) el.click(); }")
+                page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
+                page.wait_for_timeout(500)
+                self.capture_checkpoint(page, "dose_lab_brief")
+
+                # Launch 3D laboratory
+                page.click("#btn-start-experiment")
+                page.wait_for_selector("#lab-hud:not(.hidden)", timeout=10000)
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "dose_lab_first_view")
+
+                # Ensure dosePanel is open for interactive chart & HUD
+                page.evaluate("() => { if (window.dosePanel) window.dosePanel.open(); }")
+                page.wait_for_timeout(400)
+
+                # Scenario 1: Standard theophylline oral titration (happy path, stay in window)
+                print("  [QA Dose Lab] Scenario 1: Standard Theophylline oral titration in target window...")
+                page.evaluate("""async () => {
+                    await window.actionMenu.executeAction('select_patient', 'standard_adult', { profile_id: 'standard_adult' });
+                    await window.actionMenu.executeAction('select_drug', 'theophylline', { drug_id: 'theophylline' });
+                    await window.actionMenu.executeAction('set_route', 'oral', { route: 'oral' });
+                    await window.actionMenu.executeAction('set_dose', 'infusion_pump', { dose_mg: 300.0 });
+                    await window.actionMenu.executeAction('set_regimen', 'infusion_pump', { num_doses: 3, tau_h: 12.0, t_inf_h: 1.0 });
+                    await window.actionMenu.executeAction('set_sampling', 'sampling_slate', { sample_times_h: [0, 1, 2, 4, 8, 12, 24] });
+                    await window.actionMenu.executeAction('predict_window', 'prediction_slate', { cmax_predicted: 12.0, t_in_window_predicted: 8.0 });
+                    const res = await window.actionMenu.executeAction('run_simulation', 'pkpd_chart_display', {});
+                    if (window.dosePanel && res) window.dosePanel.processSimulationResult(res);
+                }""")
+                page.wait_for_timeout(1000)
+
+                # Verify DOM assertions
+                cmax_val = page.inner_text("#dose-chart-cmax").strip() if page.is_visible("#dose-chart-cmax") else ""
+                tmax_val = page.inner_text("#dose-chart-tmax").strip() if page.is_visible("#dose-chart-tmax") else ""
+                auc_val = page.inner_text("#dose-chart-auc").strip() if page.is_visible("#dose-chart-auc") else ""
+                print(f"  [QA Dose Lab] DOM Metrics: Cmax={cmax_val}, Tmax={tmax_val}, AUC={auc_val}")
+                if not cmax_val or "--" in cmax_val:
+                    self.failure_reasons.append("#dose-chart-cmax was not populated after simulation.")
+                if not tmax_val or "--" in tmax_val:
+                    self.failure_reasons.append("#dose-chart-tmax was not populated after simulation.")
+                if not auc_val or "--" in auc_val:
+                    self.failure_reasons.append("#dose-chart-auc was not populated after simulation.")
+
+                self.capture_checkpoint(page, "dose_scenario_1_theophylline")
+
+                # Scenario 2: Vancomycin 2-compartment IV infusion
+                print("  [QA Dose Lab] Scenario 2: Vancomycin 2-compartment IV infusion...")
+                page.evaluate("""async () => {
+                    await window.actionMenu.executeAction('select_drug', 'vancomycin', { drug_id: 'vancomycin' });
+                    await window.actionMenu.executeAction('set_route', 'iv_infusion', { route: 'iv_infusion' });
+                    await window.actionMenu.executeAction('set_dose', 'infusion_pump', { dose_mg: 500.0 });
+                    await window.actionMenu.executeAction('set_regimen', 'infusion_pump', { num_doses: 4, tau_h: 12.0, t_inf_h: 1.0 });
+                    const res = await window.actionMenu.executeAction('run_simulation', 'pkpd_chart_display', {});
+                    if (window.dosePanel && res) window.dosePanel.processSimulationResult(res);
+                    await window.actionMenu.executeAction('compare_regimens', 'pkpd_chart_display', {});
+                }""")
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "dose_scenario_2_vancomycin_2comp")
+
+                # Scenario 3: Gentamicin in renal impairment (shows accumulation warning)
+                print("  [QA Dose Lab] Scenario 3: Gentamicin in renal impairment...")
+                page.evaluate("""async () => {
+                    await window.actionMenu.executeAction('select_patient', 'renal_patient', { profile_id: 'renal_patient' });
+                    await window.actionMenu.executeAction('set_covariates', 'patient_monitor', { crcl_ml_min: 30.0, weight_kg: 70.0, age_years: 65.0 });
+                    await window.actionMenu.executeAction('check_renal', 'patient_monitor', {});
+                    await window.actionMenu.executeAction('select_drug', 'gentamicin', { drug_id: 'gentamicin' });
+                    await window.actionMenu.executeAction('set_route', 'iv_infusion', { route: 'iv_infusion' });
+                    await window.actionMenu.executeAction('set_dose', 'infusion_pump', { dose_mg: 160.0 });
+                    await window.actionMenu.executeAction('set_regimen', 'infusion_pump', { num_doses: 3, tau_h: 8.0, t_inf_h: 1.0 });
+                    const res = await window.actionMenu.executeAction('run_simulation', 'pkpd_chart_display', {});
+                    if (window.dosePanel && res) window.dosePanel.processSimulationResult(res);
+                }""")
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "dose_scenario_3_gentamicin_renal")
+
+                # Scenario 4: Overdosed run demonstrating D-rule consequence in 3D scene
+                print("  [QA Dose Lab] Scenario 4: Toxic overdose triggering D8 rule consequence...")
+                page.evaluate("""async () => {
+                    await window.actionMenu.executeAction('set_dose', 'infusion_pump', { dose_mg: 1600.0 });
+                    const res = await window.actionMenu.executeAction('run_simulation', 'pkpd_chart_display', {});
+                    if (window.dosePanel && res) window.dosePanel.processSimulationResult(res);
+                }""")
+                page.wait_for_timeout(1200)
+                self.capture_checkpoint(page, "dose_scenario_4_overdose_alarm")
+
+                # Debrief & finish session
+                print("  [QA Dose Lab] Debriefing and submitting final analytical report...")
+                page.evaluate("async () => { await window.actionMenu.executeAction('debrief_pkpd', 'debrief_station', {}); }")
+                page.wait_for_timeout(600)
+                page.evaluate("async () => { const res = await window.api.finishSession(window.state.session.session_id); window.reportScreen.show(res); }")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "dose_lab_final_report")
+
+                dose_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                self.grades["dose_lab"] = dose_grade
+                print(f"  [QA Dose Lab] Dose Response Lab Final Grade: '{dose_grade}'")
+                if not dose_grade:
+                    self.failure_reasons.append("dose_lab report submitted without a letter grade.")
+
+                # ==============================================================
                 # 4. CAMERA RIG & AVATAR FRAMING ACCEPTANCE TEST (__camTest)
                 # ==============================================================
                 print("\n[QA] --- Step 4: Camera Rig & Viewport Framing Acceptance (__camTest) ---")
@@ -933,6 +1042,8 @@ class QAHarnessRunner:
             f"| **Avatar Viewport Framing** | {'✅ PASS' if summary['camera_acceptance'].get('passed') else '❌ FAIL'} | {summary['camera_acceptance'].get('freeRectPercent', 100.0)}% free viewport framing |",
             f"| **pk_ward Report Grade** | {'✅ PASS' if summary['grades'].get('pk_ward') else '❌ FAIL'} | Grade: `{summary['grades'].get('pk_ward', 'None')}` |",
             f"| **titration_bench Report Grade** | {'✅ PASS' if summary['grades'].get('titration_bench') else '❌ FAIL'} | Grade: `{summary['grades'].get('titration_bench', 'None')}` |",
+            f"| **launch_bench Report Grade** | {'✅ PASS' if summary['grades'].get('launch_bench') else '❌ FAIL'} | Grade: `{summary['grades'].get('launch_bench', 'None')}` |",
+            f"| **dose_lab Report Grade** | {'✅ PASS' if summary['grades'].get('dose_lab') else '❌ FAIL'} | Grade: `{summary['grades'].get('dose_lab', 'None')}` |",
             f"",
             f"---",
             f"",

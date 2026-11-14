@@ -507,7 +507,7 @@ export class DosePanel {
     if (btnAckRenal) {
       btnAckRenal.onclick = async () => {
         if (!state.session?.session_id) return;
-        const res = await api.submitAction(state.session.session_id, 'check_renal', 'patient_monitor', {});
+        const res = await api.applyAction(state.session.session_id, 'check_renal', 'patient_monitor', {});
         toast.showSuccess(res.message);
       };
     }
@@ -516,7 +516,7 @@ export class DosePanel {
     if (btnApplyCov) {
       btnApplyCov.onclick = async () => {
         if (!state.session?.session_id) return;
-        const res = await api.submitAction(state.session.session_id, 'set_covariates', 'patient_monitor', {
+        const res = await api.applyAction(state.session.session_id, 'set_covariates', 'patient_monitor', {
           weight_kg: this.weightKg,
           age_yr: this.ageYr,
           crcl_ml_min: this.crclMlMin,
@@ -533,7 +533,7 @@ export class DosePanel {
         const timeInp = document.getElementById('pred-time');
         const cmax = parseFloat(cmaxInp?.value || 10.0);
         const winT = parseFloat(timeInp?.value || 0.0);
-        const res = await api.submitAction(state.session.session_id, 'predict_window', 'prediction_slate', {
+        const res = await api.applyAction(state.session.session_id, 'predict_window', 'prediction_slate', {
           predicted_cmax: cmax,
           predicted_time_in_window_h: winT,
         });
@@ -555,7 +555,7 @@ export class DosePanel {
         if (this.lastCurve && this.lastCurve.length > 0) {
           this.comparisonCurve = [...this.lastCurve];
         }
-        const res = await api.submitAction(state.session.session_id, 'compare_regimens', 'pkpd_chart_display', {});
+        const res = await api.applyAction(state.session.session_id, 'compare_regimens', 'pkpd_chart_display', {});
         toast.showInfo('Active regimen saved as comparison overlay.');
         this.drawChart();
       };
@@ -565,7 +565,7 @@ export class DosePanel {
     if (btnDebrief) {
       btnDebrief.onclick = async () => {
         if (!state.session?.session_id) return;
-        const res = await api.submitAction(state.session.session_id, 'debrief_pkpd', 'debrief_station', {});
+        const res = await api.applyAction(state.session.session_id, 'debrief_pkpd', 'debrief_station', {});
         toast.showSuccess(res.message);
       };
     }
@@ -600,21 +600,21 @@ export class DosePanel {
     const sId = state.session.session_id;
 
     // Synchronize actions before run
-    await api.submitAction(sId, 'set_covariates', 'patient_monitor', {
+    await api.applyAction(sId, 'set_covariates', 'patient_monitor', {
       weight_kg: this.weightKg,
       age_yr: this.ageYr,
       crcl_ml_min: this.crclMlMin,
     });
     if (this.crclMlMin < 60.0) {
-      await api.submitAction(sId, 'check_renal', 'patient_monitor', {});
+      await api.applyAction(sId, 'check_renal', 'patient_monitor', {});
     }
-    await api.submitAction(sId, 'select_drug', 'infusion_pump', { drug_id: this.selectedDrug });
-    await api.submitAction(sId, 'set_route', 'infusion_pump', { route: this.selectedRoute });
-    await api.submitAction(sId, 'set_dose', 'infusion_pump', { dose_mg: this.doseMg });
+    await api.applyAction(sId, 'select_drug', 'infusion_pump', { drug_id: this.selectedDrug });
+    await api.applyAction(sId, 'set_route', 'infusion_pump', { route: this.selectedRoute });
+    await api.applyAction(sId, 'set_dose', 'infusion_pump', { dose_mg: this.doseMg });
 
     const nDoses = parseInt(document.getElementById('dose-ndoses')?.value || 1);
     const interval = parseFloat(document.getElementById('dose-interval')?.value || 8);
-    await api.submitAction(sId, 'set_regimen', 'infusion_pump', {
+    await api.applyAction(sId, 'set_regimen', 'infusion_pump', {
       n_doses: nDoses,
       interval_h: interval,
       infusion_duration_h: this.infusionDurationH,
@@ -622,19 +622,19 @@ export class DosePanel {
 
     const schedSelect = document.getElementById('sampling-select');
     const sched = schedSelect?.value || '0,1,2,4,8,12,24';
-    await api.submitAction(sId, 'set_sampling', 'sampling_schedule', { schedule: sched });
+    await api.applyAction(sId, 'set_sampling', 'sampling_schedule', { schedule: sched });
 
     const cmaxInp = document.getElementById('pred-cmax');
     const timeInp = document.getElementById('pred-time');
     const cmax = parseFloat(cmaxInp?.value || 10.0);
     const winT = parseFloat(timeInp?.value || 0.0);
-    await api.submitAction(sId, 'predict_window', 'prediction_slate', {
+    await api.applyAction(sId, 'predict_window', 'prediction_slate', {
       predicted_cmax: cmax,
       predicted_time_in_window_h: winT,
     });
 
     // Run simulation
-    const simRes = await api.submitAction(sId, 'run_simulation', 'pkpd_chart_display', {});
+    const simRes = await api.applyAction(sId, 'run_simulation', 'pkpd_chart_display', {});
     this.processSimulationResult(simRes);
   }
 
@@ -683,7 +683,17 @@ export class DosePanel {
 
       if (elCmax) elCmax.textContent = cmaxStr;
       if (elTmax) elTmax.textContent = tmaxStr;
-      if (elAuc && aucStr !== '--') elAuc.textContent = aucStr;
+      if (elAuc) {
+        if (aucStr !== '--') {
+          elAuc.textContent = aucStr;
+        } else {
+          let trapezoid = 0;
+          for (let i = 1; i < this.lastCurve.length; i++) {
+            trapezoid += 0.5 * (this.lastCurve[i].c + this.lastCurve[i-1].c) * (this.lastCurve[i].t - this.lastCurve[i-1].t);
+          }
+          elAuc.textContent = `${trapezoid.toFixed(1)} mg·h/L`;
+        }
+      }
       if (elStat) {
         if (peak > this.targetWindow.toxic) {
           elStat.textContent = 'TOXICITY RISK';
