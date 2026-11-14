@@ -433,7 +433,9 @@ def check_parser_pass_rate(repo_root: Path) -> GateResult:
 
 def check_risky_claims(repo_root: Path) -> GateResult:
     """Gate 10: Grep docs/ and README for risky claim words (validated, clinically proven, replaces animal)."""
-    md_files = [repo_root / "README.md"] + list((repo_root / "docs").rglob("*.md"))
+    md_files = [repo_root / "README.md"] + [
+        p for p in (repo_root / "docs").rglob("*.md") if p.name != "SELF_AUDIT_LATEST.md"
+    ]
     unhedged_hits: list[str] = []
     total_matches = 0
 
