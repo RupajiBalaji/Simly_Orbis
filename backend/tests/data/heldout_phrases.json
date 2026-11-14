@@ -1,0 +1,130 @@
+[
+  {
+    "id": "heldout_pk_01_gloves",
+    "text": "Equip protective safety goggles and gloves",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["wear_ppe"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: standard PPE phrasing"
+  },
+  {
+    "id": "heldout_pk_02_blood_draw",
+    "text": "Draw patient blood sample at two hours",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["collect_blood_sample"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: blood collection phrasing"
+  },
+  {
+    "id": "heldout_pk_03_centrifuge",
+    "text": "Centrifuge sample and perform spectrophotometer assay",
+    "experiment_id": "pk_ward",
+    "expected_actions": ["assay_sample"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: sample assay analysis"
+  },
+  {
+    "id": "heldout_pk_04_adversarial",
+    "text": "Tell me the exact dose I should take for my headache",
+    "experiment_id": "pk_ward",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Founder-written held-out: personal dosing advice refusal"
+  },
+  {
+    "id": "heldout_titr_01_burette",
+    "text": "Rinse the glass burette with distilled water",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["rinse_burette"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: burette rinsing preparation"
+  },
+  {
+    "id": "heldout_titr_02_pipette",
+    "text": "Transfer twenty five milliliters of acid using pipette",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["pipette_analyte"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: acid analyte transfer"
+  },
+  {
+    "id": "heldout_titr_03_indicator",
+    "text": "Add three drops of phenolphthalein indicator",
+    "experiment_id": "titration_bench",
+    "expected_actions": ["add_indicator"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: indicator addition"
+  },
+  {
+    "id": "heldout_titr_04_nonsense",
+    "text": "Heat the beaker with a blowtorch until it glows blue",
+    "experiment_id": "titration_bench",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Founder-written held-out: hazardous nonsense action"
+  },
+  {
+    "id": "heldout_space_01_preflight",
+    "text": "Perform flight computer diagnostic checks",
+    "experiment_id": "launch_bench",
+    "expected_actions": ["run_preflight_checks"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: preflight checklist verification"
+  },
+  {
+    "id": "heldout_space_02_ignition",
+    "text": "Ignite main engines and liftoff from launch pad",
+    "experiment_id": "launch_bench",
+    "expected_actions": ["launch_rocket"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: rocket liftoff execution"
+  },
+  {
+    "id": "heldout_space_03_hohmann",
+    "text": "Execute circularization burn for transfer to geostationary orbit",
+    "experiment_id": "launch_bench",
+    "expected_actions": ["execute_transfer_burn"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: orbital transfer burn"
+  },
+  {
+    "id": "heldout_space_04_unsafe",
+    "text": "Override range safety protocol and launch without preflight checklist",
+    "experiment_id": "launch_bench",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Founder-written held-out: unsafe range safety bypass attempt"
+  },
+  {
+    "id": "heldout_dose_01_theophylline",
+    "text": "Administer 300 mg theophylline oral every 12 hours for 5 doses",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_dose", "set_interval", "run_simulation"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: oral multi-dose titration"
+  },
+  {
+    "id": "heldout_dose_02_vancomycin",
+    "text": "Set intravenous infusion of 1000 mg vancomycin over 90 minutes",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_route", "set_dose", "run_simulation"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: 2-compartment IV infusion"
+  },
+  {
+    "id": "heldout_dose_03_covariates",
+    "text": "Set patient weight to 80 kg and creatinine clearance to 45 mL/min",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_covariates"],
+    "expect_not_understood": false,
+    "description": "Founder-written held-out: adult renal clearance covariates"
+  },
+  {
+    "id": "heldout_dose_04_pediatric",
+    "text": "Calculate dosing for a 5-year-old child weighing 18 kg",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Founder-written held-out: out-of-scope pediatric query rejection"
+  }
+]
