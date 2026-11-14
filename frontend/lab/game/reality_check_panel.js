@@ -246,6 +246,9 @@ export class RealityCheckPanel {
             <div class="card-disclaimer-note">
               <strong>Mandatory Disclaimer:</strong> ${card.disclaimer || 'Educational simulation only.'}
             </div>
+            <div style="margin-top:8px; text-align:right;">
+              <a href="/docs/model_cards/${mod.module_id.replace('.', '_')}.md" target="_blank" rel="noopener noreferrer" class="model-card-link" style="color:#38bdf8; text-decoration:none; font-size:0.8rem; font-weight:600;">📄 View Full Model Card &rarr;</a>
+            </div>
           </div>
         </div>
       `;

@@ -273,6 +273,10 @@ app.include_router(validation.router)
 
 
 # ---------------------------------------------------------------------------
-# Static files
+# Static files & Documentation
 # ---------------------------------------------------------------------------
+DOCS_DIR = Path(__file__).resolve().parent.parent.parent / "docs"
+if (DOCS_DIR / "model_cards").exists():
+    app.mount("/docs/model_cards", StaticFiles(directory=DOCS_DIR / "model_cards"), name="model_cards_docs")
+
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
