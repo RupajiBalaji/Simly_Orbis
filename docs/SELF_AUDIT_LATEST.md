@@ -1,7 +1,7 @@
 # Simly Orbis Stage Gate Self-Audit Report
 
 **Status:** PASS  
-**Platform Version:** 0.4.0-dev  
+**Platform Version:** 0.4.1-dev  
 **Single Source of Truth:** Backend Simulators  
 **Governance Standard:** Educational Simulation &bull; Not Medical Advice &bull; Not Clinical Evidence  
 
@@ -11,16 +11,16 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 12, HEAD: f076e7e6 |
-| 2 | App Version | **PASS** | Version `0.4.0-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite | **PASS** | [fresh venv] `==================== 411 passed, 11035 warnings in 15.56s =====================` |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 19, HEAD: 69b54fa1 |
+| 2 | App Version | **PASS** | Version `0.4.1-dev` declared in `backend/app/config.py` |
+| 3 | Pytest Test Suite | **PASS** | [fresh venv] `==================== 419 passed, 12114 warnings in 14.17s =====================` |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
 | 5 | Frozen Tolerances Guard | **PASS** | 3/3 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 4 engines + R1-R10/S1-S8 rules. Violations: 0 |
 | 7 | CI Workflow Configuration | **PASS** | `.github/workflows/ci.yml` invokes bare `pytest backend/tests`. |
 | 8 | QA Playthrough Proof | **PASS** | Folder: `20261114_111033` | Media count: 55 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
 | 9 | First-Run Parser Baselines | **PASS** | Recorded first-run rates: Dose Lab baseline: 24.2% (15/62), Space Stage baseline: 89.1% |
-| 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 3 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
+| 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 9 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
 | 11 | Gitignore Coverage | **PASS** | Coverage confirmed: qa/out (True), __pycache__ (True) |
 
 ---
@@ -29,11 +29,18 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `f076e7e6` | Clean: True (expected audit files: True) | Ahead: 12
+HEAD: `69b54fa1` | Clean: False (expected audit files: True) | Ahead: 19
 
 **Last 15 Commits:**
 ```
-f076e7e docs: Stage 3 report and self-audit
+69b54fa feat(p0): PITCH_FACTS register and CI claims grep gate
+6f4310f feat(p0): config catalogue in DEPLOY.md, startup validation and ai_status in health
+f360eb0 docs(p0): model card skeletons and reality check links
+ef8b674 feat(p0): founder-written held-out harness and sha256 guard test
+819cf0e docs(p0): provenance and claims re-audit table
+ad90a50 ci(p0): branch strategy, claims gate and pip-audit in CI
+8cc6e7e docs(p0): baseline recheck, gap report and version bump
+d139815 docs: Stage 3 report and self-audit
 6ba1771 scripts: self-audit for stage gates
 000416a docs: pkpd physics, claims audit, judge Q&A, roadmap
 27eac57 qa: dose lab playthrough with real proof
@@ -41,13 +48,6 @@ d2cc725 feat(pharma): mentor context and Ask Orbis for dose lab
 579ce49 feat(pharma): dose response UI and curves
 1dab90e feat(pharma): Dose Response Lab experiment, rules, scoring, report
 e2c2e0f feat(pharma): drug library v2 and hold-out calibration framework
-d0afa45 test(pharma): analytic checks for PK/PD engine
-bd8ce6d feat(pharma): two-compartment PK, IV route, PD, covariates
-0ba6bb0 chore: neutral pad name, git_sha, known issues
-72392c9 validation: fix space row provenance
-cb9b66f docs: Space stage report
-6e53063 chore: v0.3.0-dev space slice
-bbca0ff docs: space slice docs and claims audit update
 ```
 
 ### Gate 3: Pytest Test Suite
@@ -56,7 +56,7 @@ Exit code: 0
 
 Command: `E:\Simly Orbis\fresh\Scripts\pytest.exe backend/tests`
 
-Final line: `==================== 411 passed, 11035 warnings in 15.56s =====================`
+Final line: `==================== 419 passed, 12114 warnings in 14.17s =====================`
 
 ### Gate 4: Validation Row Governance
 
