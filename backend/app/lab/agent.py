@@ -124,6 +124,19 @@ FRIENDLY_ACTION_TITLES: dict[str, str] = {
     "burn_transfer": "Hohmann Transfer Burn",
     "circularize": "Circularize Orbit",
     "debrief": "Debrief Flight Telemetry",
+    # Dose Response Lab actions
+    "select_patient": "Select Patient Profile",
+    "select_drug": "Select Therapeutic Drug",
+    "set_route": "Set Administration Route",
+    "set_dose": "Set Dose Amount",
+    "set_regimen": "Configure Dosing Regimen",
+    "set_covariates": "Adjust Adult Covariates",
+    "check_renal": "Check Renal Function Status",
+    "set_sampling": "Set Blood Sampling Protocol",
+    "predict_window": "Predict Therapeutic Window",
+    "run_simulation": "Run PK/PD Simulation",
+    "compare_regimens": "Compare Simulation Regimens",
+    "debrief_pkpd": "Debrief PK/PD Results",
 }
 
 
@@ -231,6 +244,74 @@ def _clean_and_bound_params(action: ActionType, params: dict[str, Any]) -> dict[
             cleaned["target_alt_km"] = max(100.0, min(2000.0, float(raw_alt)))
         except (ValueError, TypeError):
             cleaned["target_alt_km"] = 200.0
+
+    # Dose Response Lab bounds
+    elif action == ActionType.select_patient:
+        pid = str(params.get("profile_id", "standard_adult")).strip().lower()
+        if pid not in ("standard_adult", "renal_patient", "elderly_adult"):
+            pid = "standard_adult"
+        cleaned["profile_id"] = pid
+
+    elif action == ActionType.select_drug:
+        cleaned["drug_id"] = str(params.get("drug_id", "theophylline")).strip().lower()
+
+    elif action == ActionType.set_route:
+        route = str(params.get("route", "oral")).strip().lower()
+        if route not in ("oral", "iv_bolus", "iv_infusion"):
+            route = "oral"
+        cleaned["route"] = route
+
+    elif action == ActionType.set_dose:
+        raw_dose = params.get("dose_mg", 300.0)
+        try:
+            cleaned["dose_mg"] = max(1.0, min(5000.0, round(float(raw_dose), 2)))
+        except (ValueError, TypeError):
+            cleaned["dose_mg"] = 300.0
+
+    elif action == ActionType.set_regimen:
+        try:
+            cleaned["num_doses"] = max(1, min(10, int(params.get("num_doses", 3))))
+        except (ValueError, TypeError):
+            cleaned["num_doses"] = 3
+        try:
+            cleaned["tau_h"] = max(1.0, min(48.0, round(float(params.get("tau_h", 12.0)), 2)))
+        except (ValueError, TypeError):
+            cleaned["tau_h"] = 12.0
+        try:
+            cleaned["t_inf_h"] = max(0.25, min(24.0, round(float(params.get("t_inf_h", 1.0)), 2)))
+        except (ValueError, TypeError):
+            cleaned["t_inf_h"] = 1.0
+
+    elif action == ActionType.set_covariates:
+        try:
+            cleaned["weight_kg"] = max(40.0, min(150.0, round(float(params.get("weight_kg", 70.0)), 1)))
+        except (ValueError, TypeError):
+            cleaned["weight_kg"] = 70.0
+        try:
+            cleaned["age_years"] = max(18.0, min(90.0, round(float(params.get("age_years", 35.0)), 1)))
+        except (ValueError, TypeError):
+            cleaned["age_years"] = 35.0
+        try:
+            cleaned["crcl_ml_min"] = max(15.0, min(150.0, round(float(params.get("crcl_ml_min", 100.0)), 1)))
+        except (ValueError, TypeError):
+            cleaned["crcl_ml_min"] = 100.0
+
+    elif action == ActionType.set_sampling:
+        raw_st = params.get("sample_times_h", [0.0, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0])
+        if isinstance(raw_st, list):
+            cleaned["sample_times_h"] = [max(0.0, min(72.0, float(x))) for x in raw_st][:15]
+        else:
+            cleaned["sample_times_h"] = [0.0, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]
+
+    elif action == ActionType.predict_window:
+        try:
+            cleaned["cmax_predicted"] = max(0.0, min(1000.0, float(params.get("cmax_predicted", 15.0))))
+        except (ValueError, TypeError):
+            cleaned["cmax_predicted"] = 15.0
+        try:
+            cleaned["t_in_window_predicted"] = max(0.0, min(72.0, float(params.get("t_in_window_predicted", 8.0))))
+        except (ValueError, TypeError):
+            cleaned["t_in_window_predicted"] = 8.0
 
     return cleaned
 
@@ -397,7 +478,7 @@ def _parse_single_clause(
         ], ctx
 
     # 6. Administer dose
-    if any(k in t for k in ["administer", "give dose", "give to patient", "give medication", "dose patient"]) or re.search(r"\badminister\b", t):
+    if (any(k in t for k in ["administer", "give dose", "give to patient", "give medication", "dose patient"]) or re.search(r"\badminister\b", t)) and exp_id != "dose_lab" and not (re.search(r"\biv\b", t) or "bolus" in t or "infusion" in t):
         ctx["target"] = "patient_bed"
         return [
             AgentProposedStep(
@@ -711,13 +792,238 @@ def _parse_single_clause(
         ], ctx
 
     # Space 10: Debrief
-    if any(k in t for k in ["debrief flight", "review telemetry", "mission debrief", "debrief with tracking station", "debrief"]):
+    if any(k in t for k in ["debrief flight", "review telemetry", "mission debrief", "debrief with tracking station", "debrief"]) and exp_id == "launch_bench":
         return [
             AgentProposedStep(
                 action=ActionType.debrief,
                 target="tracking_station",
                 params={},
                 why="Debrief mission telemetry and Keplerian conservation.",
+            )
+        ], ctx
+
+    # -----------------------------------------------------------------------
+    # Dose Response Lab Actions (Stage 3 Pharma Depth)
+    # -----------------------------------------------------------------------
+
+    # Check medical advice / paediatric refusal
+    med_triggers = [
+        "headache", "my mother", "my father", "my child", "my fever", "back pain",
+        "for my infection", "should i take", "can i take", "prescribe", "swallow right now",
+        "pills should i", "medical advice", "what dose should i", "cure my", "for me",
+        "my cough", "my disease", "my pain",
+    ]
+    paed_triggers = ["child", "pediatric", "paediatric", "toddler", "infant", "baby", "8 years", "5 years", "10 years"]
+    if any(m in t for m in med_triggers) or any(p in t for p in paed_triggers):
+        return None, ctx
+
+    # Dose 1: Debrief PKPD
+    if any(k in t for k in ["debrief the run", "debrief simulation", "debrief pkpd"]) or (exp_id == "dose_lab" and "debrief" in t):
+        return [
+            AgentProposedStep(
+                action=ActionType.debrief_pkpd,
+                target="debrief_station",
+                params={},
+                why="Debrief therapeutic efficacy, safety window, and accumulation.",
+            )
+        ], ctx
+
+    # Dose 2: Run Simulation
+    if any(k in t for k in ["run pkpd", "simulate", "simulat", "execute simulation", "run simulation"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.run_simulation,
+                target="simulation_engine",
+                params={},
+                why="Execute numerical PK/PD differential equation simulation.",
+            )
+        ], ctx
+
+    # Dose 3: Compare Regimens
+    if any(k in t for k in ["compare", "overlay"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.compare_regimens,
+                target="pkpd_chart",
+                params={},
+                why="Overlay previous simulation regimen for comparative analysis.",
+            )
+        ], ctx
+
+    # Dose 4: Predict Window
+    if "predict" in t:
+        cmax_val = 15.0
+        c_m = re.search(r"(\d+(?:\.\d+)?)\s*mg/l", t, re.IGNORECASE)
+        if c_m:
+            cmax_val = float(c_m.group(1))
+        return [
+            AgentProposedStep(
+                action=ActionType.predict_window,
+                target="prediction_slate",
+                params={"cmax_predicted": cmax_val, "t_in_window_predicted": 8.0},
+                why=f"Record predicted peak concentration ({cmax_val:.1f} mg/L).",
+            )
+        ], ctx
+
+    # Dose 5: Check Renal
+    if any(k in t for k in ["check renal", "acknowledge renal", "verify crcl", "confirm renal", "check crcl"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.check_renal,
+                target="patient_monitor",
+                params={},
+                why="Review renal function and creatinine clearance.",
+            )
+        ], ctx
+
+    # Dose 6: Select Patient
+    if any(k in t for k in ["select standard adult", "choose renal patient", "pick elderly patient", "declare patient profile"]) or (("patient" in t or "preset" in t or "profile" in t) and any(w in t for w in ["standard", "renal", "elderly"])):
+        pid = "standard_adult"
+        if "renal" in t:
+            pid = "renal_patient"
+        elif "elderly" in t:
+            pid = "elderly_adult"
+        return [
+            AgentProposedStep(
+                action=ActionType.select_patient,
+                target=pid,
+                params={"profile_id": pid},
+                why=f"Select patient clinical archetype {pid}.",
+            )
+        ], ctx
+
+    # Dose 7: Covariates
+    if any(w in t for w in ["weight", "wt", "age", "crcl", "covariate"]):
+        w_m = re.search(r"(?:weight|wt)\s*(?:to|is|=)?\s*(\d+(?:\.\d+)?)\s*(?:kg|kilos)?", t)
+        if w_m:
+            w_val = float(w_m.group(1))
+            if 40.0 <= w_val <= 150.0:
+                return [
+                    AgentProposedStep(
+                        action=ActionType.set_covariates,
+                        target="patient_monitor",
+                        params={"weight_kg": w_val},
+                        why=f"Adjust patient body weight to {w_val:.1f} kg.",
+                    )
+                ], ctx
+            return None, ctx
+
+        a_m = re.search(r"(?:age)\s*(?:to|is|=)?\s*(\d+(?:\.\d+)?)\s*(?:years|yrs)?", t)
+        if a_m:
+            a_val = float(a_m.group(1))
+            if 18.0 <= a_val <= 90.0:
+                return [
+                    AgentProposedStep(
+                        action=ActionType.set_covariates,
+                        target="patient_monitor",
+                        params={"age_years": a_val},
+                        why=f"Set patient age to {a_val:.0f} years.",
+                    )
+                ], ctx
+            return None, ctx
+
+        c_m = re.search(r"(?:crcl)\s*(?:to|is|=)?\s*(\d+(?:\.\d+)?)\s*(?:ml/min)?", t)
+        if c_m:
+            c_val = float(c_m.group(1))
+            if 15.0 <= c_val <= 150.0:
+                return [
+                    AgentProposedStep(
+                        action=ActionType.set_covariates,
+                        target="patient_monitor",
+                        params={"crcl_ml_min": c_val},
+                        why=f"Set creatinine clearance to {c_val:.0f} mL/min.",
+                    )
+                ], ctx
+            return None, ctx
+
+    # Dose 8: Select Drug
+    drug_catalog = {
+        "theophylline": "theophylline", "theophyline": "theophylline",
+        "gentamicin": "gentamicin", "vancomycin": "vancomycin",
+        "digoxin": "digoxin", "paracetamol": "paracetamol",
+        "metformin": "metformin", "amoxicillin": "amoxicillin",
+        "atorvastatin": "atorvastatin", "warfarin": "warfarin", "lisinopril": "lisinopril"
+    }
+    for d_alias, d_target in drug_catalog.items():
+        if d_alias in t and any(v in t for v in ["select", "choose", "switch", "pick", "formulary", "drug", "selet"]):
+            return [
+                AgentProposedStep(
+                    action=ActionType.select_drug,
+                    target=d_target,
+                    params={"drug_id": d_target},
+                    why=f"Select {d_target.capitalize()} from therapeutic formulary.",
+                )
+            ], ctx
+
+    # Dose 9: Route
+    if any(r in t for r in ["oral", "iv infusion", "iv bolus", "intravenous", "infusion", "route", "bolus"]) and "duration" not in t:
+        r_type = "oral"
+        if "infusion" in t or "intravenous" in t:
+            r_type = "iv_infusion"
+        elif "bolus" in t:
+            r_type = "iv_bolus"
+        return [
+            AgentProposedStep(
+                action=ActionType.set_route,
+                target=r_type,
+                params={"route": r_type},
+                why=f"Set administration route to {r_type}.",
+            )
+        ], ctx
+
+    # Dose 10: Regimen
+    if any(k in t for k in ["q12h", "q8h", "q24h", "q6h", "every", "interval", "duration", "regimen"]) or ("doses" in t and "dose" not in t):
+        num_doses = 3
+        tau_h = 12.0
+        t_inf_h = 1.0
+        d_m = re.search(r"(\d+)\s*doses", t)
+        if d_m:
+            num_doses = int(d_m.group(1))
+        tau_m = re.search(r"(?:q|every\s*|interval\s*)(\d+(?:\.\d+)?)\s*h", t)
+        if tau_m:
+            tau_h = float(tau_m.group(1))
+        elif "q12h" in t:
+            tau_h = 12.0
+        elif "q8h" in t:
+            tau_h = 8.0
+        elif "q24h" in t:
+            tau_h = 24.0
+        inf_m = re.search(r"(?:duration to|over)\s*(\d+(?:\.\d+)?)\s*h", t)
+        if inf_m:
+            t_inf_h = float(inf_m.group(1))
+        return [
+            AgentProposedStep(
+                action=ActionType.set_regimen,
+                target="infusion_pump",
+                params={"num_doses": num_doses, "tau_h": tau_h, "t_inf_h": t_inf_h},
+                why=f"Configure regimen: {num_doses} doses, tau={tau_h:.0f}h.",
+            )
+        ], ctx
+
+    # Dose 11: Dose
+    if any(k in t for k in ["set dose", "dose", "give"]):
+        dose_m = re.search(r"(\d+(?:\.\d+)?)\s*(mg|g)?\b", t)
+        if dose_m:
+            val = float(dose_m.group(1))
+            unit = (dose_m.group(2) or "mg").lower()
+            dose_mg = val * 1000.0 if unit == "g" else val
+            return [
+                AgentProposedStep(
+                    action=ActionType.set_dose,
+                    target="infusion_pump",
+                    params={"dose_mg": dose_mg},
+                    why=f"Set administered dose to {dose_mg:.0f} mg.",
+                )
+            ], ctx
+
+    # Dose 12: Sampling
+    if any(k in t for k in ["sampling", "sample times", "blood sample", "tdm"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.set_sampling,
+                target="sampling_slate",
+                params={"sample_times_h": [0.0, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]},
+                why="Establish blood sampling protocol schedule for TDM.",
             )
         ], ctx
 
@@ -845,6 +1151,36 @@ async def generate_plan(session: LabSession, text: str) -> AgentPlanResponse:
         return AgentPlanResponse(
             status="invalid",
             reply="Please provide a lab action request.",
+            steps=[],
+            source="fallback",
+            provider_tag="Rule-based",
+            calls_left=calls_left,
+        )
+
+    t_lower = clean_text.lower()
+    # Medical advice refusal guard
+    med_triggers = [
+        "headache", "my mother", "my father", "my child", "my fever", "back pain",
+        "for my infection", "should i take", "can i take", "prescribe", "swallow right now",
+        "pills should i", "medical advice", "what dose should i", "cure my", "for me",
+        "my cough", "my disease", "my pain",
+    ]
+    if any(m in t_lower for m in med_triggers):
+        return AgentPlanResponse(
+            status="refused",
+            reply="I cannot provide medical advice. Orbis Lab is an educational simulation. For medical questions, consult a qualified healthcare professional.",
+            steps=[],
+            source="fallback",
+            provider_tag="Rule-based",
+            calls_left=calls_left,
+        )
+
+    # Paediatric refusal guard
+    paed_triggers = ["child", "pediatric", "paediatric", "toddler", "infant", "baby", "8 years", "5 years", "10 years"]
+    if any(p in t_lower for p in paed_triggers):
+        return AgentPlanResponse(
+            status="refused",
+            reply="Orbis Lab only supports adult patients (age 18-90, weight 40-150 kg). Paediatric dosing is not supported.",
             steps=[],
             source="fallback",
             provider_tag="Rule-based",

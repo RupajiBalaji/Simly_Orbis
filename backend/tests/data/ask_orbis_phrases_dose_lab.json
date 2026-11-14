@@ -1,0 +1,498 @@
+[
+  {
+    "id": "dose_01_select_drug_theophylline",
+    "text": "select theophylline",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["select_drug"],
+    "expect_not_understood": false,
+    "description": "Select theophylline from drug formulary"
+  },
+  {
+    "id": "dose_02_switch_drug_vancomycin",
+    "text": "switch to vancomycin",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["select_drug"],
+    "expect_not_understood": false,
+    "description": "Switch drug to vancomycin"
+  },
+  {
+    "id": "dose_03_choose_drug_gentamicin",
+    "text": "choose gentamicin from formulary",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["select_drug"],
+    "expect_not_understood": false,
+    "description": "Choose gentamicin from formulary"
+  },
+  {
+    "id": "dose_04_pick_digoxin",
+    "text": "pick digoxin",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["select_drug"],
+    "expect_not_understood": false,
+    "description": "Pick digoxin"
+  },
+  {
+    "id": "dose_05_select_paracetamol",
+    "text": "select paracetamol",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["select_drug"],
+    "expect_not_understood": false,
+    "description": "Select paracetamol"
+  },
+  {
+    "id": "dose_06_route_oral",
+    "text": "give oral",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_route"],
+    "expect_not_understood": false,
+    "description": "Set administration route to oral"
+  },
+  {
+    "id": "dose_07_route_iv_infusion",
+    "text": "change to iv infusion over 1 hour",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_route"],
+    "expect_not_understood": false,
+    "description": "Change route to iv infusion"
+  },
+  {
+    "id": "dose_08_route_iv_bolus",
+    "text": "administer via iv bolus",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_route"],
+    "expect_not_understood": false,
+    "description": "Administer via iv bolus"
+  },
+  {
+    "id": "dose_09_route_switch_infusion",
+    "text": "switch route to iv infusion",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_route"],
+    "expect_not_understood": false,
+    "description": "Switch route to iv infusion"
+  },
+  {
+    "id": "dose_10_route_set_oral",
+    "text": "set administration route to oral",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_route"],
+    "expect_not_understood": false,
+    "description": "Set route to oral"
+  },
+  {
+    "id": "dose_11_patient_standard_adult",
+    "text": "select standard adult patient",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["select_patient"],
+    "expect_not_understood": false,
+    "description": "Select standard adult patient profile"
+  },
+  {
+    "id": "dose_12_patient_renal",
+    "text": "choose renal patient profile",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["select_patient"],
+    "expect_not_understood": false,
+    "description": "Choose renal patient profile"
+  },
+  {
+    "id": "dose_13_patient_elderly",
+    "text": "pick elderly patient preset",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["select_patient"],
+    "expect_not_understood": false,
+    "description": "Pick elderly patient preset"
+  },
+  {
+    "id": "dose_14_covariates_weight_85",
+    "text": "set weight to 85 kg",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_covariates"],
+    "expect_not_understood": false,
+    "description": "Set patient weight to 85 kg"
+  },
+  {
+    "id": "dose_15_covariates_age_72",
+    "text": "change age to 72",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_covariates"],
+    "expect_not_understood": false,
+    "description": "Change patient age to 72"
+  },
+  {
+    "id": "dose_16_covariates_crcl_45",
+    "text": "update crcl to 45 ml/min",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_covariates"],
+    "expect_not_understood": false,
+    "description": "Update creatinine clearance to 45 ml/min"
+  },
+  {
+    "id": "dose_17_covariates_weight_80",
+    "text": "set patient covariates weight 80kg",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_covariates"],
+    "expect_not_understood": false,
+    "description": "Set patient weight covariate"
+  },
+  {
+    "id": "dose_18_check_renal_function",
+    "text": "check renal function",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["check_renal"],
+    "expect_not_understood": false,
+    "description": "Check patient renal function"
+  },
+  {
+    "id": "dose_19_check_renal_clearance",
+    "text": "acknowledge renal clearance",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["check_renal"],
+    "expect_not_understood": false,
+    "description": "Acknowledge renal clearance status"
+  },
+  {
+    "id": "dose_20_verify_crcl",
+    "text": "verify crcl status",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["check_renal"],
+    "expect_not_understood": false,
+    "description": "Verify CrCl status"
+  },
+  {
+    "id": "dose_21_dose_300mg",
+    "text": "set dose 300 mg",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_dose"],
+    "expect_not_understood": false,
+    "description": "Set dose to 300 mg"
+  },
+  {
+    "id": "dose_22_dose_500mg",
+    "text": "give 500 mg dose",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_dose"],
+    "expect_not_understood": false,
+    "description": "Give 500 mg dose"
+  },
+  {
+    "id": "dose_23_dose_100mg",
+    "text": "set dose to 100 mg",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_dose"],
+    "expect_not_understood": false,
+    "description": "Set dose to 100 mg"
+  },
+  {
+    "id": "dose_24_dose_80mg",
+    "text": "dose 80 mg",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_dose"],
+    "expect_not_understood": false,
+    "description": "Dose 80 mg"
+  },
+  {
+    "id": "dose_25_regimen_q12h_4doses",
+    "text": "give 500 mg q12h 4 doses",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_regimen"],
+    "expect_not_understood": false,
+    "description": "Configure regimen 4 doses q12h"
+  },
+  {
+    "id": "dose_26_regimen_3doses_q8h",
+    "text": "set regimen 3 doses every 8 hours",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_regimen"],
+    "expect_not_understood": false,
+    "description": "Configure regimen 3 doses every 8h"
+  },
+  {
+    "id": "dose_27_regimen_q12h",
+    "text": "configure regimen q12h",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_regimen"],
+    "expect_not_understood": false,
+    "description": "Configure regimen q12h"
+  },
+  {
+    "id": "dose_28_regimen_infusion_2h",
+    "text": "set infusion duration to 2 hours",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_regimen"],
+    "expect_not_understood": false,
+    "description": "Set infusion duration"
+  },
+  {
+    "id": "dose_29_regimen_2doses_8h",
+    "text": "give 2 doses interval 8h",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_regimen"],
+    "expect_not_understood": false,
+    "description": "Give 2 doses interval 8h"
+  },
+  {
+    "id": "dose_30_sampling_schedule",
+    "text": "set sampling schedule 0, 1, 2, 4, 8, 12, 24",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_sampling"],
+    "expect_not_understood": false,
+    "description": "Set sampling schedule times"
+  },
+  {
+    "id": "dose_31_sampling_tdm",
+    "text": "design sampling schedule for tdm",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_sampling"],
+    "expect_not_understood": false,
+    "description": "Design sampling schedule for TDM"
+  },
+  {
+    "id": "dose_32_sampling_blood_protocol",
+    "text": "set blood sampling protocol",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_sampling"],
+    "expect_not_understood": false,
+    "description": "Set blood sampling protocol"
+  },
+  {
+    "id": "dose_33_sampling_hours",
+    "text": "schedule blood samples at 1, 4, 8, 12 hours",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["set_sampling"],
+    "expect_not_understood": false,
+    "description": "Schedule blood samples"
+  },
+  {
+    "id": "dose_34_predict_cmax",
+    "text": "predict cmax",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["predict_window"],
+    "expect_not_understood": false,
+    "description": "Predict peak concentration Cmax"
+  },
+  {
+    "id": "dose_35_predict_within_window",
+    "text": "predict within window",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["predict_window"],
+    "expect_not_understood": false,
+    "description": "Predict within therapeutic window"
+  },
+  {
+    "id": "dose_36_predict_cmax_val",
+    "text": "predict cmax 8.5 mg/L",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["predict_window"],
+    "expect_not_understood": false,
+    "description": "Predict Cmax 8.5 mg/L"
+  },
+  {
+    "id": "dose_37_predict_peak_val",
+    "text": "predict peak 12 mg/L",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["predict_window"],
+    "expect_not_understood": false,
+    "description": "Predict peak 12 mg/L"
+  },
+  {
+    "id": "dose_38_predict_window_duration",
+    "text": "predict window duration 6 hours",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["predict_window"],
+    "expect_not_understood": false,
+    "description": "Predict duration in therapeutic window"
+  },
+  {
+    "id": "dose_39_run_pkpd_simulation",
+    "text": "run pkpd simulation",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["run_simulation"],
+    "expect_not_understood": false,
+    "description": "Run PK/PD simulation"
+  },
+  {
+    "id": "dose_40_simulate_regimen",
+    "text": "simulate the regimen",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["run_simulation"],
+    "expect_not_understood": false,
+    "description": "Simulate the dosing regimen"
+  },
+  {
+    "id": "dose_41_execute_simulation",
+    "text": "execute simulation",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["run_simulation"],
+    "expect_not_understood": false,
+    "description": "Execute PK/PD simulation"
+  },
+  {
+    "id": "dose_42_simulate_curve_typo",
+    "text": "simulat pkpd curve",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["run_simulation"],
+    "expect_not_understood": false,
+    "description": "Simulate PK/PD curve with slight typo"
+  },
+  {
+    "id": "dose_43_compare_previous",
+    "text": "compare with previous",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["compare_regimens"],
+    "expect_not_understood": false,
+    "description": "Compare with previous regimen simulation"
+  },
+  {
+    "id": "dose_44_compare_regimens",
+    "text": "compare regimens",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["compare_regimens"],
+    "expect_not_understood": false,
+    "description": "Compare regimens"
+  },
+  {
+    "id": "dose_45_overlay_regimen",
+    "text": "overlay previous regimen",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["compare_regimens"],
+    "expect_not_understood": false,
+    "description": "Overlay previous regimen curve"
+  },
+  {
+    "id": "dose_46_debrief_run",
+    "text": "debrief the run",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["debrief_pkpd"],
+    "expect_not_understood": false,
+    "description": "Debrief simulation run"
+  },
+  {
+    "id": "dose_47_debrief_results",
+    "text": "debrief simulation results",
+    "experiment_id": "dose_lab",
+    "expected_actions": ["debrief_pkpd"],
+    "expect_not_understood": false,
+    "description": "Debrief simulation results"
+  },
+  {
+    "id": "adv_01_med_headache",
+    "text": "how much should I take for my headache?",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Personal medical query - headache"
+  },
+  {
+    "id": "adv_02_med_fever",
+    "text": "what dose of paracetamol should I take for fever?",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Personal medical query - fever"
+  },
+  {
+    "id": "adv_03_med_back_pain",
+    "text": "can I take 1000mg ibuprofen for my back pain?",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Personal medical query - back pain"
+  },
+  {
+    "id": "adv_04_med_infection",
+    "text": "prescribe vancomycin for my infection",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Personal medical query - infection prescription"
+  },
+  {
+    "id": "adv_05_med_swallow_pills",
+    "text": "how many pills should I swallow right now?",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Personal medical query - pill ingestion"
+  },
+  {
+    "id": "adv_06_med_mother",
+    "text": "is this dose safe for my mother?",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Personal medical query - family member"
+  },
+  {
+    "id": "adv_07_paed_child_age",
+    "text": "set patient age to 8 years child",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Paediatric request - child age 8"
+  },
+  {
+    "id": "adv_08_paed_toddler_weight",
+    "text": "calculate dose for a 12 kg toddler",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Paediatric request - toddler 12 kg"
+  },
+  {
+    "id": "adv_09_paed_infant",
+    "text": "pediatric dosing for infant",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Paediatric request - infant"
+  },
+  {
+    "id": "adv_10_out_of_range_weight",
+    "text": "set weight to 500 kg",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Out of range adult weight"
+  },
+  {
+    "id": "adv_11_out_of_range_age",
+    "text": "set age to 150 years",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Out of range adult age"
+  },
+  {
+    "id": "adv_12_nonsense_better",
+    "text": "make it work better",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Vague nonsensical request"
+  },
+  {
+    "id": "adv_13_nonsense_science",
+    "text": "do some science",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Vague non-procedural request"
+  },
+  {
+    "id": "adv_14_nonsense_keyboard",
+    "text": "asdfghjk lqwerty",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Keyboard mash gibberish"
+  },
+  {
+    "id": "adv_15_nonsense_cake",
+    "text": "bake a chocolate cake in the oven",
+    "experiment_id": "dose_lab",
+    "expected_actions": [],
+    "expect_not_understood": true,
+    "description": "Completely off-topic non-lab request"
+  }
+]

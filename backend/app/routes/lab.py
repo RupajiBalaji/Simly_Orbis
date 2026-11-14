@@ -234,6 +234,28 @@ def _build_mentor_context(session: LabSession) -> tuple[str, str, str]:
             f"Vehicle: {preset}, Payload: {payload:.0f} kg, Liftoff TWR: {twr:.2f}, "
             f"Total Δv: {total_dv:.0f} m/s, Status: {flight_status}, Ap: {ap:.1f} km, Pe: {pe:.1f} km"
         )
+    elif session.experiment_id == "dose_lab":
+        pat = session.apparatus_state.get("patient", {})
+        cov = pat.get("covariates", {})
+        drug_id = session.apparatus_state.get("drug_id", "Not selected")
+        regimen = session.apparatus_state.get("regimen", {})
+        sim_res = session.apparatus_state.get("simulation_result") or {}
+        cmax = sim_res.get("cmax", 0.0)
+        acc = sim_res.get("accumulation_ratio", 1.0)
+        c_low = sim_res.get("target_window_low", 10.0)
+        c_high = sim_res.get("target_window_high", 20.0)
+        crcl = cov.get("crcl_ml_min", 100.0)
+        limiting = "Normal clearance & volume"
+        if crcl < 60.0:
+            limiting = f"Reduced renal clearance (CrCl {crcl:.0f} mL/min; accumulation risk)"
+        elif cov.get("weight_kg", 70.0) > 100.0:
+            limiting = "Expanded volume of distribution (high body weight)"
+        readouts.append(
+            f"Patient: Age {cov.get('age_years', 35)} yr, Weight {cov.get('weight_kg', 70)} kg, CrCl {crcl:.0f} mL/min; "
+            f"Drug: {drug_id}; Regimen: {regimen.get('dose_mg', 300)} mg {regimen.get('route', 'oral')} q{regimen.get('tau_h', 12)}h; "
+            f"Simulated Cmax: {cmax:.2f} mg/L (Target: {c_low:.1f}-{c_high:.1f} mg/L); Accumulation: {acc:.2f}x; "
+            f"Limiting Factor: {limiting}"
+        )
     readout_str = "; ".join(readouts) or "Normal baseline"
 
     context_text = f"""Experiment: {session.experiment_id}
@@ -290,6 +312,26 @@ def _generate_rule_based_mentor_message(
                 "Dr. Orbis: I must decline instructions that attempt to alter laboratory safety protocols or system settings. "
                 f"Let's focus on the active protocol. Currently at step '{step_title}': {step_hint}"
             )
+        # Medical advice refusal guard
+        med_triggers = [
+            "headache", "my mother", "my father", "my child", "my fever", "back pain",
+            "for my infection", "should i take", "can i take", "prescribe", "swallow right now",
+            "pills should i", "medical advice", "what dose should i", "cure my", "for me",
+            "my cough", "my disease", "my pain",
+        ]
+        if any(m in q_lower for m in med_triggers):
+            return (
+                "Dr. Orbis: I cannot provide medical advice. Orbis Lab is an educational simulation. "
+                "For medical questions, consult a qualified healthcare professional."
+            )
+
+        paed_triggers = ["child", "pediatric", "paediatric", "toddler", "infant", "baby", "8 years", "5 years", "10 years"]
+        if any(p in q_lower for p in paed_triggers):
+            return (
+                "Dr. Orbis: Orbis Lab only supports adult patients (age 18-90, weight 40-150 kg). "
+                "Paediatric dosing and pharmacology are not supported."
+            )
+
         # Off-topic boundary control
         if any(w in q_lower for w in ["weather", "capital of", "joke", "recipe", "politics", "football", "movie"]):
             return (
@@ -350,6 +392,35 @@ def _generate_rule_based_mentor_message(
                 )
             return (
                 "Dr. Orbis: Orbital mechanics requires precise staging, TWR > 1.2 at liftoff, and sufficient Δv for insertion. "
+                f"Currently at step '{step_title}': {step_hint}"
+            )
+        elif session.experiment_id == "dose_lab":
+            if any(w in q_lower for w in ["limiting", "clearance", "renal", "kidney", "crcl"]):
+                return (
+                    "Dr. Orbis: Clearance determines steady-state drug concentration and dosing interval. "
+                    "In renal impairment (CrCl < 60 mL/min), renally eliminated drugs accumulate, "
+                    f"requiring dose reductions or interval extension. Current step: {step_hint}"
+                )
+            if any(w in q_lower for w in ["window", "therapeutic", "target"]):
+                return (
+                    "Dr. Orbis: The target therapeutic window balances minimum effective concentration against toxic threshold. "
+                    "Adjust dose and interval tau to keep trough and peak levels within the green zone. "
+                    f"Current step: {step_hint}"
+                )
+            if any(w in q_lower for w in ["accumulation", "steady state", "css", "tau", "interval"]):
+                return (
+                    "Dr. Orbis: Drug accumulation ratio R = 1 / (1 - exp(-ke * tau)). "
+                    "Steady state is reached after approximately 4 to 5 elimination half-lives. "
+                    f"Current step: {step_hint}"
+                )
+            if any(w in q_lower for w in ["infusion", "route", "oral", "iv", "bolus"]):
+                return (
+                    "Dr. Orbis: IV infusion avoids high initial peak concentrations seen with IV bolus, "
+                    "while oral dosing depends on bioavailability F and absorption rate ka. "
+                    f"Current step: {step_hint}"
+                )
+            return (
+                "Dr. Orbis: Clinical dose-response modeling links pharmacokinetics with pharmacodynamics. "
                 f"Currently at step '{step_title}': {step_hint}"
             )
         else:
@@ -441,6 +512,29 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
     # Clean / cap user inputs for prompt-injection defense
     clean_nickname = (session.nickname or "Researcher")[:30]
     clean_question = (body.question or "").strip()[:200] if body.question else None
+
+    # Deterministic medical advice refusal
+    if clean_question:
+        q_low = clean_question.lower()
+        med_triggers = [
+            "headache", "my mother", "my father", "my child", "my fever", "back pain",
+            "for my infection", "should i take", "can i take", "prescribe", "swallow right now",
+            "pills should i", "medical advice", "what dose should i", "cure my", "for me",
+            "my cough", "my disease", "my pain",
+        ]
+        if any(m in q_low for m in med_triggers):
+            refusal = (
+                "Dr. Orbis: I cannot provide medical advice. Orbis Lab is an educational simulation. "
+                "For medical questions, consult a qualified healthcare professional."
+            )
+            return MentorResponse(
+                message=refusal,
+                source="fallback",
+                provider=None,
+                provider_tag="Safety Refusal",
+                fallback_reason=None,
+                calls_left=calls_left,
+            )
 
     # Check 60-second TTL cache on (session state hash + mode + question)
     state_sig = f"{session.session_id}:{len(session.protocol_progress)}:{len(session.violations)}:{len(session.events)}:{body.mode}:{clean_question or ''}"

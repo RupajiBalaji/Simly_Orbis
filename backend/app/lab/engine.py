@@ -1636,7 +1636,7 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
         base_params = PKPDParams(
             model_type=model_type,
             route=route,
-            dose_mg=float(pump.get("dose_mg", 500.0)),
+            dose_mg=max(1.0, float(pump.get("dose_mg", 500.0) or 500.0)),
             n_doses=int(pump.get("n_doses", 1)),
             interval_h=float(pump.get("interval_h", 8.0)),
             cl=float(d_cfg["cl"]),
