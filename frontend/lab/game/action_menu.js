@@ -88,6 +88,17 @@ export class ActionMenu {
         { id: 'sink', label: '🚰 Utility Sink', pos: new THREE.Vector3(-6.2, 0, -1.0), face: new THREE.Vector3(-7.2, 0.94, -1.0) },
         { id: 'chemical_waste_bin', label: '🗑️ Waste Disposal', pos: new THREE.Vector3(2.0, 0, -4.2), face: new THREE.Vector3(2.0, 0, -5.2) },
       ];
+    } else if (expId === 'dose_lab') {
+      stations = [
+        { id: 'infusion_pump', label: '💉 Infusion Pump', pos: new THREE.Vector3(-3.5, 0, -2.2), face: new THREE.Vector3(-3.5, 1.25, -3.2) },
+        { id: 'patient_monitor', label: '🩺 Patient Telemetry', pos: new THREE.Vector3(2.5, 0, -2.8), face: new THREE.Vector3(3.2, 1.25, -3.8) },
+        { id: 'pkpd_chart_display', label: '📈 PK/PD Hologram', pos: new THREE.Vector3(0.0, 0, -3.0), face: new THREE.Vector3(0.0, 0.94, -4.5) },
+        { id: 'prediction_slate', label: '📝 Prediction Slate', pos: new THREE.Vector3(-1.8, 0, -2.8), face: new THREE.Vector3(-1.8, 0.94, -4.2) },
+        { id: 'sampling_schedule', label: '🧪 Sampling Schedule', pos: new THREE.Vector3(-4.5, 0, -2.8), face: new THREE.Vector3(-4.8, 0.94, -3.8) },
+        { id: 'debrief_station', label: '📋 Debrief Station', pos: new THREE.Vector3(4.2, 0, -2.8), face: new THREE.Vector3(4.8, 0.94, -3.8) },
+        { id: 'reality_check_board', label: '⚖️ Reality Check', pos: new THREE.Vector3(-4.5, 0, -5.2), face: new THREE.Vector3(-4.5, 2.6, -6.9), isRealityCheck: true },
+        { id: 'sink', label: '🚰 Utility Sink', pos: new THREE.Vector3(-6.2, 0, -1.0), face: new THREE.Vector3(-7.2, 0.94, -1.0) },
+      ];
     } else {
       stations = [
         { id: 'burette', label: '🧪 Burette Stand', pos: new THREE.Vector3(0, 0, -1.0), face: new THREE.Vector3(0, 0.94, -2.0) },

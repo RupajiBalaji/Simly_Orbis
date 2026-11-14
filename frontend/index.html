@@ -67,6 +67,9 @@
   <!-- Virtual Trial Compare Modal -->
   <div id="trial-compare-modal" class="trial-compare-modal hidden"></div>
 
+  <!-- Dose Response Lab Control Panel & Analytics -->
+  <div id="dose-lab-panel" class="dose-lab-panel hidden"></div>
+
   <!-- Dr. Orbis AI Lab Mentor Docked Chat Bubble -->
   <div id="dr-orbis-container" class="dr-orbis-container hidden"></div>
 
@@ -198,7 +201,18 @@
           <button type="button" class="district-action-btn btn-launch">Enter Bench <span>➔</span></button>
         </div>
 
-        <!-- District 4: Market (Locked) -->
+        <!-- District 4: Dose Response Lab (Unlocked) -->
+        <div class="district-card pharma unlocked" id="card-district-dose-lab">
+          <div>
+            <span class="district-badge badge-unlocked">● Unlocked</span>
+            <div class="district-icon">📈</div>
+            <h3 class="district-title">Dose Response Lab</h3>
+            <p class="district-desc">Explore multi-compartment PK/PD dynamics across oral and IV routes. Adjust adult patient covariates (weight, age, CrCl), predict concentration windows, and observe therapeutic effect curves.</p>
+          </div>
+          <button type="button" class="district-action-btn btn-launch">Enter Lab <span>➔</span></button>
+        </div>
+
+        <!-- District 5: Market (Locked) -->
         <div class="district-card locked">
           <div>
             <span class="district-badge badge-locked">🔒 Coming Soon</span>

@@ -16,6 +16,7 @@ import { ReportScreen } from './game/report.js';
 import { DirectorRunner } from './demo/director.js';
 import { DebugOverlay } from './demo/debug_overlay.js';
 import { TrialPanel } from './game/trial_panel.js';
+import { DosePanel } from './game/dose_panel.js';
 import { DrOrbisMentor } from './game/mentor.js';
 import { RealityCheckPanel } from './game/reality_check_panel.js';
 import { AskOrbisAgentPanel } from './game/agent_panel.js';
@@ -110,6 +111,7 @@ async function initOrbisLab() {
   directorRunner = new DirectorRunner(actionMenu);
   debugOverlay = new DebugOverlay();
   const trialPanel = new TrialPanel(sceneManager.trialHall, sceneManager);
+  const dosePanel = new DosePanel();
   const drOrbis = new DrOrbisMentor();
   const realityCheckPanel = new RealityCheckPanel(sceneManager);
   const agentPanel = new AskOrbisAgentPanel();
@@ -119,6 +121,8 @@ async function initOrbisLab() {
       trialPanel.trialHall = payload;
     } else if (event === 'open_trial_panel') {
       trialPanel.open();
+    } else if (event === 'open_dose_panel') {
+      dosePanel.open();
     } else if (event === 'open_reality_check_panel') {
       realityCheckPanel.open();
     }
@@ -129,6 +133,7 @@ async function initOrbisLab() {
   window.actionMenu = actionMenu;
   window.hud = hud;
   window.trialPanel = trialPanel;
+  window.dosePanel = dosePanel;
   window.drOrbis = drOrbis;
   window.realityCheckPanel = realityCheckPanel;
   window.agentPanel = agentPanel;
@@ -192,6 +197,7 @@ function setupLobby() {
   const cardPharma = document.getElementById('card-district-pharma');
   const cardChem = document.getElementById('card-district-chemistry');
   const cardSpace = document.getElementById('card-district-space');
+  const cardDoseLab = document.getElementById('card-district-dose-lab');
 
   if (cardPharma) {
     cardPharma.onclick = () => openExperimentBrief('pk_ward');
@@ -201,6 +207,9 @@ function setupLobby() {
   }
   if (cardSpace) {
     cardSpace.onclick = () => openExperimentBrief('launch_bench');
+  }
+  if (cardDoseLab) {
+    cardDoseLab.onclick = () => openExperimentBrief('dose_lab');
   }
 
   // Brief modal controls
@@ -621,6 +630,12 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
     // 4. Hide brief screen and show HUD
     if (briefScreen) briefScreen.classList.add('hidden');
     hud.show();
+
+    if (experimentId === 'dose_lab') {
+      if (window.dosePanel) window.dosePanel.open();
+    } else {
+      if (window.dosePanel) window.dosePanel.close();
+    }
   } catch (err) {
     console.error('Failed to initialize 3D laboratory session:', err);
     if (briefScreen) briefScreen.classList.add('hidden');

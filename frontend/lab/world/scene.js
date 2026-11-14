@@ -417,6 +417,15 @@ export class LabScene {
           if (this.trialHall) this.trialHall.update(performance.now());
         });
         state.emit('trial_hall_ready', this.trialHall);
+      } else if (experimentDef?.id === 'dose_lab') {
+        this.camera.fov = 65;
+        this.camera.updateProjectionMatrix();
+        this.stationPresets.default = {
+          pos: new THREE.Vector3(0.0, 2.4, 2.2),
+          target: new THREE.Vector3(0.0, 1.1, -3.8),
+        };
+        this.cameraDefaultPos.copy(this.stationPresets.default.pos);
+        this.cameraTarget.copy(this.stationPresets.default.target);
       } else {
         this.camera.fov = 50;
         this.camera.updateProjectionMatrix();

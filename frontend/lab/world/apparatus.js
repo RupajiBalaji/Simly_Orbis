@@ -100,12 +100,21 @@ export function formatApparatusTitle(id) {
     ward_clock: 'Clinical Clock',
     virtual_trial_screen: 'Virtual Trial',
     reality_check_board: 'Reality Check',
+    infusion_pump: 'Infusion Pump Station',
+    patient_monitor: 'Patient & Telemetry Monitor',
+    pkpd_chart_display: 'PK/PD Hologram Curves',
+    prediction_slate: 'Prediction Slate',
+    sampling_schedule: 'Sampling Protocol',
+    debrief_station: 'Debrief Station',
   };
   return titles[id] || (id ? id.replace(/_/g, ' ') : '');
 }
 
 export function getApparatusTagHeight(id) {
   if (id === 'virtual_trial_screen' || id === 'reality_check_board') return 1.05;
+  if (id === 'infusion_pump') return 2.1;
+  if (id === 'patient_monitor') return 1.6;
+  if (id === 'pkpd_chart_display') return 1.1;
   if (id === 'burette') return 1.7;
   if (id === 'patient_bed') return 1.1;
   if (id === 'conical_flask') return 0.55;
@@ -252,6 +261,30 @@ export function buildApparatus(rawApparatus, scene) {
       group = buildWashBottle(id);
       group.position.set(1.4, 0.94, -1.7);
       group.userData.stationPos = new THREE.Vector3(1.0, 0, -1.0);
+    } else if (id === 'infusion_pump' || type === 'infusion_pump') {
+      group = buildInfusionPump(id);
+      group.position.set(-3.5, 0, -3.2);
+      group.userData.stationPos = new THREE.Vector3(-3.5, 0, -2.2);
+    } else if (id === 'patient_monitor' || type === 'patient_monitor') {
+      group = buildPatientMonitor(id);
+      group.position.set(3.2, 0, -3.8);
+      group.userData.stationPos = new THREE.Vector3(2.5, 0, -2.8);
+    } else if (id === 'pkpd_chart_display' || type === 'pkpd_chart_display') {
+      group = buildPkpdChartDisplay(id);
+      group.position.set(0.0, 0.94, -4.5);
+      group.userData.stationPos = new THREE.Vector3(0.0, 0, -3.0);
+    } else if (id === 'prediction_slate' || type === 'prediction_slate') {
+      group = buildPredictionSlate(id);
+      group.position.set(-1.8, 0.94, -4.2);
+      group.userData.stationPos = new THREE.Vector3(-1.8, 0, -2.8);
+    } else if (id === 'sampling_schedule' || type === 'sampling_schedule') {
+      group = buildSamplingSchedule(id);
+      group.position.set(-4.8, 0.94, -3.8);
+      group.userData.stationPos = new THREE.Vector3(-4.5, 0, -2.8);
+    } else if (id === 'debrief_station' || type === 'debrief_station') {
+      group = buildDebriefStation(id);
+      group.position.set(4.8, 0.94, -3.8);
+      group.userData.stationPos = new THREE.Vector3(4.2, 0, -2.8);
     } else {
       console.warn(`Unmapped apparatus: id='${id}', type='${type}'`);
     }
@@ -1364,6 +1397,213 @@ export function buildRealityCheckBoard(id) {
     texture.needsUpdate = true;
   };
 
+  return group;
+}
+
+function buildInfusionPump(id) {
+  const group = new THREE.Group();
+  group.name = `apparatus_${id}`;
+
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, roughness: 0.2, metalness: 0.85 });
+  const basePole = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 2.0, 16), chromeMat);
+  basePole.position.y = 1.0;
+  group.add(basePole);
+
+  for (let i = 0; i < 5; i++) {
+    const angle = (i * Math.PI * 2) / 5;
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.02, 0.03), chromeMat);
+    leg.position.set(Math.cos(angle) * 0.12, 0.04, Math.sin(angle) * 0.12);
+    leg.rotation.y = -angle;
+    group.add(leg);
+  }
+
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
+  const pumpBody = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.35, 0.18), bodyMat);
+  pumpBody.position.set(0, 1.25, 0);
+  group.add(pumpBody);
+
+  const screenCanvas = document.createElement('canvas');
+  screenCanvas.width = 128;
+  screenCanvas.height = 64;
+  const screenCtx = screenCanvas.getContext('2d');
+  screenCtx.fillStyle = '#020617';
+  screenCtx.fillRect(0, 0, 128, 64);
+  screenCtx.fillStyle = '#38bdf8';
+  screenCtx.font = 'bold 16px monospace';
+  screenCtx.fillText('IV PUMP', 10, 24);
+  screenCtx.fillStyle = '#34d399';
+  screenCtx.font = 'bold 18px monospace';
+  screenCtx.fillText('READY', 10, 50);
+
+  const screenTex = new THREE.CanvasTexture(screenCanvas);
+  const screenMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.20, 0.12),
+    new THREE.MeshBasicMaterial({ map: screenTex })
+  );
+  screenMesh.position.set(0, 1.28, 0.092);
+  group.add(screenMesh);
+
+  const ledGeo = new THREE.SphereGeometry(0.015, 8, 8);
+  const ledMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+  const ledMesh = new THREE.Mesh(ledGeo, ledMat);
+  ledMesh.position.set(0.08, 1.38, 0.092);
+  group.add(ledMesh);
+
+  const hook = new THREE.Mesh(new THREE.TorusGeometry(0.04, 0.008, 8, 16, Math.PI), chromeMat);
+  hook.position.set(0.08, 1.95, 0);
+  hook.rotation.z = Math.PI;
+  group.add(hook);
+
+  const bagMat = new THREE.MeshPhysicalMaterial({
+    color: 0xe0f2fe,
+    transparent: true,
+    opacity: 0.65,
+    roughness: 0.1,
+    transmission: 0.7,
+  });
+  const ivBag = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.22, 0.05), bagMat);
+  ivBag.position.set(0.08, 1.82, 0);
+  group.add(ivBag);
+
+  const chamberMat = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.8 });
+  const dripChamber = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.06, 12), chamberMat);
+  dripChamber.position.set(0.08, 1.66, 0);
+  group.add(dripChamber);
+
+  const tubeMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
+  const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.45, 8), tubeMat);
+  tube.position.set(0.08, 1.43, 0.02);
+  group.add(tube);
+
+  group.userData.screenCanvas = screenCanvas;
+  group.userData.screenCtx = screenCtx;
+  group.userData.screenTex = screenTex;
+  group.userData.ledMesh = ledMesh;
+  group.userData.ledMat = ledMat;
+  group.userData.ivBag = ivBag;
+
+  return group;
+}
+
+function buildPatientMonitor(id) {
+  const group = new THREE.Group();
+  group.name = `apparatus_${id}`;
+
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.3 });
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.1, 16), darkMat);
+  stand.position.y = 0.55;
+  group.add(stand);
+
+  const chassis = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.36, 0.08), darkMat);
+  chassis.position.set(0, 1.25, 0);
+  group.add(chassis);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 192;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(0, 0, 256, 192);
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 18px monospace';
+  ctx.fillText('PATIENT TELEMETRY', 14, 28);
+  ctx.fillStyle = '#34d399';
+  ctx.font = '16px monospace';
+  ctx.fillText('Weight: 70 kg', 14, 65);
+  ctx.fillText('Age: 35 yr', 14, 95);
+  ctx.fillText('CrCl: 100 mL/min', 14, 125);
+  ctx.fillStyle = '#a855f7';
+  ctx.fillText('ECG: NORMAL SINUS', 14, 165);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const screenMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.44, 0.32),
+    new THREE.MeshBasicMaterial({ map: tex })
+  );
+  screenMesh.position.set(0, 1.25, 0.042);
+  group.add(screenMesh);
+
+  group.userData.canvas = canvas;
+  group.userData.ctx = ctx;
+  group.userData.tex = tex;
+
+  return group;
+}
+
+function buildPkpdChartDisplay(id) {
+  const group = new THREE.Group();
+  group.name = `apparatus_${id}`;
+
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
+  const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.24, 0.08, 24), baseMat);
+  pedestal.position.y = 0.04;
+  group.add(pedestal);
+
+  const frameMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.1, metalness: 0.8 });
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.04, 0.12), frameMat);
+  frame.position.set(0, 0.08, 0);
+  group.add(frame);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#020617';
+  ctx.fillRect(0, 0, 512, 256);
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = 'bold 24px monospace';
+  ctx.fillText('⬡ PK/PD SIMULATION CURVES', 20, 36);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '16px monospace';
+  ctx.fillText('Target Therapeutic Window Active', 20, 70);
+  ctx.fillStyle = '#34d399';
+  ctx.fillText('Cmax: -- mg/L | AUC: -- mg·h/L', 20, 110);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  const holoMat = new THREE.MeshBasicMaterial({
+    map: tex,
+    transparent: true,
+    opacity: 0.92,
+    side: THREE.DoubleSide,
+  });
+  const holoMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), holoMat);
+  holoMesh.position.set(0, 0.50, 0);
+  group.add(holoMesh);
+
+  group.userData.canvas = canvas;
+  group.userData.ctx = ctx;
+  group.userData.tex = tex;
+
+  return group;
+}
+
+function buildPredictionSlate(id) {
+  const group = new THREE.Group();
+  group.name = `apparatus_${id}`;
+  const mat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+  const board = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.03, 0.45), mat);
+  board.position.y = 0.015;
+  group.add(board);
+  return group;
+}
+
+function buildSamplingSchedule(id) {
+  const group = new THREE.Group();
+  group.name = `apparatus_${id}`;
+  const mat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.3 });
+  const stand = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.04, 0.3), mat);
+  stand.position.y = 0.02;
+  group.add(stand);
+  return group;
+}
+
+function buildDebriefStation(id) {
+  const group = new THREE.Group();
+  group.name = `apparatus_${id}`;
+  const mat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.2 });
+  const term = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.25, 0.3), mat);
+  term.position.y = 0.125;
+  group.add(term);
   return group;
 }
 

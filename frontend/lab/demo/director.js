@@ -50,6 +50,42 @@ export class DirectorRunner {
       await this.runTitrationScript();
     } else if (expId === 'launch_bench') {
       await this.runLaunchBenchScript();
+    } else if (expId === 'dose_lab') {
+      await this.runDoseLabScript();
+    }
+  }
+
+  async runDoseLabScript() {
+    const steps = [
+      { action: 'select_patient', target: 'preset_standard_70kg', params: {} },
+      { action: 'check_renal', target: 'patient_monitor', params: {} },
+      { action: 'select_drug', target: 'infusion_pump', params: { drug_id: 'theophylline' } },
+      { action: 'set_route', target: 'infusion_pump', params: { route: 'oral' } },
+      { action: 'set_dose', target: 'infusion_pump', params: { dose_mg: 300.0 } },
+      { action: 'set_regimen', target: 'infusion_pump', params: { n_doses: 1, interval_h: 8.0 } },
+      { action: 'set_sampling', target: 'sampling_schedule', params: { schedule: '0,1,2,4,8,12,24' } },
+      { action: 'predict_window', target: 'prediction_slate', params: { predicted_cmax: 8.5, predicted_time_in_window_h: 0.0 } },
+      { action: 'run_simulation', target: 'pkpd_chart_display', params: {} },
+      { action: 'compare_regimens', target: 'pkpd_chart_display', params: {} },
+      { action: 'set_covariates', target: 'patient_monitor', params: { weight_kg: 70.0, age_yr: 72.0, crcl_ml_min: 30.0 } },
+      { action: 'check_renal', target: 'patient_monitor', params: {} },
+      { action: 'set_dose', target: 'infusion_pump', params: { dose_mg: 150.0 } },
+      { action: 'run_simulation', target: 'pkpd_chart_display', params: {} },
+      { action: 'debrief_pkpd', target: 'debrief_station', params: {} },
+    ];
+
+    const stepDelay = this.stepDelay ?? (state.skipAnimation ? 350 : 1200);
+    for (const step of steps) {
+      if (!this.isRunning) break;
+      await this.actionMenu.executeAction(step.action, step.target, step.params);
+      await this.sleep(stepDelay);
+    }
+
+    if (this.isRunning) {
+      toast.showInfo('Director Mode: Submitting final pharmacometric report...', 2000);
+      const res = await api.finishSession(state.session.session_id);
+      window.reportScreen.show(res);
+      this.toggleDirectorMode();
     }
   }
 
@@ -158,7 +194,13 @@ export class DirectorRunner {
 
   async runMistakeDemo() {
     const expId = state.session?.experiment_id;
-    if (expId === 'launch_bench') {
+    if (expId === 'dose_lab') {
+      toast.showInfo('Mistake Demo: Giving unadjusted gentamicin dose to renal impairment patient (Rule D2)...', 3500);
+      await this.actionMenu.executeAction('set_covariates', 'patient_monitor', { weight_kg: 70.0, age_yr: 70.0, crcl_ml_min: 30.0 });
+      await this.actionMenu.executeAction('select_drug', 'infusion_pump', { drug_id: 'gentamicin' });
+      await this.actionMenu.executeAction('set_route', 'infusion_pump', { route: 'iv_bolus' });
+      await this.actionMenu.executeAction('set_dose', 'infusion_pump', { dose_mg: 300.0 });
+    } else if (expId === 'launch_bench') {
       toast.showInfo('Mistake Demo: Attempting launch without preflight checklist or range clearance (Rules S1 & S6)...', 3500);
       await this.actionMenu.executeAction('choose_rocket', 'orbis_1', {});
       await this.actionMenu.executeAction('launch', 'pad_39a', {});
