@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simly Orbis Component Showcase (Dev-Only)</title>
+  <!-- Self-hosted fonts and design tokens loaded via <link> -->
+  <link rel="stylesheet" href="../vendor/fonts/fonts.css">
+  <link rel="stylesheet" href="../styles/tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <style>
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      margin: 0;
+      padding: var(--space-6);
+      line-height: var(--line-height-body);
+    }
+    .showcase-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+    .showcase-section {
+      margin-bottom: var(--space-6);
+      background: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: var(--space-5);
+    }
+    .section-title {
+      font-size: var(--text-lg);
+      font-weight: 700;
+      margin-top: 0;
+      margin-bottom: var(--space-3);
+      color: var(--accent);
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+      padding-bottom: var(--space-2);
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      align-items: center;
+      margin-bottom: var(--space-3);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: var(--space-4);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="showcase-header">
+    <h1>Simly Orbis Component Library Showcase</h1>
+    <p style="color: var(--text-muted); margin: 0;">
+      Development-only showcase demonstrating all UI components in all states per Section 7.3 &amp; Section 18 P1-T2.
+    </p>
+  </header>
+
+  <!-- 1. Buttons -->
+  <section class="showcase-section" id="sec-buttons">
+    <h2 class="section-title">1. Buttons (Section 7.3)</h2>
+    <div class="row">
+      <button type="button" class="btn btn-primary" id="btn-primary-demo">Primary Action</button>
+      <button type="button" class="btn btn-secondary" id="btn-secondary-demo">Secondary Action</button>
+      <button type="button" class="btn btn-ghost" id="btn-ghost-demo">Ghost Button</button>
+      <button type="button" class="btn btn-danger" id="btn-danger-demo">Danger Action</button>
+      <button type="button" class="btn btn-primary" disabled id="btn-disabled-demo">Disabled Button</button>
+    </div>
+  </section>
+
+  <!-- 2. Disclaimer Banner -->
+  <section class="showcase-section" id="sec-banner">
+    <h2 class="section-title">2. Disclaimer Banner (Section 7.3 &amp; 7.9)</h2>
+    <aside class="disclaimer-banner" role="note" id="demo-banner">
+      <span aria-hidden="true">⚠️</span>
+      <span><strong>Educational Simulation:</strong> Not medical advice, not clinical evidence, and not mission-planning software.</span>
+    </aside>
+  </section>
+
+  <!-- 3. Cards & Docked Panels -->
+  <section class="showcase-section" id="sec-cards-panels">
+    <h2 class="section-title">3. Cards &amp; Docked Panels (Section 7.3)</h2>
+    <div class="grid-2">
+      <div class="card" id="demo-card">
+        <h3 class="card-title">Pharmacokinetics Ward</h3>
+        <p class="card-body">Explore multi-compartment bioavailability, clearance rates, and therapeutic windows with real-time feedback.</p>
+      </div>
+
+      <div class="panel" id="demo-panel">
+        <div class="panel-header">
+          <span class="panel-title">Safety Monitor</span>
+          <span class="badge badge-ok">Nominal</span>
+        </div>
+        <div class="panel-body">
+          <p style="margin: 0; font-size: var(--text-sm); color: var(--text-muted);">
+            Rules R1 through R10 evaluated continuously against backend differential simulators.
+          </p>
+        </div>
+        <div class="panel-footer">
+          <button type="button" class="btn btn-secondary" style="width: 100%;">View Rule State</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Readouts & Source Chips -->
+  <section class="showcase-section" id="sec-readouts">
+    <h2 class="section-title">4. Readouts &amp; Source Chips (Section 7.3 &amp; 7.9)</h2>
+    <div class="grid-2">
+      <div class="readout-card" id="readout-engine">
+        <div class="readout-header">
+          <span class="readout-label">Peak Concentration (Cmax)</span>
+          <span class="source-chip chip-engine">Engine</span>
+        </div>
+        <div class="readout-val">8.33 <span class="readout-unit">mg/L</span></div>
+      </div>
+
+      <div class="readout-card" id="readout-game">
+        <div class="readout-header">
+          <span class="readout-label">Ascent Delta-V Loss</span>
+          <span class="source-chip chip-game">Game</span>
+        </div>
+        <div class="readout-val">1,500 <span class="readout-unit">m/s</span></div>
+      </div>
+
+      <div class="readout-card" id="readout-lit">
+        <div class="readout-header">
+          <span class="readout-label">Observed AUC (Portoles 2003)</span>
+          <span class="source-chip chip-lit">Lit (Unverified)</span>
+        </div>
+        <div class="readout-val">28.49 <span class="readout-unit">mg·h/L</span></div>
+      </div>
+
+      <div class="readout-card" id="readout-ai">
+        <div class="readout-header">
+          <span class="readout-label">Dr. Orbis Recommendation</span>
+          <span class="source-chip chip-ai">AI Proposed</span>
+        </div>
+        <div class="readout-val">Infusion Adjust <span class="readout-unit">Pending Engine</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Slider Paired with Numeric Input -->
+  <section class="showcase-section" id="sec-slider">
+    <h2 class="section-title">5. Slider Paired with Numeric Input (Section 7.3)</h2>
+    <div class="slider-group" id="demo-slider-group">
+      <div class="slider-header">
+        <label class="slider-label" for="slider-dose">Target Bolus Dose</label>
+        <span class="badge badge-target">Target Window</span>
+      </div>
+      <div class="slider-controls">
+        <input type="range" class="slider-input" id="slider-dose" min="100" max="1000" step="50" value="500" aria-label="Dose slider">
+        <input type="number" class="slider-number" id="num-dose" min="100" max="1000" step="50" value="500" aria-label="Dose numeric input">
+        <span class="slider-unit">mg</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Stepper -->
+  <section class="showcase-section" id="sec-stepper">
+    <h2 class="section-title">6. Experiment Stepper (Section 7.3)</h2>
+    <nav class="stepper" aria-label="Titration Bench steps" id="demo-stepper">
+      <div class="step-item completed">
+        <span class="step-badge">✓</span>
+        <span class="step-title">Rinse Burette</span>
+      </div>
+      <div class="step-item completed">
+        <span class="step-badge">✓</span>
+        <span class="step-title">Pipette Analyte</span>
+      </div>
+      <div class="step-item active">
+        <span class="step-badge">3</span>
+        <span class="step-title">Add Indicator</span>
+      </div>
+      <div class="step-item">
+        <span class="step-badge">4</span>
+        <span class="step-title">Titrate</span>
+      </div>
+      <div class="step-item">
+        <span class="step-badge">5</span>
+        <span class="step-title">Detect Endpoint</span>
+      </div>
+    </nav>
+  </section>
+
+  <!-- 7. Accessible Tabs -->
+  <section class="showcase-section" id="sec-tabs">
+    <h2 class="section-title">7. Accessible Tabs (Section 7.3 &amp; 7.5)</h2>
+    <div class="tabs" id="demo-tabs">
+      <div class="tablist" role="tablist" aria-label="Experiment Views">
+        <button type="button" class="tab" role="tab" aria-selected="true" id="tab-1" aria-controls="panel-1">Telemetry</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" id="tab-2" aria-controls="panel-2">Reality Check</button>
+        <button type="button" class="tab" role="tab" aria-selected="false" tabindex="-1" id="tab-3" aria-controls="panel-3">Dr. Orbis Notes</button>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
+        <p>Live differential trajectory and pharmacokinetic parameters streamed at 60 FPS.</p>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden>
+        <p>Mathematical Model Cards and literature validation benchmarks.</p>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden>
+        <p>Educational mentor guidance and procedural recommendations.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Command Bar -->
+  <section class="showcase-section" id="sec-command">
+    <h2 class="section-title">8. Command Bar (Section 7.3: / shortcut)</h2>
+    <form class="command-bar" role="search" id="demo-command-bar">
+      <input type="text" class="command-input" id="cmd-input" placeholder="Type a lab request or press / to focus..." aria-label="Ask Orbis command input">
+      <kbd class="command-kbd">/</kbd>
+      <button type="submit" class="btn btn-primary" style="min-height: 36px; padding: 4px 12px;">Submit</button>
+    </form>
+  </section>
+
+  <!-- 9. Skeletons & Empty States -->
+  <section class="showcase-section" id="sec-states">
+    <h2 class="section-title">9. Skeletons &amp; Feedback States (Section 7.3 &amp; 8.16)</h2>
+    <div class="grid-2">
+      <div style="display: flex; flex-direction: column; gap: var(--space-2);" id="demo-skeletons">
+        <span style="font-size: var(--text-xs); color: var(--text-muted);">Loading Skeleton:</span>
+        <div class="skeleton" style="height: 24px; width: 80%;"></div>
+        <div class="skeleton" style="height: 16px; width: 60%;"></div>
+        <div class="skeleton" style="height: 64px; width: 100%;"></div>
+      </div>
+
+      <div class="empty-state" id="demo-empty">
+        <div style="font-size: 28px;">🧪</div>
+        <h4 class="empty-title">No Runs Recorded</h4>
+        <p class="empty-desc">Execute your first simulation trial from the lab bench to review comparative telemetry.</p>
+        <button type="button" class="btn btn-secondary">Initialize Bench</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. Accessible Chart Container & Screen-Reader Table Fallback -->
+  <section class="showcase-section" id="sec-chart">
+    <h2 class="section-title">10. Chart with Screen-Reader Fallback (Section 7.3)</h2>
+    <figure class="chart-container" id="demo-chart-container">
+      <figcaption class="chart-title">Concentration-Time Curve (Paracetamol 1000mg)</figcaption>
+      <!-- Simulated SVG Curve -->
+      <svg width="100%" height="160" viewBox="0 0 400 160" style="background: var(--surface-2); border-radius: var(--radius-sm);" role="img" aria-label="Concentration time curve peaking at 8.3 mg/L at 1.1 hours">
+        <path d="M 20 140 Q 60 20 120 70 T 380 135" fill="none" stroke="var(--accent)" stroke-width="3" />
+        <line x1="20" y1="140" x2="380" y2="140" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+        <line x1="20" y1="20" x2="20" y2="140" stroke="rgba(255,255,255,0.2)" stroke-width="1" />
+        <text x="30" y="30" fill="var(--text-muted)" font-size="10">Peak Cmax: 8.33 mg/L</text>
+      </svg>
+      <!-- Screen Reader Fallback Table -->
+      <table class="sr-only" aria-label="Tabular data for concentration-time curve">
+        <thead><tr><th>Time (h)</th><th>Concentration (mg/L)</th></tr></thead>
+        <tbody>
+          <tr><td>0.0</td><td>0.00</td></tr>
+          <tr><td>0.5</td><td>5.12</td></tr>
+          <tr><td>1.0</td><td>8.33</td></tr>
+          <tr><td>2.0</td><td>6.20</td></tr>
+          <tr><td>4.0</td><td>3.10</td></tr>
+          <tr><td>8.0</td><td>0.78</td></tr>
+        </tbody>
+      </table>
+    </figure>
+  </section>
+
+  <script type="module">
+    import { initTabs } from './components.js';
+    initTabs(document.getElementById('demo-tabs'));
+
+    // Wire up slider-number sync
+    const range = document.getElementById('slider-dose');
+    const num = document.getElementById('num-dose');
+    range.addEventListener('input', (e) => { num.value = e.target.value; });
+    num.addEventListener('input', (e) => { range.value = e.target.value; });
+  </script>
+</body>
+</html>

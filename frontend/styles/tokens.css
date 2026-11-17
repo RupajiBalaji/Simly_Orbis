@@ -6,7 +6,7 @@
  * WCAG 2.1 AA 4.5:1 contrast ratios via scripts/check_contrast.py.
  */
 
-@import "../vendor/fonts/fonts.css";
+/* Stylesheet loaded via <link rel="stylesheet"> in HTML per P1 specification */
 
 :root {
   /* =========================================================================
