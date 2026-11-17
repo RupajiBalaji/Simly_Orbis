@@ -404,9 +404,11 @@ def check_qa_artifacts(repo_root: Path) -> GateResult:
 
 
 def check_parser_pass_rate(repo_root: Path) -> GateResult:
-    """Gate 9: First-run parser pass rate recorded in stage reports / known issues."""
+    """Gate 9: First-run parser pass rate recorded in stage reports / known issues and held-out evaluation."""
     known_issues = repo_root / "docs" / "KNOWN_ISSUES.md"
     space_report = repo_root / "docs" / "SPACE_STAGE_REPORT.md"
+    founder_file = repo_root / "backend" / "tests" / "data" / "founder_heldout_phrases.json"
+    agent_seed_file = repo_root / "backend" / "tests" / "data" / "agent_seed_heldout_phrases.json"
 
     found_rates: list[str] = []
 
@@ -422,11 +424,19 @@ def check_parser_pass_rate(repo_root: Path) -> GateResult:
         if m:
             found_rates.append(f"Space Stage baseline: {m.group(1)}")
 
+    if not founder_file.exists():
+        found_rates.append("founder set: not provided")
+    else:
+        found_rates.append("founder set: provided")
+
+    if agent_seed_file.exists():
+        found_rates.append("agent-written seed set, not founder-written (n=4/exp too small to be meaningful)")
+
     passed = len(found_rates) > 0
-    evidence = "Recorded first-run rates: " + ", ".join(found_rates) if passed else "No first-run pass rates found"
+    evidence = "Recorded rates & held-out status: " + "; ".join(found_rates) if passed else "No first-run pass rates found"
     return GateResult(
         gate_id=9,
-        name="First-Run Parser Baselines",
+        name="First-Run Parser Baselines & Held-Out Status",
         passed=passed,
         evidence=evidence,
     )

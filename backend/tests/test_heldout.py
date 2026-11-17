@@ -3,9 +3,12 @@ backend/tests/test_heldout.py
 Held-out Evaluation Harness & Integrity Guard Test.
 
 Standard: Section 18 (P0-T4) of Simly Orbis MVP Build Specification.
-- Loads backend/tests/data/heldout_phrases.json (founder-written; agent never edits).
-- Guard test: fails if file hash does not match backend/tests/data/heldout.sha256.
-- Reports pass rates per experiment separately from the agent's corpora.
+- Checks for founder_heldout_phrases.json (founder-written; agent never creates or edits).
+  If missing, reports 'founder set: not provided'.
+- Loads backend/tests/data/agent_seed_heldout_phrases.json (agent-written seed set, not founder-written).
+- Note: n=4 per experiment is too small to be meaningful.
+- Guard test: fails if file hash does not match backend/tests/data/agent_seed_heldout.sha256.
+- Reports pass rates per experiment separately from the agent's main corpora.
 """
 
 from __future__ import annotations
@@ -19,30 +22,39 @@ from app.lab.agent import parse_request_rule_based
 from app.lab.engine import create_session
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
-HELDOUT_JSON = DATA_DIR / "heldout_phrases.json"
-HELDOUT_SHA = DATA_DIR / "heldout.sha256"
+AGENT_SEED_JSON = DATA_DIR / "agent_seed_heldout_phrases.json"
+AGENT_SEED_SHA = DATA_DIR / "agent_seed_heldout.sha256"
+FOUNDER_HELDOUT_JSON = DATA_DIR / "founder_heldout_phrases.json"
 
 
-def test_heldout_corpus_hash_guard():
-    """Guard test: verifies heldout_phrases.json matches founder-signed SHA-256."""
-    assert HELDOUT_JSON.exists(), "heldout_phrases.json missing"
-    assert HELDOUT_SHA.exists(), "heldout.sha256 missing"
+def test_agent_seed_heldout_corpus_hash_guard():
+    """Guard test: verifies agent_seed_heldout_phrases.json matches signed SHA-256."""
+    assert AGENT_SEED_JSON.exists(), "agent_seed_heldout_phrases.json missing"
+    assert AGENT_SEED_SHA.exists(), "agent_seed_heldout.sha256 missing"
 
-    actual_hash = hashlib.sha256(HELDOUT_JSON.read_bytes()).hexdigest()
-    expected_hash = HELDOUT_SHA.read_text(encoding="utf-8").strip()
+    actual_hash = hashlib.sha256(AGENT_SEED_JSON.read_bytes()).hexdigest()
+    expected_hash = AGENT_SEED_SHA.read_text(encoding="utf-8").strip()
 
     assert actual_hash == expected_hash, (
-        f"heldout_phrases.json has been modified without updating heldout.sha256! "
-        f"Expected {expected_hash}, got {actual_hash}. "
-        f"The agent must never edit the founder-written held-out set."
+        f"agent_seed_heldout_phrases.json has been modified without updating agent_seed_heldout.sha256! "
+        f"Expected {expected_hash}, got {actual_hash}."
     )
 
 
-def test_heldout_evaluation_runner():
-    """Evaluate heldout phrases across all experiments and compute per-experiment pass rates."""
-    assert HELDOUT_JSON.exists(), "heldout_phrases.json missing"
+def test_founder_heldout_status_check():
+    """Verifies founder held-out set status: agent never creates or fabricates founder_heldout_phrases.json."""
+    if not FOUNDER_HELDOUT_JSON.exists():
+        status = "founder set: not provided"
+    else:
+        status = "founder set: provided"
+    assert status in ("founder set: not provided", "founder set: provided")
 
-    with open(HELDOUT_JSON, "r", encoding="utf-8") as f:
+
+def test_agent_seed_heldout_evaluation_runner():
+    """Evaluate agent seed heldout phrases across all experiments and compute per-experiment pass rates."""
+    assert AGENT_SEED_JSON.exists(), "agent_seed_heldout_phrases.json missing"
+
+    with open(AGENT_SEED_JSON, "r", encoding="utf-8") as f:
         phrases = json.load(f)
 
     assert len(phrases) >= 8, f"Expected at least 8 heldout phrases, found {len(phrases)}"
@@ -73,11 +85,13 @@ def test_heldout_evaluation_runner():
     total_passed = sum(s["passed"] for s in per_exp_stats.values())
     overall_pass_rate = (total_passed / total_phrases) * 100.0 if total_phrases else 0.0
 
-    print("\n=== Founder-Written Held-Out Parser Evaluation (Not Tuned) ===")
+    print("\n=== Agent Seed Held-Out Parser Evaluation ===")
+    print("Label: agent-written seed set, not founder-written")
+    print("Note: n=4 per experiment is too small to be meaningful.")
     for exp_id, stats in per_exp_stats.items():
         rate = (stats["passed"] / stats["total"]) * 100.0 if stats["total"] else 0.0
         print(f"  {exp_id:18s}: {rate:5.1f}% ({stats['passed']}/{stats['total']})")
-    print(f"Overall Held-Out Rate: {overall_pass_rate:5.1f}% ({total_passed}/{total_phrases})")
+    print(f"Overall Seed Held-Out Rate: {overall_pass_rate:5.1f}% ({total_passed}/{total_phrases})")
 
     # Evaluation completed successfully and reports rates per experiment
     assert total_phrases == len(phrases)

@@ -20,7 +20,7 @@
 | **P0-T1** | Baseline and GAP report | **DONE** | `8cc6e7e` | `docs/RECHECK_BASELINE.md` and `docs/GAP_REPORT.md` authored auditing all 16 spec sections. Version bumped to `0.4.1-dev` across 5 locations. Spec committed. |
 | **P0-T2** | Branch and CI hygiene | **DONE** | `ad90a50` | `docs/BRANCH_STRATEGY.md` created. CI workflow (`.github/workflows/ci.yml`) updated with bare `pytest backend/tests`, `python scripts/check_claims.py`, `pip-audit`, and `self_audit.py`. `pip-audit==2.10.1` pinned in `requirements-dev.txt`. |
 | **P0-T3** | Provenance & claims re-audit | **DONE** | `819cf0e` | `docs/PROVENANCE_CLAIMS_REAUDIT.md` authored. Audited 32 rows across 5 CSV files: 0 rows derived from engines, 0 invented dates, all `verified_by = "unverified"`, all `retrieved_on` blank. |
-| **P0-T4** | Held-out harness | **DONE** | `ef8b674` | `backend/tests/data/heldout_phrases.json` (16 phrases) created; SHA-256 frozen in `backend/tests/data/heldout.sha256`. Unit tests (`test_heldout.py`) and evaluation script (`scripts/eval_heldout.py`) reporting with label `"founder-written, not tuned"`. |
+| **P0-T4** | Held-out harness | **DONE** | `ef8b674` | `backend/tests/data/agent_seed_heldout_phrases.json` (16 phrases) created; SHA-256 frozen in `agent_seed_heldout.sha256`. Unit tests (`test_heldout.py`) and evaluation script (`scripts/eval_heldout.py`) reporting with label `"agent-written seed set, not founder-written"`. Note: n=4 per experiment is too small to be meaningful. Founder set: not provided. |
 | **P0-T5** | Model Card skeletons | **DONE** | `f360eb0` | 5 standardized Model Cards authored in `docs/model_cards/`. Static route `/docs/model_cards` mounted in FastAPI. Direct links wired into frontend Reality Check panel. Verified via `backend/tests/test_model_cards.py`. |
 | **P0-T6** | Config and health | **DONE** | `6f4310f` | Environment variable catalogue expanded in `docs/DEPLOY.md` with default values and validation rules. `validate_startup_config()` implemented. `ai_status` payload added to `/api/health`. Verified via `backend/tests/test_api.py`. |
 | **P0-T7** | PITCH_FACTS & claims gate | **DONE** | `69b54fa` | `docs/PITCH_FACTS.md` created with statistics register (STAT-001 to STAT-009) leaving review dates blank for founder. `scripts/check_claims.py` and unit test `backend/tests/test_claims_gate.py` passing. |
@@ -52,14 +52,17 @@ Newest QA Playthrough Run: `qa/out/20261114_111033`
 - **Author / Hard Corpora Baselines (Before Fixes):**
   - Dose Lab baseline: **24.2%** (15 / 62)
   - Space Stage baseline: **89.1%** (41 / 46)
-- **Founder-Written Held-Out Corpus Evaluation (`scripts/eval_heldout.py`):**
-  - **Label:** `founder-written, not tuned`
+- **Founder Held-Out Set (`founder_heldout_phrases.json`):**
+  - **Status:** `founder set: not provided` (agent never creates or fabricates the founder file)
+- **Agent Seed Held-Out Corpus Evaluation (`scripts/eval_heldout.py`):**
+  - **Label:** `agent-written seed set, not founder-written`
+  - **Note:** n=4 per experiment is too small to be meaningful.
   - **SHA-256 Guard:** `a67d6d83276f9a4f6655e51363282d9b020ef4df06bc3ddf3b673b1bb25699a1` (PASS)
   - `dose_lab`: 75.0% (3 / 4)
   - `launch_bench`: 25.0% (1 / 4)
   - `pk_ward`: 50.0% (2 / 4)
   - `titration_bench`: 100.0% (4 / 4)
-  - **OVERALL HELD-OUT PASS RATE:** **62.5%** (10 / 16)
+  - **OVERALL SEED HELD-OUT PASS RATE:** **62.5%** (10 / 16)
 
 ---
 
