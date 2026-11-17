@@ -1,0 +1,114 @@
+/**
+ * Simly Orbis Design Tokens (frontend/styles/tokens.css)
+ * Standard: Section 7.2 & Section 18 (P1-T1) of Simly Orbis MVP Build Specification.
+ *
+ * All text and background token pairs are verified to meet or exceed
+ * WCAG 2.1 AA 4.5:1 contrast ratios via scripts/check_contrast.py.
+ */
+
+@import "../vendor/fonts/fonts.css";
+
+:root {
+  /* =========================================================================
+     Color Tokens (Dark Theme - Default / MUST)
+     ========================================================================= */
+  --bg: #0B1220;
+  --surface: #121B2E;
+  --surface-2: #1A2540;
+
+  --text: #E8EEF9;
+  --text-muted: #9AA8C4;
+
+  /* Domain & Status Accents (Calibrated for >= 4.5:1 contrast against all dark surfaces) */
+  --accent: #19C3B1;         /* Pharmacokinetics (cyan-teal) */
+  --accent-chem: #F5A524;    /* Chemistry (amber) */
+  --accent-space: #9B82FF;   /* Space flight (violet, calibrated from #7C5CFF for AA contrast) */
+
+  --ok: #2EBD6B;             /* Success (green) */
+  --warn: #F5A524;           /* Warning (amber) */
+  --danger: #F36664;         /* Error / critical (red, calibrated from #F0524F for AA contrast) */
+  --info: #5595FA;           /* Information (blue, calibrated from #3B82F6 for AA contrast) */
+
+  /* Focus Ring (3px visible per WCAG 2.1 AA) */
+  --focus-ring: 0 0 0 3px rgba(25, 195, 177, 0.6);
+  --focus-ring-offset: 2px;
+
+  /* =========================================================================
+     Spacing Scale (px)
+     ========================================================================= */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* =========================================================================
+     Corner Radii (px)
+     ========================================================================= */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  /* =========================================================================
+     Elevation Levels (Box Shadows)
+     ========================================================================= */
+  --elevation-1: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --elevation-2: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+  --elevation-3: 0 10px 15px -3px rgba(0, 0, 0, 0.6), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
+
+  /* =========================================================================
+     Typography Scale
+     ========================================================================= */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --text-3xl: 44px;
+
+  --line-height-body: 1.5;
+  --line-height-tight: 1.25;
+  --line-height-loose: 1.75;
+
+  /* =========================================================================
+     Touch Target & Transitions
+     ========================================================================= */
+  --touch-target-min: 44px;
+  --transition-fast: 120ms ease-out;
+  --transition-normal: 180ms ease-out;
+  --transition-slow: 240ms ease-out;
+}
+
+/* =========================================================================
+   Light Theme Override (Optional SHOULD per Section 7.2)
+   Calibrated for >= 4.5:1 contrast against all light surfaces.
+   ========================================================================= */
+[data-theme="light"] {
+  --bg: #F4F6FB;
+  --surface: #FFFFFF;
+  --surface-2: #E8EDF5;
+
+  --text: #0F172A;
+  --text-muted: #334155;
+
+  --accent: #0F6D67;
+  --accent-chem: #8A4204;
+  --accent-space: #5B21B6;
+
+  --ok: #14532D;
+  --warn: #8A4204;
+  --danger: #B91C1C;
+  --info: #1D4ED8;
+
+  --focus-ring: 0 0 0 3px rgba(15, 109, 103, 0.6);
+  --elevation-1: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --elevation-2: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
+  --elevation-3: 0 10px 15px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.08);
+}
