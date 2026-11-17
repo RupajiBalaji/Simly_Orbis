@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 – Page Not Found | Simly Orbis</title>
+  <link rel="stylesheet" href="/vendor/fonts/fonts.css">
+  <link rel="stylesheet" href="/styles/tokens.css">
+  <link rel="stylesheet" href="/ui/components.css">
+  <style>
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: var(--space-4);
+      box-sizing: border-box;
+    }
+    .not-found-card {
+      background-color: var(--surface);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      max-width: 480px;
+      text-align: center;
+      box-shadow: var(--elevation-3);
+    }
+    .status-code {
+      font-family: var(--font-mono);
+      font-size: 64px;
+      font-weight: 800;
+      color: var(--accent);
+      margin: 0 0 var(--space-2) 0;
+      line-height: 1;
+    }
+    .not-found-title {
+      font-size: var(--text-xl);
+      font-weight: 700;
+      margin: 0 0 var(--space-3) 0;
+    }
+    .not-found-desc {
+      color: var(--text-muted);
+      font-size: var(--text-sm);
+      margin-bottom: var(--space-5);
+      line-height: var(--line-height-body);
+    }
+  </style>
+</head>
+<body>
+  <div class="not-found-card" role="main">
+    <div class="status-code">404</div>
+    <h1 class="not-found-title">Experiment Not Found</h1>
+    <p class="not-found-desc">
+      The requested route or simulation experiment does not exist in this laboratory facility.
+    </p>
+    <a href="/#/lobby" class="btn btn-primary" style="text-decoration:none;">Return to Lab Lobby</a>
+  </div>
+</body>
+</html>

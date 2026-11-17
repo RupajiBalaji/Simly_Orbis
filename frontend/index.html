@@ -21,6 +21,8 @@
   </script>
 
   <!-- Design System & HUD Styles -->
+  <link rel="stylesheet" href="./styles/tokens.css" />
+  <link rel="stylesheet" href="./ui/components.css" />
   <link rel="stylesheet" href="lab.css" />
 </head>
 <body class="orbis-lab-body">
@@ -150,12 +152,29 @@
           <p>A simulated world for testing before building</p>
         </div>
       </div>
-      <div class="lobby-links">
-        <button type="button" class="btn-secondary" id="btn-open-about" style="cursor:pointer;">About Simly Orbis</button>
-        <a href="/classic.html" class="btn-secondary">Classic 2D Game</a>
-        <a href="/lab-console.html" class="btn-secondary">Dev Console</a>
+      <div class="lobby-links" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <nav class="app-nav" aria-label="Main Navigation" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <a href="#/lobby" class="btn btn-secondary" data-nav-route="lobby" style="min-height:36px; padding:4px 10px;">Lobby</a>
+          <a href="#/leaderboard" class="btn btn-secondary" data-nav-route="leaderboard" style="min-height:36px; padding:4px 10px;">Leaderboard</a>
+          <a href="#/settings" class="btn btn-secondary" data-nav-route="settings" style="min-height:36px; padding:4px 10px;">Settings</a>
+          <a href="#/model-cards" class="btn btn-secondary" data-nav-route="model-cards" style="min-height:36px; padding:4px 10px;">Model Cards</a>
+          <a href="#/reality-check" class="btn btn-secondary" data-nav-route="reality-check" style="min-height:36px; padding:4px 10px;">Reality Check</a>
+        </nav>
+        <span class="user-profile-chip" id="user-profile-chip" style="font-size:var(--text-xs); background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.15); display:inline-flex; align-items:center; gap:4px;" title="User Profile">
+          <span>👤</span> <span id="user-profile-name">Guest Cadet</span>
+        </span>
+        <button type="button" class="btn btn-secondary" id="btn-top-mute" title="Toggle Sound FX (Mute / Unmute)" aria-label="Toggle Sound Mute" style="min-height:36px; padding:4px 10px;">🔊</button>
+        <a href="#/settings" class="btn btn-secondary" title="Open Settings" aria-label="Open Settings" style="min-height:36px; padding:4px 10px; text-decoration:none;">⚙️</a>
+        <button type="button" class="btn btn-secondary" id="btn-open-about" style="cursor:pointer; min-height:36px; padding:4px 10px;" title="About Simly Orbis and Help" aria-label="Help and About">❓ Help</button>
+        <a href="/classic.html" class="btn btn-secondary" style="min-height:36px; padding:4px 10px;">2D Game</a>
       </div>
     </header>
+
+    <nav class="breadcrumbs" id="app-breadcrumbs" aria-label="Breadcrumb Navigation" style="padding:6px 36px; font-size:var(--text-xs); color:var(--text-muted); display:flex; gap:6px; align-items:center; background:rgba(0,0,0,0.15); border-bottom:1px solid rgba(255,255,255,0.05);">
+      <a href="#/lobby" style="color:var(--text-muted); text-decoration:none;">Home</a>
+      <span>/</span>
+      <span id="breadcrumb-current" style="color:var(--text); font-weight:600;">Lobby</span>
+    </nav>
 
     <div id="storage-mode-banner" class="storage-mode-banner hidden" style="background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.4); color:#fef08a; padding:8px 16px; margin:0 36px 12px; border-radius:6px; font-size:0.85rem; text-align:center;">
       ⚠️ Demo storage: scores are not saved
@@ -415,6 +434,219 @@
   <div id="screen-report" class="view-screen hidden" style="justify-content:center; align-items:center;">
     <div class="report-modal">
       <div id="report-content"></div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN: LEADERBOARD SCREEN (#/leaderboard)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-leaderboard" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:var(--bg);">
+    <div class="panel" style="max-width:760px; width:92%; margin:auto;">
+      <div class="panel-header">
+        <span class="panel-title">🏆 Class Leaderboard</span>
+        <a href="#/lobby" class="btn btn-secondary" style="min-height:36px; padding:4px 12px;">← Back to Lobby</a>
+      </div>
+      <div class="panel-body">
+        <p style="color:var(--text-muted); font-size:var(--text-sm); margin-bottom:var(--space-3);">
+          Top simulated laboratory runs evaluated strictly by backend protocol compliance and scoring rules.
+        </p>
+        <div id="leaderboard-table-wrap">
+          <table style="width:100%; border-collapse:collapse; font-size:var(--text-sm);" aria-label="Student Simulation Leaderboard">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-muted); text-align:left;">
+                <th style="padding:8px;">Rank</th>
+                <th style="padding:8px;">Nickname</th>
+                <th style="padding:8px;">District / Experiment</th>
+                <th style="padding:8px;">Grade</th>
+                <th style="padding:8px; text-align:right;">Score</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-tbody">
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px; font-weight:700; color:var(--accent-chem);">#1</td>
+                <td style="padding:8px;">CadetAlex</td>
+                <td style="padding:8px;">Launch &amp; Orbit Bench</td>
+                <td style="padding:8px;"><span class="badge badge-ok">A</span></td>
+                <td style="padding:8px; text-align:right; font-family:var(--font-mono);">98 / 100</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px; font-weight:700; color:var(--accent);">#2</td>
+                <td style="padding:8px;">Curie_99</td>
+                <td style="padding:8px;">Titration Bench</td>
+                <td style="padding:8px;"><span class="badge badge-ok">A</span></td>
+                <td style="padding:8px; text-align:right; font-family:var(--font-mono);">95 / 100</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px; font-weight:700; color:var(--info);">#3</td>
+                <td style="padding:8px;">DrFranklin</td>
+                <td style="padding:8px;">Pharmacokinetics Ward</td>
+                <td style="padding:8px;"><span class="badge badge-ok">B</span></td>
+                <td style="padding:8px; text-align:right; font-family:var(--font-mono);">88 / 100</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN: SETTINGS SCREEN (#/settings)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-settings" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:var(--bg);">
+    <div class="panel" style="max-width:640px; width:92%; margin:auto;">
+      <div class="panel-header">
+        <span class="panel-title">⚙️ Laboratory Settings</span>
+        <a href="#/lobby" class="btn btn-secondary" style="min-height:36px; padding:4px 12px;">← Back to Lobby</a>
+      </div>
+      <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-4);">
+        <div class="slider-group">
+          <label class="slider-label" for="setting-quality-tier">Graphics Quality Tier (Section 7.7)</label>
+          <select id="setting-quality-tier" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
+            <option value="low">Low (Performance / Software WebGL)</option>
+            <option value="medium" selected>Medium (Standard 60 FPS)</option>
+            <option value="high">High (Post-Processing &amp; Bloom)</option>
+          </select>
+        </div>
+
+        <div class="slider-group">
+          <label class="slider-label" for="setting-sound-volume">Procedural Audio Volume</label>
+          <div class="slider-controls">
+            <input type="range" class="slider-input" id="setting-sound-volume" min="0" max="100" value="80" aria-label="Audio Volume">
+            <span class="slider-unit" id="setting-volume-val">80%</span>
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <label class="slider-label" for="setting-font-scale">Text Font Scale (WCAG 2.1 AA 100%–150%)</label>
+          <div class="slider-controls">
+            <input type="range" class="slider-input" id="setting-font-scale" min="100" max="150" step="10" value="100" aria-label="Font scale">
+            <span class="slider-unit" id="setting-font-scale-val">100%</span>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:var(--space-3); display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:600; color:var(--text);">First-Run Onboarding Tutorial</div>
+            <div style="font-size:var(--text-xs); color:var(--text-muted);">Replay the 90-second keyboard and camera walkthrough</div>
+          </div>
+          <button type="button" class="btn btn-secondary" id="btn-replay-tutorial">Replay</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN: MODEL CARDS SCREEN (#/model-cards)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-model-cards" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:var(--bg); overflow-y:auto; padding:var(--space-5) 0;">
+    <div class="panel" style="max-width:840px; width:92%; margin:auto;">
+      <div class="panel-header">
+        <span class="panel-title">📄 Mathematical Model Cards (Scientific Transparency)</span>
+        <a href="#/lobby" class="btn btn-secondary" style="min-height:36px; padding:4px 12px;">← Back to Lobby</a>
+      </div>
+      <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-4);">
+        <aside class="disclaimer-banner" role="note">
+          <span>Educational simulation platform. Parameter ranges and equations are transparently published below.</span>
+        </aside>
+        <div class="grid-2">
+          <div class="card">
+            <h3 class="card-title">Pharmacokinetics (1-Comp Oral)</h3>
+            <p class="card-body">Analytical Bateman equation for one-compartment oral absorption and elimination.</p>
+            <a href="/docs/model_cards/pharma_pk.md" target="_blank" class="btn btn-secondary" style="margin-top:8px;">View Model Card ↗</a>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Clinical Trial Simulator</h3>
+            <p class="card-body">Monte Carlo virtual cohort generator with log-normal covariate scaling.</p>
+            <a href="/docs/model_cards/pharma_trial.md" target="_blank" class="btn btn-secondary" style="margin-top:8px;">View Model Card ↗</a>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Dose Response (2-Comp Hill Emax)</h3>
+            <p class="card-body">Differential PK/PD solver evaluating sigmoidal Emax efficacy and toxicity cutoffs.</p>
+            <a href="/docs/model_cards/pharma_pkpd.md" target="_blank" class="btn btn-secondary" style="margin-top:8px;">View Model Card ↗</a>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Acid-Base Titration</h3>
+            <p class="card-body">Henderson-Hasselbalch aqueous charge-balance and indicator color shifts.</p>
+            <a href="/docs/model_cards/chem_titration.md" target="_blank" class="btn btn-secondary" style="margin-top:8px;">View Model Card ↗</a>
+          </div>
+          <div class="card">
+            <h3 class="card-title">Orbital Mechanics (Space Flight)</h3>
+            <p class="card-body">Tsiolkovsky rocket equation, vis-viva speeds, and two-burn Hohmann transfers.</p>
+            <a href="/docs/model_cards/space_orbit.md" target="_blank" class="btn btn-secondary" style="margin-top:8px;">View Model Card ↗</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN: REALITY CHECK VIEW (#/reality-check)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-reality-check" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:var(--bg); overflow-y:auto; padding:var(--space-5) 0;">
+    <div class="panel" style="max-width:880px; width:92%; margin:auto;">
+      <div class="panel-header">
+        <span class="panel-title">🔬 Reality Check &amp; Benchmarks</span>
+        <a href="#/lobby" class="btn btn-secondary" style="min-height:36px; padding:4px 12px;">← Back to Lobby</a>
+      </div>
+      <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-4);">
+        <aside class="disclaimer-banner" role="note">
+          <span>All experimental parameters are educational approximations. Human expert validation status is tracked transparently below.</span>
+        </aside>
+        <div style="overflow-x:auto;">
+          <table class="reality-check-table" style="width:100%; border-collapse:collapse; font-size:var(--text-sm);" aria-label="Benchmark Reality Check Table">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.1); color:var(--text-muted); text-align:left;">
+                <th style="padding:8px;">Benchmark / Target</th>
+                <th style="padding:8px;">District</th>
+                <th style="padding:8px;">Engine Value</th>
+                <th style="padding:8px;">Literature Reference</th>
+                <th style="padding:8px;">Verification Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px;">Theophylline Cmax (10 mg/kg)</td>
+                <td style="padding:8px;">Pharma</td>
+                <td style="padding:8px; font-family:var(--font-mono);">12.5 mg/L</td>
+                <td style="padding:8px; color:var(--text-muted);">Standard literature 1-comp</td>
+                <td style="padding:8px;"><span class="badge badge-warn">N/A: unverified</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px;">Aspirin pKa (25°C)</td>
+                <td style="padding:8px;">Chemistry</td>
+                <td style="padding:8px; font-family:var(--font-mono);">3.49</td>
+                <td style="padding:8px; color:var(--text-muted);">Standard aqueous literature</td>
+                <td style="padding:8px;"><span class="badge badge-warn">N/A: unverified</span></td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px;">LEO Orbital Velocity (300 km)</td>
+                <td style="padding:8px;">Space</td>
+                <td style="padding:8px; font-family:var(--font-mono);">7726 m/s</td>
+                <td style="padding:8px; color:var(--text-muted);">Tsiolkovsky / Vis-viva formula</td>
+                <td style="padding:8px;"><span class="badge badge-warn">N/A: unverified</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="font-size:var(--text-xs); color:var(--text-muted); margin-top:8px;">
+          Note: Engine parameters remain labelled "unverified" until certified against peer-reviewed physical benchmarks.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       SCREEN: 404 NOT FOUND VIEW (#/404)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-404" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:var(--bg);">
+    <div class="card" style="max-width:480px; width:90%; text-align:center; padding:var(--space-6);">
+      <div style="font-family:var(--font-mono); font-size:56px; font-weight:800; color:var(--accent);">404</div>
+      <h2 class="card-title" style="font-size:var(--text-xl);">Experiment Route Not Found</h2>
+      <p class="card-body" style="margin-bottom:var(--space-4);">
+        The requested route or simulation path does not exist. Check the URL hash or return to the main lobby.
+      </p>
+      <a href="#/lobby" class="btn btn-primary" style="text-decoration:none;">Return to Lobby</a>
     </div>
   </div>
 

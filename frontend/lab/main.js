@@ -23,6 +23,7 @@ import { AskOrbisAgentPanel } from './game/agent_panel.js';
 import { toast } from './game/toast.js';
 import { soundFX } from './audio/sound_fx.js';
 import { runCameraAcceptanceTest } from './world/camera_test.js';
+import { initRouter } from '../router.js';
 
 // WebGL Support Detection
 function isWebGLAvailable() {
@@ -153,15 +154,119 @@ async function initOrbisLab() {
     }
   });
 
-  // 3. Setup Navigation & District Selection
+  // 3. Setup Navigation, Router & District Selection
+  setupRouter();
   setupLobby();
   setupHUDControls();
   checkServerWakeup();
 }
 
+function showScreen(screenId) {
+  const screens = [
+    'screen-lobby',
+    'screen-brief',
+    'screen-report',
+    'screen-leaderboard',
+    'screen-settings',
+    'screen-model-cards',
+    'screen-reality-check',
+    'screen-404'
+  ];
+
+  screens.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (id === screenId) {
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+  });
+
+  const hud = document.getElementById('lab-hud');
+  if (screenId === 'lab-hud') {
+    if (hud) hud.classList.remove('hidden');
+  } else {
+    if (hud) hud.classList.add('hidden');
+  }
+
+  const errorOverlay = document.getElementById('session-error-overlay');
+  if (errorOverlay && screenId !== 'session-error-overlay') {
+    errorOverlay.classList.add('hidden');
+  }
+}
+
+function updateBreadcrumb(title) {
+  const el = document.getElementById('breadcrumb-current');
+  if (el) el.textContent = title;
+}
+
+function setupRouter() {
+  const routes = {
+    lobby: () => {
+      showScreen('screen-lobby');
+      updateBreadcrumb('Lobby');
+    },
+    briefing: async (params) => {
+      const expId = params.exp || 'pk_ward';
+      updateBreadcrumb(`Briefing (${expId})`);
+      await openExperimentBrief(expId);
+    },
+    lab: async (params) => {
+      const expId = params.exp || 'pk_ward';
+      updateBreadcrumb(`Laboratory (${expId})`);
+      await startExperimentSession(expId, localStorage.getItem('orbis_nickname') || 'Researcher');
+    },
+    report: (params) => {
+      showScreen('screen-report');
+      updateBreadcrumb('Report');
+    },
+    leaderboard: () => {
+      showScreen('screen-leaderboard');
+      updateBreadcrumb('Leaderboard');
+    },
+    settings: () => {
+      showScreen('screen-settings');
+      updateBreadcrumb('Settings');
+    },
+    'model-cards': () => {
+      showScreen('screen-model-cards');
+      updateBreadcrumb('Model Cards');
+    },
+    'reality-check': () => {
+      showScreen('screen-reality-check');
+      updateBreadcrumb('Reality Check');
+    },
+    '404': () => {
+      showScreen('screen-404');
+      updateBreadcrumb('404 Not Found');
+    }
+  };
+
+  initRouter(routes);
+}
+
 function setupLobby() {
   const lobbyScreen = document.getElementById('screen-lobby');
   const briefScreen = document.getElementById('screen-brief');
+
+  // Top Bar User Profile & Mute Toggle
+  const btnTopMute = document.getElementById('btn-top-mute');
+  if (btnTopMute) {
+    btnTopMute.textContent = soundFX.isMuted ? '🔇' : '🔊';
+    btnTopMute.onclick = () => {
+      soundFX.toggleMute();
+      btnTopMute.textContent = soundFX.isMuted ? '🔇' : '🔊';
+      const hudBtn = document.getElementById('btn-toggle-sound');
+      if (hudBtn) hudBtn.textContent = soundFX.isMuted ? '🔇' : '🔊';
+    };
+  }
+
+  const profileName = document.getElementById('user-profile-name');
+  if (profileName) {
+    profileName.textContent = localStorage.getItem('orbis_nickname') || 'Guest Cadet';
+  }
 
   // About Simly Orbis Modal
   const btnOpenAbout = document.getElementById('btn-open-about');
@@ -193,31 +298,30 @@ function setupLobby() {
     }
   }).catch(() => {});
 
-  // District Card Clicks
+  // District Card Clicks -> navigate via router
   const cardPharma = document.getElementById('card-district-pharma');
   const cardChem = document.getElementById('card-district-chemistry');
   const cardSpace = document.getElementById('card-district-space');
   const cardDoseLab = document.getElementById('card-district-dose-lab');
 
   if (cardPharma) {
-    cardPharma.onclick = () => openExperimentBrief('pk_ward');
+    cardPharma.onclick = () => { window.location.hash = '#/briefing?exp=pk_ward'; };
   }
   if (cardChem) {
-    cardChem.onclick = () => openExperimentBrief('titration_bench');
+    cardChem.onclick = () => { window.location.hash = '#/briefing?exp=titration_bench'; };
   }
   if (cardSpace) {
-    cardSpace.onclick = () => openExperimentBrief('launch_bench');
+    cardSpace.onclick = () => { window.location.hash = '#/briefing?exp=launch_bench'; };
   }
   if (cardDoseLab) {
-    cardDoseLab.onclick = () => openExperimentBrief('dose_lab');
+    cardDoseLab.onclick = () => { window.location.hash = '#/briefing?exp=dose_lab'; };
   }
 
   // Brief modal controls
   const btnCloseBrief = document.getElementById('btn-close-brief');
   if (btnCloseBrief) {
     btnCloseBrief.onclick = () => {
-      briefScreen.classList.add('hidden');
-      lobbyScreen.classList.remove('hidden');
+      window.location.hash = '#/lobby';
     };
   }
 
@@ -226,7 +330,10 @@ function setupLobby() {
     btnStartExp.onclick = async () => {
       const nicknameInput = document.getElementById('brief-nickname-input');
       const nickname = nicknameInput?.value.trim() || 'Researcher';
-      await startExperimentSession(currentSelectedExperimentId, nickname);
+      localStorage.setItem('orbis_nickname', nickname);
+      const curProfileName = document.getElementById('user-profile-name');
+      if (curProfileName) curProfileName.textContent = nickname;
+      window.location.hash = `#/lab?exp=${currentSelectedExperimentId}`;
     };
   }
 
@@ -560,10 +667,7 @@ function showSessionError(title, message) {
 
 async function openExperimentBrief(experimentId) {
   currentSelectedExperimentId = experimentId;
-  const lobbyScreen = document.getElementById('screen-lobby');
-  const briefScreen = document.getElementById('screen-brief');
-  const errorOverlay = document.getElementById('session-error-overlay');
-  if (errorOverlay) errorOverlay.classList.add('hidden');
+  showScreen('screen-brief');
 
   try {
     const exp = await api.getExperiment(experimentId);
@@ -585,20 +689,14 @@ async function openExperimentBrief(experimentId) {
       ppeBar.innerHTML = (exp.required_ppe || []).map((p) => `<span class="ppe-pill">🛡️ ${p.toUpperCase()}</span>`).join('');
     }
 
-    lobbyScreen.classList.add('hidden');
-    briefScreen.classList.remove('hidden');
+    showScreen('screen-brief');
   } catch (err) {
     toast.showInfo(`Could not load experiment details: ${err.message}`);
   }
 }
 
 async function startExperimentSession(experimentId, nickname = 'Researcher') {
-  const lobbyScreen = document.getElementById('screen-lobby');
-  const briefScreen = document.getElementById('screen-brief');
-  const errorOverlay = document.getElementById('session-error-overlay');
-  if (lobbyScreen) lobbyScreen.classList.add('hidden');
-  if (briefScreen) briefScreen.classList.add('hidden');
-  if (errorOverlay) errorOverlay.classList.add('hidden');
+  showScreen('lab-hud');
   toast.clear();
 
   try {
