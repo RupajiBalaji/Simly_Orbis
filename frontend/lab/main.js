@@ -268,6 +268,107 @@ function setupLobby() {
     profileName.textContent = localStorage.getItem('orbis_nickname') || 'Guest Cadet';
   }
 
+  // Mode Toggle (Guided vs Free Play)
+  const btnModeGuided = document.getElementById('btn-mode-guided');
+  const btnModeFree = document.getElementById('btn-mode-free');
+  const modeDesc = document.getElementById('mode-desc');
+
+  function setLobbyMode(mode) {
+    localStorage.setItem('orbis_mode', mode);
+    if (mode === 'free') {
+      btnModeFree?.classList.add('active');
+      btnModeFree?.setAttribute('aria-pressed', 'true');
+      btnModeFree?.style.setProperty('border', '1px solid var(--accent)');
+      btnModeGuided?.classList.remove('active');
+      btnModeGuided?.setAttribute('aria-pressed', 'false');
+      btnModeGuided?.style.setProperty('border', '1px solid rgba(255,255,255,0.12)');
+      if (modeDesc) modeDesc.textContent = 'Free Play Mode: Sandbox exploration. Experiment freely without strict exam scoring gates.';
+    } else {
+      btnModeGuided?.classList.add('active');
+      btnModeGuided?.setAttribute('aria-pressed', 'true');
+      btnModeGuided?.style.setProperty('border', '1px solid var(--accent)');
+      btnModeFree?.classList.remove('active');
+      btnModeFree?.setAttribute('aria-pressed', 'false');
+      btnModeFree?.style.setProperty('border', '1px solid rgba(255,255,255,0.12)');
+      if (modeDesc) modeDesc.textContent = 'Guided Mode: Strict protocol compliance, safety rules, and algorithmic scorecards enabled.';
+    }
+  }
+
+  const initialMode = localStorage.getItem('orbis_mode') || 'guided';
+  setLobbyMode(initialMode);
+  if (btnModeGuided) btnModeGuided.onclick = () => setLobbyMode('guided');
+  if (btnModeFree) btnModeFree.onclick = () => setLobbyMode('free');
+
+  // "Why Locked?" Modal Handlers
+  const modalWhyLocked = document.getElementById('modal-why-locked');
+  const btnCloseWhyLocked = document.getElementById('btn-close-why-locked');
+  const btnWhyLockedOk = document.getElementById('btn-why-locked-ok');
+  const whyLockedTitle = document.getElementById('why-locked-title');
+  const whyLockedExpl = document.getElementById('why-locked-explanation');
+  const whyLockedPath = document.getElementById('why-locked-path');
+
+  function openWhyLocked(target) {
+    if (!modalWhyLocked) return;
+    if (target === 'biology') {
+      if (whyLockedTitle) whyLockedTitle.textContent = '🔒 Molecular Biology Locked';
+      if (whyLockedExpl) whyLockedExpl.textContent = 'Access to the Molecular Biology District requires verified lab safety certifications in both Pharmacology and Chemistry.';
+      if (whyLockedPath) {
+        whyLockedPath.innerHTML = `
+          <li>Complete Foundation Safety &amp; PPE certification in Oral PK Ward</li>
+          <li>Achieve Grade B or higher on Acid-Base Equivalence in Chemistry Bench</li>
+          <li>Attain receptor-binding pre-clearance</li>
+        `;
+      }
+    } else {
+      if (whyLockedTitle) whyLockedTitle.textContent = '🔒 Market Systems Locked';
+      if (whyLockedExpl) whyLockedExpl.textContent = 'Curriculum locked: High-Frequency Market Microstructure is reserved for Advanced Stochastic Systems course modules.';
+      if (whyLockedPath) {
+        whyLockedPath.innerHTML = `
+          <li>Complete prerequisite physical science benchmarks</li>
+          <li>Attain stochastic modeling clearance</li>
+          <li>Course enrollment opening next academic semester</li>
+        `;
+      }
+    }
+    modalWhyLocked.classList.remove('hidden');
+  }
+
+  document.querySelectorAll('.btn-locked-info').forEach((btn) => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      openWhyLocked(btn.getAttribute('data-locked-target'));
+    };
+  });
+
+  const cardBiology = document.getElementById('card-district-biology');
+  if (cardBiology) cardBiology.onclick = () => openWhyLocked('biology');
+  const cardMarket = document.getElementById('card-district-market');
+  if (cardMarket) cardMarket.onclick = () => openWhyLocked('market');
+
+  if (btnCloseWhyLocked) btnCloseWhyLocked.onclick = () => modalWhyLocked?.classList.add('hidden');
+  if (btnWhyLockedOk) btnWhyLockedOk.onclick = () => modalWhyLocked?.classList.add('hidden');
+
+  // Status Chips from localStorage
+  const expStatusMap = {
+    pk_ward: 'status-pk-ward',
+    dose_lab: 'status-dose-lab',
+    titration_bench: 'status-titration',
+    launch_bench: 'status-launch'
+  };
+
+  Object.entries(expStatusMap).forEach(([expId, elementId]) => {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const savedGrade = localStorage.getItem(`orbis_grade_${expId}`);
+    if (savedGrade) {
+      el.textContent = `Completed (${savedGrade})`;
+      el.className = 'status-chip badge badge-ok';
+    } else if (localStorage.getItem(`orbis_started_${expId}`)) {
+      el.textContent = 'In progress';
+      el.className = 'status-chip badge badge-warn';
+    }
+  });
+
   // About Simly Orbis Modal
   const btnOpenAbout = document.getElementById('btn-open-about');
   const btnHudOpenAbout = document.getElementById('btn-hud-open-about');
@@ -881,14 +982,43 @@ async function checkServerWakeup() {
   const progressBar = document.getElementById('wakeup-progress-bar');
   const statusText = document.getElementById('wakeup-status-text');
   const retryBtn = document.getElementById('btn-retry-wakeup');
+  const tipText = document.getElementById('wakeup-tip-text');
+  const dotsEl = document.getElementById('wakeup-dots');
+
+  const tips = [
+    "In orbital mechanics, burning prograde raises the apoapsis on the opposite side of Earth, not where you ignite.",
+    "Half-life t1/2 = ln(2) / kel ≈ 0.693 / kel for 1-compartment first-order elimination.",
+    "Phenolphthalein transitions from clear to vivid pink in the alkaline pH range of 8.2 to 10.0.",
+    "In two-compartment pharmacokinetics, alpha phase represents rapid distribution, followed by beta elimination.",
+    "Tsiolkovsky delta-v equation: Δv = Isp * g0 * ln(m0 / mf). Higher Isp dramatically cuts propellant mass."
+  ];
+
+  let tipIndex = 0;
+  const tipInterval = setInterval(() => {
+    tipIndex = (tipIndex + 1) % tips.length;
+    if (tipText) tipText.textContent = tips[tipIndex];
+  }, 4000);
+
+  let dotCount = 0;
+  const dotInterval = setInterval(() => {
+    dotCount = (dotCount + 1) % 4;
+    if (dotsEl) dotsEl.textContent = '.'.repeat(dotCount);
+  }, 450);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const simulateWakeup = urlParams.get('simulate_wakeup') === '1';
 
   let isAwake = false;
-  try {
-    const res = await fetch('/api/ping', { signal: AbortSignal.timeout(1200) });
-    if (res.ok) isAwake = true;
-  } catch (_) {}
+  if (!simulateWakeup) {
+    try {
+      const res = await fetch('/api/ping', { signal: AbortSignal.timeout(1200) });
+      if (res.ok) isAwake = true;
+    } catch (_) {}
+  }
 
   if (isAwake) {
+    clearInterval(tipInterval);
+    clearInterval(dotInterval);
     if (wakeupScreen) wakeupScreen.classList.add('hidden');
     return;
   }
@@ -907,9 +1037,16 @@ async function checkServerWakeup() {
     if (progressBar) progressBar.style.width = `${Math.max(15, progressPct)}%`;
     if (statusText) statusText.textContent = `Pinging simulation engine (attempt ${attempt}, ${Math.round(elapsed / 1000)}s)...`;
 
+    if (simulateWakeup && elapsed >= 2000) {
+      // Freeze simulation so screenshots/tests can inspect
+      return;
+    }
+
     try {
       const res = await fetch('/api/ping', { signal: AbortSignal.timeout(3000) });
       if (res.ok) {
+        clearInterval(tipInterval);
+        clearInterval(dotInterval);
         if (progressBar) progressBar.style.width = '100%';
         if (statusText) statusText.textContent = 'Connected! Laboratory ready.';
         setTimeout(() => {

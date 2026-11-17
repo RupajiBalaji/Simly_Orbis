@@ -184,62 +184,206 @@
       <div class="lobby-hero">
         <h2>Select Simulation District</h2>
         <p>Choose an interactive district to conduct stateful laboratory experiments, test scientific hypotheses, and receive algorithmic feedback.</p>
+        <div class="lobby-controls" style="display:flex; justify-content:center; align-items:center; gap:16px; margin-top:16px; flex-wrap:wrap;">
+          <div class="mode-toggle-group" style="display:inline-flex; background:rgba(255,255,255,0.06); padding:4px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.12);">
+            <button type="button" id="btn-mode-guided" class="btn btn-secondary active" style="min-height:32px; padding:4px 12px; font-size:var(--text-xs); border:1px solid var(--accent);" aria-pressed="true">🎯 Guided (Exam)</button>
+            <button type="button" id="btn-mode-free" class="btn btn-secondary" style="min-height:32px; padding:4px 12px; font-size:var(--text-xs);" aria-pressed="false">⚡ Free Play</button>
+          </div>
+          <span id="mode-desc" style="font-size:var(--text-xs); color:var(--text-muted);">Guided Mode: Strict protocol compliance, safety rules, and algorithmic scorecards enabled.</span>
+        </div>
       </div>
 
-      <div class="districts-grid">
-        <!-- District 1: Pharma (Unlocked) -->
-        <div class="district-card pharma unlocked" id="card-district-pharma">
+      <div class="districts-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:var(--space-4); margin-top:var(--space-4);">
+        <!-- District 1: Pharmacology (Unlocked) -->
+        <div class="district-card pharma unlocked" id="card-district-pharma" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <span class="district-badge badge-unlocked">● Unlocked</span>
-            <div class="district-icon">💊</div>
-            <h3 class="district-title">Pharmacokinetics Ward</h3>
-            <p class="district-desc">Administer oral paracetamol to virtual patient Alex, advance clinical ward time, draw blood samples, and analyze plasma concentrations using centrifuge assays.</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="district-badge badge-unlocked">● Unlocked</span>
+              <span style="font-size:var(--text-xs); color:var(--accent-chem); font-weight:600;">2 Experiments</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <span class="district-icon" style="font-size:1.8rem;">💊</span>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Pharmacology</h3>
+            </div>
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+              Investigate absorption, distribution, metabolism, elimination, and concentration-response curves.
+            </p>
+            
+            <!-- Experiment Tiles -->
+            <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
+              <div class="exp-tile card" data-exp-id="pk_ward" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                  <strong style="font-size:var(--text-sm); color:var(--text);">Oral PK Ward</strong>
+                  <div style="display:flex; gap:4px;">
+                    <span class="badge badge-info" style="font-size:10px;">Novice</span>
+                    <span style="font-size:10px; color:var(--text-muted);">⏱️ 5 min</span>
+                  </div>
+                </div>
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                  Administer oral paracetamol, sample plasma, and compute elimination half-life.
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="status-chip badge badge-default" id="status-pk-ward" style="font-size:10px;">Not started</span>
+                  <a href="#/briefing?exp=pk_ward" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;">Enter Ward ➔</a>
+                </div>
+              </div>
+
+              <div class="exp-tile card" data-exp-id="dose_lab" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                  <strong style="font-size:var(--text-sm); color:var(--text);">Dose Response Lab</strong>
+                  <div style="display:flex; gap:4px;">
+                    <span class="badge badge-warn" style="font-size:10px;">Advanced</span>
+                    <span style="font-size:10px; color:var(--text-muted);">⏱️ 8 min</span>
+                  </div>
+                </div>
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                  Multi-compartment PK/PD dynamics across oral/IV routes and patient covariates.
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="status-chip badge badge-default" id="status-dose-lab" style="font-size:10px;">Not started</span>
+                  <a href="#/briefing?exp=dose_lab" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;">Enter Lab ➔</a>
+                </div>
+              </div>
+            </div>
           </div>
-          <button type="button" class="district-action-btn btn-launch">Enter Ward <span>➔</span></button>
         </div>
 
         <!-- District 2: Chemistry (Unlocked) -->
-        <div class="district-card chemistry unlocked" id="card-district-chemistry">
+        <div class="district-card chemistry unlocked" id="card-district-chemistry" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <span class="district-badge badge-unlocked">● Unlocked</span>
-            <div class="district-icon">🧪</div>
-            <h3 class="district-title">Titration Bench</h3>
-            <p class="district-desc">Standardize your burette, pipette acid analyte into a conical flask, add pH indicators, and perform precision drop-wise neutralization with continuous color transitions.</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="district-badge badge-unlocked">● Unlocked</span>
+              <span style="font-size:var(--text-xs); color:var(--accent); font-weight:600;">1 Experiment</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <span class="district-icon" style="font-size:1.8rem;">🧪</span>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Chemistry</h3>
+            </div>
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+              Aqueous equilibrium, volumetric glassware titration, and pH indicator shifts.
+            </p>
+            
+            <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
+              <div class="exp-tile card" data-exp-id="titration_bench" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                  <strong style="font-size:var(--text-sm); color:var(--text);">Titration Bench</strong>
+                  <div style="display:flex; gap:4px;">
+                    <span class="badge badge-info" style="font-size:10px;">Novice</span>
+                    <span style="font-size:10px; color:var(--text-muted);">⏱️ 6 min</span>
+                  </div>
+                </div>
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                  Standardize burette, pipette analyte, and drop-wise neutralize to find equivalence point.
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="status-chip badge badge-default" id="status-titration" style="font-size:10px;">Not started</span>
+                  <a href="#/briefing?exp=titration_bench" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;">Enter Bench ➔</a>
+                </div>
+              </div>
+            </div>
           </div>
-          <button type="button" class="district-action-btn btn-launch">Enter Bench <span>➔</span></button>
         </div>
 
         <!-- District 3: Space (Unlocked) -->
-        <div class="district-card space unlocked" id="card-district-space">
+        <div class="district-card space unlocked" id="card-district-space" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <span class="district-badge badge-unlocked">● Unlocked</span>
-            <div class="district-icon">🚀</div>
-            <h3 class="district-title">Launch & Orbit Bench</h3>
-            <p class="district-desc">Design rocket staging, calculate Tsiolkovsky delta-v, ignite orbital launch vehicles from Launch Pad A, and execute Hohmann orbital transfers in low Earth orbit.</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="district-badge badge-unlocked">● Unlocked</span>
+              <span style="font-size:var(--text-xs); color:var(--accent-space, #38bdf8); font-weight:600;">1 Experiment</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <span class="district-icon" style="font-size:1.8rem;">🚀</span>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Space Systems</h3>
+            </div>
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+              Orbital mechanics, two-stage Tsiolkovsky delta-v, and Hohmann coplanar transfers.
+            </p>
+            
+            <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
+              <div class="exp-tile card" data-exp-id="launch_bench" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                  <strong style="font-size:var(--text-sm); color:var(--text);">Launch &amp; Orbit Bench</strong>
+                  <div style="display:flex; gap:4px;">
+                    <span class="badge badge-warn" style="font-size:10px;">Advanced</span>
+                    <span style="font-size:10px; color:var(--text-muted);">⏱️ 7 min</span>
+                  </div>
+                </div>
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                  Calculate staging mass ratio, ignite ascent to LEO, and execute circularization burns.
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="status-chip badge badge-default" id="status-launch" style="font-size:10px;">Not started</span>
+                  <a href="#/briefing?exp=launch_bench" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;">Enter Bench ➔</a>
+                </div>
+              </div>
+            </div>
           </div>
-          <button type="button" class="district-action-btn btn-launch">Enter Bench <span>➔</span></button>
         </div>
 
-        <!-- District 4: Dose Response Lab (Unlocked) -->
-        <div class="district-card pharma unlocked" id="card-district-dose-lab">
+        <!-- District 4: Molecular Biology (Locked) -->
+        <div class="district-card locked" id="card-district-biology" style="display:flex; flex-direction:column; justify-content:space-between; opacity:0.85;">
           <div>
-            <span class="district-badge badge-unlocked">● Unlocked</span>
-            <div class="district-icon">📈</div>
-            <h3 class="district-title">Dose Response Lab</h3>
-            <p class="district-desc">Explore multi-compartment PK/PD dynamics across oral and IV routes. Adjust adult patient covariates (weight, age, CrCl), predict concentration windows, and observe therapeutic effect curves.</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="district-badge badge-locked">🔒 Prerequisite Locked</span>
+              <span style="font-size:var(--text-xs); color:var(--text-muted);">Curriculum Path</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <span class="district-icon" style="font-size:1.8rem;">🧬</span>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Molecular Biology</h3>
+            </div>
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+              Enzymatic kinetics, protein binding affinity assays, and receptor-ligand docking.
+            </p>
+            
+            <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
+              <div class="exp-tile card" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:var(--radius-md);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                  <strong style="font-size:var(--text-sm); color:var(--text-muted);">Enzyme Kinetics Bench</strong>
+                  <span style="font-size:10px; color:var(--text-muted);">⏱️ 10 min</span>
+                </div>
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                  Michaelis-Menten substrate kinetics and competitive active-site inhibition.
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="status-chip badge badge-warn" style="font-size:10px;">🔒 Locked</span>
+                  <button type="button" class="btn btn-secondary btn-locked-info" data-locked-target="biology" style="min-height:28px; padding:2px 10px; font-size:11px;">Why Locked?</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <button type="button" class="district-action-btn btn-launch">Enter Lab <span>➔</span></button>
         </div>
 
-        <!-- District 5: Market (Locked) -->
-        <div class="district-card locked">
+        <!-- District 5: Market Microstructure (Locked) -->
+        <div class="district-card locked" id="card-district-market" style="display:flex; flex-direction:column; justify-content:space-between; opacity:0.85;">
           <div>
-            <span class="district-badge badge-locked">🔒 Coming Soon</span>
-            <div class="district-icon">📈</div>
-            <h3 class="district-title">Market Microstructure</h3>
-            <p class="district-desc">High-frequency limit order books, automated market maker (AMM) curves, and multi-agent liquidity equilibrium testing.</p>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="district-badge badge-locked">🔒 Curriculum Locked</span>
+              <span style="font-size:var(--text-xs); color:var(--text-muted);">Coming Soon</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+              <span class="district-icon" style="font-size:1.8rem;">📊</span>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Market Systems</h3>
+            </div>
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+              High-frequency limit order books, automated market maker curves, and liquidity dynamics.
+            </p>
+            
+            <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
+              <div class="exp-tile card" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:var(--radius-md);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
+                  <strong style="font-size:var(--text-sm); color:var(--text-muted);">Order Book &amp; AMM Bench</strong>
+                  <span style="font-size:10px; color:var(--text-muted);">⏱️ 10 min</span>
+                </div>
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                  Simulate adverse selection, bid-ask spread expansion, and token bonding curves.
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span class="status-chip badge badge-warn" style="font-size:10px;">🔒 Locked</span>
+                  <button type="button" class="btn btn-secondary btn-locked-info" data-locked-target="market" style="min-height:28px; padding:2px 10px; font-size:11px;">Why Locked?</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <button type="button" class="district-action-btn btn-disabled" disabled>Locked</button>
         </div>
       </div>
     </main>
@@ -654,17 +798,52 @@
        SCREEN 5: SERVER WAKE-UP / COLD START SCREEN
        ═════════════════════════════════════════════════════════════════════ -->
   <div id="screen-wakeup" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:9999; background:rgba(12,7,29,0.96);">
-    <div class="brief-modal" style="text-align:center; max-width:440px;">
+    <div class="brief-modal" style="text-align:center; max-width:460px;">
       <div style="font-size:3rem; margin-bottom:12px;">⏳</div>
-      <h2 style="color:#38bdf8; font-size:1.5rem; margin-bottom:8px;">Waking up the lab...</h2>
-      <p style="color:#94a3b8; font-size:0.88rem; margin-bottom:20px; line-height:1.5;">
+      <h2 id="wakeup-header-title" style="color:#38bdf8; font-size:1.5rem; margin-bottom:8px;">Lab waking up<span id="wakeup-dots">...</span> ~30s</h2>
+      <p style="color:#94a3b8; font-size:0.88rem; margin-bottom:16px; line-height:1.5;">
         Free hosting instances go to sleep when inactive. We are waking up the backend simulation engine. This usually takes 15–40 seconds.
       </p>
+      
+      <!-- Educational Rotating Tip -->
+      <div id="wakeup-tip-container" class="card" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); padding:10px 14px; text-align:left; margin-bottom:16px;">
+        <div style="font-size:var(--text-xs); font-weight:700; color:var(--accent); margin-bottom:4px;">💡 Simulation Tip</div>
+        <div id="wakeup-tip-text" style="font-size:var(--text-xs); color:var(--text-muted); line-height:1.4;">In orbital mechanics, burning prograde raises the apoapsis on the opposite side of Earth, not where you ignite.</div>
+      </div>
+
       <div id="wakeup-progress-bar-wrap" style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-bottom:16px;">
         <div id="wakeup-progress-bar" style="width:15%; height:100%; background:linear-gradient(90deg, #38bdf8, #a855f7); transition:width 0.4s ease;"></div>
       </div>
       <div id="wakeup-status-text" style="font-size:0.8rem; color:#cbd5e1; font-family:var(--font-mono); margin-bottom:16px;">Checking /api/ping...</div>
       <button type="button" class="btn-primary" id="btn-retry-wakeup" style="display:none; margin:0 auto;">Retry Wake-Up</button>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       MODAL: WHY LOCKED (Educational Progression & Prerequisites)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="modal-why-locked" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:210; background:rgba(12,7,29,0.92);">
+    <div class="panel" style="max-width:540px; width:90%; margin:auto;">
+      <div class="panel-header">
+        <span class="panel-title" id="why-locked-title">🔒 District Locked</span>
+        <button type="button" class="btn btn-secondary" id="btn-close-why-locked" style="padding:4px 8px;" aria-label="Close why locked modal">✕</button>
+      </div>
+      <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-3);">
+        <p id="why-locked-explanation" style="font-size:var(--text-sm); line-height:var(--line-height-body); color:var(--text-muted);">
+          This simulation district is part of the advanced curriculum progression.
+        </p>
+        <div class="card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:var(--space-3);">
+          <div style="font-weight:600; font-size:var(--text-sm); color:var(--accent); margin-bottom:4px;">Educational Progression Path:</div>
+          <ol style="margin:0; padding-left:20px; font-size:var(--text-xs); color:var(--text-muted); line-height:1.6;" id="why-locked-path">
+            <li>Complete Foundation Safety &amp; PPE protocols in Oral PK Ward</li>
+            <li>Master Acid-Base Neutralization &amp; Equivalence in Chemistry Bench</li>
+            <li>Attain Grade B or higher on laboratory protocols to unlock advanced districts</li>
+          </ol>
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:var(--space-2);">
+          <button type="button" class="btn btn-primary" id="btn-why-locked-ok">Understood</button>
+        </div>
+      </div>
     </div>
   </div>
 
