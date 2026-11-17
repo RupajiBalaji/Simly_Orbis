@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     trust_proxy: bool = False
     git_sha: str = ""
     app_version: str = "0.4.1-dev"
+    environment: str = "development"
 
     model_config = SettingsConfigDict(
         env_file=("backend/.env", ".env"),

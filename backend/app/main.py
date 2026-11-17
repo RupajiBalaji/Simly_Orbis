@@ -65,10 +65,19 @@ async def lifespan(app: FastAPI):  # noqa: ANN001
 # ---------------------------------------------------------------------------
 # Application
 # ---------------------------------------------------------------------------
+is_production = (
+    getattr(settings, "environment", "development").lower() in ("production", "prod")
+    or os.environ.get("ENVIRONMENT", "").lower() in ("production", "prod")
+    or os.environ.get("RENDER", "").lower() == "true"
+)
+
 app = FastAPI(
     title="Simly Orbis",
     version=settings.app_version,
     lifespan=lifespan,
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json",
 )
 
 
