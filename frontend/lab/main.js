@@ -24,6 +24,7 @@ import { toast } from './game/toast.js';
 import { soundFX } from './audio/sound_fx.js';
 import { runCameraAcceptanceTest } from './world/camera_test.js';
 import { initRouter } from '../router.js';
+import { initI18n, setLocale, getLocale, t } from '../i18n.js';
 
 // WebGL Support Detection
 function isWebGLAvailable() {
@@ -154,7 +155,8 @@ async function initOrbisLab() {
     }
   });
 
-  // 3. Setup Navigation, Router & District Selection
+  // 3. Setup Navigation, Router, i18n & District Selection
+  await initI18n();
   setupRouter();
   setupLobby();
   setupSettings();
@@ -857,6 +859,7 @@ function setupSettings() {
   const fontScaleSelect = document.getElementById('setting-font-scale');
   const highContrastCheck = document.getElementById('setting-high-contrast');
   const colorblindSelect = document.getElementById('setting-colorblind-mode');
+  const langSelect = document.getElementById('setting-app-language');
   const btnReset = document.getElementById('btn-settings-reset');
 
   // 1. Graphics Quality
@@ -951,7 +954,16 @@ function setupSettings() {
     colorblindSelect.onchange = () => applyColorblind(colorblindSelect.value);
   }
 
-  // 6. Reset Defaults
+  // 6. Language (i18n)
+  if (langSelect) {
+    langSelect.value = getLocale();
+    langSelect.onchange = async () => {
+      await setLocale(langSelect.value);
+      toast.showInfo(`Language switched: ${langSelect.value.toUpperCase()}`);
+    };
+  }
+
+  // 7. Reset Defaults
   if (btnReset) {
     btnReset.onclick = () => {
       localStorage.removeItem('orbis_quality_tier');
@@ -960,6 +972,7 @@ function setupSettings() {
       localStorage.removeItem('orbis_font_scale');
       localStorage.removeItem('orbis_high_contrast');
       localStorage.removeItem('orbis_colorblind');
+      localStorage.removeItem('orbis_locale');
 
       if (qualitySelect) { qualitySelect.value = 'medium'; qualitySelect.dispatchEvent(new Event('change')); }
       if (volumeSlider) { volumeSlider.value = 80; volumeSlider.dispatchEvent(new Event('input')); }
@@ -967,6 +980,7 @@ function setupSettings() {
       if (fontScaleSelect) { fontScaleSelect.value = 'normal'; fontScaleSelect.dispatchEvent(new Event('change')); }
       if (highContrastCheck) { highContrastCheck.checked = false; highContrastCheck.dispatchEvent(new Event('change')); }
       if (colorblindSelect) { colorblindSelect.value = 'off'; colorblindSelect.dispatchEvent(new Event('change')); }
+      if (langSelect) { langSelect.value = 'en'; langSelect.dispatchEvent(new Event('change')); }
       toast.showInfo('Settings reset to defaults');
     };
   }

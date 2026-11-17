@@ -148,17 +148,17 @@
       <div class="lobby-brand">
         <div class="logo-orb">⬡</div>
         <div class="lobby-title-group">
-          <h1>ORBIS LAB</h1>
-          <p>A simulated world for testing before building</p>
+          <h1 data-i18n="common.app_title">ORBIS LAB</h1>
+          <p data-i18n="common.subtitle">A simulated world for testing before building</p>
         </div>
       </div>
       <div class="lobby-links" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <nav class="app-nav" aria-label="Main Navigation" style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-          <a href="#/lobby" class="btn btn-secondary" data-nav-route="lobby" style="min-height:36px; padding:4px 10px;">Lobby</a>
-          <a href="#/leaderboard" class="btn btn-secondary" data-nav-route="leaderboard" style="min-height:36px; padding:4px 10px;">Leaderboard</a>
-          <a href="#/settings" class="btn btn-secondary" data-nav-route="settings" style="min-height:36px; padding:4px 10px;">Settings</a>
-          <a href="#/model-cards" class="btn btn-secondary" data-nav-route="model-cards" style="min-height:36px; padding:4px 10px;">Model Cards</a>
-          <a href="#/reality-check" class="btn btn-secondary" data-nav-route="reality-check" style="min-height:36px; padding:4px 10px;">Reality Check</a>
+          <a href="#/lobby" class="btn btn-secondary" data-nav-route="lobby" data-i18n="nav.lobby" style="min-height:36px; padding:4px 10px;">Lobby</a>
+          <a href="#/leaderboard" class="btn btn-secondary" data-nav-route="leaderboard" data-i18n="nav.leaderboard" style="min-height:36px; padding:4px 10px;">Leaderboard</a>
+          <a href="#/settings" class="btn btn-secondary" data-nav-route="settings" data-i18n="nav.settings" style="min-height:36px; padding:4px 10px;">Settings</a>
+          <a href="#/model-cards" class="btn btn-secondary" data-nav-route="model-cards" data-i18n="nav.model_cards" style="min-height:36px; padding:4px 10px;">Model Cards</a>
+          <a href="#/reality-check" class="btn btn-secondary" data-nav-route="reality-check" data-i18n="nav.reality_check" style="min-height:36px; padding:4px 10px;">Reality Check</a>
         </nav>
         <span class="user-profile-chip" id="user-profile-chip" style="font-size:var(--text-xs); background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.15); display:inline-flex; align-items:center; gap:4px;" title="User Profile">
           <span>👤</span> <span id="user-profile-name">Guest Cadet</span>
@@ -182,12 +182,12 @@
 
     <main class="lobby-content">
       <div class="lobby-hero">
-        <h2>Select Simulation District</h2>
-        <p>Choose an interactive district to conduct stateful laboratory experiments, test scientific hypotheses, and receive algorithmic feedback.</p>
+        <h2 data-i18n="lobby.select_district">Select Simulation District</h2>
+        <p data-i18n="lobby.hero_desc">Choose an interactive district to conduct stateful laboratory experiments, test scientific hypotheses, and receive algorithmic feedback.</p>
         <div class="lobby-controls" style="display:flex; justify-content:center; align-items:center; gap:16px; margin-top:16px; flex-wrap:wrap;">
           <div class="mode-toggle-group" style="display:inline-flex; background:rgba(255,255,255,0.06); padding:4px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.12);">
-            <button type="button" id="btn-mode-guided" class="btn btn-secondary active" style="min-height:32px; padding:4px 12px; font-size:var(--text-xs); border:1px solid var(--accent);" aria-pressed="true">🎯 Guided (Exam)</button>
-            <button type="button" id="btn-mode-free" class="btn btn-secondary" style="min-height:32px; padding:4px 12px; font-size:var(--text-xs);" aria-pressed="false">⚡ Free Play</button>
+            <button type="button" id="btn-mode-guided" class="btn btn-secondary active" data-i18n="lobby.guided_mode" style="min-height:32px; padding:4px 12px; font-size:var(--text-xs); border:1px solid var(--accent);" aria-pressed="true">🎯 Guided (Exam)</button>
+            <button type="button" id="btn-mode-free" class="btn btn-secondary" data-i18n="lobby.free_mode" style="min-height:32px; padding:4px 12px; font-size:var(--text-xs);" aria-pressed="false">⚡ Free Play</button>
           </div>
           <span id="mode-desc" style="font-size:var(--text-xs); color:var(--text-muted);">Guided Mode: Strict protocol compliance, safety rules, and algorithmic scorecards enabled.</span>
         </div>
@@ -736,6 +736,15 @@
             <option value="protanopia">Protanopia (Red-Blind)</option>
             <option value="deuteranopia">Deuteranopia (Green-Blind)</option>
             <option value="tritanopia">Tritanopia (Blue-Blind)</option>
+          </select>
+        </div>
+
+        <!-- Language (i18n) -->
+        <div class="slider-group">
+          <label class="slider-label" for="setting-app-language">Language / Idioma (i18n)</label>
+          <select id="setting-app-language" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
+            <option value="en" selected>English (EN)</option>
+            <option value="es">Español (ES - Beta)</option>
           </select>
         </div>
 

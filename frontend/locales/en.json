@@ -1,0 +1,106 @@
+{
+  "common": {
+    "app_title": "ORBIS LAB",
+    "subtitle": "A simulated world for testing before building",
+    "disclaimer": "Educational simulation. Simplified models. Not medical advice.",
+    "back_to_lobby": "← Back to Lobby",
+    "close": "Close",
+    "skip": "Skip",
+    "next": "Next ➔",
+    "back": "Back",
+    "finish": "Finish ✓",
+    "retry": "Retry",
+    "help": "Help",
+    "settings": "Settings",
+    "loading": "Loading...",
+    "offline": "Offline Mode"
+  },
+  "nav": {
+    "lobby": "Lobby",
+    "leaderboard": "Leaderboard",
+    "settings": "Settings",
+    "model_cards": "Model Cards",
+    "reality_check": "Reality Check",
+    "classic_2d": "2D Game"
+  },
+  "lobby": {
+    "select_district": "Select Simulation District",
+    "hero_desc": "Choose an interactive district to conduct stateful laboratory experiments, test scientific hypotheses, and receive algorithmic feedback.",
+    "guided_mode": "🎯 Guided (Exam)",
+    "free_mode": "⚡ Free Play",
+    "guided_desc": "Guided Mode: Strict protocol compliance, safety rules, and algorithmic scorecards enabled.",
+    "free_desc": "Free Play Mode: Sandbox exploration. Experiment freely without strict exam scoring gates.",
+    "unlocked_badge": "● Unlocked",
+    "locked_badge": "🔒 Locked",
+    "why_locked": "Why Locked?",
+    "not_started": "Not started",
+    "in_progress": "In progress",
+    "completed": "Completed"
+  },
+  "districts": {
+    "pharma_title": "Pharmacology",
+    "pharma_desc": "Investigate absorption, distribution, metabolism, elimination, and concentration-response curves.",
+    "pk_ward_name": "Oral PK Ward",
+    "pk_ward_goal": "Administer oral paracetamol, sample plasma, and compute elimination half-life.",
+    "dose_lab_name": "Dose Response Lab",
+    "dose_lab_goal": "Multi-compartment PK/PD dynamics across oral/IV routes and patient covariates.",
+    "chem_title": "Chemistry",
+    "chem_desc": "Aqueous equilibrium, volumetric glassware titration, and pH indicator shifts.",
+    "titration_name": "Titration Bench",
+    "titration_goal": "Standardize burette, pipette analyte, and drop-wise neutralize to find equivalence point.",
+    "space_title": "Space Systems",
+    "space_desc": "Orbital mechanics, two-stage Tsiolkovsky delta-v, and Hohmann coplanar transfers.",
+    "launch_name": "Launch & Orbit Bench",
+    "launch_goal": "Calculate staging mass ratio, ignite ascent to LEO, and execute circularization burns.",
+    "biology_title": "Molecular Biology",
+    "market_title": "Market Systems"
+  },
+  "hud": {
+    "brand": "⬡ ORBIS LAB",
+    "protocol_checklist": "Protocol Checklist",
+    "active_rules": "Active Safety Rules",
+    "telemetry_title": "Live Telemetry & Readouts",
+    "concentration": "Concentration",
+    "mass": "Sample / Mass",
+    "event_log": "Laboratory Event Log",
+    "go_to_station": "GO TO STATION:",
+    "what_to_do": "What would you like to do?",
+    "more_actions": "➕ More Actions",
+    "finish_report": "✓ Finish Report",
+    "source_engine": "[Engine]",
+    "source_game": "[Game]",
+    "source_lit": "[Lit]",
+    "source_ai": "[AI]"
+  },
+  "rules": {
+    "r1_title": "Rule R1: Personal Protective Equipment",
+    "r1_reason": "Protects student researcher from chemical splashes and contact dermatitis.",
+    "r2_title": "Rule R2: Balance Tare Required",
+    "r2_reason": "Ensures container weight is not erroneously added to the active drug dose."
+  },
+  "settings": {
+    "title": "⚙️ Laboratory Settings",
+    "quality_tier": "Graphics Quality Tier (Section 7.7)",
+    "sound_volume": "Procedural Audio Volume",
+    "mute": "Mute All Sound",
+    "font_scale": "Text Font Scale (WCAG 2.1 AA 100%–140%)",
+    "high_contrast": "High Contrast Mode",
+    "high_contrast_desc": "Enforce pure black background and elevated contrast ratios (7:1+)",
+    "colorblind_mode": "Colorblind Vision Simulation",
+    "tutorial_title": "First-Run Onboarding Tutorial",
+    "replay_tutorial": "Replay Tutorial",
+    "reset_defaults": "Reset Defaults"
+  },
+  "brief": {
+    "district_prefix": "District: ",
+    "learning_goals": "Learning Goals",
+    "required_ppe": "Required PPE",
+    "enter_lab": "Enter 3D Laboratory ➔"
+  },
+  "report": {
+    "title": "Experimental Evaluation Report",
+    "overall_score": "Overall Protocol Score",
+    "grade": "Grade",
+    "return_to_lobby": "Return to World Hub"
+  }
+}
