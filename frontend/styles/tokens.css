@@ -155,3 +155,26 @@ body[data-colorblind="deuteranopia"] {
 body[data-colorblind="tritanopia"] {
   filter: contrast(1.1) hue-rotate(15deg);
 }
+
+/* =========================================================================
+   Universal Keyboard Focus Ring (3px Visible Outline per WCAG 2.1 AA)
+   ========================================================================= */
+:focus-visible {
+  outline: 3px solid var(--accent, #19C3B1) !important;
+  outline-offset: 2px !important;
+  box-shadow: var(--focus-ring, 0 0 0 3px rgba(25, 195, 177, 0.6)) !important;
+}
+
+/* =========================================================================
+   Universal Reduced Motion (Section 7.5 & WCAG 2.1 AA Guideline 2.3.3)
+   ========================================================================= */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

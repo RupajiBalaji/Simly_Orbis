@@ -311,8 +311,11 @@ function setupLobby() {
   const whyLockedExpl = document.getElementById('why-locked-explanation');
   const whyLockedPath = document.getElementById('why-locked-path');
 
-  function openWhyLocked(target) {
+  let lastFocusedWhyLocked = null;
+
+  function openWhyLocked(target, triggerEl) {
     if (!modalWhyLocked) return;
+    lastFocusedWhyLocked = triggerEl || document.activeElement;
     if (target === 'biology') {
       if (whyLockedTitle) whyLockedTitle.textContent = '🔒 Molecular Biology Locked';
       if (whyLockedExpl) whyLockedExpl.textContent = 'Access to the Molecular Biology District requires verified lab safety certifications in both Pharmacology and Chemistry.';
@@ -335,22 +338,55 @@ function setupLobby() {
       }
     }
     modalWhyLocked.classList.remove('hidden');
+    btnWhyLockedOk?.focus();
   }
+
+  function closeWhyLocked() {
+    modalWhyLocked?.classList.add('hidden');
+    if (lastFocusedWhyLocked && typeof lastFocusedWhyLocked.focus === 'function') {
+      lastFocusedWhyLocked.focus();
+    }
+  }
+
+  modalWhyLocked?.addEventListener('keydown', (e) => {
+    if (modalWhyLocked.classList.contains('hidden')) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeWhyLocked();
+    } else if (e.key === 'Tab') {
+      const focusable = modalWhyLocked.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusable.length > 0) {
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    }
+  });
 
   document.querySelectorAll('.btn-locked-info').forEach((btn) => {
     btn.onclick = (e) => {
       e.stopPropagation();
-      openWhyLocked(btn.getAttribute('data-locked-target'));
+      openWhyLocked(btn.getAttribute('data-locked-target'), btn);
     };
   });
 
   const cardBiology = document.getElementById('card-district-biology');
-  if (cardBiology) cardBiology.onclick = () => openWhyLocked('biology');
+  if (cardBiology) cardBiology.onclick = () => openWhyLocked('biology', cardBiology);
   const cardMarket = document.getElementById('card-district-market');
-  if (cardMarket) cardMarket.onclick = () => openWhyLocked('market');
+  if (cardMarket) cardMarket.onclick = () => openWhyLocked('market', cardMarket);
 
-  if (btnCloseWhyLocked) btnCloseWhyLocked.onclick = () => modalWhyLocked?.classList.add('hidden');
-  if (btnWhyLockedOk) btnWhyLockedOk.onclick = () => modalWhyLocked?.classList.add('hidden');
+  if (btnCloseWhyLocked) btnCloseWhyLocked.onclick = closeWhyLocked;
+  if (btnWhyLockedOk) btnWhyLockedOk.onclick = closeWhyLocked;
 
   // Status Chips from localStorage
   const expStatusMap = {
@@ -380,11 +416,49 @@ function setupLobby() {
   const btnCloseAbout = document.getElementById('btn-close-about');
   const btnAboutCloseBtn = document.getElementById('btn-about-close-btn');
 
+  let lastFocusedAbout = null;
+  const openAbout = (triggerEl) => {
+    lastFocusedAbout = triggerEl || document.activeElement;
+    modalAbout?.classList.remove('hidden');
+    btnCloseAbout?.focus();
+  };
+  const closeAbout = () => {
+    modalAbout?.classList.add('hidden');
+    if (lastFocusedAbout && typeof lastFocusedAbout.focus === 'function') {
+      lastFocusedAbout.focus();
+    }
+  };
+
   if (modalAbout) {
-    if (btnOpenAbout) btnOpenAbout.onclick = () => modalAbout.classList.remove('hidden');
-    if (btnHudOpenAbout) btnHudOpenAbout.onclick = () => modalAbout.classList.remove('hidden');
-    if (btnCloseAbout) btnCloseAbout.onclick = () => modalAbout.classList.add('hidden');
-    if (btnAboutCloseBtn) btnAboutCloseBtn.onclick = () => modalAbout.classList.add('hidden');
+    if (btnOpenAbout) btnOpenAbout.onclick = () => openAbout(btnOpenAbout);
+    if (btnHudOpenAbout) btnHudOpenAbout.onclick = () => openAbout(btnHudOpenAbout);
+    if (btnCloseAbout) btnCloseAbout.onclick = closeAbout;
+    if (btnAboutCloseBtn) btnAboutCloseBtn.onclick = closeAbout;
+
+    modalAbout.addEventListener('keydown', (e) => {
+      if (modalAbout.classList.contains('hidden')) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeAbout();
+      } else if (e.key === 'Tab') {
+        const focusable = modalAbout.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length > 0) {
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      }
+    });
   }
 
   // Check Storage Mode & dynamic version metadata
