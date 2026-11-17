@@ -402,13 +402,26 @@ export class LabHUD {
   initCollapsibleDock() {
     const btnCollapse = document.getElementById('btn-collapse-bottom-dock');
     const bottomDock = document.getElementById('hud-bottom-dock');
+    const handle = document.getElementById('bottom-sheet-drag-handle');
+
+    const toggleDock = () => {
+      bottomDock.classList.toggle('minimized');
+      const isMin = bottomDock.classList.contains('minimized');
+      if (btnCollapse) btnCollapse.textContent = isMin ? '▲ Expand' : '▼ Minimize';
+      soundFX.playClick();
+    };
+
     if (btnCollapse && bottomDock) {
-      btnCollapse.onclick = () => {
-        bottomDock.classList.toggle('minimized');
-        const isMin = bottomDock.classList.contains('minimized');
-        btnCollapse.textContent = isMin ? '▲ Expand' : '▼ Minimize';
-        soundFX.playClick();
-      };
+      btnCollapse.onclick = toggleDock;
+    }
+    if (handle && bottomDock) {
+      handle.onclick = toggleDock;
+      handle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleDock();
+        }
+      });
     }
   }
 

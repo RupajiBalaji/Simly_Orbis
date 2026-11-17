@@ -3892,6 +3892,121 @@ body.orbis-lab-body {
   background: rgba(20, 184, 166, 0.8);
 }
 
+/* ==========================================================================
+   Responsive Phone & Tablet Layout (Section 7.6, 8.17, P1-T7)
+   ========================================================================== */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  .view-screen {
+    max-width: 100vw;
+    box-sizing: border-box;
+    padding-left: max(var(--space-3, 12px), env(safe-area-inset-left));
+    padding-right: max(var(--space-3, 12px), env(safe-area-inset-right));
+    padding-top: max(var(--space-3, 12px), env(safe-area-inset-top));
+    padding-bottom: max(var(--space-3, 12px), env(safe-area-inset-bottom));
+  }
+
+  /* Lobby Header & Grid on Mobile */
+  .lobby-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--space-3, 12px);
+    gap: var(--space-2, 8px);
+  }
+
+  .lobby-links {
+    justify-content: center;
+  }
+
+  .districts-grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-3, 12px);
+  }
+
+  /* Touch targets >= 44x44px per WCAG 2.1 AA */
+  button, 
+  .btn, 
+  .hud-btn, 
+  .district-action-btn, 
+  .action-btn, 
+  .station-btn,
+  select,
+  input[type="button"],
+  input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Bottom Sheet Transformation */
+  .hud-bottom-dock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    border-radius: 16px 16px 0 0;
+    background: rgba(11, 18, 32, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    padding: var(--space-2, 8px) var(--space-3, 12px) max(var(--space-2, 8px), env(safe-area-inset-bottom));
+    z-index: 50;
+    transition: transform 0.25s ease-out;
+  }
+
+  .bottom-sheet-handle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.25);
+    margin: 4px auto 8px auto;
+    cursor: pointer;
+  }
+
+  /* Joystick on mobile */
+  .touch-joystick-zone {
+    display: block;
+    left: max(16px, env(safe-area-inset-left));
+    bottom: calc(72px + env(safe-area-inset-bottom));
+  }
+
+  /* Collapsed HUD side panels on phone */
+  .hud-protocol-panel,
+  .hud-right-panel {
+    max-width: 85vw;
+  }
+
+  .hud-top-bar {
+    padding: 6px var(--space-2, 8px);
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 390x844 specific rules (iPhone / modern Android) */
+  .lobby-hero h2 {
+    font-size: var(--text-lg, 1.25rem);
+  }
+
+  .lobby-hero p {
+    font-size: var(--text-xs, 0.75rem);
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .telemetry-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 
 
 
