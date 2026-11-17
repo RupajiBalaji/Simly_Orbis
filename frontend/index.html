@@ -516,15 +516,51 @@
         <button type="button" class="panel-toggle-btn" id="btn-toggle-checklist" title="Collapse / Expand Checklist">◀</button>
       </div>
       <div class="protocol-steps-list" id="protocol-steps-list"></div>
+
+      <!-- Docked Rules Panel (Spec 8.4) -->
+      <div class="hud-rules-panel" id="hud-rules-panel" style="border-top:1px solid rgba(255,255,255,0.1); margin-top:12px; padding-top:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h4 style="font-size:var(--text-xs); text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin:0;">Active Safety Rules</h4>
+          <span class="badge badge-ok" id="hud-rules-status-badge" style="font-size:10px;">Compliant</span>
+        </div>
+        <div id="hud-rules-content" style="font-size:var(--text-xs); line-height:1.4; color:var(--text-muted);">
+          <div class="rule-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:8px; border-radius:var(--radius-sm); margin-bottom:6px;">
+            <div style="font-weight:600; color:var(--text); margin-bottom:2px;" id="rule-title">R1: Personal Protective Equipment</div>
+            <div style="font-size:11px; color:var(--accent);" id="rule-status">Requirement: Goggles + Gloves + Coat</div>
+            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;" id="rule-reason">Protects student researcher from chemical splashes and contact dermatitis.</div>
+          </div>
+        </div>
+      </div>
     </aside>
 
-    <!-- Right Panel: Real-Time Event Log (Collapsible, collapsed to last 2 lines by default) -->
+    <!-- Right Panel: Telemetry Readouts & Real-Time Event Log (Collapsible) -->
     <aside class="hud-right-panel collapsed" id="hud-right-panel">
+      <!-- Telemetry Readouts Strip (Spec 8.4 & 14.1) -->
+      <div class="hud-telemetry-section" id="hud-telemetry-section" style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.1);">
+        <div style="font-size:var(--text-xs); font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Live Telemetry &amp; Readouts</div>
+        <div class="telemetry-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
+            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span>Concentration</span>
+              <span class="source-chip badge badge-info" title="Computed by Bateman oral PK differential equation">[Engine]</span>
+            </div>
+            <div id="readout-concentration" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">0.00 mg/L</div>
+          </div>
+          <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
+            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span>Sample / Mass</span>
+              <span class="source-chip badge badge-default" title="Apparatus measurement reading">[Game]</span>
+            </div>
+            <div id="readout-mass" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">0.000 g</div>
+          </div>
+        </div>
+      </div>
+
       <div class="log-header">
         <span>Laboratory Event Log</span>
         <button type="button" class="panel-toggle-btn" id="btn-toggle-log" title="Expand / Collapse Event Log">▲</button>
       </div>
-      <div class="event-log-list" id="event-log-list"></div>
+      <div class="event-log-list" id="event-log-list" role="log" aria-live="polite" aria-atomic="false"></div>
     </aside>
 
     <!-- Bottom Station Navigation Strip & Compact Action Bar -->

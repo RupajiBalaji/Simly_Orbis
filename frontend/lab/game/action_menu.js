@@ -441,15 +441,26 @@ export class ActionMenu {
       btn.textContent = baseLabel;
     }
     btn.dataset.action = item.action;
+    btn.setAttribute('tabindex', '0');
 
     if (!item.enabled) {
       btn.disabled = true;
       btn.dataset.backendDisabled = 'true';
+      btn.dataset.disabledReason = item.disabled_reason || 'Action currently locked by protocol or safety prerequisite.';
       btn.title = item.disabled_reason || 'Action currently locked by protocol or safety prerequisite.';
+      btn.setAttribute('aria-disabled', 'true');
     } else {
+      btn.setAttribute('aria-disabled', 'false');
       btn.title = `Execute ${item.label || item.action} on ${resolvedTarget || 'station'}`;
       btn.onclick = () => this.handleActionClick(item.action, targetId);
     }
+
+    btn.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && item.enabled) {
+        e.preventDefault();
+        this.handleActionClick(item.action, targetId);
+      }
+    });
 
     return btn;
   }

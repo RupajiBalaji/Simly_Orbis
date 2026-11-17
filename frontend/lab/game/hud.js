@@ -215,8 +215,75 @@ export class LabHUD {
       this.renderProtocol(state.experiment.protocol || [], session.protocol_progress || []);
     }
 
+    // Telemetry readouts (Spec 8.4)
+    const concEl = document.getElementById('readout-concentration');
+    if (concEl) {
+      if (session.latest_assay?.concentration_mg_l !== undefined) {
+        concEl.textContent = `${session.latest_assay.concentration_mg_l.toFixed(2)} mg/L`;
+      } else if (session.dose_mg !== undefined) {
+        concEl.textContent = `${session.dose_mg} mg`;
+      } else {
+        concEl.textContent = '0.00 mg/L';
+      }
+    }
+
+    const massEl = document.getElementById('readout-mass');
+    if (massEl) {
+      if (session.weighed_amount_g !== undefined) {
+        massEl.textContent = `${session.weighed_amount_g.toFixed(3)} g`;
+      } else if (session.volume_ml !== undefined) {
+        massEl.textContent = `${session.volume_ml.toFixed(1)} mL`;
+      } else {
+        massEl.textContent = '0.000 g';
+      }
+    }
+
+    // Active Rules Panel (Spec 8.4)
+    this.updateRulesPanel(session);
+
     // Event Log
     this.renderEventLog(session.events || []);
+  }
+
+  updateRulesPanel(session) {
+    const statusBadge = document.getElementById('hud-rules-status-badge');
+    const ruleTitle = document.getElementById('rule-title');
+    const ruleStatus = document.getElementById('rule-status');
+    const ruleReason = document.getElementById('rule-reason');
+
+    const violations = session.violations || [];
+    if (violations.length > 0) {
+      const latest = violations[violations.length - 1];
+      if (statusBadge) {
+        statusBadge.textContent = 'Breached';
+        statusBadge.className = 'badge badge-danger';
+      }
+      if (ruleTitle) ruleTitle.textContent = latest.rule_id ? `Rule ${latest.rule_id}` : 'Safety Rule Violation';
+      if (ruleStatus) ruleStatus.textContent = `Breached: ${latest.message || latest.rule_id}`;
+      if (ruleReason) ruleReason.textContent = latest.explanation || 'Protocol safety rule breached. Algorithmic penalty applied.';
+    } else {
+      const ppe = session.ppe || [];
+      const required = state.experiment?.required_ppe || ['goggles', 'gloves', 'coat'];
+      const missing = required.filter((p) => !ppe.includes(p));
+
+      if (missing.length > 0) {
+        if (statusBadge) {
+          statusBadge.textContent = 'At Risk';
+          statusBadge.className = 'badge badge-warn';
+        }
+        if (ruleTitle) ruleTitle.textContent = 'Rule R1: Mandatory PPE';
+        if (ruleStatus) ruleStatus.textContent = `Missing: ${missing.join(', ')}`;
+        if (ruleReason) ruleReason.textContent = 'Protects student researcher from chemical splashes and contact dermatitis.';
+      } else {
+        if (statusBadge) {
+          statusBadge.textContent = 'Compliant';
+          statusBadge.className = 'badge badge-ok';
+        }
+        if (ruleTitle) ruleTitle.textContent = 'Rules R1-R10: Active Safety Standards';
+        if (ruleStatus) ruleStatus.textContent = 'All laboratory protocol safety requirements satisfied.';
+        if (ruleReason) ruleReason.textContent = 'Zero protocol violations detected. Operating within safe simulation boundaries.';
+      }
+    }
   }
 
   updateSelectedTarget(targetId) {
