@@ -51,7 +51,8 @@ Newest QA Playthrough Run: `qa/out/20261114_111033`
 
 - **Author / Hard Corpora Baselines (Before Fixes):**
   - Dose Lab baseline: **24.2%** (15 / 62)
-  - Space Stage baseline: **89.1%** (41 / 46)
+  - Space Stage baseline: **89.1%** (49 / 55)  
+    *(Note on baseline count reconciliation: The original first-run run evidence in `docs/SPACE_STAGE_REPORT.md` and `docs/STAGE3_REPORT.md` evaluated the 55-phrase space corpus in `backend/tests/data/ask_orbis_phrases_space.json`, yielding 49/55 = 89.09% ~ 89.1%. An earlier draft of this report noted 41/46, an arithmetic transcription error from 89.13%; the authentic first-run corpus size is confirmed as 55 with 49 passed).*
 - **Founder Held-Out Set (`founder_heldout_phrases.json`):**
   - **Status:** `founder set: not provided` (agent never creates or fabricates the founder file)
 - **Agent Seed Held-Out Corpus Evaluation (`scripts/eval_heldout.py`):**
