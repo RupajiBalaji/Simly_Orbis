@@ -162,6 +162,7 @@ async function initOrbisLab() {
   setupSettings();
   setupOnboarding();
   setupHUDControls();
+  setupOfflineDetection();
   checkServerWakeup();
 }
 
@@ -824,15 +825,22 @@ function setupLobby() {
   }
 }
 
-function showSessionError(title, message) {
+function showSessionError(title, message, whatHappened = null, whatToDo = null) {
   const overlay = document.getElementById('session-error-overlay');
   const titleEl = document.getElementById('session-error-title');
   const textEl = document.getElementById('session-error-text');
+  const whatHappenedEl = document.getElementById('error-what-happened');
   const btnBack = document.getElementById('btn-error-back-to-brief');
+  const btnLobby = document.getElementById('btn-error-to-lobby');
   const briefScreen = document.getElementById('screen-brief');
 
-  if (titleEl) titleEl.textContent = title;
-  if (textEl) textEl.textContent = message;
+  if (titleEl) titleEl.textContent = title || '⚠️ Simulation Error';
+  if (whatHappenedEl) {
+    whatHappenedEl.textContent = whatHappened || 'The simulation engine encountered a network timeout or unexpected response.';
+  }
+  if (textEl) {
+    textEl.textContent = message || '';
+  }
 
   if (btnBack) {
     btnBack.onclick = () => {
@@ -841,7 +849,28 @@ function showSessionError(title, message) {
     };
   }
 
+  if (btnLobby) {
+    btnLobby.onclick = () => {
+      if (overlay) overlay.classList.add('hidden');
+      window.location.hash = '#/lobby';
+    };
+  }
+
   if (overlay) overlay.classList.remove('hidden');
+}
+
+function setupOfflineDetection() {
+  const banner = document.getElementById('offline-state-banner');
+  const updateStatus = () => {
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      banner?.classList.remove('hidden');
+    } else {
+      banner?.classList.add('hidden');
+    }
+  };
+  window.addEventListener('online', updateStatus);
+  window.addEventListener('offline', updateStatus);
+  updateStatus();
 }
 
 async function openExperimentBrief(experimentId) {

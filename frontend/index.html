@@ -133,6 +133,19 @@
   </div>
 
 
+  <!-- Offline State Banner (Spec 8.16) -->
+  <aside id="offline-state-banner" class="offline-banner hidden" role="status" style="position:fixed; top:0; left:0; right:0; z-index:99999; background:var(--warn, #F5A524); color:#000; font-weight:700; text-align:center; padding:8px 16px; font-size:var(--text-xs); box-shadow:var(--elevation-2);">
+    ⚠️ Offline – working locally where possible, cloud features paused.
+  </aside>
+
+  <!-- Global Asynchronous Loading State (Spec 8.16) -->
+  <div id="global-loading-spinner" class="view-screen hidden" role="status" aria-live="polite" style="justify-content:center; align-items:center; z-index:999; background:rgba(12,7,29,0.7);">
+    <div class="panel" style="text-align:center; padding:var(--space-5, 24px); max-width:320px;">
+      <div class="loading-spinner" style="border:4px solid rgba(255,255,255,0.1); border-top:4px solid var(--accent, #19C3B1); border-radius:50%; width:44px; height:44px; margin:0 auto var(--space-3, 12px) auto; animation:spin 1s linear infinite;"></div>
+      <div id="loading-spinner-label" style="font-size:var(--text-sm); color:var(--text); font-weight:600;">Loading simulation...</div>
+    </div>
+  </div>
+
   <!-- WebGL Fallback Notification -->
   <div id="webgl-fallback" style="display:none; position:fixed; inset:0; background:#0c071d; z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
     <h2 style="color:#ec4899; font-size:1.8rem; margin-bottom:12px;">WebGL Unavailable</h2>
@@ -429,14 +442,31 @@
     </div>
   </div>
 
-  <!-- Session Error Overlay -->
+  <!-- Error State Card (Spec 8.16) -->
   <div id="session-error-overlay" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:rgba(12,7,29,0.96);">
-    <div class="brief-modal" style="border-color:#ef4444; text-align:center;">
-      <div style="font-size:3rem; margin-bottom:12px;">⚠️</div>
-      <h2 id="session-error-title" style="color:#f87171; font-size:1.6rem; margin-bottom:12px;">Failed to Launch Laboratory</h2>
-      <p id="session-error-text" style="color:#fca5a5; font-family:var(--font-mono); font-size:0.9rem; margin-bottom:24px; word-break:break-word; background:rgba(0,0,0,0.5); padding:14px; border-radius:8px; border:1px solid rgba(239,68,68,0.3);"></p>
-      <div style="display:flex; justify-content:center; gap:12px;">
-        <button type="button" class="btn-primary" id="btn-error-back-to-brief" style="background:linear-gradient(135deg, #ef4444, #9333ea);">Back to Experiment Brief</button>
+    <div class="panel" style="max-width:520px; width:92%; margin:auto; border:1px solid rgba(243,102,100,0.5);">
+      <div class="panel-header" style="border-bottom:1px solid rgba(243,102,100,0.2);">
+        <span class="panel-title" style="color:var(--danger);" id="session-error-title">⚠️ Simulation Error</span>
+      </div>
+      <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-3, 12px);">
+        <div>
+          <strong style="font-size:var(--text-xs); color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">What Happened:</strong>
+          <p id="error-what-happened" style="color:var(--text); font-size:var(--text-sm); margin:4px 0 0 0; line-height:1.4;">
+            The laboratory encountered an unexpected simulation error or network timeout.
+          </p>
+        </div>
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md, 12px);">
+          <strong style="font-size:var(--text-xs); color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">What You Can Do:</strong>
+          <ul id="error-what-to-do" style="margin:4px 0 0 0; padding-left:18px; font-size:var(--text-xs); color:var(--text-muted); line-height:1.5;">
+            <li>Check your network connection and reload the laboratory session.</li>
+            <li>Return to the main lobby and select another experiment.</li>
+          </ul>
+        </div>
+        <p id="session-error-text" class="hidden"></p>
+        <div style="display:flex; justify-content:flex-end; gap:var(--space-2, 8px); margin-top:var(--space-2, 8px);">
+          <button type="button" class="btn btn-secondary" id="btn-error-to-lobby">Return to Lobby</button>
+          <button type="button" class="btn btn-primary" id="btn-error-back-to-brief">Retry Experiment</button>
+        </div>
       </div>
     </div>
   </div>
@@ -668,6 +698,13 @@
               </tr>
             </tbody>
           </table>
+          <div id="leaderboard-empty-state" class="empty-state hidden" style="text-align:center; padding:var(--space-6, 32px) var(--space-4, 16px);">
+            <div style="font-size:2.5rem; margin-bottom:8px;">📊</div>
+            <h3 style="font-size:var(--text-base, 1rem); color:var(--text); margin-bottom:4px;">No runs yet</h3>
+            <p style="font-size:var(--text-xs, 0.75rem); color:var(--text-muted); max-width:320px; margin:auto;">
+              No runs yet -- complete an experiment to post your score!
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -900,6 +937,13 @@
               </tr>
             </tbody>
           </table>
+          <div id="leaderboard-empty-state" class="empty-state hidden" style="text-align:center; padding:var(--space-6, 32px) var(--space-4, 16px);">
+            <div style="font-size:2.5rem; margin-bottom:8px;">📊</div>
+            <h3 style="font-size:var(--text-base, 1rem); color:var(--text); margin-bottom:4px;">No runs yet</h3>
+            <p style="font-size:var(--text-xs, 0.75rem); color:var(--text-muted); max-width:320px; margin:auto;">
+              No runs yet -- complete an experiment to post your score!
+            </p>
+          </div>
         </div>
         <div style="font-size:var(--text-xs); color:var(--text-muted); margin-top:8px;">
           Note: Engine parameters remain labelled "unverified" until certified against peer-reviewed physical benchmarks.
