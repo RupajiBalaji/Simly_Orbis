@@ -17,7 +17,7 @@
 
 | Task ID | Description | Status | Commit | ACCEPT Evidence |
 | :--- | :--- | :---: | :---: | :--- |
-| **P0-T1** | Baseline and GAP report | **DONE** | `8cc6e7e` | `docs/RECHECK_BASELINE.md` and `docs/GAP_REPORT.md` authored auditing all 16 spec sections. Version bumped to `0.4.1-dev` across 5 locations. Spec committed. |
+| **P0-T1** | Baseline and GAP report | **DONE** | `8cc6e7e` | `docs/RECHECK_BASELINE.md` and `docs/GAP_REPORT.md` authored auditing all MUST requirements across spec sections 4 to 17 (of the 20-section MVP specification). Version bumped to `0.4.1-dev` across 5 locations. Spec committed. |
 | **P0-T2** | Branch and CI hygiene | **DONE** | `ad90a50` | `docs/BRANCH_STRATEGY.md` created. CI workflow (`.github/workflows/ci.yml`) updated with bare `pytest backend/tests`, `python scripts/check_claims.py`, `pip-audit`, and `self_audit.py`. `pip-audit==2.10.1` pinned in `requirements-dev.txt`. |
 | **P0-T3** | Provenance & claims re-audit | **DONE** | `819cf0e` | `docs/PROVENANCE_CLAIMS_REAUDIT.md` authored. Audited 32 rows across 5 CSV files: 0 rows derived from engines, 0 invented dates, all `verified_by = "unverified"`, all `retrieved_on` blank. |
 | **P0-T4** | Held-out harness | **DONE** | `ef8b674` | `backend/tests/data/agent_seed_heldout_phrases.json` (16 phrases) created; SHA-256 frozen in `agent_seed_heldout.sha256`. Unit tests (`test_heldout.py`) and evaluation script (`scripts/eval_heldout.py`) reporting with label `"agent-written seed set, not founder-written"`. Note: n=4 per experiment is too small to be meaningful. Founder set: not provided. |
