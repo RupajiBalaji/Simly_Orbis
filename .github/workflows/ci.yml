@@ -12,6 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -33,7 +35,7 @@ jobs:
 
       - name: Run Stage Gates Self-Audit
         run: |
-          python scripts/self_audit.py --skip-venv
+          python scripts/self_audit.py --ci
 
       - name: Dependency Security Audit (pip-audit)
         run: |
@@ -45,6 +47,8 @@ jobs:
     needs: test
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
