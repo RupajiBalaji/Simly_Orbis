@@ -157,6 +157,8 @@ async function initOrbisLab() {
   // 3. Setup Navigation, Router & District Selection
   setupRouter();
   setupLobby();
+  setupSettings();
+  setupOnboarding();
   setupHUDControls();
   checkServerWakeup();
 }
@@ -846,6 +848,239 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
 }
 
 window.startExperimentSession = startExperimentSession;
+
+function setupSettings() {
+  const qualitySelect = document.getElementById('setting-quality-tier');
+  const volumeSlider = document.getElementById('setting-sound-volume');
+  const volumeVal = document.getElementById('setting-volume-val');
+  const muteCheck = document.getElementById('setting-audio-mute');
+  const fontScaleSelect = document.getElementById('setting-font-scale');
+  const highContrastCheck = document.getElementById('setting-high-contrast');
+  const colorblindSelect = document.getElementById('setting-colorblind-mode');
+  const btnReset = document.getElementById('btn-settings-reset');
+
+  // 1. Graphics Quality
+  const savedQuality = localStorage.getItem('orbis_quality_tier') || 'medium';
+  if (qualitySelect) {
+    qualitySelect.value = savedQuality;
+    qualitySelect.onchange = () => {
+      const q = qualitySelect.value;
+      localStorage.setItem('orbis_quality_tier', q);
+      sceneManager.setQuality(q);
+      const hudBtn = document.getElementById('btn-toggle-quality');
+      if (hudBtn) {
+        const labels = { low: '⚡ Quality: Low', medium: '✨ Quality: Med', high: '💎 Quality: High' };
+        hudBtn.textContent = labels[q] || '⚙️ Quality';
+      }
+    };
+  }
+
+  // 2. Audio Volume & Mute
+  const savedVol = parseFloat(localStorage.getItem('orbis_lab_volume') || '0.8');
+  if (volumeSlider) {
+    volumeSlider.value = Math.round(savedVol * 100);
+    if (volumeVal) volumeVal.textContent = `${Math.round(savedVol * 100)}%`;
+    volumeSlider.oninput = () => {
+      const vol = parseFloat(volumeSlider.value) / 100;
+      soundFX.setVolume(vol);
+      if (volumeVal) volumeVal.textContent = `${volumeSlider.value}%`;
+      const hudSlider = document.getElementById('hud-volume-slider');
+      if (hudSlider) hudSlider.value = volumeSlider.value;
+    };
+  }
+
+  const isMuted = localStorage.getItem('orbis_lab_muted') === 'true';
+  if (muteCheck) {
+    muteCheck.checked = isMuted;
+    muteCheck.onchange = () => {
+      soundFX.setMuted(muteCheck.checked);
+      const btnTopMute = document.getElementById('btn-top-mute');
+      if (btnTopMute) btnTopMute.textContent = muteCheck.checked ? '🔇' : '🔊';
+      const hudBtn = document.getElementById('btn-toggle-sound');
+      if (hudBtn) hudBtn.textContent = muteCheck.checked ? '🔇' : '🔊';
+    };
+  }
+
+  // 3. Font Scale
+  function applyFontScale(scale) {
+    document.body.classList.remove('font-scale-normal', 'font-scale-large', 'font-scale-xlarge');
+    if (scale === 'large') document.body.classList.add('font-scale-large');
+    else if (scale === 'xlarge') document.body.classList.add('font-scale-xlarge');
+    else document.body.classList.add('font-scale-normal');
+    localStorage.setItem('orbis_font_scale', scale);
+  }
+
+  const savedScale = localStorage.getItem('orbis_font_scale') || 'normal';
+  applyFontScale(savedScale);
+  if (fontScaleSelect) {
+    fontScaleSelect.value = savedScale;
+    fontScaleSelect.onchange = () => applyFontScale(fontScaleSelect.value);
+  }
+
+  // 4. High Contrast Mode
+  function applyHighContrast(enabled) {
+    if (enabled) {
+      document.body.classList.add('high-contrast');
+    } else {
+      document.body.classList.remove('high-contrast');
+    }
+    localStorage.setItem('orbis_high_contrast', enabled ? 'true' : 'false');
+  }
+
+  const savedHighContrast = localStorage.getItem('orbis_high_contrast') === 'true';
+  applyHighContrast(savedHighContrast);
+  if (highContrastCheck) {
+    highContrastCheck.checked = savedHighContrast;
+    highContrastCheck.onchange = () => applyHighContrast(highContrastCheck.checked);
+  }
+
+  // 5. Colorblind Vision Mode
+  function applyColorblind(mode) {
+    if (mode && mode !== 'off') {
+      document.body.setAttribute('data-colorblind', mode);
+    } else {
+      document.body.removeAttribute('data-colorblind');
+    }
+    localStorage.setItem('orbis_colorblind', mode || 'off');
+  }
+
+  const savedColorblind = localStorage.getItem('orbis_colorblind') || 'off';
+  applyColorblind(savedColorblind);
+  if (colorblindSelect) {
+    colorblindSelect.value = savedColorblind;
+    colorblindSelect.onchange = () => applyColorblind(colorblindSelect.value);
+  }
+
+  // 6. Reset Defaults
+  if (btnReset) {
+    btnReset.onclick = () => {
+      localStorage.removeItem('orbis_quality_tier');
+      localStorage.removeItem('orbis_lab_volume');
+      localStorage.removeItem('orbis_lab_muted');
+      localStorage.removeItem('orbis_font_scale');
+      localStorage.removeItem('orbis_high_contrast');
+      localStorage.removeItem('orbis_colorblind');
+
+      if (qualitySelect) { qualitySelect.value = 'medium'; qualitySelect.dispatchEvent(new Event('change')); }
+      if (volumeSlider) { volumeSlider.value = 80; volumeSlider.dispatchEvent(new Event('input')); }
+      if (muteCheck) { muteCheck.checked = false; muteCheck.dispatchEvent(new Event('change')); }
+      if (fontScaleSelect) { fontScaleSelect.value = 'normal'; fontScaleSelect.dispatchEvent(new Event('change')); }
+      if (highContrastCheck) { highContrastCheck.checked = false; highContrastCheck.dispatchEvent(new Event('change')); }
+      if (colorblindSelect) { colorblindSelect.value = 'off'; colorblindSelect.dispatchEvent(new Event('change')); }
+      toast.showInfo('Settings reset to defaults');
+    };
+  }
+}
+
+function setupOnboarding() {
+  const modal = document.getElementById('modal-onboarding');
+  const btnSkip = document.getElementById('btn-skip-tutorial');
+  const btnPrev = document.getElementById('btn-tutorial-prev');
+  const btnNext = document.getElementById('btn-tutorial-next');
+  const btnReplay = document.getElementById('btn-replay-tutorial');
+  const dots = document.getElementById('tutorial-dots');
+
+  let currentStep = 1;
+  const totalSteps = 3;
+
+  function setStep(step) {
+    currentStep = Math.max(1, Math.min(totalSteps, step));
+    for (let i = 1; i <= totalSteps; i++) {
+      const slide = document.getElementById(`tutorial-slide-${i}`);
+      if (slide) {
+        if (i === currentStep) slide.classList.remove('hidden');
+        else slide.classList.add('hidden');
+      }
+    }
+    if (dots) dots.textContent = `Step ${currentStep} of ${totalSteps}`;
+    if (btnPrev) btnPrev.disabled = (currentStep === 1);
+    if (btnNext) {
+      btnNext.textContent = (currentStep === totalSteps) ? 'Finish ✓' : 'Next ➔';
+    }
+  }
+
+  function openTutorial() {
+    setStep(1);
+    modal?.classList.remove('hidden');
+    btnNext?.focus();
+  }
+
+  function closeTutorial() {
+    modal?.classList.add('hidden');
+    localStorage.setItem('orbis_tutorial_completed', 'true');
+  }
+
+  if (btnNext) {
+    btnNext.onclick = () => {
+      if (currentStep < totalSteps) {
+        setStep(currentStep + 1);
+      } else {
+        closeTutorial();
+      }
+    };
+  }
+
+  if (btnPrev) {
+    btnPrev.onclick = () => {
+      if (currentStep > 1) {
+        setStep(currentStep - 1);
+      }
+    };
+  }
+
+  if (btnSkip) btnSkip.onclick = () => closeTutorial();
+  if (btnReplay) btnReplay.onclick = () => openTutorial();
+
+  // Keyboard navigation & Focus Trapping inside modal
+  if (modal) {
+    modal.addEventListener('keydown', (e) => {
+      if (modal.classList.contains('hidden')) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeTutorial();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        if (document.activeElement === btnSkip) {
+          e.preventDefault();
+          closeTutorial();
+        } else if (document.activeElement === btnPrev) {
+          e.preventDefault();
+          if (currentStep > 1) setStep(currentStep - 1);
+        } else {
+          e.preventDefault();
+          if (currentStep < totalSteps) setStep(currentStep + 1);
+          else closeTutorial();
+        }
+      } else if (e.key === 'Tab') {
+        const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length > 0) {
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // Trigger on first visit if not completed
+  const completed = localStorage.getItem('orbis_tutorial_completed');
+  const urlParams = new URLSearchParams(window.location.search);
+  if (!completed && !urlParams.get('snap') && window.location.hash !== '#/settings') {
+    setTimeout(() => {
+      openTutorial();
+    }, 800);
+  }
+}
 
 function setupHUDControls() {
   // Toggle Name Tags Button

@@ -637,13 +637,14 @@
   <!-- ═════════════════════════════════════════════════════════════════════
        SCREEN: SETTINGS SCREEN (#/settings)
        ═════════════════════════════════════════════════════════════════════ -->
-  <div id="screen-settings" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:var(--bg);">
-    <div class="panel" style="max-width:640px; width:92%; margin:auto;">
+  <div id="screen-settings" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:var(--bg); overflow-y:auto; padding:var(--space-5) 0;">
+    <div class="panel" style="max-width:680px; width:92%; margin:auto;">
       <div class="panel-header">
         <span class="panel-title">⚙️ Laboratory Settings</span>
         <a href="#/lobby" class="btn btn-secondary" style="min-height:36px; padding:4px 12px;">← Back to Lobby</a>
       </div>
       <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-4);">
+        <!-- Graphics Tier -->
         <div class="slider-group">
           <label class="slider-label" for="setting-quality-tier">Graphics Quality Tier (Section 7.7)</label>
           <select id="setting-quality-tier" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
@@ -653,28 +654,107 @@
           </select>
         </div>
 
+        <!-- Audio Settings -->
         <div class="slider-group">
-          <label class="slider-label" for="setting-sound-volume">Procedural Audio Volume</label>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label class="slider-label" for="setting-sound-volume" style="margin:0;">Procedural Audio Volume</label>
+            <label style="font-size:var(--text-xs); color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="setting-audio-mute"> Mute All Sound
+            </label>
+          </div>
           <div class="slider-controls">
             <input type="range" class="slider-input" id="setting-sound-volume" min="0" max="100" value="80" aria-label="Audio Volume">
             <span class="slider-unit" id="setting-volume-val">80%</span>
           </div>
         </div>
 
+        <!-- Font Scale -->
         <div class="slider-group">
-          <label class="slider-label" for="setting-font-scale">Text Font Scale (WCAG 2.1 AA 100%–150%)</label>
-          <div class="slider-controls">
-            <input type="range" class="slider-input" id="setting-font-scale" min="100" max="150" step="10" value="100" aria-label="Font scale">
-            <span class="slider-unit" id="setting-font-scale-val">100%</span>
+          <label class="slider-label" for="setting-font-scale">Text Font Scale (WCAG 2.1 AA 100%–140%)</label>
+          <select id="setting-font-scale" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
+            <option value="normal" selected>Normal (100%)</option>
+            <option value="large">Large (+20% / 120%)</option>
+            <option value="xlarge">Extra-Large (+40% / 140%)</option>
+          </select>
+        </div>
+
+        <!-- High-Contrast Toggle -->
+        <div class="slider-group">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <label for="setting-high-contrast" style="font-weight:600; color:var(--text); cursor:pointer;">High Contrast Mode</label>
+              <div style="font-size:var(--text-xs); color:var(--text-muted);">Enforce pure black background and elevated contrast ratios (7:1+)</div>
+            </div>
+            <input type="checkbox" id="setting-high-contrast" style="transform:scale(1.2); cursor:pointer;">
           </div>
         </div>
 
-        <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:var(--space-3); display:flex; justify-content:space-between; align-items:center;">
+        <!-- Colorblind Mode -->
+        <div class="slider-group">
+          <label class="slider-label" for="setting-colorblind-mode">Colorblind Vision Simulation</label>
+          <select id="setting-colorblind-mode" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
+            <option value="off" selected>Off (Default Colors)</option>
+            <option value="protanopia">Protanopia (Red-Blind)</option>
+            <option value="deuteranopia">Deuteranopia (Green-Blind)</option>
+            <option value="tritanopia">Tritanopia (Blue-Blind)</option>
+          </select>
+        </div>
+
+        <!-- Tutorial Replay & Defaults -->
+        <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:var(--space-3); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
             <div style="font-weight:600; color:var(--text);">First-Run Onboarding Tutorial</div>
             <div style="font-size:var(--text-xs); color:var(--text-muted);">Replay the 90-second keyboard and camera walkthrough</div>
           </div>
-          <button type="button" class="btn btn-secondary" id="btn-replay-tutorial">Replay</button>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-secondary" id="btn-replay-tutorial">Replay Tutorial</button>
+            <button type="button" class="btn btn-secondary" id="btn-settings-reset" style="color:var(--danger);">Reset Defaults</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       MODAL: FIRST-RUN ONBOARDING TUTORIAL (90-sec Walkthrough)
+       ═════════════════════════════════════════════════════════════════════ -->
+  <div id="modal-onboarding" class="view-screen hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-step-title" style="justify-content:center; align-items:center; z-index:900; background:rgba(12,7,29,0.94);">
+    <div class="panel" id="onboarding-panel" style="max-width:540px; width:92%; margin:auto;">
+      <div class="panel-header">
+        <span class="panel-title" id="tutorial-step-title">🎮 Laboratory Controls Walkthrough</span>
+        <button type="button" class="btn btn-secondary" id="btn-skip-tutorial" style="padding:4px 8px;" aria-label="Skip Tutorial">Skip ✕</button>
+      </div>
+      <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-4);">
+        <div id="tutorial-slide-1" class="tutorial-slide">
+          <div style="font-size:2.4rem; text-align:center; margin-bottom:8px;">🚶</div>
+          <h3 style="text-align:center; margin-bottom:8px;">Step 1: Avatar Movement</h3>
+          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;">
+            Use <kbd class="command-kbd">W</kbd> <kbd class="command-kbd">A</kbd> <kbd class="command-kbd">S</kbd> <kbd class="command-kbd">D</kbd> or the Arrow Keys to walk around the laboratory. Press <kbd class="command-kbd">Shift</kbd> to sprint.
+          </p>
+        </div>
+
+        <div id="tutorial-slide-2" class="tutorial-slide hidden">
+          <div style="font-size:2.4rem; text-align:center; margin-bottom:8px;">🎥</div>
+          <h3 style="text-align:center; margin-bottom:8px;">Step 2: Camera &amp; Views</h3>
+          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;">
+            Hold right-click and drag to rotate the camera. Press <kbd class="command-kbd">C</kbd> to toggle Follow/Free camera, <kbd class="command-kbd">V</kbd> for 1st-person, and <kbd class="command-kbd">R</kbd> to re-center.
+          </p>
+        </div>
+
+        <div id="tutorial-slide-3" class="tutorial-slide hidden">
+          <div style="font-size:2.4rem; text-align:center; margin-bottom:8px;">🔬</div>
+          <h3 style="text-align:center; margin-bottom:8px;">Step 3: Station Interaction</h3>
+          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;">
+            Walk up to an apparatus and press <kbd class="command-kbd">E</kbd> or click the action dock below. Press <kbd class="command-kbd">Space</kbd> or <kbd class="command-kbd">Enter</kbd> to execute operations.
+          </p>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:var(--space-3); margin-top:var(--space-2);">
+          <div id="tutorial-dots" style="font-size:var(--text-xs); color:var(--text-muted); font-weight:600;">Step 1 of 3</div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-secondary" id="btn-tutorial-prev" disabled>Back</button>
+            <button type="button" class="btn btn-primary" id="btn-tutorial-next">Next ➔</button>
+          </div>
         </div>
       </div>
     </div>

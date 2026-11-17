@@ -112,3 +112,46 @@
   --elevation-2: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
   --elevation-3: 0 10px 15px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -2px rgba(15, 23, 42, 0.08);
 }
+
+/* =========================================================================
+   High Contrast & Accessibility Modes (Section 7.5, 8.13, P1-T5)
+   ========================================================================= */
+body.high-contrast {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface-2: #141414;
+  --text: #ffffff;
+  --text-muted: #e2e8f0;
+  --accent: #00ffff;
+  --accent-chem: #ffb700;
+  --accent-space: #bf94ff;
+  --ok: #00ff66;
+  --warn: #ffaa00;
+  --danger: #ff4d4d;
+  --info: #38bdf8;
+  --focus-ring: 0 0 0 3px #ffff00;
+}
+
+body.font-scale-normal {
+  font-size: 16px;
+}
+
+body.font-scale-large {
+  font-size: 19.2px; /* +20% */
+}
+
+body.font-scale-xlarge {
+  font-size: 22.4px; /* +40% */
+}
+
+body[data-colorblind="protanopia"] {
+  filter: contrast(1.1) saturate(0.85);
+}
+
+body[data-colorblind="deuteranopia"] {
+  filter: contrast(1.15) hue-rotate(5deg);
+}
+
+body[data-colorblind="tritanopia"] {
+  filter: contrast(1.1) hue-rotate(15deg);
+}
