@@ -13,7 +13,7 @@ Simly Orbis is an interactive 3D science laboratory simulation platform where ac
 
 ## 🔍 Honest Status & Credibility Baseline
 
-- **Current Version:** `v0.4.0-dev` (educational simulation prototype; see [CHANGELOG.md](CHANGELOG.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)).
+- **Current Version:** `v0.5.0-dev` (educational simulation prototype; see [CHANGELOG.md](CHANGELOG.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)).
 - **What is Simulated:**
   - **Pharmacokinetics Ward (`pk_ward`)**: 1-compartment open oral pharmacokinetic model (Bateman absorption, distribution, and first-order elimination). Evaluates tare/weighing, dissolution, dosing, timed blood sampling, and plasma centrifuge assay.
   - **Titration Bench (`titration_bench`)**: Monoprotic strong/weak acid-base neutralization solved via rigorous aqueous charge-balance electroneutrality with water auto-ionization; continuous indicator color transitions (phenolphthalein / methyl orange).

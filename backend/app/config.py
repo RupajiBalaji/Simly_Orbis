@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     allowed_origins: str = "*"
     trust_proxy: bool = False
     git_sha: str = ""
-    app_version: str = "0.4.1-dev"
+    app_version: str = "0.5.0-dev"
     environment: str = "development"
 
     model_config = SettingsConfigDict(

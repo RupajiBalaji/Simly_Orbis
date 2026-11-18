@@ -39,7 +39,7 @@ def test_audit_check_version():
     res = check_version(REPO_ROOT)
     assert res.gate_id == 2
     assert res.passed is True
-    assert "0.4.1-dev" in res.evidence
+    assert "0.5.0-dev" in res.evidence
 
 
 def test_audit_check_validation_rows():

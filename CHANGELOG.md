@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.5.0-dev] - 2026-11-18
+
+### Added
+- **Phase P1 Core UI Platform & Extra Gate**:
+  - CSS design tokens (`tokens.css`), high-contrast dark theme (7:1+), accessible typography with discrete self-hosted font weights (Inter 400/500/700, JetBrains Mono 400/700; no synthetic bold).
+  - Accessible component library: action wheel, HUD panels, live-region audit log, toasts, and provenance popovers.
+  - Spec 8.3 Briefing and Report screens with print stylesheet (`@media print`), Start vs Practice modes, and experiment-specific safety rules (R1-R10, S1-S8, D1-D8).
+  - Multi-viewport accessibility baseline with 0 critical / 0 serious Axe violations across 1366x768, 768x1024, and 390x844 viewports.
+  - Comprehensive i18n scaffolding with `lint_i18n.py` enforcement guaranteeing zero untranslated UI literals across lobby, HUD, briefing, report, settings, and state screens.
+
 ## [0.4.0-dev] - 2026-11-14
 
 ### Added

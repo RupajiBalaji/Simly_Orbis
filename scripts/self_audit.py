@@ -594,11 +594,11 @@ def build_audit_report(results: list[GateResult], repo_root: Path) -> str:
             details_sections.append(f"### Gate {r.gate_id}: {r.name}\n\n{r.details}\n")
 
     version_res = [r for r in results if r.gate_id == 2]
-    ver_str = version_res[0].evidence if version_res else "0.4.1-dev"
+    ver_str = version_res[0].evidence.split("`")[1] if version_res and "`" in version_res[0].evidence else "0.5.0-dev"
     report = f"""# Simly Orbis Stage Gate Self-Audit Report
 
 **Status:** {status_str}  
-**Platform Version:** 0.4.1-dev  
+**Platform Version:** {ver_str}  
 **Single Source of Truth:** Backend Simulators  
 **Governance Standard:** Educational Simulation &bull; Not Medical Advice &bull; Not Clinical Evidence  
 
