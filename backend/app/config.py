@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     git_sha: str = ""
     app_version: str = "0.5.0-dev"
     environment: str = "development"
+    spec_runtime: bool = False
 
     model_config = SettingsConfigDict(
         env_file=("backend/.env", ".env"),

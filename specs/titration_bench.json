@@ -1,0 +1,304 @@
+{
+  "id": "titration_bench",
+  "version": "1.0.0",
+  "district": "chemistry",
+  "title": "Acid-Base Titration Bench",
+  "learning_goals": [
+    "Maintain strict chemical lab PPE compliance (goggles, gloves, lab coat).",
+    "Rinse and condition the burette with titrant before volumetric filling.",
+    "Accurately pipette standardized acid analyte into the reaction vessel.",
+    "Select and add the appropriate chemical indicator for stoichiometric detection.",
+    "Perform dropwise titration with continuous swirling to avoid volumetric overshoot.",
+    "Distinguish between indicator color transitions and exact potentiometric pH readings.",
+    "Dispose of neutralized and concentrated chemicals into designated chemical waste."
+  ],
+  "difficulty": "intermediate",
+  "est_minutes": 20,
+  "engine": {
+    "id": "chem.titration",
+    "minimum_version": "0.1.0",
+    "parameter_bounds": {
+      "analyte_vol_ml": {"min": 10.0, "max": 100.0, "unit": "mL", "default": 25.0},
+      "titrant_vol_ml": {"min": 0.0, "max": 50.0, "unit": "mL", "default": 25.0},
+      "analyte_molarity": {"min": 0.01, "max": 1.0, "unit": "M", "default": 0.1},
+      "titrant_molarity": {"min": 0.01, "max": 1.0, "unit": "M", "default": 0.1},
+      "temperature_c": {"min": 15.0, "max": 35.0, "unit": "C", "default": 25.0}
+    }
+  },
+  "equipment": [
+    "burette",
+    "conical_flask",
+    "pipette",
+    "indicator_bottles",
+    "ph_meter",
+    "acid_bottle_hcl",
+    "acid_bottle_acetic",
+    "naoh_bottle",
+    "wash_bottle",
+    "chemical_waste_bin",
+    "sink"
+  ],
+  "steps": [
+    {
+      "id": "wear_ppe",
+      "title": "Wear Personal Protective Equipment (PPE)",
+      "allowed_actions": ["wear_ppe"],
+      "preconditions": [],
+      "effects": ["ppe_worn"]
+    },
+    {
+      "id": "rinse_burette",
+      "title": "Rinse & Condition Burette",
+      "allowed_actions": ["rinse_burette"],
+      "preconditions": [],
+      "effects": ["burette_rinsed"]
+    },
+    {
+      "id": "fill_burette",
+      "title": "Fill Burette with Titrant",
+      "allowed_actions": ["fill_burette"],
+      "preconditions": [],
+      "effects": ["burette_filled"]
+    },
+    {
+      "id": "pipette_analyte",
+      "title": "Pipette Acid Analyte into Flask",
+      "allowed_actions": ["pipette_analyte"],
+      "preconditions": [],
+      "effects": ["analyte_pipetted"]
+    },
+    {
+      "id": "add_indicator",
+      "title": "Add Chemical Indicator Drops",
+      "allowed_actions": ["add_indicator"],
+      "preconditions": [],
+      "effects": ["indicator_added"]
+    },
+    {
+      "id": "titrate",
+      "title": "Titrate Towards Equivalence Point",
+      "allowed_actions": ["titrate"],
+      "preconditions": [],
+      "effects": ["titration_performed"]
+    },
+    {
+      "id": "swirl",
+      "title": "Swirl Conical Flask",
+      "allowed_actions": ["swirl"],
+      "preconditions": [],
+      "effects": ["swirled"]
+    },
+    {
+      "id": "record_endpoint",
+      "title": "Record Equivalence Endpoint",
+      "allowed_actions": ["record_endpoint"],
+      "preconditions": [],
+      "effects": ["endpoint_recorded"]
+    },
+    {
+      "id": "dispose_waste",
+      "title": "Dispose Chemical Waste",
+      "allowed_actions": ["dispose_waste"],
+      "preconditions": [],
+      "effects": ["waste_disposed"]
+    },
+    {
+      "id": "wash_hands",
+      "title": "Wash Hands at Sink",
+      "allowed_actions": ["wash_hands"],
+      "preconditions": [],
+      "effects": ["hands_washed"]
+    },
+    {
+      "id": "submit_report",
+      "title": "Submit Titration Lab Report",
+      "allowed_actions": ["submit_report"],
+      "preconditions": [],
+      "effects": ["report_submitted"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "R1",
+      "text": "Protective safety goggles must be equipped before handling active chemicals.",
+      "severity": "penalty",
+      "condition": "ppe_goggles_worn"
+    },
+    {
+      "id": "R2",
+      "text": "Chemical-resistant gloves must be worn before manipulating hazardous reagents.",
+      "severity": "penalty",
+      "condition": "ppe_gloves_worn"
+    },
+    {
+      "id": "R3",
+      "text": "Buttoned laboratory coat required before beginning experiments in active lab zones.",
+      "severity": "penalty",
+      "condition": "ppe_coat_worn"
+    },
+    {
+      "id": "R4",
+      "text": "Analytical digital balance must be tared to zero with container in place prior to weighing samples.",
+      "severity": "penalty",
+      "condition": "balance_tared"
+    },
+    {
+      "id": "R5",
+      "text": "All beakers, vials, and solutions must be explicitly labeled with contents and concentration.",
+      "severity": "penalty",
+      "condition": "solutions_labeled"
+    },
+    {
+      "id": "R6",
+      "text": "Always add acid to water slowly; never pour water directly into concentrated reagents.",
+      "severity": "block",
+      "condition": "safe_acid_sequence"
+    },
+    {
+      "id": "R7",
+      "text": "Rinse burette with titrant and never exceed graduated volumetric capacity.",
+      "severity": "penalty",
+      "condition": "burette_conditioned"
+    },
+    {
+      "id": "R8",
+      "text": "Administered medication dose must not exceed safe therapeutic threshold.",
+      "severity": "fail",
+      "condition": "safe_dose"
+    },
+    {
+      "id": "R9",
+      "text": "Chemical, biological, and sharps waste must be disposed into designated segregated waste receptacles.",
+      "severity": "penalty",
+      "condition": "segregated_waste"
+    },
+    {
+      "id": "R10",
+      "text": "Decontaminate hands and remove PPE in proper aseptic sequence before exiting laboratory.",
+      "severity": "penalty",
+      "condition": "aseptic_handwash"
+    }
+  ],
+  "scoring": {
+    "weights": {
+      "safety": 40,
+      "accuracy": 30,
+      "technique": 20,
+      "protocol": 10
+    },
+    "grade_thresholds": {
+      "A": 90,
+      "B": 80,
+      "C": 70,
+      "D": 60
+    }
+  },
+  "visual_directive_mapping": {
+    "endpoint": {
+      "type": "liquid",
+      "hex": "#f472b6",
+      "target": "conical_flask"
+    },
+    "splash": {
+      "type": "effect",
+      "name": "splash",
+      "target": "sink"
+    }
+  },
+  "mentor": {
+    "hints_per_step": {
+      "wear_ppe": ["Put on all required safety gear: goggles, gloves, and lab coat."],
+      "rinse_burette": ["Condition the burette by rinsing with a small portion (5 mL) of NaOH titrant."],
+      "fill_burette": ["Fill the burette with 0.1 M NaOH up to 50 mL."],
+      "pipette_analyte": ["Pipette 25 mL of acid analyte into the conical flask."],
+      "add_indicator": ["Add 2-3 drops of chemical indicator to the flask."],
+      "titrate": ["Carefully dispense NaOH titrant into the flask."],
+      "swirl": ["Swirl the conical flask to ensure complete chemical mixing."],
+      "record_endpoint": ["Observe persistent color change and record final endpoint volume."],
+      "dispose_waste": ["Dispose of chemical contents into designated chemical waste bin."],
+      "wash_hands": ["Remove PPE and wash hands thoroughly at the sink."],
+      "submit_report": ["Submit the completed acid-base titration laboratory report."]
+    },
+    "common_mistakes": [
+      {
+        "id": "titrate_without_indicator",
+        "trigger": "titrate_no_indicator",
+        "remedy": "Always add indicator to the flask before titrating to observe the equivalence endpoint."
+      },
+      {
+        "id": "unconditioned_burette",
+        "trigger": "fill_without_rinse",
+        "remedy": "Rinse the burette with a portion of titrant to avoid dilution errors."
+      }
+    ]
+  },
+  "ask_orbis": {
+    "allowed_actions": [
+      "wear_ppe",
+      "remove_ppe",
+      "rinse_burette",
+      "fill_burette",
+      "pipette_analyte",
+      "add_indicator",
+      "titrate",
+      "swirl",
+      "read_ph_meter",
+      "record_endpoint",
+      "pour",
+      "dispose_waste",
+      "wash_hands",
+      "submit_report"
+    ],
+    "synonyms": {
+      "wear_ppe": ["put on ppe", "equip safety gear", "don goggles and gloves"],
+      "rinse_burette": ["rinse burette", "condition burette", "wash burette with naoh"],
+      "fill_burette": ["fill burette", "add naoh to burette", "top up burette"],
+      "pipette_analyte": ["pipette acid", "transfer hcl", "pipette 25ml analyte"],
+      "add_indicator": ["add indicator", "add phenolphthalein", "drop indicator"],
+      "titrate": ["add titrant", "dispense naoh", "titrate solution", "turn stopcock"],
+      "swirl": ["swirl flask", "mix solution", "stir flask"],
+      "record_endpoint": ["record endpoint", "note equivalence point", "log volume"],
+      "dispose_waste": ["dump waste", "dispose chemicals", "empty flask into chemical waste"],
+      "wash_hands": ["clean hands", "wash up at sink", "soap hands"],
+      "submit_report": ["finish lab", "submit titration report", "end experiment"]
+    }
+  },
+  "model_card": "docs/model_cards/chem.titration.md",
+  "provenance": {
+    "author": "Antigravity Chemistry Team",
+    "model_card": "docs/model_cards/chem.titration.md",
+    "constants": {
+      "water_pkw": {
+        "value": 14.0,
+        "unit": "dimensionless",
+        "source": "CRC Handbook of Chemistry and Physics, 97th ed.",
+        "citation": "Table 5-11, Ionization Constant of Normal Water",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      },
+      "acetic_acid_pka": {
+        "value": 4.76,
+        "unit": "dimensionless",
+        "source": "CRC Handbook of Chemistry and Physics, 97th ed.",
+        "citation": "Table 5-8, Dissociation Constants of Organic Acids",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      }
+    },
+    "notes": "Standard analytical laboratory acid-base neutralization protocol."
+  },
+  "i18n_keys": {
+    "title": "experiments.titration.title",
+    "steps.wear_ppe.title": "experiments.titration.steps.wear_ppe.title",
+    "steps.rinse_burette.title": "experiments.titration.steps.rinse_burette.title",
+    "steps.fill_burette.title": "experiments.titration.steps.fill_burette.title",
+    "steps.pipette_analyte.title": "experiments.titration.steps.pipette_analyte.title",
+    "steps.add_indicator.title": "experiments.titration.steps.add_indicator.title",
+    "steps.titrate.title": "experiments.titration.steps.titrate.title",
+    "steps.swirl.title": "experiments.titration.steps.swirl.title",
+    "steps.record_endpoint.title": "experiments.titration.steps.record_endpoint.title",
+    "steps.dispose_waste.title": "experiments.titration.steps.dispose_waste.title",
+    "steps.wash_hands.title": "experiments.titration.steps.wash_hands.title",
+    "steps.submit_report.title": "experiments.titration.steps.submit_report.title"
+  }
+}
