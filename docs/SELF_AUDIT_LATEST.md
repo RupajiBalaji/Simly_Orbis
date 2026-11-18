@@ -1,7 +1,7 @@
 # Simly Orbis Stage Gate Self-Audit Report
 
 **Status:** PASS  
-**Platform Version:** 0.4.1-dev  
+**Platform Version:** 0.5.0-dev  
 **Single Source of Truth:** Backend Simulators  
 **Governance Standard:** Educational Simulation &bull; Not Medical Advice &bull; Not Clinical Evidence  
 
@@ -11,16 +11,16 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 41, HEAD: fc2eb164 |
-| 2 | App Version | **PASS** | Version `0.4.1-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite | **PASS** | [fresh venv] `==================== 465 passed, 16241 warnings in 24.26s =====================` |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 57, HEAD: baeb307a |
+| 2 | App Version | **PASS** | Version `0.5.0-dev` declared in `backend/app/config.py` |
+| 3 | Pytest Test Suite | **PASS** | [fresh venv] `=============== 582 passed, 19162 warnings in 92.59s (0:01:32) ================` |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
 | 5 | Frozen Tolerances Guard | **PASS** | 3/3 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 4 engines + R1-R10/S1-S8 rules. Violations: 0 |
 | 7 | CI Workflow Configuration | **PASS** | `.github/workflows/ci.yml` invokes bare `pytest backend/tests`. |
-| 8 | QA Playthrough Proof | **PASS** | Folder: `20261114_111033` | Media count: 55 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
+| 8 | QA Playthrough Proof | **PASS** | Folder: `20261118_085910` (fresh (post-frontend commit)) | Media count: 62 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
 | 9 | First-Run Parser Baselines & Held-Out Status | **PASS** | Recorded rates & held-out status: Dose Lab baseline: 24.2% (15/62); Space Stage baseline: 89.1%; founder set: not provided; agent-written seed set, not founder-written (n=4/exp too small to be meaningful) |
-| 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 9 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
+| 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 10 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
 | 11 | Gitignore Coverage | **PASS** | Coverage confirmed: qa/out (True), __pycache__ (True) |
 
 ---
@@ -29,25 +29,25 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `fc2eb164` | Clean: True (expected audit files: True) | Ahead: 41
+HEAD: `baeb307a` | Clean: False (expected audit files: True) | Ahead: 57
 
 **Last 15 Commits:**
 ```
-fc2eb16 docs(p1): Phase P1 report and self-audit
-d5dca9a test(p1): P1 extra gate multi-viewport screenshots, axe audit, and keyboard navigation
-001c412 feat(p1): provenance popovers and reality check integration
-3881cd4 feat(p1): experiment briefings, report screens, and print stylesheet
-37e8e45 feat(p1): loading, empty, error, offline, and WebGL fallback states
-0b67319 test(p1): accessibility baseline, axe-core check, and focus trapping
-613e7c5 feat(p1): i18n localization scaffolding, dictionary, and lint script
-0586da8 feat(p1): phone-playable touch layout and responsive bottom sheet
-1de60c8 feat(p1): accessible HUD refactor, source chips, and actions panel
-bb3a2ee feat(p1): keyboard onboarding tutorial and persistent settings
-7d76b6b feat(p1): lobby district tiles, waking state, and market modal
-01e77b0 feat(p1): app shell, client router, route views, and 404 page
-03daf30 feat(p1): shared component library, showcase page, and DOM tests
-b7b09c0 feat(p1): design tokens, typography, and contrast verification script
-70a3c9e docs(p0): recheck table verifying P0 tasks and F1-F5 fixes
+baeb307 feat(spec): experiment authoring form and validation UI
+8a015a2 docs(spec): author experiment specification guide and worked example
+bbdad8b feat(spec): spec-driven mentor hints and ask orbis vocabulary
+84ff27b feat(spec): migrate PK Ward, Launch Bench, and Dose Response Lab to declarative specs
+ef18cf4 feat(spec): migrate Titration Bench to declarative spec with golden-equivalence tests
+9480cc1 feat(spec): experiment specification schema, loader, validator, and CLI
+770cb62 docs(p1): record newest QA run 20261118_081803 in RECHECK_P1
+712648f docs(p1): P1 recheck report with verification evidence
+a041a00 test(p1): QA full run for 4 experiments and frontend freshness self-audit check
+f625617 test(p1): touch e2e test at 390x844 with mobile interactions
+778a313 chore: bump version to 0.5.0-dev
+329012b fix(p1): complete font weights without synthetic bold
+70d7cd8 fix(p1): comprehensive i18n coverage and template lint enforcement
+67e52da fix(p1): experiment-specific briefing rules in plain language
+fc6b442 fix(p1): align lobby scope, remove biology card and spanish locale, add practice buttons
 ```
 
 ### Gate 3: Pytest Test Suite
@@ -56,7 +56,7 @@ Exit code: 0
 
 Command: `E:\Simly Orbis\fresh\Scripts\pytest.exe backend/tests`
 
-Final line: `==================== 465 passed, 16241 warnings in 24.26s =====================`
+Final line: `=============== 582 passed, 19162 warnings in 92.59s (0:01:32) ================`
 
 ### Gate 4: Validation Row Governance
 

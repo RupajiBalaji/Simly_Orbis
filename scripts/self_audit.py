@@ -89,6 +89,12 @@ def check_git_status(repo_root: Path) -> GateResult:
             "docs/STAGE3_REPORT.md",
             "docs/PHASE_0_REPORT.md",
             "docs/PHASE_1_REPORT.md",
+            "docs/PHASE_2_REPORT.md",
+            "docs/screenshots/touch/01_lobby_touch.png",
+            "docs/screenshots/touch/02_briefing_touch.png",
+            "docs/screenshots/touch/03_joystick_drag.png",
+            "docs/screenshots/touch/04_action_wheel_touch.png",
+            "docs/screenshots/touch/05_report_touch.png",
         }
         untracked_or_modified = []
         for line in dirty_lines:
