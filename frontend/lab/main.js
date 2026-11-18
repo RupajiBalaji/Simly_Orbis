@@ -525,9 +525,25 @@ function setupLobby() {
       const nicknameInput = document.getElementById('brief-nickname-input');
       const nickname = nicknameInput?.value.trim() || 'Researcher';
       localStorage.setItem('orbis_nickname', nickname);
+      localStorage.setItem('orbis_mode', 'guided');
+      localStorage.setItem('orbis_practice', 'false');
       const curProfileName = document.getElementById('user-profile-name');
       if (curProfileName) curProfileName.textContent = nickname;
       window.location.hash = `#/lab?exp=${currentSelectedExperimentId}`;
+    };
+  }
+
+  const btnPracticeExp = document.getElementById('btn-practice-experiment');
+  if (btnPracticeExp) {
+    btnPracticeExp.onclick = async () => {
+      const nicknameInput = document.getElementById('brief-nickname-input');
+      const nickname = nicknameInput?.value.trim() || 'Researcher';
+      localStorage.setItem('orbis_nickname', nickname);
+      localStorage.setItem('orbis_mode', 'free');
+      localStorage.setItem('orbis_practice', 'true');
+      const curProfileName = document.getElementById('user-profile-name');
+      if (curProfileName) curProfileName.textContent = nickname;
+      window.location.hash = `#/lab?exp=${currentSelectedExperimentId}&practice=1`;
     };
   }
 

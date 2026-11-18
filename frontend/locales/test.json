@@ -1,0 +1,38 @@
+{
+  "common": {
+    "app_title": "ORBIS LAB [TEST]",
+    "subtitle": "A simulated test environment",
+    "disclaimer": "Educational test simulation.",
+    "back_to_lobby": "← Back to Test Lobby",
+    "close": "Close Test",
+    "skip": "Skip Test",
+    "next": "Next Test ➔",
+    "back": "Back Test",
+    "finish": "Finish Test ✓",
+    "retry": "Retry Test",
+    "help": "Help Test",
+    "settings": "Settings Test",
+    "loading": "Loading Test...",
+    "offline": "Offline Test"
+  },
+  "nav": {
+    "lobby": "Test Lobby",
+    "leaderboard": "Test Leaderboard",
+    "settings": "Test Settings",
+    "model_cards": "Test Model Cards",
+    "reality_check": "Test Reality Check",
+    "classic_2d": "Test 2D Play"
+  },
+  "lobby": {
+    "select_district": "Select Test District",
+    "hero_desc": "Test locale for automated multi-lingual verification.",
+    "guided_mode": "🎯 Test Guided",
+    "free_mode": "⚡ Test Practice",
+    "unlocked_badge": "● Test Unlocked",
+    "locked_badge": "🔒 Test Locked",
+    "why_locked": "Why Locked? [Test]",
+    "not_started": "Not Started [Test]",
+    "in_progress": "In Progress [Test]",
+    "completed": "Completed [Test]"
+  }
+}

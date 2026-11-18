@@ -198,11 +198,7 @@
         <h2 data-i18n="lobby.select_district">Select Simulation District</h2>
         <p data-i18n="lobby.hero_desc">Choose an interactive district to conduct stateful laboratory experiments, test scientific hypotheses, and receive algorithmic feedback.</p>
         <div class="lobby-controls" style="display:flex; justify-content:center; align-items:center; gap:16px; margin-top:16px; flex-wrap:wrap;">
-          <div class="mode-toggle-group" style="display:inline-flex; background:rgba(255,255,255,0.06); padding:4px; border-radius:var(--radius-md); border:1px solid rgba(255,255,255,0.12);">
-            <button type="button" id="btn-mode-guided" class="btn btn-secondary active" data-i18n="lobby.guided_mode" style="min-height:32px; padding:4px 12px; font-size:var(--text-xs); border:1px solid var(--accent);" aria-pressed="true">🎯 Guided (Exam)</button>
-            <button type="button" id="btn-mode-free" class="btn btn-secondary" data-i18n="lobby.free_mode" style="min-height:32px; padding:4px 12px; font-size:var(--text-xs);" aria-pressed="false">⚡ Free Play</button>
-          </div>
-          <span id="mode-desc" style="font-size:var(--text-xs); color:var(--text-muted);">Guided Mode: Strict protocol compliance, safety rules, and algorithmic scorecards enabled.</span>
+          <span style="font-size:var(--text-xs); color:var(--text-muted);">Choose a district below, then select <strong>Start (Exam)</strong> or <strong>Practice (Sandbox)</strong> in the briefing.</span>
         </div>
       </div>
 
@@ -333,39 +329,6 @@
           </div>
         </div>
 
-        <!-- District 4: Molecular Biology (Locked) -->
-        <div class="district-card locked" id="card-district-biology" style="display:flex; flex-direction:column; justify-content:space-between; opacity:0.85;">
-          <div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span class="district-badge badge-locked">🔒 Prerequisite Locked</span>
-              <span style="font-size:var(--text-xs); color:var(--text-muted);">Curriculum Path</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-              <span class="district-icon" style="font-size:1.8rem;">🧬</span>
-              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Molecular Biology</h3>
-            </div>
-            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
-              Enzymatic kinetics, protein binding affinity assays, and receptor-ligand docking.
-            </p>
-            
-            <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
-              <div class="exp-tile card" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:var(--radius-md);">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                  <strong style="font-size:var(--text-sm); color:var(--text-muted);">Enzyme Kinetics Bench</strong>
-                  <span style="font-size:10px; color:var(--text-muted);">⏱️ 10 min</span>
-                </div>
-                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
-                  Michaelis-Menten substrate kinetics and competitive active-site inhibition.
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span class="status-chip badge badge-warn" style="font-size:10px;">🔒 Locked</span>
-                  <button type="button" class="btn btn-secondary btn-locked-info" data-locked-target="biology" style="min-height:28px; padding:2px 10px; font-size:11px;">Why Locked?</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- District 5: Market Microstructure (Locked) -->
         <div class="district-card locked" id="card-district-market" style="display:flex; flex-direction:column; justify-content:space-between; opacity:0.85;">
           <div>
@@ -451,15 +414,11 @@
         <input type="text" id="brief-nickname-input" placeholder="e.g. Dr. Curie" value="Dr. Curie" maxlength="24" />
       </div>
 
-      <div class="practice-mode-wrap" style="display:flex; align-items:center; gap:8px; margin:12px 0;">
-        <input type="checkbox" id="brief-practice-mode" aria-label="Practice Mode" style="transform:scale(1.2); cursor:pointer;">
-        <label for="brief-practice-mode" style="font-size:var(--text-sm, 0.88rem); color:var(--text); cursor:pointer;">
-          <strong>Practice Mode</strong> (Sandbox run: no scorecard recorded to leaderboard)
-        </label>
-      </div>
+      <input type="checkbox" id="brief-practice-mode" aria-label="Practice Mode" style="display:none;">
 
-      <div class="brief-actions">
-        <button type="button" class="btn-primary" id="btn-start-experiment">Start Experiment ➔</button>
+      <div class="brief-actions" style="display:flex; gap:12px; justify-content:flex-end; align-items:center; margin-top:16px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" id="btn-practice-experiment" data-i18n="briefing.btn_practice">⚡ Practice (No Score, Free Hints)</button>
+        <button type="button" class="btn btn-primary" id="btn-start-experiment" data-i18n="briefing.btn_start">🎯 Start Experiment (Exam Mode) ➔</button>
       </div>
     </div>
   </div>
@@ -814,10 +773,10 @@
 
         <!-- Language (i18n) -->
         <div class="slider-group">
-          <label class="slider-label" for="setting-app-language">Language / Idioma (i18n)</label>
+          <label class="slider-label" for="setting-app-language">Language / Locale (i18n)</label>
           <select id="setting-app-language" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
             <option value="en" selected>English (EN)</option>
-            <option value="es">Español (ES - Beta)</option>
+            <option value="test">Test Locale (QAA - Automated QA)</option>
           </select>
         </div>
 

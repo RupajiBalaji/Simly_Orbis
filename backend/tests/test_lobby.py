@@ -15,12 +15,12 @@ async def test_lobby_district_cards_and_tiles():
         assert res.status_code == 200
         html = res.text
 
-        # 5 District cards
+        # Spec Section 4 District cards: Pharma, Chem, Space, Market (locked)
         assert 'id="card-district-pharma"' in html
         assert 'id="card-district-chemistry"' in html
         assert 'id="card-district-space"' in html
-        assert 'id="card-district-biology"' in html
         assert 'id="card-district-market"' in html
+        assert 'id="card-district-biology"' not in html
 
         # Experiment tiles with difficulty & time estimate
         assert 'data-exp-id="pk_ward"' in html
@@ -49,16 +49,17 @@ async def test_lobby_district_cards_and_tiles():
 
 
 @pytest.mark.asyncio
-async def test_lobby_mode_toggle():
-    """Verify Guided vs Free Play mode toggle is present with proper aria attributes."""
+async def test_spec_8_3_start_and_practice_mode_buttons():
+    """Verify Spec 8.3 Start and Practice buttons are present for mode selection."""
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         res = await ac.get("/")
         html = res.text
 
-        assert 'id="btn-mode-guided"' in html
-        assert 'id="btn-mode-free"' in html
-        assert 'id="mode-desc"' in html
+        assert 'id="btn-start-experiment"' in html
+        assert 'id="btn-practice-experiment"' in html
+        assert 'Practice (No Score' in html
+        assert 'Start Experiment' in html
 
 
 @pytest.mark.asyncio

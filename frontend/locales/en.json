@@ -97,6 +97,10 @@
     "required_ppe": "Required PPE",
     "enter_lab": "Enter 3D Laboratory ➔"
   },
+  "briefing": {
+    "btn_practice": "⚡ Practice (No Score, Free Hints)",
+    "btn_start": "🎯 Start Experiment (Exam Mode) ➔"
+  },
   "report": {
     "title": "Experimental Evaluation Report",
     "overall_score": "Overall Protocol Score",

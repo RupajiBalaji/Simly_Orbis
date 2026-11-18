@@ -42,7 +42,8 @@ An honest technical overview of current capabilities in Release Candidate 1 (RC1
 - **User Authentication & Persistent Profiles**: Scores and sessions are currently keyed by nickname and session ID without OAuth/passwords.
 - **Multiplayer Lab Collaborations**: Each session is single-player; collaborative partner benches are not yet implemented.
 - **Full Touch Gestures on Small Mobile Screens**: While responsive, complex camera orbiting is optimized for mouse and trackpad devices.
-- **Market Microstructure District**: Remains marked "🔒 Coming Soon" in lobby.
+- **Market Microstructure District**: Remains marked "🔒 Coming Soon" in lobby per Spec Section 4.
+- **Molecular Biology District (Enzyme Kinetics)**: Curriculum expansion planned for future phases (Michaelis-Menten kinetics, active-site inhibition assays); excluded from MVP lobby scope per Spec Section 4.
 
 ---
 

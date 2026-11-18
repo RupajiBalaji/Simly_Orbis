@@ -31,11 +31,11 @@ async def test_locales_served_via_static_routes():
         assert "common" in en_dict
         assert en_dict["common"]["app_title"] == "ORBIS LAB"
 
-        res_es = await ac.get("/locales/es.json")
-        assert res_es.status_code == 200
-        es_dict = res_es.json()
-        assert "common" in es_dict
-        assert "Volver al Vestíbulo" in es_dict["common"]["back_to_lobby"]
+        res_test = await ac.get("/locales/test.json")
+        assert res_test.status_code == 200
+        test_dict = res_test.json()
+        assert "common" in test_dict
+        assert "Back to Test Lobby" in test_dict["common"]["back_to_lobby"]
 
 
 def test_t_helper_logic_simulation():
@@ -44,8 +44,8 @@ def test_t_helper_logic_simulation():
         "common": {"greeting": "Hello, {name}!", "score": "Score: {pts} / {max}"},
         "errors": {"not_found": "Resource not found"}
     }
-    es_dict = {
-        "common": {"greeting": "¡Hola, {name}!"}
+    test_dict = {
+        "common": {"greeting": "Test-Greeting, {name}!"}
     }
 
     def simulate_t(dict_current, dict_en, key, params=None):
@@ -78,12 +78,12 @@ def test_t_helper_logic_simulation():
             val = val.replace(f"{{{k}}}", str(v))
         return val
 
-    # Spanish with interpolation
-    assert simulate_t(es_dict, en_dict, "common.greeting", {"name": "Alex"}) == "¡Hola, Alex!"
+    # Test locale with interpolation
+    assert simulate_t(test_dict, en_dict, "common.greeting", {"name": "Alex"}) == "Test-Greeting, Alex!"
 
-    # Fallback to English when key missing in Spanish
-    assert simulate_t(es_dict, en_dict, "common.score", {"pts": 85, "max": 100}) == "Score: 85 / 100"
-    assert simulate_t(es_dict, en_dict, "errors.not_found") == "Resource not found"
+    # Fallback to English when key missing in Test locale
+    assert simulate_t(test_dict, en_dict, "common.score", {"pts": 85, "max": 100}) == "Score: 85 / 100"
+    assert simulate_t(test_dict, en_dict, "errors.not_found") == "Resource not found"
 
     # Missing key in both falls back to raw key
-    assert simulate_t(es_dict, en_dict, "unknown.nested.key") == "unknown.nested.key"
+    assert simulate_t(test_dict, en_dict, "unknown.nested.key") == "unknown.nested.key"
