@@ -594,16 +594,30 @@
           <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
             <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
               <span>Concentration</span>
-              <span class="source-chip badge badge-info" title="Computed by Bateman oral PK differential equation">[Engine]</span>
+              <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/pharma_pk.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button>
             </div>
             <div id="readout-concentration" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">0.00 mg/L</div>
           </div>
           <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
             <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
               <span>Sample / Mass</span>
-              <span class="source-chip badge badge-default" title="Apparatus measurement reading">[Game]</span>
+              <button type="button" class="source-chip chip-game" data-source-type="game" aria-label="Source: Game apparatus. Click for provenance details.">[Game]</button>
             </div>
             <div id="readout-mass" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">0.000 g</div>
+          </div>
+          <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
+            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span>Lit Target</span>
+              <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/pharma_pk.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button>
+            </div>
+            <div id="readout-target" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--accent); margin-top:2px;">12.5 mg/L</div>
+          </div>
+          <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
+            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+              <span>AI Mentor</span>
+              <button type="button" class="source-chip chip-ai" data-source-type="ai" aria-label="Source: AI Mentor. Click for provenance details.">[AI]</button>
+            </div>
+            <div id="readout-ai-status" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--info); margin-top:2px;">Active</div>
           </div>
         </div>
       </div>
@@ -933,39 +947,68 @@
                 <th style="padding:8px;">Engine Value</th>
                 <th style="padding:8px;">Literature Reference</th>
                 <th style="padding:8px;">Verification Status</th>
+                <th style="padding:8px;">Model Card</th>
               </tr>
             </thead>
-            <tbody>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                <td style="padding:8px;">Theophylline Cmax (10 mg/kg)</td>
-                <td style="padding:8px;">Pharma</td>
-                <td style="padding:8px; font-family:var(--font-mono);">12.5 mg/L</td>
-                <td style="padding:8px; color:var(--text-muted);">Standard literature 1-comp</td>
-                <td style="padding:8px;"><span class="badge badge-warn">N/A: unverified</span></td>
+            <tbody id="reality-check-tbody">
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-model-card="/docs/model_cards/pharma_pk.md">
+                <td style="padding:8px; font-weight:600;">Theophylline Cmax (10 mg/kg)</td>
+                <td style="padding:8px;"><span class="badge badge-info">Pharma</span></td>
+                <td style="padding:8px; font-family:var(--font-mono);">12.5 mg/L <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/pharma_pk.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button></td>
+                <td style="padding:8px; color:var(--text-muted);">Standard literature 1-comp <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/pharma_pk.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button></td>
+                <td style="padding:8px;"><span class="badge badge-warn status-unverified">N/A: unverified</span></td>
+                <td style="padding:8px;"><a href="/docs/model_cards/pharma_pk.md" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:28px; padding:2px 8px; font-size:11px; text-decoration:none;">Model Card ↗</a></td>
               </tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                <td style="padding:8px;">Aspirin pKa (25°C)</td>
-                <td style="padding:8px;">Chemistry</td>
-                <td style="padding:8px; font-family:var(--font-mono);">3.49</td>
-                <td style="padding:8px; color:var(--text-muted);">Standard aqueous literature</td>
-                <td style="padding:8px;"><span class="badge badge-warn">N/A: unverified</span></td>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-model-card="/docs/model_cards/pharma_pk.md">
+                <td style="padding:8px; font-weight:600;">Ibuprofen AUC (400 mg oral)</td>
+                <td style="padding:8px;"><span class="badge badge-info">Pharma</span></td>
+                <td style="padding:8px; font-family:var(--font-mono);">104.3 mg*h/L <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/pharma_pk.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button></td>
+                <td style="padding:8px; color:var(--text-muted);">Davies NM 1998 Clin Pharmacokinet <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/pharma_pk.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button></td>
+                <td style="padding:8px;"><span class="badge badge-warn status-unverified">N/A: unverified</span></td>
+                <td style="padding:8px;"><a href="/docs/model_cards/pharma_pk.md" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:28px; padding:2px 8px; font-size:11px; text-decoration:none;">Model Card ↗</a></td>
               </tr>
-              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                <td style="padding:8px;">LEO Orbital Velocity (300 km)</td>
-                <td style="padding:8px;">Space</td>
-                <td style="padding:8px; font-family:var(--font-mono);">7726 m/s</td>
-                <td style="padding:8px; color:var(--text-muted);">Tsiolkovsky / Vis-viva formula</td>
-                <td style="padding:8px;"><span class="badge badge-warn">N/A: unverified</span></td>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-model-card="/docs/model_cards/pharma_trial.md">
+                <td style="padding:8px; font-weight:600;">Virtual Cohort Clearance (70 kg)</td>
+                <td style="padding:8px;"><span class="badge badge-info">Pharma Trials</span></td>
+                <td style="padding:8px; font-family:var(--font-mono);">CL: 2.8 L/h <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/pharma_trial.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button></td>
+                <td style="padding:8px; color:var(--text-muted);">Log-normal population cohort <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/pharma_trial.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button></td>
+                <td style="padding:8px;"><span class="badge badge-warn status-unverified">N/A: unverified</span></td>
+                <td style="padding:8px;"><a href="/docs/model_cards/pharma_trial.md" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:28px; padding:2px 8px; font-size:11px; text-decoration:none;">Model Card ↗</a></td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-model-card="/docs/model_cards/pharma_pkpd.md">
+                <td style="padding:8px; font-weight:600;">Dose Response Emax / EC50 (Hill)</td>
+                <td style="padding:8px;"><span class="badge badge-info">Dose Lab</span></td>
+                <td style="padding:8px; font-family:var(--font-mono);">Emax 100%, EC50 15 mg/L <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/pharma_pkpd.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button></td>
+                <td style="padding:8px; color:var(--text-muted);">Sigmoidal Hill differential solver <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/pharma_pkpd.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button></td>
+                <td style="padding:8px;"><span class="badge badge-warn status-unverified">N/A: unverified</span></td>
+                <td style="padding:8px;"><a href="/docs/model_cards/pharma_pkpd.md" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:28px; padding:2px 8px; font-size:11px; text-decoration:none;">Model Card ↗</a></td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-model-card="/docs/model_cards/chem_titration.md">
+                <td style="padding:8px; font-weight:600;">Aspirin pKa (25°C)</td>
+                <td style="padding:8px;"><span class="badge badge-warn">Chemistry</span></td>
+                <td style="padding:8px; font-family:var(--font-mono);">3.49 <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/chem_titration.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button></td>
+                <td style="padding:8px; color:var(--text-muted);">Standard aqueous literature <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/chem_titration.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button></td>
+                <td style="padding:8px;"><span class="badge badge-warn status-unverified">N/A: unverified</span></td>
+                <td style="padding:8px;"><a href="/docs/model_cards/chem_titration.md" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:28px; padding:2px 8px; font-size:11px; text-decoration:none;">Model Card ↗</a></td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-model-card="/docs/model_cards/space_orbit.md">
+                <td style="padding:8px; font-weight:600;">LEO Orbital Velocity (300 km)</td>
+                <td style="padding:8px;"><span class="badge" style="background:rgba(124,92,255,0.2); color:var(--accent-space);">Space</span></td>
+                <td style="padding:8px; font-family:var(--font-mono);">7726 m/s <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/space_orbit.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button></td>
+                <td style="padding:8px; color:var(--text-muted);">Tsiolkovsky / Vis-viva formula <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/space_orbit.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button></td>
+                <td style="padding:8px;"><span class="badge badge-warn status-unverified">N/A: unverified</span></td>
+                <td style="padding:8px;"><a href="/docs/model_cards/space_orbit.md" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:28px; padding:2px 8px; font-size:11px; text-decoration:none;">Model Card ↗</a></td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);" data-model-card="/docs/model_cards/space_orbit.md">
+                <td style="padding:8px; font-weight:600;">Hohmann Transfer LEO-GEO dv</td>
+                <td style="padding:8px;"><span class="badge" style="background:rgba(124,92,255,0.2); color:var(--accent-space);">Space</span></td>
+                <td style="padding:8px; font-family:var(--font-mono);">3935 m/s <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/space_orbit.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button></td>
+                <td style="padding:8px; color:var(--text-muted);">Analytic 2-body Kepler transfer <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/space_orbit.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button></td>
+                <td style="padding:8px;"><span class="badge badge-warn status-unverified">N/A: unverified</span></td>
+                <td style="padding:8px;"><a href="/docs/model_cards/space_orbit.md" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height:28px; padding:2px 8px; font-size:11px; text-decoration:none;">Model Card ↗</a></td>
               </tr>
             </tbody>
           </table>
-          <div id="leaderboard-empty-state" class="empty-state hidden" style="text-align:center; padding:var(--space-6, 32px) var(--space-4, 16px);">
-            <div style="font-size:2.5rem; margin-bottom:8px;">📊</div>
-            <h3 style="font-size:var(--text-base, 1rem); color:var(--text); margin-bottom:4px;">No runs yet</h3>
-            <p style="font-size:var(--text-xs, 0.75rem); color:var(--text-muted); max-width:320px; margin:auto;">
-              No runs yet -- complete an experiment to post your score!
-            </p>
-          </div>
         </div>
         <div style="font-size:var(--text-xs); color:var(--text-muted); margin-top:8px;">
           Note: Engine parameters remain labelled "unverified" until certified against peer-reviewed physical benchmarks.

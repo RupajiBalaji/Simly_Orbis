@@ -25,6 +25,7 @@ import { soundFX } from './audio/sound_fx.js';
 import { runCameraAcceptanceTest } from './world/camera_test.js';
 import { initRouter } from '../router.js';
 import { initI18n, setLocale, getLocale, t } from '../i18n.js';
+import { initProvenancePopovers } from '../ui/components.js';
 
 // WebGL Support Detection
 function isWebGLAvailable() {
@@ -164,6 +165,7 @@ async function initOrbisLab() {
   setupHUDControls();
   setupOfflineDetection();
   checkServerWakeup();
+  initProvenancePopovers();
 }
 
 function showScreen(screenId) {
@@ -242,6 +244,7 @@ function setupRouter() {
     'reality-check': () => {
       showScreen('screen-reality-check');
       updateBreadcrumb('Reality Check');
+      initProvenancePopovers(document.getElementById('screen-reality-check'));
     },
     '404': () => {
       showScreen('screen-404');
