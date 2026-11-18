@@ -11,9 +11,9 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 40, HEAD: d5dca9a5 |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 41, HEAD: fc2eb164 |
 | 2 | App Version | **PASS** | Version `0.4.1-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite | **PASS** | [fresh venv] `==================== 465 passed, 16241 warnings in 18.97s =====================` |
+| 3 | Pytest Test Suite | **PASS** | [fresh venv] `==================== 465 passed, 16241 warnings in 24.26s =====================` |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
 | 5 | Frozen Tolerances Guard | **PASS** | 3/3 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 4 engines + R1-R10/S1-S8 rules. Violations: 0 |
@@ -29,10 +29,11 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `d5dca9a5` | Clean: False (expected audit files: True) | Ahead: 40
+HEAD: `fc2eb164` | Clean: True (expected audit files: True) | Ahead: 41
 
 **Last 15 Commits:**
 ```
+fc2eb16 docs(p1): Phase P1 report and self-audit
 d5dca9a test(p1): P1 extra gate multi-viewport screenshots, axe audit, and keyboard navigation
 001c412 feat(p1): provenance popovers and reality check integration
 3881cd4 feat(p1): experiment briefings, report screens, and print stylesheet
@@ -47,7 +48,6 @@ bb3a2ee feat(p1): keyboard onboarding tutorial and persistent settings
 03daf30 feat(p1): shared component library, showcase page, and DOM tests
 b7b09c0 feat(p1): design tokens, typography, and contrast verification script
 70a3c9e docs(p0): recheck table verifying P0 tasks and F1-F5 fixes
-eb4b2f6 docs(p0): audit sections 4-17 in gap report and clarify 20-section spec scope
 ```
 
 ### Gate 3: Pytest Test Suite
@@ -56,7 +56,7 @@ Exit code: 0
 
 Command: `E:\Simly Orbis\fresh\Scripts\pytest.exe backend/tests`
 
-Final line: `==================== 465 passed, 16241 warnings in 18.97s =====================`
+Final line: `==================== 465 passed, 16241 warnings in 24.26s =====================`
 
 ### Gate 4: Validation Row Governance
 
