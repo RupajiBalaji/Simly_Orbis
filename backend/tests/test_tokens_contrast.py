@@ -50,11 +50,30 @@ def test_tokens_css_exists_and_declares_tokens():
 
 
 def test_self_hosted_fonts_present():
-    """Verify that self-hosted font files and stylesheet are present."""
+    """Verify that self-hosted font files, distinct weights (400, 500, 700), license, and link tag exist."""
     assert FONTS_CSS.exists(), "frontend/vendor/fonts/fonts.css missing"
     fonts_dir = FONTS_CSS.parent
     woff2_files = list(fonts_dir.glob("*.woff2"))
-    assert len(woff2_files) >= 2, f"Expected at least 2 woff2 font files, found {len(woff2_files)}"
+    assert len(woff2_files) >= 5, f"Expected discrete weights for Inter and JetBrains Mono, found {len(woff2_files)}"
+
+    # Check license file
+    ofl_txt = fonts_dir / "OFL.txt"
+    assert ofl_txt.exists(), "frontend/vendor/fonts/OFL.txt license missing"
+
+    content = FONTS_CSS.read_text(encoding="utf-8")
+    for weight in ["400", "500", "700"]:
+        assert f"font-weight: {weight};" in content, f"Missing font-weight {weight} in fonts.css"
+
+    # Verify every referenced font file on disk actually exists
+    import re
+    urls = re.findall(r"url\(['\"]?\./([^'\")]+)['\"]?\)", content)
+    for u in urls:
+        assert (fonts_dir / u).exists(), f"Referenced font file {u} does not exist on disk!"
+
+    # Verify index.html loads via link tag, not @import
+    index_html = (REPO_ROOT / "frontend" / "index.html").read_text(encoding="utf-8")
+    assert '<link rel="stylesheet" href="./vendor/fonts/fonts.css"' in index_html
+    assert '@import url("./vendor/fonts/fonts.css")' not in index_html
 
 
 def test_contrast_validation_script_passes():
