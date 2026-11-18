@@ -290,3 +290,50 @@ def test_cli_execution_valid_and_invalid(tmp_path: Path):
     assert res_invalid.returncode == 1
     assert "[FAIL]" in res_invalid.stdout
     assert "unknown_field" in res_invalid.stdout
+
+
+def test_worked_example_fixture_validates_and_runs():
+    """Verify that the worked example from docs/experiment_spec.md validates and can run."""
+    from app.specs.loader import load_and_validate_spec
+    from app.specs.adapter import spec_to_experiment_definition
+    from app.lab.engine import create_session, apply_action
+    from app.lab.models import ActionRequest, ActionType
+    import app.lab.experiments as lab_exp
+
+    fixture_path = REPO_ROOT / "specs" / "fixtures" / "worked_example_neutralization.json"
+    assert fixture_path.is_file(), f"Fixture {fixture_path} missing"
+
+    spec, report = load_and_validate_spec(fixture_path)
+    assert report.valid is True, f"Worked example failed validation: {report.errors}"
+    assert spec is not None
+    assert spec.id == "worked_example_neutralization"
+
+    # Convert to ExperimentDefinition
+    from app.lab.experiments.titration import TITRATION_BENCH_EXPERIMENT
+    exp_def = spec_to_experiment_definition(
+        spec,
+        base_apparatus=TITRATION_BENCH_EXPERIMENT.apparatus,
+        base_inventory=TITRATION_BENCH_EXPERIMENT.inventory,
+        required_ppe=TITRATION_BENCH_EXPERIMENT.required_ppe,
+    )
+    assert exp_def.id == "worked_example_neutralization"
+    assert len(exp_def.protocol) == 11
+    assert len(exp_def.rules) == 10
+
+    # Register temporarily and execute actions on a session
+    lab_exp._EXPERIMENTS[exp_def.id] = exp_def
+    try:
+        session = create_session(exp_def.id, "TeacherAlex")
+        assert session.experiment_id == exp_def.id
+
+        # Execute wear_ppe
+        res_ppe = apply_action(session, ActionRequest(action=ActionType.wear_ppe, target="avatar", params={"item": "all"}))
+        assert res_ppe.accepted is True
+        assert "goggles" in session.ppe
+
+        # Execute rinse_burette
+        res_rinse = apply_action(session, ActionRequest(action=ActionType.rinse_burette, target="burette", params={"solvent": "naoh"}))
+        assert res_rinse.accepted is True
+    finally:
+        lab_exp._EXPERIMENTS.pop(exp_def.id, None)
+
