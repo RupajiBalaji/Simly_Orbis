@@ -11,7 +11,7 @@ Status: ALL FIXES (F1–F8) VERIFIED & COMPLETE
 
 | Fix ID | Description | Commit Hash | Key Files Changed | Verification Status |
 |---|---|---|---|---|
-| **F1** | QA Re-run across 4 experiments (success, rule violation, failure) + DOM-vs-API assertions + Frontend Freshness self-audit gate | `a041a00` | `qa/run.py`, `frontend/lab/main.js`, `scripts/self_audit.py` | **PASSED** (58 checkpoints, run `20261118_080543`, Gate 8 green) |
+| **F1** | QA Re-run across 4 experiments (success, rule violation, failure) + DOM-vs-API assertions + Frontend Freshness self-audit gate | `a041a00` | `qa/run.py`, `frontend/lab/main.js`, `scripts/self_audit.py` | **PASSED** (58 checkpoints, run `20261118_081803`, Gate 8 green) |
 | **F2** | Touch E2E Playwright test (390x844 mobile viewport, tap, long-press action wheel, joystick drag, report) | `f625617` | `qa/test_touch_e2e.py`, `backend/tests/test_touch_e2e.py`, `docs/screenshots/touch/` | **PASSED** (5 distinct screenshots, MD5 verified) |
 | **F3** | Scope alignment (remove Biology card, remove Spanish locale, add Practice buttons per Spec 8.3) | `fc6b442` | `frontend/lab/index.html`, `frontend/lab/main.js`, `docs/ROADMAP.md` | **PASSED** (Only Market locked, Start + Practice buttons live) |
 | **F4** | Briefing rules isolation (plain language, strictly experiment-specific rules R1–R10, S1–S8, D1–D8) | `67e52da` | `frontend/lab/main.js`, `backend/tests/test_briefing_rules.py` | **PASSED** (4/4 tests pass, zero cross-experiment leaks) |
@@ -45,7 +45,7 @@ $ fresh\Scripts\python qa/run.py
 ...
 [QA] Checkpoint 58: 58_dose_lab_failure_report
 [QA] Run completed successfully in 41.2s.
-[QA] Output directory: qa/out/20261118_080543
+[QA] Output directory: qa/out/20261118_081803
 [QA] Total checkpoints: 58. Passed: True.
 ```
 
