@@ -212,4 +212,16 @@ TITRATION_BENCH_EXPERIMENT = ExperimentDefinition(
         "technique": 20,
         "protocol": 10,
     },
+    rules=[
+        {"rule_id": "R1", "title": "Eye Protection (Goggles)", "explanation": "Protective safety goggles must be equipped before handling active drugs or chemicals."},
+        {"rule_id": "R2", "title": "Protective Gloves", "explanation": "Chemical-resistant gloves must be worn before manipulating hazardous reagents or specimens."},
+        {"rule_id": "R3", "title": "Protective Lab Coat", "explanation": "Buttoned laboratory coat required before beginning experiments in active lab zones."},
+        {"rule_id": "R4", "title": "Balance Tare Required", "explanation": "Analytical digital balance must be tared to zero with container in place prior to weighing samples."},
+        {"rule_id": "R5", "title": "Specimen & Solution Labelling", "explanation": "All beakers, vials, and solutions must be explicitly labeled with contents and concentration."},
+        {"rule_id": "R6", "title": "Safe Acid Dilution Sequence", "explanation": "Always add acid to water slowly; never pour water directly into concentrated reagents."},
+        {"rule_id": "R7", "title": "Burette Conditioning & Capacity", "explanation": "Rinse burette with titrant and never exceed graduated volumetric capacity."},
+        {"rule_id": "R8", "title": "Maximum Safe Single Dose", "explanation": "Administered medication dose must not exceed safe therapeutic threshold."},
+        {"rule_id": "R9", "title": "Segregated Waste Disposal", "explanation": "Chemical, biological, and sharps waste must be disposed into designated segregated waste receptacles."},
+        {"rule_id": "R10", "title": "Aseptic Handwash & Clean Finish", "explanation": "Decontaminate hands and remove PPE in proper aseptic sequence before exiting laboratory."},
+    ],
 )

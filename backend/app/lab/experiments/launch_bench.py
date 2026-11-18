@@ -179,4 +179,14 @@ LAUNCH_BENCH_EXPERIMENT = ExperimentDefinition(
         "technique": 20,
         "protocol": 10,
     },
+    rules=[
+        {"rule_id": "S1", "title": "Preflight Flight Computer Checklist", "explanation": "Flight computer checklist and guidance diagnostics must be run prior to launch."},
+        {"rule_id": "S2", "title": "Propellant Tank Capacity Limits", "explanation": "Propellant load must not be empty or exceed maximum certified tank capacity."},
+        {"rule_id": "S3", "title": "Liftoff Thrust-to-Weight Ratio", "explanation": "Liftoff thrust-to-weight ratio must exceed 1.0 (TWR > 1.0) to achieve positive climb acceleration."},
+        {"rule_id": "S4", "title": "Declared Payload Mass", "explanation": "Payload mass must be formally declared and within upper stage structural limits."},
+        {"rule_id": "S5", "title": "Staging Sequence Order", "explanation": "Lower booster stage burnout required before staging separation and upper stage ignition."},
+        {"rule_id": "S6", "title": "Range Safety Tracking Clearance", "explanation": "Range safety radar tracking and downrange airspace clearance required before ignition."},
+        {"rule_id": "S7", "title": "Delta-V Margin Required", "explanation": "Trajectory budget must maintain at least a 5% delta-v reserve margin to avoid orbital decay."},
+        {"rule_id": "S8", "title": "Post-Flight Mission Debrief", "explanation": "Telemetry review and flight debrief must be completed before submitting final flight report."},
+    ],
 )

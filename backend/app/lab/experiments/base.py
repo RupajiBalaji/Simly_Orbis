@@ -21,6 +21,7 @@ class ExperimentDefinition(BaseModel):
     inventory: dict[str, dict[str, Any]] = Field(default_factory=dict)
     allowed_actions: list[str] = Field(default_factory=list)
     protocol: list[dict[str, str]] = Field(default_factory=list)
+    rules: list[dict[str, str]] = Field(default_factory=list)
     scoring_weights: dict[str, int] = Field(
         default_factory=lambda: {
             "safety": 40,

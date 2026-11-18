@@ -182,4 +182,14 @@ DOSE_LAB_EXPERIMENT = ExperimentDefinition(
         "technique": 20,
         "protocol": 10,
     },
+    rules=[
+        {"rule_id": "D1", "title": "Maximum Safe Single Dose", "explanation": "Administered dose must not exceed the maximum recommended adult single dose from drug specifications."},
+        {"rule_id": "D2", "title": "Renal Impairment Adjustment", "explanation": "Patients with renal impairment (CrCl < 60 mL/min) receiving renally cleared drugs require dose reduction."},
+        {"rule_id": "D3", "title": "Bioavailability & Route Compatibility", "explanation": "Selected administration route must be compatible with drug bioavailability."},
+        {"rule_id": "D4", "title": "Adult Covariate Boundaries", "explanation": "Patient parameters must remain within adult boundary limits (Age 18-90, Weight 40-150 kg, CrCl 15-150 mL/min)."},
+        {"rule_id": "D5", "title": "Therapeutic Drug Monitoring Sampling", "explanation": "Narrow therapeutic index drugs require at least 3 blood sampling observation timepoints."},
+        {"rule_id": "D6", "title": "Safe Infusion Duration", "explanation": "Intravenous infusions must not be administered in under 15 minutes (< 0.25h) to avoid adverse reactions."},
+        {"rule_id": "D7", "title": "Target Window Prediction", "explanation": "Enter predicted peak concentration and target window duration before executing simulation."},
+        {"rule_id": "D8", "title": "Toxic Peak Concentration Avoidance", "explanation": "Simulated Cmax must not exceed the toxic concentration threshold."},
+    ],
 )

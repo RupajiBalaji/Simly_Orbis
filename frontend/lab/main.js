@@ -936,15 +936,22 @@ async function openExperimentBrief(experimentId) {
         : '<span style="font-size:11px; color:var(--text-muted);">Standard laboratory workbench apparatus</span>';
     }
 
-    // Safety rules list with R-numbers
+    // Safety rules list with experiment-specific rule numbers (R1-R10, S1-S8, D1-D8)
     const rulesList = document.getElementById('brief-rules-list');
     if (rulesList) {
-      rulesList.innerHTML = `
-        <li><strong style="color:var(--accent);">R1:</strong> Mandatory PPE equipped before manipulating active agents</li>
-        <li><strong style="color:var(--accent);">R2:</strong> Analytical balance tare required before mass measurement</li>
-        <li><strong style="color:var(--accent);">R3:</strong> Verified dissolution &amp; labeling prior to administration or titration</li>
-        <li><strong style="color:var(--accent);">R4:</strong> Safe waste disposal and sink decontamination required at conclusion</li>
-      `;
+      const expRules = exp.rules || [];
+      if (expRules.length > 0) {
+        rulesList.innerHTML = expRules.map((r) => `
+          <li style="margin-bottom:4px;"><strong style="color:var(--accent);">${r.rule_id}:</strong> <span>${r.title}</span> – <span style="color:var(--text-muted); font-size:11px;">${r.explanation}</span></li>
+        `).join('');
+      } else {
+        rulesList.innerHTML = `
+          <li><strong style="color:var(--accent);">R1:</strong> Mandatory PPE equipped before manipulating active agents</li>
+          <li><strong style="color:var(--accent);">R2:</strong> Analytical balance tare required before mass measurement</li>
+          <li><strong style="color:var(--accent);">R3:</strong> Verified dissolution &amp; labeling prior to administration or titration</li>
+          <li><strong style="color:var(--accent);">R4:</strong> Safe waste disposal and sink decontamination required at conclusion</li>
+        `;
+      }
     }
 
     // Scoring rubric preview
