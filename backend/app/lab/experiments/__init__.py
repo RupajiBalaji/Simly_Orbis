@@ -13,8 +13,6 @@ from app.lab.experiments.dose_lab import DOSE_LAB_EXPERIMENT
 from app.lab.experiments.launch_bench import LAUNCH_BENCH_EXPERIMENT
 from app.lab.experiments.pk_ward import PK_WARD_EXPERIMENT
 from app.lab.experiments.titration import TITRATION_BENCH_EXPERIMENT
-from app.specs.adapter import spec_to_experiment_definition
-from app.specs.loader import load_and_validate_spec
 
 _EXPERIMENTS: dict[str, ExperimentDefinition] = {
     PK_WARD_EXPERIMENT.id: PK_WARD_EXPERIMENT,
@@ -43,6 +41,9 @@ def _get_spec_experiment(experiment_id: str) -> ExperimentDefinition | None:
 
     if spec_file is None:
         return None
+
+    from app.specs.loader import load_and_validate_spec
+    from app.specs.adapter import spec_to_experiment_definition
 
     spec, report = load_and_validate_spec(spec_file)
     if not report.valid or spec is None:

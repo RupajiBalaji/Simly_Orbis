@@ -1,0 +1,323 @@
+{
+  "id": "pk_ward",
+  "version": "1.0.0",
+  "district": "pharma",
+  "title": "Pharmacokinetics Clinical Ward",
+  "learning_goals": [
+    "Master laboratory personal protective equipment (PPE) requirements.",
+    "Accurately tare and weigh medicinal powders on an analytical digital balance.",
+    "Perform aseptic dissolution and rigorous sample labelling.",
+    "Administer oral pharmacotherapy and monitor plasma concentration dynamics.",
+    "Conduct timed venous sampling and clinical centrifuge/fluorescence assays.",
+    "Segregate biomedical and chemical waste according to safety standards."
+  ],
+  "difficulty": "intermediate",
+  "est_minutes": 25,
+  "engine": {
+    "id": "pharma.pk",
+    "minimum_version": "0.1.0",
+    "parameter_bounds": {
+      "dose_mg": {"min": 100.0, "max": 1000.0, "unit": "mg", "default": 500.0},
+      "cl_l_per_h": {"min": 1.0, "max": 30.0, "unit": "L/h", "default": 21.0},
+      "v_d_l": {"min": 10.0, "max": 100.0, "unit": "L", "default": 65.0},
+      "ka_per_h": {"min": 0.1, "max": 5.0, "unit": "1/h", "default": 1.2}
+    }
+  },
+  "equipment": [
+    "digital_balance",
+    "dosing_cup",
+    "water_jug",
+    "patient_bed",
+    "tube_1",
+    "tube_2",
+    "tube_3",
+    "label_pen",
+    "assay_analyzer",
+    "biohazard_bin",
+    "chemical_waste_bin",
+    "sink"
+  ],
+  "steps": [
+    {
+      "id": "wear_ppe",
+      "title": "Wear Personal Protective Equipment (PPE)",
+      "allowed_actions": ["wear_ppe"],
+      "preconditions": [],
+      "effects": ["ppe_worn"]
+    },
+    {
+      "id": "tare_balance",
+      "title": "Tare Analytical Digital Balance",
+      "allowed_actions": ["tare_balance"],
+      "preconditions": [],
+      "effects": ["balance_tared"]
+    },
+    {
+      "id": "weigh_powder",
+      "title": "Weigh Paracetamol Powder",
+      "allowed_actions": ["weigh"],
+      "preconditions": [],
+      "effects": ["powder_weighed"]
+    },
+    {
+      "id": "dissolve_dose",
+      "title": "Dissolve Powder in Water",
+      "allowed_actions": ["dissolve", "pour"],
+      "preconditions": [],
+      "effects": ["dose_dissolved"]
+    },
+    {
+      "id": "label_cup",
+      "title": "Label Oral Dosing Cup",
+      "allowed_actions": ["label"],
+      "preconditions": [],
+      "effects": ["cup_labeled"]
+    },
+    {
+      "id": "administer_oral",
+      "title": "Administer Oral Suspension",
+      "allowed_actions": ["administer_oral"],
+      "preconditions": [],
+      "effects": ["dose_administered"]
+    },
+    {
+      "id": "advance_time",
+      "title": "Advance Simulated Clock",
+      "allowed_actions": ["advance_time"],
+      "preconditions": [],
+      "effects": ["time_advanced"]
+    },
+    {
+      "id": "label_tube",
+      "title": "Label Venous Blood Sampling Tube",
+      "allowed_actions": ["label"],
+      "preconditions": [],
+      "effects": ["tube_labeled"]
+    },
+    {
+      "id": "draw_blood",
+      "title": "Collect Venous Blood Sample",
+      "allowed_actions": ["draw_blood"],
+      "preconditions": [],
+      "effects": ["blood_drawn"]
+    },
+    {
+      "id": "run_assay",
+      "title": "Run Centrifuge Drug Assay",
+      "allowed_actions": ["run_assay"],
+      "preconditions": [],
+      "effects": ["sample_assayed"]
+    },
+    {
+      "id": "dispose_waste",
+      "title": "Dispose Biomedical Waste",
+      "allowed_actions": ["dispose_waste"],
+      "preconditions": [],
+      "effects": ["waste_disposed"]
+    },
+    {
+      "id": "wash_hands",
+      "title": "Wash Hands at Utility Sink",
+      "allowed_actions": ["wash_hands"],
+      "preconditions": [],
+      "effects": ["hands_washed"]
+    },
+    {
+      "id": "submit_report",
+      "title": "Submit Clinical Ward Report",
+      "allowed_actions": ["submit_report"],
+      "preconditions": [],
+      "effects": ["report_submitted"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "R1",
+      "text": "Protective safety goggles must be equipped before handling active drugs or chemicals.",
+      "severity": "penalty",
+      "condition": "ppe_goggles_worn"
+    },
+    {
+      "id": "R2",
+      "text": "Chemical-resistant gloves must be worn before manipulating hazardous reagents or specimens.",
+      "severity": "penalty",
+      "condition": "ppe_gloves_worn"
+    },
+    {
+      "id": "R3",
+      "text": "Buttoned laboratory coat required before beginning experiments in active lab zones.",
+      "severity": "penalty",
+      "condition": "ppe_coat_worn"
+    },
+    {
+      "id": "R4",
+      "text": "Analytical digital balance must be tared to zero with container in place prior to weighing samples.",
+      "severity": "penalty",
+      "condition": "balance_tared"
+    },
+    {
+      "id": "R5",
+      "text": "All beakers, vials, and solutions must be explicitly labeled with contents and concentration.",
+      "severity": "penalty",
+      "condition": "solutions_labeled"
+    },
+    {
+      "id": "R6",
+      "text": "Always add acid to water slowly; never pour water directly into concentrated reagents.",
+      "severity": "block",
+      "condition": "safe_acid_sequence"
+    },
+    {
+      "id": "R7",
+      "text": "Rinse burette with titrant and never exceed graduated volumetric capacity.",
+      "severity": "penalty",
+      "condition": "burette_conditioned"
+    },
+    {
+      "id": "R8",
+      "text": "Administered medication dose must not exceed safe therapeutic threshold.",
+      "severity": "fail",
+      "condition": "safe_dose"
+    },
+    {
+      "id": "R9",
+      "text": "Chemical, biological, and sharps waste must be disposed into designated segregated waste receptacles.",
+      "severity": "penalty",
+      "condition": "segregated_waste"
+    },
+    {
+      "id": "R10",
+      "text": "Decontaminate hands and remove PPE in proper aseptic sequence before exiting laboratory.",
+      "severity": "penalty",
+      "condition": "aseptic_handwash"
+    }
+  ],
+  "scoring": {
+    "weights": {
+      "safety": 40,
+      "accuracy": 30,
+      "technique": 20,
+      "protocol": 10
+    },
+    "grade_thresholds": {
+      "A": 90,
+      "B": 80,
+      "C": 70,
+      "D": 60
+    }
+  },
+  "visual_directive_mapping": {
+    "suspension": {
+      "type": "liquid",
+      "hex": "#f8fafc",
+      "target": "dosing_cup"
+    },
+    "blood_sample": {
+      "type": "liquid",
+      "hex": "#b91c1c",
+      "target": "tube_1"
+    }
+  },
+  "mentor": {
+    "hints_per_step": {
+      "wear_ppe": ["Put on all required PPE (safety goggles, lab gloves, and lab coat)."],
+      "tare_balance": ["Tare the analytical balance with the empty weighing dish first."],
+      "weigh_powder": ["Weigh a safe therapeutic dose of paracetamol powder (e.g. 500 mg)."],
+      "dissolve_dose": ["Dissolve the weighed drug powder into water inside the dosing cup."],
+      "label_cup": ["Label the dosing cup with patient ID and medication info."],
+      "administer_oral": ["Administer the prepared oral medication to the patient."],
+      "advance_time": ["Advance simulated time (e.g. 1.0 h) to allow gastrointestinal absorption."],
+      "label_tube": ["Label a blood collection tube before performing the venous draw."],
+      "draw_blood": ["Draw a sterile venous blood sample from the patient into the tube."],
+      "run_assay": ["Load the blood sample into the centrifuge/assay analyzer to measure plasma level."],
+      "dispose_waste": ["Dispose of biomedical waste (used tubes, needles) into the biohazard bin."],
+      "wash_hands": ["Remove PPE and wash hands thoroughly at the sink."],
+      "submit_report": ["Submit the completed pharmacokinetics clinical ward report."]
+    },
+    "common_mistakes": [
+      {
+        "id": "weigh_without_tare",
+        "trigger": "weigh_untared",
+        "remedy": "Always press tare with the container on the balance before weighing drug powder."
+      },
+      {
+        "id": "overdose_administered",
+        "trigger": "dose_exceeds_1000mg",
+        "remedy": "Single doses of paracetamol must not exceed 1000 mg to prevent hepatotoxicity."
+      }
+    ]
+  },
+  "ask_orbis": {
+    "allowed_actions": [
+      "wear_ppe",
+      "remove_ppe",
+      "tare_balance",
+      "weigh",
+      "dissolve",
+      "pour",
+      "label",
+      "administer_oral",
+      "advance_time",
+      "draw_blood",
+      "run_assay",
+      "dispose_waste",
+      "wash_hands",
+      "submit_report"
+    ],
+    "synonyms": {
+      "wear_ppe": ["put on ppe", "don safety gear", "wear goggles and gloves"],
+      "tare_balance": ["zero balance", "tare scale", "calibrate balance"],
+      "weigh": ["weigh paracetamol", "measure 500mg", "weigh drug"],
+      "dissolve": ["dissolve powder", "mix with water", "make oral suspension"],
+      "pour": ["pour water", "fill dosing cup"],
+      "label": ["label cup", "label sample tube", "mark container"],
+      "administer_oral": ["give dose", "give paracetamol", "administer oral dose"],
+      "advance_time": ["wait 1 hour", "advance time", "fast forward clock"],
+      "draw_blood": ["take blood sample", "draw venous blood", "sample plasma"],
+      "run_assay": ["analyze sample", "run centrifuge assay", "measure concentration"],
+      "dispose_waste": ["throw away needles", "biohazard disposal", "dispose waste"],
+      "wash_hands": ["clean hands", "wash up", "soap hands"],
+      "submit_report": ["finish trial", "submit clinical report", "complete ward"]
+    }
+  },
+  "model_card": "docs/model_cards/pharma.pk.md",
+  "provenance": {
+    "author": "Antigravity Clinical Pharmacology Team",
+    "model_card": "docs/model_cards/pharma.pk.md",
+    "constants": {
+      "paracetamol_mw": {
+        "value": 151.16,
+        "unit": "g/mol",
+        "source": "PubChem Compound CID 1983",
+        "citation": "National Center for Biotechnology Information (NCBI)",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      },
+      "paracetamol_cl": {
+        "value": 21.0,
+        "unit": "L/h",
+        "source": "game-balanced approximate, not label or literature data, human verification needed",
+        "citation": "Goodman & Gilman's Pharmacological Basis of Therapeutics, 13th ed., Table 2-1",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      }
+    },
+    "notes": "Educational one-compartment oral pharmacokinetics model."
+  },
+  "i18n_keys": {
+    "title": "experiments.pk_ward.title",
+    "steps.wear_ppe.title": "experiments.pk_ward.steps.wear_ppe.title",
+    "steps.tare_balance.title": "experiments.pk_ward.steps.tare_balance.title",
+    "steps.weigh_powder.title": "experiments.pk_ward.steps.weigh_powder.title",
+    "steps.dissolve_dose.title": "experiments.pk_ward.steps.dissolve_dose.title",
+    "steps.label_cup.title": "experiments.pk_ward.steps.label_cup.title",
+    "steps.administer_oral.title": "experiments.pk_ward.steps.administer_oral.title",
+    "steps.advance_time.title": "experiments.pk_ward.steps.advance_time.title",
+    "steps.label_tube.title": "experiments.pk_ward.steps.label_tube.title",
+    "steps.draw_blood.title": "experiments.pk_ward.steps.draw_blood.title",
+    "steps.run_assay.title": "experiments.pk_ward.steps.run_assay.title",
+    "steps.dispose_waste.title": "experiments.pk_ward.steps.dispose_waste.title",
+    "steps.wash_hands.title": "experiments.pk_ward.steps.wash_hands.title",
+    "steps.submit_report.title": "experiments.pk_ward.steps.submit_report.title"
+  }
+}

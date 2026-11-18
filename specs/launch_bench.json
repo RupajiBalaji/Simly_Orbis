@@ -1,0 +1,281 @@
+{
+  "id": "launch_bench",
+  "version": "1.0.0",
+  "district": "space",
+  "title": "Launch & Orbit Bench",
+  "learning_goals": [
+    "Calculate multi-stage rocket mass budgets and Tsiolkovsky delta-v.",
+    "Ensure liftoff thrust-to-weight ratio (TWR > 1.0) and verify stage propellant capacities.",
+    "Execute preflight diagnostic checklists and obtain range safety clearance.",
+    "Achieve stable low Earth orbit (LEO) insertion with minimal ascent gravity and steering losses.",
+    "Execute Hohmann transfer burns and circularization at target orbital altitudes.",
+    "Debrief flight telemetry and verify Keplerian energy conservation."
+  ],
+  "difficulty": "advanced",
+  "est_minutes": 30,
+  "engine": {
+    "id": "space.orbit",
+    "minimum_version": "0.1.0",
+    "parameter_bounds": {
+      "target_alt_km": {"min": 150.0, "max": 36000.0, "unit": "km", "default": 200.0},
+      "payload_mass_kg": {"min": 10.0, "max": 2000.0, "unit": "kg", "default": 500.0},
+      "stage_mass_kg": {"min": 500.0, "max": 500000.0, "unit": "kg", "default": 45000.0},
+      "isp_s": {"min": 200.0, "max": 450.0, "unit": "s", "default": 310.0},
+      "stages": {"min": 1.0, "max": 3.0, "unit": "count", "default": 2.0}
+    }
+  },
+  "equipment": [
+    "launch_pad",
+    "rocket",
+    "propellant_tanks",
+    "range_control",
+    "flight_computer",
+    "tracking_station"
+  ],
+  "steps": [
+    {
+      "id": "choose_rocket",
+      "title": "Select Launch Vehicle",
+      "allowed_actions": ["choose_rocket"],
+      "preconditions": [],
+      "effects": ["rocket_selected"]
+    },
+    {
+      "id": "declare_payload",
+      "title": "Declare Payload Mass",
+      "allowed_actions": ["declare_payload"],
+      "preconditions": [],
+      "effects": ["payload_declared"]
+    },
+    {
+      "id": "fuel_rocket",
+      "title": "Load Propellant",
+      "allowed_actions": ["fuel_rocket"],
+      "preconditions": [],
+      "effects": ["rocket_fueled"]
+    },
+    {
+      "id": "run_checklist",
+      "title": "Preflight Diagnostic Checklist",
+      "allowed_actions": ["run_checklist"],
+      "preconditions": [],
+      "effects": ["checklist_completed"]
+    },
+    {
+      "id": "clear_range",
+      "title": "Clear Range Safety",
+      "allowed_actions": ["clear_range"],
+      "preconditions": [],
+      "effects": ["range_cleared"]
+    },
+    {
+      "id": "launch",
+      "title": "Ignition & Orbital Ascent",
+      "allowed_actions": ["launch"],
+      "preconditions": [],
+      "effects": ["launched"]
+    },
+    {
+      "id": "coast",
+      "title": "Orbital Coast",
+      "allowed_actions": ["coast"],
+      "preconditions": [],
+      "effects": ["coasted"]
+    },
+    {
+      "id": "burn_transfer",
+      "title": "Hohmann Transfer Burn",
+      "allowed_actions": ["burn_transfer"],
+      "preconditions": [],
+      "effects": ["transfer_burned"]
+    },
+    {
+      "id": "circularize",
+      "title": "Circularize Orbit",
+      "allowed_actions": ["circularize"],
+      "preconditions": [],
+      "effects": ["circularized"]
+    },
+    {
+      "id": "debrief",
+      "title": "Flight Telemetry Debrief",
+      "allowed_actions": ["debrief"],
+      "preconditions": [],
+      "effects": ["debriefed"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "S1",
+      "text": "Flight computer checklist and guidance diagnostics must be run prior to launch.",
+      "severity": "penalty",
+      "condition": "checklist_complete"
+    },
+    {
+      "id": "S2",
+      "text": "Propellant load must not be empty or exceed maximum certified tank capacity.",
+      "severity": "penalty",
+      "condition": "propellant_valid"
+    },
+    {
+      "id": "S3",
+      "text": "Liftoff thrust-to-weight ratio must exceed 1.0 (TWR > 1.0) to achieve positive climb acceleration.",
+      "severity": "fail",
+      "condition": "twr_above_one"
+    },
+    {
+      "id": "S4",
+      "text": "Payload mass must be formally declared and within upper stage structural limits.",
+      "severity": "penalty",
+      "condition": "payload_declared"
+    },
+    {
+      "id": "S5",
+      "text": "Lower booster stage burnout required before staging separation and upper stage ignition.",
+      "severity": "block",
+      "condition": "staging_order_valid"
+    },
+    {
+      "id": "S6",
+      "text": "Range safety radar tracking and downrange airspace clearance required before ignition.",
+      "severity": "penalty",
+      "condition": "range_cleared"
+    },
+    {
+      "id": "S7",
+      "text": "Trajectory budget must maintain at least a 5% delta-v reserve margin to avoid orbital decay.",
+      "severity": "penalty",
+      "condition": "delta_v_margin_valid"
+    },
+    {
+      "id": "S8",
+      "text": "Telemetry review and flight debrief must be completed before submitting final flight report.",
+      "severity": "penalty",
+      "condition": "flight_debriefed"
+    }
+  ],
+  "scoring": {
+    "weights": {
+      "safety": 40,
+      "accuracy": 30,
+      "technique": 20,
+      "protocol": 10
+    },
+    "grade_thresholds": {
+      "A": 90,
+      "B": 80,
+      "C": 70,
+      "D": 60
+    }
+  },
+  "visual_directive_mapping": {
+    "flame": {
+      "type": "flame",
+      "target": "launch_pad"
+    },
+    "smoke": {
+      "type": "effect",
+      "name": "smoke",
+      "target": "launch_pad"
+    }
+  },
+  "mentor": {
+    "hints_per_step": {
+      "choose_rocket": ["Select an orbital launch vehicle configuration (e.g. Orbis 1 or Orbis Heavy)."],
+      "declare_payload": ["Specify mission payload mass (kg) within vehicle capacity."],
+      "fuel_rocket": ["Load propellant into launch vehicle stages according to capacity limits."],
+      "run_checklist": ["Execute preflight flight computer diagnostic checklist."],
+      "clear_range": ["Confirm range safety clearance with tracking and range control."],
+      "launch": ["Ignite stage 1 and launch vehicle to reach orbital insertion altitude."],
+      "coast": ["Coast to parking orbit apoapsis or transfer point."],
+      "burn_transfer": ["Execute apogee or Hohmann transfer burn to target orbit altitude."],
+      "circularize": ["Execute final circularization burn to achieve target circular orbit."],
+      "debrief": ["Analyze orbital telemetry and flight parameters before final sign-off."]
+    },
+    "common_mistakes": [
+      {
+        "id": "launch_without_clearance",
+        "trigger": "launch_uncleared",
+        "remedy": "Obtain range safety clearance and run preflight checklist before ignition."
+      },
+      {
+        "id": "twr_insufficient",
+        "trigger": "twr_less_than_one",
+        "remedy": "Ensure booster stage thrust exceeds total wet vehicle weight (TWR > 1.0)."
+      }
+    ]
+  },
+  "ask_orbis": {
+    "allowed_actions": [
+      "choose_rocket",
+      "declare_payload",
+      "fuel_rocket",
+      "run_checklist",
+      "clear_range",
+      "launch",
+      "coast",
+      "burn_transfer",
+      "circularize",
+      "debrief",
+      "submit_report"
+    ],
+    "synonyms": {
+      "choose_rocket": ["select rocket", "choose launch vehicle", "pick orbis 1"],
+      "declare_payload": ["declare payload", "set payload mass", "load satellite"],
+      "fuel_rocket": ["fuel rocket", "load propellant", "tank rp-1"],
+      "run_checklist": ["preflight checklist", "diagnostics", "check flight computer"],
+      "clear_range": ["clear range", "request range safety", "radar clear"],
+      "launch": ["launch", "ignite engines", "liftoff", "ascent to orbit"],
+      "coast": ["coast", "inertial coast", "coast to apogee"],
+      "burn_transfer": ["hohmann transfer", "transfer burn", "boost apogee"],
+      "circularize": ["circularize", "circularization burn", "insert into geo"],
+      "debrief": ["debrief telemetry", "mission debrief", "review flight data"],
+      "submit_report": ["submit flight report", "complete mission", "end launch bench"]
+    }
+  },
+  "model_card": "docs/model_cards/space.orbit.md",
+  "provenance": {
+    "author": "Antigravity Orbital Mechanics Team",
+    "model_card": "docs/model_cards/space.orbit.md",
+    "constants": {
+      "earth_mu": {
+        "value": 3.986004418e14,
+        "unit": "m^3/s^2",
+        "source": "NASA Earth Fact Sheet",
+        "citation": "Standard Gravitational Parameter of the Earth (GM)",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      },
+      "earth_radius_km": {
+        "value": 6371.0,
+        "unit": "km",
+        "source": "IUGG Mean Earth Radius (R_1)",
+        "citation": "International Union of Geodesy and Geophysics",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      },
+      "standard_gravity": {
+        "value": 9.80665,
+        "unit": "m/s^2",
+        "source": "CODATA Standard Acceleration of Gravity (g_0)",
+        "citation": "NIST Reference on Constants, Units, and Uncertainty",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      }
+    },
+    "notes": "Keplerian orbital mechanics and multi-stage Tsiolkovsky rocket equation."
+  },
+  "i18n_keys": {
+    "title": "experiments.launch_bench.title",
+    "steps.choose_rocket.title": "experiments.launch_bench.steps.choose_rocket.title",
+    "steps.declare_payload.title": "experiments.launch_bench.steps.declare_payload.title",
+    "steps.fuel_rocket.title": "experiments.launch_bench.steps.fuel_rocket.title",
+    "steps.run_checklist.title": "experiments.launch_bench.steps.run_checklist.title",
+    "steps.clear_range.title": "experiments.launch_bench.steps.clear_range.title",
+    "steps.launch.title": "experiments.launch_bench.steps.launch.title",
+    "steps.coast.title": "experiments.launch_bench.steps.coast.title",
+    "steps.burn_transfer.title": "experiments.launch_bench.steps.burn_transfer.title",
+    "steps.circularize.title": "experiments.launch_bench.steps.circularize.title",
+    "steps.debrief.title": "experiments.launch_bench.steps.debrief.title"
+  }
+}

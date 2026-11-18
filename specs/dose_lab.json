@@ -1,0 +1,259 @@
+{
+  "id": "dose_lab",
+  "version": "1.0.0",
+  "district": "pharma",
+  "title": "Dose Response Lab",
+  "learning_goals": [
+    "Differentiate 1-compartment vs 2-compartment distribution phases and multi-exponential decay.",
+    "Compare oral absorption kinetics against zero-order IV infusion and instantaneous IV bolus.",
+    "Apply allometric weight scaling and calculate CrCl renal impairment dose adjustments.",
+    "Forecast peak concentration (Cmax) and time in target therapeutic window.",
+    "Link plasma concentration to physiological effect using sigmoid Emax pharmacodynamics.",
+    "Analyze multi-dose accumulation ratios and steady-state kinetics."
+  ],
+  "difficulty": "advanced",
+  "est_minutes": 25,
+  "engine": {
+    "id": "pharma.trial",
+    "minimum_version": "0.1.0",
+    "parameter_bounds": {
+      "age": {"min": 18.0, "max": 90.0, "unit": "years", "default": 35.0},
+      "weight_kg": {"min": 40.0, "max": 150.0, "unit": "kg", "default": 70.0},
+      "crcl_ml_min": {"min": 15.0, "max": 150.0, "unit": "mL/min", "default": 100.0},
+      "dose_mg": {"min": 1.0, "max": 2000.0, "unit": "mg", "default": 500.0}
+    }
+  },
+  "equipment": [
+    "patient_monitor",
+    "infusion_pump",
+    "sampling_schedule",
+    "prediction_slate",
+    "pkpd_chart_display",
+    "debrief_station"
+  ],
+  "steps": [
+    {
+      "id": "select_patient",
+      "title": "Declare Patient Profile",
+      "allowed_actions": ["select_patient", "set_covariates"],
+      "preconditions": [],
+      "effects": ["patient_declared"]
+    },
+    {
+      "id": "select_drug",
+      "title": "Select Drug & Administration Route",
+      "allowed_actions": ["select_drug", "set_route"],
+      "preconditions": [],
+      "effects": ["drug_selected"]
+    },
+    {
+      "id": "set_dose",
+      "title": "Set Dose & Regimen Parameters",
+      "allowed_actions": ["set_dose", "set_regimen"],
+      "preconditions": [],
+      "effects": ["dose_configured"]
+    },
+    {
+      "id": "check_renal",
+      "title": "Acknowledge Renal Function Status",
+      "allowed_actions": ["check_renal"],
+      "preconditions": [],
+      "effects": ["renal_checked"]
+    },
+    {
+      "id": "set_sampling",
+      "title": "Choose Sampling Schedule",
+      "allowed_actions": ["set_sampling"],
+      "preconditions": [],
+      "effects": ["sampling_set"]
+    },
+    {
+      "id": "predict_window",
+      "title": "Predict Target Window Response",
+      "allowed_actions": ["predict_window"],
+      "preconditions": [],
+      "effects": ["prediction_submitted"]
+    },
+    {
+      "id": "run_simulation",
+      "title": "Execute PK/PD Simulation",
+      "allowed_actions": ["run_simulation"],
+      "preconditions": [],
+      "effects": ["simulation_executed"]
+    },
+    {
+      "id": "debrief_pkpd",
+      "title": "Debrief Pharmacometric Telemetry",
+      "allowed_actions": ["debrief_pkpd"],
+      "preconditions": [],
+      "effects": ["debriefed"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "D1",
+      "text": "Administered dose must not exceed the maximum recommended adult single dose from drug specifications.",
+      "severity": "fail",
+      "condition": "dose_under_max"
+    },
+    {
+      "id": "D2",
+      "text": "Patients with renal impairment (CrCl < 60 mL/min) receiving renally cleared drugs require dose reduction.",
+      "severity": "penalty",
+      "condition": "renal_adjusted"
+    },
+    {
+      "id": "D3",
+      "text": "Selected administration route must be compatible with drug bioavailability.",
+      "severity": "block",
+      "condition": "route_compatible"
+    },
+    {
+      "id": "D4",
+      "text": "Patient parameters must remain within adult boundary limits (Age 18-90, Weight 40-150 kg, CrCl 15-150 mL/min).",
+      "severity": "penalty",
+      "condition": "adult_covariates_valid"
+    },
+    {
+      "id": "D5",
+      "text": "Narrow therapeutic index drugs require at least 3 blood sampling observation timepoints.",
+      "severity": "penalty",
+      "condition": "tdm_sampling_sufficient"
+    },
+    {
+      "id": "D6",
+      "text": "Intravenous infusions must not be administered in under 15 minutes (< 0.25h) to avoid adverse reactions.",
+      "severity": "penalty",
+      "condition": "infusion_duration_safe"
+    },
+    {
+      "id": "D7",
+      "text": "Enter predicted peak concentration and target window duration before executing simulation.",
+      "severity": "penalty",
+      "condition": "prediction_recorded"
+    },
+    {
+      "id": "D8",
+      "text": "Simulated Cmax must not exceed the toxic concentration threshold.",
+      "severity": "fail",
+      "condition": "cmax_under_toxic"
+    }
+  ],
+  "scoring": {
+    "weights": {
+      "safety": 40,
+      "accuracy": 30,
+      "technique": 20,
+      "protocol": 10
+    },
+    "grade_thresholds": {
+      "A": 90,
+      "B": 80,
+      "C": 70,
+      "D": 60
+    }
+  },
+  "visual_directive_mapping": {
+    "infusion_effect": {
+      "type": "effect",
+      "name": "bubbles",
+      "target": "infusion_pump"
+    },
+    "alarm_flash": {
+      "type": "effect",
+      "name": "alarm_flash",
+      "target": "patient_monitor"
+    }
+  },
+  "mentor": {
+    "hints_per_step": {
+      "select_patient": ["Select an adult patient profile and confirm baseline weight, age, and renal status."],
+      "select_drug": ["Select drug and valid route from the clinical formulary (e.g. Paracetamol oral or Gentamicin IV)."],
+      "set_dose": ["Specify dose within safety boundaries and configure infusion duration or dosing intervals."],
+      "check_renal": ["Check creatinine clearance (CrCl); if < 60 mL/min, confirm renal dose adjustment."],
+      "set_sampling": ["Choose blood sampling schedule (e.g. 0-24h monitoring) to capture Cmax and terminal elimination."],
+      "predict_window": ["Record your scientific prediction for peak concentration and duration in target window."],
+      "run_simulation": ["Run the deterministic simulation engine and examine concentration and effect curves."],
+      "debrief_pkpd": ["Analyze observed Cmax, AUC, and time-in-target window before finalizing session report."]
+    },
+    "common_mistakes": [
+      {
+        "id": "renal_overdose",
+        "trigger": "renal_no_reduction",
+        "remedy": "Patients with CrCl < 60 mL/min clear aminoglycosides slowly; reduce dose by 50% or extend interval."
+      },
+      {
+        "id": "fast_infusion",
+        "trigger": "infusion_under_15min",
+        "remedy": "Infuse vancomycin over at least 60 minutes to prevent red man syndrome."
+      }
+    ]
+  },
+  "ask_orbis": {
+    "allowed_actions": [
+      "select_patient",
+      "select_drug",
+      "set_route",
+      "set_dose",
+      "set_regimen",
+      "set_covariates",
+      "check_renal",
+      "set_sampling",
+      "predict_window",
+      "run_simulation",
+      "compare_regimens",
+      "debrief_pkpd",
+      "submit_report"
+    ],
+    "synonyms": {
+      "select_patient": ["select patient", "declare patient", "pick patient"],
+      "select_drug": ["select drug", "choose drug", "pick paracetamol", "pick gentamicin"],
+      "set_route": ["set route", "choose iv", "oral route", "iv infusion"],
+      "set_dose": ["set dose", "adjust dose", "dose 500mg"],
+      "set_regimen": ["set regimen", "q8h regimen", "multi dose"],
+      "set_covariates": ["set weight", "set age", "adjust covariates"],
+      "check_renal": ["check renal", "acknowledge crcl", "verify kidney function"],
+      "set_sampling": ["sampling schedule", "set monitoring", "select blood times"],
+      "predict_window": ["predict cmax", "scientific prediction", "forecast window"],
+      "run_simulation": ["run simulation", "simulate pkpd", "calculate curves"],
+      "compare_regimens": ["compare regimens", "overlay curve", "save comparison"],
+      "debrief_pkpd": ["debrief telemetry", "review pkpd", "analyze results"],
+      "submit_report": ["submit dose report", "finish dose lab", "end experiment"]
+    }
+  },
+  "model_card": "docs/model_cards/pharma.trial.md",
+  "provenance": {
+    "author": "Antigravity Quantitative Pharmacology Team",
+    "model_card": "docs/model_cards/pharma.trial.md",
+    "constants": {
+      "paracetamol_cl": {
+        "value": 21.0,
+        "unit": "L/h",
+        "source": "game-balanced approximate, not label or literature data, human verification needed",
+        "citation": "Goodman & Gilman's Pharmacological Basis of Therapeutics, 13th ed., Table 2-1",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      },
+      "gentamicin_vd": {
+        "value": 18.0,
+        "unit": "L",
+        "source": "game-balanced approximate, not label or literature data, human verification needed",
+        "citation": "Rowland and Tozer's Clinical Pharmacokinetics and Pharmacodynamics, 5th ed., Appendix A",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      }
+    },
+    "notes": "Educational multi-compartment PK/PD simulation model."
+  },
+  "i18n_keys": {
+    "title": "experiments.dose_lab.title",
+    "steps.select_patient.title": "experiments.dose_lab.steps.select_patient.title",
+    "steps.select_drug.title": "experiments.dose_lab.steps.select_drug.title",
+    "steps.set_dose.title": "experiments.dose_lab.steps.set_dose.title",
+    "steps.check_renal.title": "experiments.dose_lab.steps.check_renal.title",
+    "steps.set_sampling.title": "experiments.dose_lab.steps.set_sampling.title",
+    "steps.predict_window.title": "experiments.dose_lab.steps.predict_window.title",
+    "steps.run_simulation.title": "experiments.dose_lab.steps.run_simulation.title",
+    "steps.debrief_pkpd.title": "experiments.dose_lab.steps.debrief_pkpd.title"
+  }
+}
