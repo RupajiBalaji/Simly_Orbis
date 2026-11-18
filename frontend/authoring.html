@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simly Orbis — Experiment Specification Authoring (Section 8.14)</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      margin: 0;
+      padding: 24px;
+    }
+    .authoring-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+      color: #38bdf8;
+    }
+    p.subtitle {
+      color: #94a3b8;
+      margin-bottom: 24px;
+    }
+    .authoring-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .panel {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    textarea.spec-editor {
+      width: 100%;
+      height: 480px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: #090d16;
+      color: #e2e8f0;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      padding: 12px;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    .button-bar {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    button.btn {
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button.btn-primary {
+      background: #0284c7;
+      color: white;
+    }
+    button.btn-primary:hover { background: #0369a1; }
+    button.btn-secondary {
+      background: #334155;
+      color: #f8fafc;
+    }
+    button.btn-secondary:hover { background: #475569; }
+    button.btn-success {
+      background: #059669;
+      color: white;
+    }
+    button.btn-success:hover { background: #047857; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .status-pass { background: #065f46; color: #a7f3d0; }
+    .status-fail { background: #7f1d1d; color: #fecaca; }
+    .error-list {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+    .error-item {
+      background: #2a151b;
+      border-left: 3px solid #ef4444;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 2px;
+      font-size: 13px;
+    }
+    .error-path {
+      font-family: 'JetBrains Mono', monospace;
+      color: #f87171;
+      font-weight: bold;
+    }
+    pre.output-view {
+      background: #090d16;
+      color: #cbd5e1;
+      padding: 12px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      max-height: 250px;
+    }
+  </style>
+</head>
+<body>
+  <div class="authoring-container">
+    <h1>Simly Orbis — Experiment Authoring & Validation</h1>
+    <p class="subtitle">Section 8.14: Declarative authoring form with field-level errors, simulated dry run, and approved export.</p>
+
+    <div class="authoring-grid">
+      <div class="panel">
+        <h2>Specification JSON</h2>
+        <textarea id="specEditor" class="spec-editor" spellcheck="false"></textarea>
+        <div class="button-bar">
+          <button id="btnValidate" class="btn btn-primary">Validate Spec</button>
+          <button id="btnDryRun" class="btn btn-secondary">Simulate Dry Run</button>
+          <button id="btnExport" class="btn btn-success">Export (with Approval Flag)</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Validation & Dry Run Results</h2>
+        <div id="statusArea">
+          <span class="status-badge" style="background: #334155; color: #cbd5e1;">Awaiting validation...</span>
+        </div>
+        <div id="errorsContainer"></div>
+        <h3 style="margin-top: 16px; font-size: 15px;">Output Telemetry</h3>
+        <pre id="outputLog" class="output-view">// Action execution log and export JSON appears here.</pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sampleSpec = {
+      "id": "worked_example_neutralization",
+      "version": "1.0.0",
+      "district": "chemistry",
+      "title": "Vinegar Acidity Analysis (Neutralization)",
+      "learning_goals": [
+        "Determine acetic acid molarity through sodium hydroxide titration",
+        "Identify stoichiometric neutralization equivalence point with phenolphthalein"
+      ],
+      "difficulty": "beginner",
+      "est_minutes": 15,
+      "engine": {
+        "id": "chem.titration",
+        "minimum_version": "1.0.0",
+        "parameter_bounds": {
+          "analyte_volume_ml": { "min": 5.0, "max": 50.0, "unit": "mL", "default": 25.0 },
+          "titrant_volume_ml": { "min": 1.0, "max": 50.0, "unit": "mL", "default": 50.0 },
+          "analyte_concentration_m": { "min": 0.01, "max": 2.0, "unit": "M", "default": 0.1 },
+          "titrant_concentration_m": { "min": 0.01, "max": 2.0, "unit": "M", "default": 0.1 }
+        }
+      },
+      "equipment": ["burette", "conical_flask", "pipette", "digital_balance", "sink", "chemical_waste"],
+      "steps": [
+        { "id": "wear_ppe", "title": "Wear Personal Protective Equipment (PPE)", "allowed_actions": ["wear_ppe"], "preconditions": [], "effects": ["ppe_worn"] },
+        { "id": "rinse_burette", "title": "Rinse & Condition Burette", "allowed_actions": ["rinse_burette"], "preconditions": [], "effects": ["burette_rinsed"] },
+        { "id": "fill_burette", "title": "Fill Burette with NaOH Titrant", "allowed_actions": ["fill_burette"], "preconditions": [], "effects": ["burette_filled"] },
+        { "id": "submit_report", "title": "Submit Laboratory Neutralization Report", "allowed_actions": ["submit_report"], "preconditions": [], "effects": ["report_submitted"] }
+      ],
+      "rules": [
+        { "id": "R1", "text": "Protective safety goggles must be equipped before handling active chemicals.", "severity": "penalty", "condition": "ppe_goggles_worn", "hint": "Put on safety goggles from the equipment tray before opening reagent bottles." },
+        { "id": "R2", "text": "Chemical-resistant gloves must be worn before manipulating hazardous reagents.", "severity": "penalty", "condition": "ppe_gloves_worn", "hint": "Equip protective nitrile gloves to prevent direct skin contact with corrosive reagents." }
+      ],
+      "scoring": {
+        "weights": { "safety": 40, "accuracy": 30, "technique": 20, "protocol": 10 },
+        "grade_thresholds": { "A": 90, "B": 80, "C": 70, "D": 60 }
+      },
+      "visual_directive_mapping": {
+        "endpoint": { "type": "liquid", "hex": "#f472b6", "target": "conical_flask" }
+      },
+      "mentor": {
+        "hints_per_step": {
+          "wear_ppe": ["Put on all required safety gear: goggles, gloves, and lab coat."],
+          "rinse_burette": ["Condition the burette by rinsing with a small portion (5 mL) of NaOH titrant."],
+          "fill_burette": ["Fill the burette with 0.1 M NaOH up to 50 mL."],
+          "submit_report": ["Submit the completed acid-base titration laboratory report."]
+        },
+        "common_mistakes": [
+          { "id": "skipping_indicator", "trigger": "titrate before add_indicator", "remedy": "Always add 2-3 drops of indicator before dispensing titrant." }
+        ]
+      },
+      "ask_orbis": {
+        "allowed_actions": ["wear_ppe", "remove_ppe", "rinse_burette", "fill_burette", "submit_report"],
+        "synonyms": {
+          "wear_ppe": ["put on ppe", "don ppe"],
+          "rinse_burette": ["rinse burette", "wash burette"],
+          "fill_burette": ["fill burette", "load titrant"],
+          "submit_report": ["submit report", "finish experiment"]
+        }
+      },
+      "model_card": "docs/model_cards/chem_titration_v1.md",
+      "provenance": {
+        "author": "Simly Orbis Curriculum Team",
+        "model_card": "docs/model_cards/chem_titration_v1.md",
+        "constants": {
+          "kw_water": { "value": 1.0e-14, "unit": "mol^2/L^2", "source": "IUPAC standard at 25 deg C", "citation": "IUPAC Gold Book", "verified_by": "unverified", "retrieved_on": "", "notes": "Human verification required" }
+        }
+      },
+      "i18n_keys": {
+        "title": "experiments.neutralization.title",
+        "steps.wear_ppe.title": "experiments.neutralization.steps.wear_ppe.title",
+        "steps.rinse_burette.title": "experiments.neutralization.steps.rinse_burette.title",
+        "steps.fill_burette.title": "experiments.neutralization.steps.fill_burette.title",
+        "steps.submit_report.title": "experiments.neutralization.steps.submit_report.title"
+      }
+    };
+
+    const editor = document.getElementById("specEditor");
+    const statusArea = document.getElementById("statusArea");
+    const errorsContainer = document.getElementById("errorsContainer");
+    const outputLog = document.getElementById("outputLog");
+
+    editor.value = JSON.stringify(sampleSpec, null, 2);
+
+    function parseSpec() {
+      try {
+        return JSON.parse(editor.value);
+      } catch (e) {
+        statusArea.innerHTML = '<span class="status-badge status-fail">JSON Parse Error</span>';
+        errorsContainer.innerHTML = `<div class="error-item">${e.message}</div>`;
+        return null;
+      }
+    }
+
+    document.getElementById("btnValidate").addEventListener("click", async () => {
+      const spec = parseSpec();
+      if (!spec) return;
+
+      statusArea.innerHTML = '<span class="status-badge" style="background: #334155; color: #cbd5e1;">Validating...</span>';
+      errorsContainer.innerHTML = "";
+      outputLog.textContent = "// Sending validation request to /api/specs/validate...";
+
+      try {
+        const res = await fetch("/api/specs/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ spec_data: spec }),
+        });
+        const data = await res.json();
+        if (data.valid) {
+          statusArea.innerHTML = '<span class="status-badge status-pass">VALID SPECIFICATION</span>';
+          outputLog.textContent = `[PASS] Specification '${spec.id}' is 100% compliant with Section 10 schema and business rules.`;
+        } else {
+          statusArea.innerHTML = `<span class="status-badge status-fail">${data.error_count} VALIDATION ERROR(S)</span>`;
+          errorsContainer.innerHTML = '<ul class="error-list">' + data.errors.map(e => `
+            <li class="error-item">
+              <span class="error-path">${e.path}</span>: ${e.message}
+            </li>
+          `).join("") + '</ul>';
+          outputLog.textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        statusArea.innerHTML = '<span class="status-badge status-fail">Network Error</span>';
+        outputLog.textContent = String(err);
+      }
+    });
+
+    document.getElementById("btnDryRun").addEventListener("click", async () => {
+      const spec = parseSpec();
+      if (!spec) return;
+
+      statusArea.innerHTML = '<span class="status-badge" style="background: #334155; color: #cbd5e1;">Executing dry run...</span>';
+      errorsContainer.innerHTML = "";
+      outputLog.textContent = "// Executing scripted actions against in-memory simulation engine...";
+
+      const scriptedActions = [
+        { action: "wear_ppe", target: "avatar", params: { item: "all" } },
+        { action: "rinse_burette", target: "burette", params: { solvent: "naoh" } },
+        { action: "fill_burette", target: "burette", params: { titrant: "naoh", volume_ml: 50.0 } }
+      ];
+
+      try {
+        const res = await fetch("/api/specs/dry-run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ spec_data: spec, actions: scriptedActions }),
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          statusArea.innerHTML = `<span class="status-badge status-pass">DRY RUN SUCCESS (Score: ${data.final_score}/100)</span>`;
+          outputLog.textContent = JSON.stringify(data, null, 2);
+        } else {
+          statusArea.innerHTML = '<span class="status-badge status-fail">DRY RUN FAILED</span>';
+          outputLog.textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        statusArea.innerHTML = '<span class="status-badge status-fail">Network Error</span>';
+        outputLog.textContent = String(err);
+      }
+    });
+
+    document.getElementById("btnExport").addEventListener("click", async () => {
+      const spec = parseSpec();
+      if (!spec) return;
+
+      statusArea.innerHTML = '<span class="status-badge" style="background: #334155; color: #cbd5e1;">Exporting...</span>';
+      errorsContainer.innerHTML = "";
+
+      try {
+        const res = await fetch("/api/specs/export", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ spec_data: spec }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          statusArea.innerHTML = '<span class="status-badge status-pass">EXPORT READY (Pending Admin Approval)</span>';
+          outputLog.textContent = JSON.stringify(data.exported_spec, null, 2);
+
+          // Trigger download
+          const blob = new Blob([JSON.stringify(data.exported_spec, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${spec.id}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          statusArea.innerHTML = '<span class="status-badge status-fail">EXPORT REJECTED</span>';
+          outputLog.textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        statusArea.innerHTML = '<span class="status-badge status-fail">Network Error</span>';
+        outputLog.textContent = String(err);
+      }
+    });
+  </script>
+</body>
+</html>
