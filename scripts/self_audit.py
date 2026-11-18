@@ -425,11 +425,35 @@ def check_qa_artifacts(repo_root: Path, ci_mode: bool = False) -> GateResult:
         found = [d for d in districts if d in report_text]
         districts_passed = len(found) == len(districts)
 
-    passed = has_report and len(media_files) >= 20 and len(duplicates) == 0 and districts_passed
+    # Check freshness against last commit touching frontend/
+    proc = subprocess.run(
+        ["git", "log", "-1", "--format=%ct", "--", "frontend"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    frontend_commit_time = 0
+    if proc.returncode == 0 and proc.stdout.strip().isdigit():
+        frontend_commit_time = int(proc.stdout.strip())
+
+    folder_time = int(newest.stat().st_mtime)
+    try:
+        folder_dt = datetime.strptime(newest.name, "%Y%m%d_%H%M%S")
+        folder_ts = int(folder_dt.timestamp())
+        run_time = max(folder_time, folder_ts)
+    except Exception:
+        run_time = folder_time
+
+    is_fresh = (frontend_commit_time == 0) or (run_time >= frontend_commit_time)
+
+    passed = has_report and len(media_files) >= 20 and len(duplicates) == 0 and districts_passed and is_fresh
+    freshness_str = "fresh (post-frontend commit)" if is_fresh else f"STALE (run {run_time} < commit {frontend_commit_time})"
     evidence = (
-        f"Folder: `{newest.name}` | Media count: {len(media_files)} | "
+        f"Folder: `{newest.name}` ({freshness_str}) | Media count: {len(media_files)} | "
         f"report.md: {has_report} | MD5 collisions: {len(duplicates)} | Districts: 4/4 verified"
     )
+    if not is_fresh:
+        evidence += f" | FAILED: newest qa/out ({newest.name}) is older than last frontend commit"
     return GateResult(
         gate_id=8,
         name="QA Playthrough Proof",

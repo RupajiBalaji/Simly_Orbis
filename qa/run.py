@@ -272,6 +272,7 @@ class QAHarnessRunner:
                     record_video_size={"width": 1280, "height": 720},
                     viewport={"width": 1280, "height": 720},
                 )
+                context.add_init_script("localStorage.setItem('orbis_tutorial_completed', 'true');")
 
                 page = context.new_page()
                 page.set_default_timeout(self.timeout_ms)
@@ -292,7 +293,8 @@ class QAHarnessRunner:
                 # ==============================================================
                 print("\n[QA] --- Step 2: Pharmacokinetics Ward (pk_ward) ---")
                 # Open brief
-                page.click("#card-district-pharma")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); }")
+                page.click('a[href="#/briefing?exp=pk_ward"]')
                 page.wait_for_selector("#screen-brief:not(.hidden)", timeout=self.timeout_ms)
                 page.wait_for_timeout(500)
                 self.capture_checkpoint(page, "pk_ward_brief")
@@ -309,11 +311,11 @@ class QAHarnessRunner:
                 init_pos = page.evaluate("() => ({ x: window.characterController.rig.root.position.x, z: window.characterController.rig.root.position.z })")
                 # Send real key events and assert the avatar moved without leaving walkable space
                 page.keyboard.down("w")
-                page.wait_for_timeout(500)
+                page.wait_for_timeout(800)
                 self.capture_checkpoint(page, "cp3_walking_mid_frame")
-                page.wait_for_timeout(500)
+                page.wait_for_timeout(600)
                 page.keyboard.up("w")
-                page.wait_for_timeout(300)
+                page.wait_for_timeout(400)
 
                 final_pos = page.evaluate("() => ({ x: window.characterController.rig.root.position.x, z: window.characterController.rig.root.position.z })")
                 walk_dist = math.hypot(final_pos["x"] - init_pos["x"], final_pos["z"] - init_pos["z"])
@@ -540,16 +542,43 @@ class QAHarnessRunner:
                 page.wait_for_timeout(1000)
                 self.capture_checkpoint(page, "pk_ward_report")
 
-                # Extract grade
+                # Extract grade & DOM-vs-API assertion
                 pk_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                api_grade = page.evaluate("() => window.state?.session?.report?.grade || ''")
+                if api_grade and pk_grade:
+                    assert pk_grade == api_grade, f"PK Ward DOM grade '{pk_grade}' != API grade '{api_grade}'"
+                    print(f"  [QA PK Ward] DOM-vs-API Assertion PASSED: Grade '{pk_grade}' matches API exactly.")
                 self.grades["pk_ward"] = pk_grade
                 print(f"  [QA] Pharmacokinetics Ward Final Grade: '{pk_grade}'")
                 if not pk_grade:
                     self.failure_reasons.append("pk_ward report submitted without a letter grade.")
 
+                # PK Ward Rule-Violation Run: Weighing without PPE (Rule R1)
+                print("  [QA PK Ward] Rule-Violation Run: Weighed without PPE (Rule R1)...")
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('pk_ward');
+                    window.location.hash = '#/lab?exp=pk_ward';
+                    await window.actionMenu.executeAction('weigh', 'digital_balance', { amount_g: 0.5, substance: 'paracetamol' });
+                }""")
+                page.wait_for_timeout(800)
+                self.capture_checkpoint(page, "pk_ward_rule_violation")
+
+                # PK Ward Failure Run: Incomplete trial submitted without administration or sampling
+                print("  [QA PK Ward] Failure Run: Incomplete trial submitted without sampling...")
+                page.evaluate("""async () => {
+                    const failRep = await window.api.finishSession(window.state.session.session_id);
+                    window.reportScreen.show(failRep);
+                }""")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(800)
+                dom_fail_pk = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                print(f"  [QA PK Ward] Failure Run Grade: '{dom_fail_pk}'")
+                assert dom_fail_pk in ("F", "D"), f"Expected failure grade 'F' or 'D', got '{dom_fail_pk}'"
+                self.capture_checkpoint(page, "pk_ward_failure_report")
+
                 # Return to lobby
                 print("  [QA] Returning to lobby...")
-                page.evaluate("() => { if (window.agentPanel) window.agentPanel.closePlanModal(); }")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); if (window.agentPanel) window.agentPanel.closePlanModal(); }")
                 page.click("#btn-report-lobby")
                 page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
                 page.wait_for_timeout(600)
@@ -558,7 +587,8 @@ class QAHarnessRunner:
                 # 3. TITRATION BENCH (titration_bench)
                 # ==============================================================
                 print("\n[QA] --- Step 3: Titration Bench (titration_bench) ---")
-                page.click("#card-district-chemistry")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); }")
+                page.click('a[href="#/briefing?exp=titration_bench"]')
                 page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
                 page.wait_for_timeout(500)
                 self.capture_checkpoint(page, "titration_brief")
@@ -656,24 +686,55 @@ class QAHarnessRunner:
                 page.wait_for_timeout(1000)
                 self.capture_checkpoint(page, "titration_report")
 
-                # Extract grade
+                # Extract grade & DOM-vs-API assertion
                 tit_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                api_tit_grade = page.evaluate("() => window.state?.session?.report?.grade || ''")
+                if api_tit_grade and tit_grade:
+                    assert tit_grade == api_tit_grade, f"Titration DOM grade '{tit_grade}' != API grade '{api_tit_grade}'"
+                    print(f"  [QA Titration] DOM-vs-API Assertion PASSED: Grade '{tit_grade}' matches API exactly.")
                 self.grades["titration_bench"] = tit_grade
                 print(f"  [QA] Titration Bench Final Grade: '{tit_grade}'")
                 if not tit_grade:
                     self.failure_reasons.append("titration_bench report submitted without a letter grade.")
 
+                # Titration Rule-Violation Run: Titrating without indicator (Rule R3)
+                print("  [QA Titration] Rule-Violation Run: Titrating without indicator (Rule R3)...")
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('titration_bench');
+                    window.location.hash = '#/lab?exp=titration_bench';
+                    await window.actionMenu.executeAction('titrate', 'burette', { volume_ml: 10.0 });
+                }""")
+                page.wait_for_timeout(800)
+                self.capture_checkpoint(page, "titration_rule_violation")
+
+                # Titration Failure Run: Severe over-titration past equivalence point
+                print("  [QA Titration] Failure Run: Over-titrated by 25 mL past endpoint...")
+                page.evaluate("""async () => {
+                    await window.actionMenu.executeAction('fill_burette', 'burette', { titrant: 'naoh', volume_ml: 50.0 });
+                    await window.actionMenu.executeAction('pipette_analyte', 'conical_flask', { analyte: 'hcl', volume_ml: 25.0 });
+                    await window.actionMenu.executeAction('titrate', 'burette', { volume_ml: 45.0 });
+                    const failRep = await window.api.finishSession(window.state.session.session_id);
+                    window.reportScreen.show(failRep);
+                }""")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(800)
+                dom_fail_tit = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                print(f"  [QA Titration] Failure Run Grade: '{dom_fail_tit}'")
+                assert dom_fail_tit in ("F", "D", "C-"), f"Expected low/failure grade, got '{dom_fail_tit}'"
+                self.capture_checkpoint(page, "titration_failure_report")
+
                 # ==============================================================
                 # 3b. LAUNCH & ORBIT BENCH (launch_bench)
                 # ==============================================================
                 print("\n[QA] --- Step 3b: Launch & Orbit Bench (launch_bench) ---")
-                page.evaluate("() => { if (window.agentPanel) window.agentPanel.closePlanModal(); }")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); if (window.agentPanel) window.agentPanel.closePlanModal(); }")
                 page.click("#btn-report-lobby")
                 page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
                 page.wait_for_timeout(500)
 
                 # Enter Space District
-                page.click("#card-district-space")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); }")
+                page.click('a[href="#/briefing?exp=launch_bench"]')
                 page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
                 page.wait_for_timeout(500)
                 self.capture_checkpoint(page, "space_brief")
@@ -747,23 +808,61 @@ class QAHarnessRunner:
                 page.wait_for_timeout(1000)
                 self.capture_checkpoint(page, "space_flight_report")
 
+                # Extract grade & DOM-vs-API assertion
                 space_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                api_space_grade = page.evaluate("() => window.state?.session?.report?.grade || ''")
+                if api_space_grade and space_grade:
+                    assert space_grade == api_space_grade, f"Space DOM grade '{space_grade}' != API grade '{api_space_grade}'"
+                    print(f"  [QA Space] DOM-vs-API Assertion PASSED: Grade '{space_grade}' matches API exactly.")
                 self.grades["launch_bench"] = space_grade
                 print(f"  [QA Space] Launch Bench Final Grade: '{space_grade}'")
                 if not space_grade:
                     self.failure_reasons.append("launch_bench report submitted without a letter grade.")
 
+                # Launch Bench Rule-Violation Run: Launch without checklist or range clearance (Rule S1/S2)
+                print("  [QA Space] Rule-Violation Run: Igniting rocket without preflight checklist / clearance (Rule S1/S2)...")
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('launch_bench');
+                    window.location.hash = '#/lab?exp=launch_bench';
+                    await window.actionMenu.executeAction('choose_rocket', 'orbis_1', { preset_id: 'orbis_1' });
+                    await window.actionMenu.executeAction('fuel_rocket', 'nominal_fuel', { mode: 'nominal_fuel' });
+                    await window.actionMenu.executeAction('launch', 'pad_39a', { target_alt_km: 200.0 });
+                }""")
+                page.wait_for_timeout(800)
+                self.capture_checkpoint(page, "space_rule_violation")
+
+                # Launch Bench Failure Run: Launching with 5000 kg overload payload (suborbital failure)
+                print("  [QA Space] Failure Run: Launching with 5000 kg overload payload resulting in suborbital flight failure...")
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('launch_bench');
+                    window.location.hash = '#/lab?exp=launch_bench';
+                    await window.actionMenu.executeAction('choose_rocket', 'orbis_1', { preset_id: 'orbis_1' });
+                    await window.actionMenu.executeAction('declare_payload', 'flight_computer', { payload_kg: 5000 });
+                    await window.actionMenu.executeAction('run_checklist', 'flight_computer', {});
+                    await window.actionMenu.executeAction('clear_range', 'range_control', {});
+                    await window.actionMenu.executeAction('launch', 'pad_39a', { target_alt_km: 200.0 });
+                    const failRep = await window.api.finishSession(window.state.session.session_id);
+                    window.reportScreen.show(failRep);
+                }""")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(800)
+                dom_fail_space = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                print(f"  [QA Space] Failure Run Grade: '{dom_fail_space}'")
+                assert dom_fail_space in ("F", "D"), f"Expected failure grade, got '{dom_fail_space}'"
+                self.capture_checkpoint(page, "space_failure_report")
+
                 # ==============================================================
                 # 3c. DOSE RESPONSE LAB (dose_lab)
                 # ==============================================================
                 print("\n[QA] --- Step 3c: Dose Response Lab (dose_lab) ---")
-                page.evaluate("() => { if (window.agentPanel) window.agentPanel.closePlanModal(); }")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); if (window.agentPanel) window.agentPanel.closePlanModal(); }")
                 page.click("#btn-report-lobby")
                 page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
                 page.wait_for_timeout(500)
 
                 # Enter Dose Response Lab brief
-                page.evaluate("() => { const el = document.getElementById('card-district-dose-lab'); if (el) el.click(); }")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); }")
+                page.click('a[href="#/briefing?exp=dose_lab"]')
                 page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
                 page.wait_for_timeout(500)
                 self.capture_checkpoint(page, "dose_lab_brief")
@@ -847,6 +946,34 @@ class QAHarnessRunner:
                 page.wait_for_timeout(1200)
                 self.capture_checkpoint(page, "dose_scenario_4_overdose_alarm")
 
+                # Dose Lab Failure Run Report Checkpoint
+                print("  [QA Dose Lab] Failure Run: Overdose trial report submitted with toxicity alarm...")
+                page.evaluate("""async () => {
+                    const failRep = await window.api.finishSession(window.state.session.session_id);
+                    window.reportScreen.show(failRep);
+                }""")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(800)
+                dom_fail_dose = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                print(f"  [QA Dose Lab] Overdose Failure Report Grade: '{dom_fail_dose}'")
+                self.capture_checkpoint(page, "dose_lab_failure_report")
+
+                # Reset to compliant state for debrief & final report
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('dose_lab');
+                    window.location.hash = '#/lab?exp=dose_lab';
+                    await window.actionMenu.executeAction('select_patient', 'standard_adult', { profile_id: 'standard_adult' });
+                    await window.actionMenu.executeAction('select_drug', 'theophylline', { drug_id: 'theophylline' });
+                    await window.actionMenu.executeAction('set_route', 'oral', { route: 'oral' });
+                    await window.actionMenu.executeAction('set_dose', 'infusion_pump', { dose_mg: 300.0 });
+                    await window.actionMenu.executeAction('set_regimen', 'infusion_pump', { num_doses: 3, tau_h: 12.0, t_inf_h: 1.0 });
+                    await window.actionMenu.executeAction('set_sampling', 'sampling_slate', { sample_times_h: [0, 1, 2, 4, 8, 12, 24] });
+                    await window.actionMenu.executeAction('predict_window', 'prediction_slate', { cmax_predicted: 12.0, t_in_window_predicted: 8.0 });
+                    const res = await window.actionMenu.executeAction('run_simulation', 'pkpd_chart_display', {});
+                    if (window.dosePanel && res) window.dosePanel.processSimulationResult(res);
+                }""")
+                page.wait_for_timeout(800)
+
                 # Debrief & finish session
                 print("  [QA Dose Lab] Debriefing and submitting final analytical report...")
                 page.evaluate("async () => { await window.actionMenu.executeAction('debrief_pkpd', 'debrief_station', {}); }")
@@ -856,7 +983,12 @@ class QAHarnessRunner:
                 page.wait_for_timeout(1000)
                 self.capture_checkpoint(page, "dose_lab_final_report")
 
+                # Extract grade & DOM-vs-API assertion
                 dose_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                api_dose_grade = page.evaluate("() => window.state?.session?.report?.grade || ''")
+                if api_dose_grade and dose_grade:
+                    assert dose_grade == api_dose_grade, f"Dose Lab DOM grade '{dose_grade}' != API grade '{api_dose_grade}'"
+                    print(f"  [QA Dose Lab] DOM-vs-API Assertion PASSED: Grade '{dose_grade}' matches API exactly.")
                 self.grades["dose_lab"] = dose_grade
                 print(f"  [QA Dose Lab] Dose Response Lab Final Grade: '{dose_grade}'")
                 if not dose_grade:
@@ -866,11 +998,12 @@ class QAHarnessRunner:
                 # 4. CAMERA RIG & AVATAR FRAMING ACCEPTANCE TEST (__camTest)
                 # ==============================================================
                 print("\n[QA] --- Step 4: Camera Rig & Viewport Framing Acceptance (__camTest) ---")
-                page.evaluate("() => { if (window.agentPanel) window.agentPanel.closePlanModal(); }")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); if (window.agentPanel) window.agentPanel.closePlanModal(); }")
                 page.click("#btn-report-lobby")
                 page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
                 # Launch into pk_ward for acceptance camera test
-                page.click("#card-district-pharma")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); }")
+                page.click('a[href="#/briefing?exp=pk_ward"]')
                 page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
                 page.click("#btn-start-experiment")
                 page.wait_for_selector("#lab-hud:not(.hidden)", timeout=10000)
@@ -1071,6 +1204,9 @@ class QAHarnessRunner:
             f"---",
             f"",
             f"## 3. Render Engine Telemetry (`__stats`)",
+            f"",
+            f"> [!NOTE]",
+            f"> **Performance Telemetry Note:** Software WebGL render (SwiftShader) in headless test environment; FPS telemetry values are software-render metrics and not representative of native GPU client hardware.",
             f"",
             f"- **Median FPS:** {summary['fps_telemetry'].get('median', 60)}",
             f"- **Minimum FPS:** {summary['fps_telemetry'].get('min', 60)}",

@@ -985,6 +985,7 @@ async function openExperimentBrief(experimentId) {
 }
 
 async function startExperimentSession(experimentId, nickname = 'Researcher') {
+  const briefScreen = document.getElementById('screen-brief');
   showScreen('lab-hud');
   toast.clear();
 
