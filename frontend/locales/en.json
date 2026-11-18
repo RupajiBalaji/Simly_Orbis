@@ -21,7 +21,8 @@
     "settings": "Settings",
     "model_cards": "Model Cards",
     "reality_check": "Reality Check",
-    "classic_2d": "2D Game"
+    "classic_2d": "2D Game",
+    "home": "Home"
   },
   "lobby": {
     "select_district": "Select Simulation District",
@@ -35,7 +36,28 @@
     "why_locked": "Why Locked?",
     "not_started": "Not started",
     "in_progress": "In progress",
-    "completed": "Completed"
+    "completed": "Completed",
+    "guest_cadet": "Guest Cadet",
+    "breadcrumb_lobby": "Lobby",
+    "storage_mode_demo": "⚠️ Demo storage: scores are not saved",
+    "mode_instruction": "Choose a district below, then select Start (Exam) or Practice (Sandbox) in the briefing.",
+    "exp_count_2": "2 Experiments",
+    "exp_count_1": "1 Experiment",
+    "time_5min": "⏱️ 5 min",
+    "time_8min": "⏱️ 8 min",
+    "time_6min": "⏱️ 6 min",
+    "time_7min": "⏱️ 7 min",
+    "time_10min": "⏱️ 10 min",
+    "diff_novice": "Novice",
+    "diff_advanced": "Advanced",
+    "enter_ward": "Enter Ward ➔",
+    "enter_lab": "Enter Lab ➔",
+    "enter_bench": "Enter Bench ➔",
+    "curriculum_locked": "🔒 Curriculum Locked",
+    "coming_soon": "Coming Soon",
+    "market_desc": "High-frequency limit order books, automated market maker curves, and liquidity dynamics.",
+    "order_book_name": "Order Book & AMM Bench",
+    "order_book_goal": "Simulate adverse selection, bid-ask spread expansion, and token bonding curves."
   },
   "districts": {
     "pharma_title": "Pharmacology",
@@ -89,7 +111,9 @@
     "colorblind_mode": "Colorblind Vision Simulation",
     "tutorial_title": "First-Run Onboarding Tutorial",
     "replay_tutorial": "Replay Tutorial",
-    "reset_defaults": "Reset Defaults"
+    "reset_defaults": "Reset Defaults",
+    "language_label": "Language / Locale (i18n)",
+    "tutorial_desc": "Replay the 90-second keyboard and camera walkthrough"
   },
   "brief": {
     "district_prefix": "District: ",
@@ -99,12 +123,61 @@
   },
   "briefing": {
     "btn_practice": "⚡ Practice (No Score, Free Hints)",
-    "btn_start": "🎯 Start Experiment (Exam Mode) ➔"
+    "btn_start": "🎯 Start Experiment (Exam Mode) ➔",
+    "learning_goals": "Learning Goals",
+    "apparatus_equipment": "Apparatus & Laboratory Equipment",
+    "mandatory_safety_rules": "Mandatory Safety Rules",
+    "scoring_rubric": "Scoring Rubric Preview",
+    "required_ppe": "Required Personal Protective Equipment (PPE)",
+    "researcher_nickname": "Researcher Nickname",
+    "default_title": "Pharmacokinetics Ward"
   },
   "report": {
     "title": "Experimental Evaluation Report",
     "overall_score": "Overall Protocol Score",
     "grade": "Grade",
     "return_to_lobby": "Return to World Hub"
+  },
+  "state": {
+    "offline_banner": "⚠️ Offline – working locally where possible, cloud features paused.",
+    "webgl_unavailable": "WebGL Unavailable",
+    "webgl_desc": "Your browser or device does not support hardware-accelerated WebGL. You can still play the 2D pharmacokinetics simulation game:",
+    "launch_2d_game": "Launch Classic 2D Game"
+  },
+  "error": {
+    "title": "⚠️ Simulation Error",
+    "what_happened_label": "What Happened:",
+    "default_what_happened": "The laboratory encountered an unexpected simulation error or network timeout.",
+    "what_you_can_do_label": "What You Can Do:",
+    "action_reload": "Check your network connection and reload the laboratory session.",
+    "action_lobby": "Return to the main lobby and select another experiment.",
+    "retry_experiment": "Retry Experiment"
+  },
+  "onboarding": {
+    "title": "🎮 Laboratory Controls Walkthrough",
+    "step1_title": "Step 1: Avatar Movement",
+    "step1_desc": "Use WASD or the Arrow Keys to walk around the laboratory. Press Shift to sprint.",
+    "step2_title": "Step 2: Camera & Views",
+    "step2_desc": "Hold right-click and drag to rotate the camera. Press C to toggle Follow/Free camera, V for 1st-person, and R to re-center.",
+    "step3_title": "Step 3: Station Interaction",
+    "step3_desc": "Walk up to an apparatus and press E or click the action dock below. Press Space or Enter to execute operations.",
+    "step_counter": "Step 1 of 3"
+  },
+  "wakeup": {
+    "title": "Lab waking up",
+    "desc": "Free hosting instances go to sleep when inactive. We are waking up the backend simulation engine. This usually takes 15–40 seconds.",
+    "tip_label": "💡 Simulation Tip",
+    "tip_default": "In orbital mechanics, burning prograde raises the apoapsis on the opposite side of Earth, not where you ignite.",
+    "checking_ping": "Checking /api/ping...",
+    "btn_retry": "Retry Wake-Up"
+  },
+  "why_locked": {
+    "title": "🔒 District Locked",
+    "desc": "This simulation district is part of the advanced curriculum progression.",
+    "path_title": "Educational Progression Path:",
+    "step1": "Complete Foundation Safety & PPE protocols in Oral PK Ward",
+    "step2": "Master Acid-Base Neutralization & Equivalence in Chemistry Bench",
+    "step3": "Attain Grade B or higher on laboratory protocols to unlock advanced districts",
+    "btn_ok": "Understood"
   }
 }

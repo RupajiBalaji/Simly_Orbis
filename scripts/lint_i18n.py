@@ -2,13 +2,16 @@
 """
 scripts/lint_i18n.py
 Verifies that frontend/locales/en.json is valid, all keys are non-empty,
-and scans HTML/JS templates for registered data-i18n keys to ensure zero missing keys.
+scans HTML/JS templates for registered data-i18n keys to ensure zero missing keys,
+and strictly asserts zero untranslated user-facing literals exist across lobby,
+HUD, briefing, report, settings, and state screens.
 """
 
 import sys
 import json
 import re
 from pathlib import Path
+from html.parser import HTMLParser
 
 
 def flatten_keys(obj, prefix=""):
@@ -20,6 +23,47 @@ def flatten_keys(obj, prefix=""):
         else:
             keys.add(full_key)
     return keys
+
+
+class LiteralScanner(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.stack = []
+        self.current_screen = None
+        self.untranslated = []
+        self.target_screens = {
+            "screen-lobby", "screen-brief", "screen-settings", "screen-report",
+            "hud", "session-error-overlay", "screen-wakeup", "offline-state-banner",
+            "webgl-fallback", "modal-onboarding", "modal-why-locked"
+        }
+
+    def handle_starttag(self, tag, attrs):
+        attr_dict = dict(attrs)
+        element_id = attr_dict.get("id", "")
+        if element_id in self.target_screens:
+            self.current_screen = element_id
+
+        has_i18n = "data-i18n" in attr_dict or "data-i18n-title" in attr_dict
+        self.stack.append((tag, attr_dict, has_i18n))
+
+    def handle_endtag(self, tag):
+        if self.stack:
+            popped = self.stack.pop()
+            popped_id = popped[1].get("id", "")
+            if popped_id == self.current_screen:
+                self.current_screen = None
+
+    def handle_data(self, data):
+        if not self.current_screen or not self.stack:
+            return
+        tag, attrs, has_i18n = self.stack[-1]
+        if tag in ("script", "style", "input", "select", "option", "code"):
+            return
+        ancestor_has_i18n = any(item[2] for item in self.stack)
+        txt = data.strip()
+        if txt and not ancestor_has_i18n and len(txt) > 2:
+            if re.search(r"[a-zA-Z]{3,}", txt):
+                self.untranslated.append((self.current_screen, tag, attrs.get("id", ""), txt))
 
 
 def main():
@@ -57,9 +101,10 @@ def main():
 
     # Scan HTML files for data-i18n usage
     html_files = list((repo_root / "frontend").rglob("*.html"))
+    print(f"Scanned {len(html_files)} HTML template files.")
+
     missing = []
     found_keys = 0
-
     pattern = re.compile(r'data-i18n(?:-title)?=["\']([a-zA-Z0-9_.]+)["\']')
 
     for hf in html_files:
@@ -75,6 +120,18 @@ def main():
         for file_path, k in missing:
             print(f"  - {file_path}: {k}")
         sys.exit(1)
+
+    # Scan for untranslated literals across lobby, HUD, briefing, report, settings, and state screens
+    index_file = repo_root / "frontend" / "index.html"
+    if index_file.exists():
+        scanner = LiteralScanner()
+        scanner.feed(index_file.read_text(encoding="utf-8"))
+        if scanner.untranslated:
+            print(f"FAIL: {len(scanner.untranslated)} untranslated literals found in {index_file}:")
+            for scr, tag, eid, txt in scanner.untranslated:
+                print(f"  - [{scr}] <{tag} id='{eid}'>: {txt}")
+            sys.exit(1)
+        print("PASS: 0 untranslated literals found across lobby, HUD, briefing, report, settings, and state screens.")
 
     print(f"PASS: All {found_keys} template data-i18n references match registered en.json keys.")
     print("PASS: i18n dictionary and template lint succeeded.")

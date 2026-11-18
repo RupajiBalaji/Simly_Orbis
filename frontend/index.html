@@ -134,7 +134,7 @@
 
 
   <!-- Offline State Banner (Spec 8.16) -->
-  <aside id="offline-state-banner" class="offline-banner hidden" role="status" style="position:fixed; top:0; left:0; right:0; z-index:99999; background:var(--warn, #F5A524); color:#000; font-weight:700; text-align:center; padding:8px 16px; font-size:var(--text-xs); box-shadow:var(--elevation-2);">
+  <aside id="offline-state-banner" class="offline-banner hidden" role="status" style="position:fixed; top:0; left:0; right:0; z-index:99999; background:var(--warn, #F5A524); color:#000; font-weight:700; text-align:center; padding:8px 16px; font-size:var(--text-xs); box-shadow:var(--elevation-2);" data-i18n="state.offline_banner">
     ⚠️ Offline – working locally where possible, cloud features paused.
   </aside>
 
@@ -148,9 +148,9 @@
 
   <!-- WebGL Fallback Notification -->
   <div id="webgl-fallback" style="display:none; position:fixed; inset:0; background:#0c071d; z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:24px; text-align:center;">
-    <h2 style="color:#ec4899; font-size:1.8rem; margin-bottom:12px;">WebGL Unavailable</h2>
-    <p style="color:#94a3b8; max-width:480px; margin-bottom:20px;">Your browser or device does not support hardware-accelerated WebGL. You can still play the 2D pharmacokinetics simulation game:</p>
-    <a href="/classic.html" class="btn-primary" style="display:inline-block; padding:12px 24px; text-decoration:none;">Launch Classic 2D Game</a>
+    <h2 style="color:#ec4899; font-size:1.8rem; margin-bottom:12px;" data-i18n="state.webgl_unavailable">WebGL Unavailable</h2>
+    <p style="color:#94a3b8; max-width:480px; margin-bottom:20px;" data-i18n="state.webgl_desc">Your browser or device does not support hardware-accelerated WebGL. You can still play the 2D pharmacokinetics simulation game:</p>
+    <a href="/classic.html" class="btn-primary" style="display:inline-block; padding:12px 24px; text-decoration:none;" data-i18n="state.launch_2d_game">Launch Classic 2D Game</a>
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════════════
@@ -174,22 +174,22 @@
           <a href="#/reality-check" class="btn btn-secondary" data-nav-route="reality-check" data-i18n="nav.reality_check" style="min-height:36px; padding:4px 10px;">Reality Check</a>
         </nav>
         <span class="user-profile-chip" id="user-profile-chip" style="font-size:var(--text-xs); background:rgba(255,255,255,0.08); padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.15); display:inline-flex; align-items:center; gap:4px;" title="User Profile">
-          <span>👤</span> <span id="user-profile-name">Guest Cadet</span>
+          <span>👤</span> <span id="user-profile-name" data-i18n="lobby.guest_cadet">Guest Cadet</span>
         </span>
         <button type="button" class="btn btn-secondary" id="btn-top-mute" title="Toggle Sound FX (Mute / Unmute)" aria-label="Toggle Sound Mute" style="min-height:36px; padding:4px 10px;">🔊</button>
         <a href="#/settings" class="btn btn-secondary" title="Open Settings" aria-label="Open Settings" style="min-height:36px; padding:4px 10px; text-decoration:none;">⚙️</a>
-        <button type="button" class="btn btn-secondary" id="btn-open-about" style="cursor:pointer; min-height:36px; padding:4px 10px;" title="About Simly Orbis and Help" aria-label="Help and About">❓ Help</button>
-        <a href="/classic.html" class="btn btn-secondary" style="min-height:36px; padding:4px 10px;">2D Game</a>
+        <button type="button" class="btn btn-secondary" id="btn-open-about" style="cursor:pointer; min-height:36px; padding:4px 10px;" title="About Simly Orbis and Help" aria-label="Help and About" data-i18n="common.help">❓ Help</button>
+        <a href="/classic.html" class="btn btn-secondary" style="min-height:36px; padding:4px 10px;" data-i18n="nav.classic_2d">2D Game</a>
       </div>
     </header>
 
     <nav class="breadcrumbs" id="app-breadcrumbs" aria-label="Breadcrumb Navigation" style="padding:6px 36px; font-size:var(--text-xs); color:var(--text-muted); display:flex; gap:6px; align-items:center; background:rgba(0,0,0,0.15); border-bottom:1px solid rgba(255,255,255,0.05);">
-      <a href="#/lobby" style="color:var(--text-muted); text-decoration:none;">Home</a>
+      <a href="#/lobby" style="color:var(--text-muted); text-decoration:none;" data-i18n="nav.home">Home</a>
       <span>/</span>
-      <span id="breadcrumb-current" style="color:var(--text); font-weight:600;">Lobby</span>
+      <span id="breadcrumb-current" style="color:var(--text); font-weight:600;" data-i18n="lobby.breadcrumb_lobby">Lobby</span>
     </nav>
 
-    <div id="storage-mode-banner" class="storage-mode-banner hidden" style="background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.4); color:#fef08a; padding:8px 16px; margin:0 36px 12px; border-radius:6px; font-size:0.85rem; text-align:center;">
+    <div id="storage-mode-banner" class="storage-mode-banner hidden" style="background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.4); color:#fef08a; padding:8px 16px; margin:0 36px 12px; border-radius:6px; font-size:0.85rem; text-align:center;" data-i18n="lobby.storage_mode_demo">
       ⚠️ Demo storage: scores are not saved
     </div>
 
@@ -198,7 +198,7 @@
         <h2 data-i18n="lobby.select_district">Select Simulation District</h2>
         <p data-i18n="lobby.hero_desc">Choose an interactive district to conduct stateful laboratory experiments, test scientific hypotheses, and receive algorithmic feedback.</p>
         <div class="lobby-controls" style="display:flex; justify-content:center; align-items:center; gap:16px; margin-top:16px; flex-wrap:wrap;">
-          <span style="font-size:var(--text-xs); color:var(--text-muted);">Choose a district below, then select <strong>Start (Exam)</strong> or <strong>Practice (Sandbox)</strong> in the briefing.</span>
+          <span style="font-size:var(--text-xs); color:var(--text-muted);" data-i18n="lobby.mode_instruction">Choose a district below, then select Start (Exam) or Practice (Sandbox) in the briefing.</span>
         </div>
       </div>
 
@@ -207,14 +207,14 @@
         <div class="district-card pharma unlocked" id="card-district-pharma" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span class="district-badge badge-unlocked">● Unlocked</span>
-              <span style="font-size:var(--text-xs); color:var(--accent-chem); font-weight:600;">2 Experiments</span>
+              <span class="district-badge badge-unlocked" data-i18n="lobby.unlocked_badge">● Unlocked</span>
+              <span style="font-size:var(--text-xs); color:var(--accent-chem); font-weight:600;" data-i18n="lobby.exp_count_2">2 Experiments</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
               <span class="district-icon" style="font-size:1.8rem;">💊</span>
-              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Pharmacology</h3>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;" data-i18n="districts.pharma_title">Pharmacology</h3>
             </div>
-            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;" data-i18n="districts.pharma_desc">
               Investigate absorption, distribution, metabolism, elimination, and concentration-response curves.
             </p>
             
@@ -222,35 +222,35 @@
             <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
               <div class="exp-tile card" data-exp-id="pk_ward" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                  <strong style="font-size:var(--text-sm); color:var(--text);">Oral PK Ward</strong>
+                  <strong style="font-size:var(--text-sm); color:var(--text);" data-i18n="districts.pk_ward_name">Oral PK Ward</strong>
                   <div style="display:flex; gap:4px;">
-                    <span class="badge badge-info" style="font-size:10px;">Novice</span>
-                    <span style="font-size:10px; color:var(--text-muted);">⏱️ 5 min</span>
+                    <span class="badge badge-info" style="font-size:10px;" data-i18n="lobby.diff_novice">Novice</span>
+                    <span style="font-size:10px; color:var(--text-muted);" data-i18n="lobby.time_5min">⏱️ 5 min</span>
                   </div>
                 </div>
-                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;" data-i18n="districts.pk_ward_goal">
                   Administer oral paracetamol, sample plasma, and compute elimination half-life.
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span class="status-chip badge badge-default" id="status-pk-ward" style="font-size:10px;">Not started</span>
-                  <a href="#/briefing?exp=pk_ward" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;">Enter Ward ➔</a>
+                  <span class="status-chip badge badge-default" id="status-pk-ward" style="font-size:10px;" data-i18n="lobby.not_started">Not started</span>
+                  <a href="#/briefing?exp=pk_ward" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;" data-i18n="lobby.enter_ward">Enter Ward ➔</a>
                 </div>
               </div>
 
               <div class="exp-tile card" data-exp-id="dose_lab" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                  <strong style="font-size:var(--text-sm); color:var(--text);">Dose Response Lab</strong>
+                  <strong style="font-size:var(--text-sm); color:var(--text);" data-i18n="districts.dose_lab_name">Dose Response Lab</strong>
                   <div style="display:flex; gap:4px;">
-                    <span class="badge badge-warn" style="font-size:10px;">Advanced</span>
-                    <span style="font-size:10px; color:var(--text-muted);">⏱️ 8 min</span>
+                    <span class="badge badge-warn" style="font-size:10px;" data-i18n="lobby.diff_advanced">Advanced</span>
+                    <span style="font-size:10px; color:var(--text-muted);" data-i18n="lobby.time_8min">⏱️ 8 min</span>
                   </div>
                 </div>
-                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;" data-i18n="districts.dose_lab_goal">
                   Multi-compartment PK/PD dynamics across oral/IV routes and patient covariates.
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span class="status-chip badge badge-default" id="status-dose-lab" style="font-size:10px;">Not started</span>
-                  <a href="#/briefing?exp=dose_lab" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;">Enter Lab ➔</a>
+                  <span class="status-chip badge badge-default" id="status-dose-lab" style="font-size:10px;" data-i18n="lobby.not_started">Not started</span>
+                  <a href="#/briefing?exp=dose_lab" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;" data-i18n="lobby.enter_lab">Enter Lab ➔</a>
                 </div>
               </div>
             </div>
@@ -261,32 +261,32 @@
         <div class="district-card chemistry unlocked" id="card-district-chemistry" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span class="district-badge badge-unlocked">● Unlocked</span>
-              <span style="font-size:var(--text-xs); color:var(--accent); font-weight:600;">1 Experiment</span>
+              <span class="district-badge badge-unlocked" data-i18n="lobby.unlocked_badge">● Unlocked</span>
+              <span style="font-size:var(--text-xs); color:var(--accent); font-weight:600;" data-i18n="lobby.exp_count_1">1 Experiment</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
               <span class="district-icon" style="font-size:1.8rem;">🧪</span>
-              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Chemistry</h3>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;" data-i18n="districts.chem_title">Chemistry</h3>
             </div>
-            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;" data-i18n="districts.chem_desc">
               Aqueous equilibrium, volumetric glassware titration, and pH indicator shifts.
             </p>
             
             <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
               <div class="exp-tile card" data-exp-id="titration_bench" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                  <strong style="font-size:var(--text-sm); color:var(--text);">Titration Bench</strong>
+                  <strong style="font-size:var(--text-sm); color:var(--text);" data-i18n="districts.titration_name">Titration Bench</strong>
                   <div style="display:flex; gap:4px;">
-                    <span class="badge badge-info" style="font-size:10px;">Novice</span>
-                    <span style="font-size:10px; color:var(--text-muted);">⏱️ 6 min</span>
+                    <span class="badge badge-info" style="font-size:10px;" data-i18n="lobby.diff_novice">Novice</span>
+                    <span style="font-size:10px; color:var(--text-muted);" data-i18n="lobby.time_6min">⏱️ 6 min</span>
                   </div>
                 </div>
-                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;" data-i18n="districts.titration_goal">
                   Standardize burette, pipette analyte, and drop-wise neutralize to find equivalence point.
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span class="status-chip badge badge-default" id="status-titration" style="font-size:10px;">Not started</span>
-                  <a href="#/briefing?exp=titration_bench" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;">Enter Bench ➔</a>
+                  <span class="status-chip badge badge-default" id="status-titration" style="font-size:10px;" data-i18n="lobby.not_started">Not started</span>
+                  <a href="#/briefing?exp=titration_bench" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;" data-i18n="lobby.enter_bench">Enter Bench ➔</a>
                 </div>
               </div>
             </div>
@@ -297,32 +297,32 @@
         <div class="district-card space unlocked" id="card-district-space" style="display:flex; flex-direction:column; justify-content:space-between;">
           <div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span class="district-badge badge-unlocked">● Unlocked</span>
-              <span style="font-size:var(--text-xs); color:var(--accent-space, #38bdf8); font-weight:600;">1 Experiment</span>
+              <span class="district-badge badge-unlocked" data-i18n="lobby.unlocked_badge">● Unlocked</span>
+              <span style="font-size:var(--text-xs); color:var(--accent-space, #38bdf8); font-weight:600;" data-i18n="lobby.exp_count_1">1 Experiment</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
               <span class="district-icon" style="font-size:1.8rem;">🚀</span>
-              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Space Systems</h3>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;" data-i18n="districts.space_title">Space Systems</h3>
             </div>
-            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;" data-i18n="districts.space_desc">
               Orbital mechanics, two-stage Tsiolkovsky delta-v, and Hohmann coplanar transfers.
             </p>
             
             <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
               <div class="exp-tile card" data-exp-id="launch_bench" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                  <strong style="font-size:var(--text-sm); color:var(--text);">Launch &amp; Orbit Bench</strong>
+                  <strong style="font-size:var(--text-sm); color:var(--text);" data-i18n="districts.launch_name">Launch &amp; Orbit Bench</strong>
                   <div style="display:flex; gap:4px;">
-                    <span class="badge badge-warn" style="font-size:10px;">Advanced</span>
-                    <span style="font-size:10px; color:var(--text-muted);">⏱️ 7 min</span>
+                    <span class="badge badge-warn" style="font-size:10px;" data-i18n="lobby.diff_advanced">Advanced</span>
+                    <span style="font-size:10px; color:var(--text-muted);" data-i18n="lobby.time_7min">⏱️ 7 min</span>
                   </div>
                 </div>
-                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;" data-i18n="districts.launch_goal">
                   Calculate staging mass ratio, ignite ascent to LEO, and execute circularization burns.
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span class="status-chip badge badge-default" id="status-launch" style="font-size:10px;">Not started</span>
-                  <a href="#/briefing?exp=launch_bench" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;">Enter Bench ➔</a>
+                  <span class="status-chip badge badge-default" id="status-launch" style="font-size:10px;" data-i18n="lobby.not_started">Not started</span>
+                  <a href="#/briefing?exp=launch_bench" class="btn btn-primary" style="min-height:28px; padding:2px 10px; font-size:11px; text-decoration:none;" data-i18n="lobby.enter_bench">Enter Bench ➔</a>
                 </div>
               </div>
             </div>
@@ -333,29 +333,29 @@
         <div class="district-card locked" id="card-district-market" style="display:flex; flex-direction:column; justify-content:space-between; opacity:0.85;">
           <div>
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span class="district-badge badge-locked">🔒 Curriculum Locked</span>
-              <span style="font-size:var(--text-xs); color:var(--text-muted);">Coming Soon</span>
+              <span class="district-badge badge-locked" data-i18n="lobby.curriculum_locked">🔒 Curriculum Locked</span>
+              <span style="font-size:var(--text-xs); color:var(--text-muted);" data-i18n="lobby.coming_soon">Coming Soon</span>
             </div>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
               <span class="district-icon" style="font-size:1.8rem;">📊</span>
-              <h3 class="district-title" style="margin:0; font-size:1.15rem;">Market Systems</h3>
+              <h3 class="district-title" style="margin:0; font-size:1.15rem;" data-i18n="districts.market_title">Market Systems</h3>
             </div>
-            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;">
+            <p class="district-desc" style="font-size:var(--text-xs); color:var(--text-muted); margin-bottom:12px;" data-i18n="lobby.market_desc">
               High-frequency limit order books, automated market maker curves, and liquidity dynamics.
             </p>
             
             <div class="experiment-tiles" style="display:flex; flex-direction:column; gap:8px;">
               <div class="exp-tile card" style="background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); padding:10px; border-radius:var(--radius-md);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-                  <strong style="font-size:var(--text-sm); color:var(--text-muted);">Order Book &amp; AMM Bench</strong>
-                  <span style="font-size:10px; color:var(--text-muted);">⏱️ 10 min</span>
+                  <strong style="font-size:var(--text-sm); color:var(--text-muted);" data-i18n="lobby.order_book_name">Order Book &amp; AMM Bench</strong>
+                  <span style="font-size:10px; color:var(--text-muted);" data-i18n="lobby.time_10min">⏱️ 10 min</span>
                 </div>
-                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;">
+                <div class="exp-goal" style="font-size:11px; color:var(--text-muted); margin-bottom:8px; line-height:1.3;" data-i18n="lobby.order_book_goal">
                   Simulate adverse selection, bid-ask spread expansion, and token bonding curves.
                 </div>
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                  <span class="status-chip badge badge-warn" style="font-size:10px;">🔒 Locked</span>
-                  <button type="button" class="btn btn-secondary btn-locked-info" data-locked-target="market" style="min-height:28px; padding:2px 10px; font-size:11px;">Why Locked?</button>
+                  <span class="status-chip badge badge-warn" style="font-size:10px;" data-i18n="lobby.locked_badge">🔒 Locked</span>
+                  <button type="button" class="btn btn-secondary btn-locked-info" data-locked-target="market" style="min-height:28px; padding:2px 10px; font-size:11px;" data-i18n="lobby.why_locked">Why Locked?</button>
                 </div>
               </div>
             </div>
@@ -364,7 +364,7 @@
       </div>
     </main>
 
-    <footer style="padding:16px 36px; text-align:center; font-size:0.75rem; color:#64748b; border-top:1px solid rgba(255,255,255,0.05);">
+    <footer style="padding:16px 36px; text-align:center; font-size:0.75rem; color:#64748b; border-top:1px solid rgba(255,255,255,0.05);" data-i18n="common.disclaimer">
       Educational simulation. Simplified models. Not medical advice.
     </footer>
   </div>
@@ -376,8 +376,8 @@
     <div class="brief-modal" style="max-height:90vh; overflow-y:auto;">
       <div class="brief-header">
         <div>
-          <span class="brief-district" id="brief-district">District: Pharma</span>
-          <h2 class="brief-title" id="brief-title">Pharmacokinetics Ward</h2>
+          <span class="brief-district" id="brief-district" data-i18n="brief.district_prefix">District: Pharma</span>
+          <h2 class="brief-title" id="brief-title" data-i18n="briefing.default_title">Pharmacokinetics Ward</h2>
         </div>
         <button type="button" class="brief-close" id="btn-close-brief" aria-label="Close Briefing">&times;</button>
       </div>
@@ -385,32 +385,32 @@
       <p id="brief-description" style="color:#cbd5e1; font-size:0.9rem; line-height:1.5; margin-bottom:16px;"></p>
 
       <div class="brief-section">
-        <h4>Learning Goals</h4>
+        <h4 data-i18n="briefing.learning_goals">Learning Goals</h4>
         <ul class="brief-list" id="brief-learning-goals"></ul>
       </div>
 
       <div class="brief-section">
-        <h4>Apparatus &amp; Laboratory Equipment</h4>
+        <h4 data-i18n="briefing.apparatus_equipment">Apparatus &amp; Laboratory Equipment</h4>
         <div class="equipment-list-grid" id="brief-equipment-list" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
       </div>
 
       <div class="brief-section">
-        <h4>Mandatory Safety Rules</h4>
+        <h4 data-i18n="briefing.mandatory_safety_rules">Mandatory Safety Rules</h4>
         <ul class="brief-list" id="brief-rules-list"></ul>
       </div>
 
       <div class="brief-section">
-        <h4>Scoring Rubric Preview</h4>
+        <h4 data-i18n="briefing.scoring_rubric">Scoring Rubric Preview</h4>
         <div id="brief-scoring-rubric" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:8px;"></div>
       </div>
 
       <div class="brief-section">
-        <h4>Required Personal Protective Equipment (PPE)</h4>
+        <h4 data-i18n="briefing.required_ppe">Required Personal Protective Equipment (PPE)</h4>
         <div class="ppe-requirements-bar" id="brief-ppe-bar"></div>
       </div>
 
       <div class="nickname-input-group">
-        <label for="brief-nickname-input">Researcher Nickname</label>
+        <label for="brief-nickname-input" data-i18n="briefing.researcher_nickname">Researcher Nickname</label>
         <input type="text" id="brief-nickname-input" placeholder="e.g. Dr. Curie" value="Dr. Curie" maxlength="24" />
       </div>
 
@@ -427,26 +427,26 @@
   <div id="session-error-overlay" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:rgba(12,7,29,0.96);">
     <div class="panel" style="max-width:520px; width:92%; margin:auto; border:1px solid rgba(243,102,100,0.5);">
       <div class="panel-header" style="border-bottom:1px solid rgba(243,102,100,0.2);">
-        <span class="panel-title" style="color:var(--danger);" id="session-error-title">⚠️ Simulation Error</span>
+        <span class="panel-title" style="color:var(--danger);" id="session-error-title" data-i18n="error.title">⚠️ Simulation Error</span>
       </div>
       <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-3, 12px);">
         <div>
-          <strong style="font-size:var(--text-xs); color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">What Happened:</strong>
-          <p id="error-what-happened" style="color:var(--text); font-size:var(--text-sm); margin:4px 0 0 0; line-height:1.4;">
+          <strong style="font-size:var(--text-xs); color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;" data-i18n="error.what_happened_label">What Happened:</strong>
+          <p id="error-what-happened" style="color:var(--text); font-size:var(--text-sm); margin:4px 0 0 0; line-height:1.4;" data-i18n="error.default_what_happened">
             The laboratory encountered an unexpected simulation error or network timeout.
           </p>
         </div>
         <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:10px; border-radius:var(--radius-md, 12px);">
-          <strong style="font-size:var(--text-xs); color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">What You Can Do:</strong>
+          <strong style="font-size:var(--text-xs); color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;" data-i18n="error.what_you_can_do_label">What You Can Do:</strong>
           <ul id="error-what-to-do" style="margin:4px 0 0 0; padding-left:18px; font-size:var(--text-xs); color:var(--text-muted); line-height:1.5;">
-            <li>Check your network connection and reload the laboratory session.</li>
-            <li>Return to the main lobby and select another experiment.</li>
+            <li data-i18n="error.action_reload">Check your network connection and reload the laboratory session.</li>
+            <li data-i18n="error.action_lobby">Return to the main lobby and select another experiment.</li>
           </ul>
         </div>
         <p id="session-error-text" class="hidden"></p>
         <div style="display:flex; justify-content:flex-end; gap:var(--space-2, 8px); margin-top:var(--space-2, 8px);">
-          <button type="button" class="btn btn-secondary" id="btn-error-to-lobby">Return to Lobby</button>
-          <button type="button" class="btn btn-primary" id="btn-error-back-to-brief">Retry Experiment</button>
+          <button type="button" class="btn btn-secondary" id="btn-error-to-lobby" data-i18n="common.back_to_lobby">Return to Lobby</button>
+          <button type="button" class="btn btn-primary" id="btn-error-back-to-brief" data-i18n="error.retry_experiment">Retry Experiment</button>
         </div>
       </div>
     </div>
@@ -711,13 +711,13 @@
   <div id="screen-settings" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:100; background:var(--bg); overflow-y:auto; padding:var(--space-5) 0;">
     <div class="panel" style="max-width:680px; width:92%; margin:auto;">
       <div class="panel-header">
-        <span class="panel-title">⚙️ Laboratory Settings</span>
-        <a href="#/lobby" class="btn btn-secondary" style="min-height:36px; padding:4px 12px;">← Back to Lobby</a>
+        <span class="panel-title" data-i18n="settings.title">⚙️ Laboratory Settings</span>
+        <a href="#/lobby" class="btn btn-secondary" style="min-height:36px; padding:4px 12px;" data-i18n="common.back_to_lobby">← Back to Lobby</a>
       </div>
       <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-4);">
         <!-- Graphics Tier -->
         <div class="slider-group">
-          <label class="slider-label" for="setting-quality-tier">Graphics Quality Tier (Section 7.7)</label>
+          <label class="slider-label" for="setting-quality-tier" data-i18n="settings.quality_tier">Graphics Quality Tier (Section 7.7)</label>
           <select id="setting-quality-tier" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
             <option value="low">Low (Performance / Software WebGL)</option>
             <option value="medium" selected>Medium (Standard 60 FPS)</option>
@@ -728,7 +728,7 @@
         <!-- Audio Settings -->
         <div class="slider-group">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <label class="slider-label" for="setting-sound-volume" style="margin:0;">Procedural Audio Volume</label>
+            <label class="slider-label" for="setting-sound-volume" style="margin:0;" data-i18n="settings.sound_volume">Procedural Audio Volume</label>
             <label style="font-size:var(--text-xs); color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;">
               <input type="checkbox" id="setting-audio-mute" aria-label="Mute All Sound"> Mute All Sound
             </label>
@@ -741,7 +741,7 @@
 
         <!-- Font Scale -->
         <div class="slider-group">
-          <label class="slider-label" for="setting-font-scale">Text Font Scale (WCAG 2.1 AA 100%–140%)</label>
+          <label class="slider-label" for="setting-font-scale" data-i18n="settings.font_scale">Text Font Scale (WCAG 2.1 AA 100%–140%)</label>
           <select id="setting-font-scale" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
             <option value="normal" selected>Normal (100%)</option>
             <option value="large">Large (+20% / 120%)</option>
@@ -753,8 +753,8 @@
         <div class="slider-group">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
-              <label for="setting-high-contrast" style="font-weight:600; color:var(--text); cursor:pointer;">High Contrast Mode</label>
-              <div style="font-size:var(--text-xs); color:var(--text-muted);">Enforce pure black background and elevated contrast ratios (7:1+)</div>
+              <label for="setting-high-contrast" style="font-weight:600; color:var(--text); cursor:pointer;" data-i18n="settings.high_contrast">High Contrast Mode</label>
+              <div style="font-size:var(--text-xs); color:var(--text-muted);" data-i18n="settings.high_contrast_desc">Enforce pure black background and elevated contrast ratios (7:1+)</div>
             </div>
             <input type="checkbox" id="setting-high-contrast" aria-label="High Contrast Mode" style="transform:scale(1.2); cursor:pointer;">
           </div>
@@ -762,7 +762,7 @@
 
         <!-- Colorblind Mode -->
         <div class="slider-group">
-          <label class="slider-label" for="setting-colorblind-mode">Colorblind Vision Simulation</label>
+          <label class="slider-label" for="setting-colorblind-mode" data-i18n="settings.colorblind_mode">Colorblind Vision Simulation</label>
           <select id="setting-colorblind-mode" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
             <option value="off" selected>Off (Default Colors)</option>
             <option value="protanopia">Protanopia (Red-Blind)</option>
@@ -773,7 +773,7 @@
 
         <!-- Language (i18n) -->
         <div class="slider-group">
-          <label class="slider-label" for="setting-app-language">Language / Locale (i18n)</label>
+          <label class="slider-label" for="setting-app-language" data-i18n="settings.language_label">Language / Locale (i18n)</label>
           <select id="setting-app-language" class="slider-number" style="width:100%; text-align:left; padding:8px 12px; font-family:var(--font-sans);">
             <option value="en" selected>English (EN)</option>
             <option value="test">Test Locale (QAA - Automated QA)</option>
@@ -783,12 +783,12 @@
         <!-- Tutorial Replay & Defaults -->
         <div style="border-top:1px solid rgba(255,255,255,0.08); padding-top:var(--space-3); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
           <div>
-            <div style="font-weight:600; color:var(--text);">First-Run Onboarding Tutorial</div>
-            <div style="font-size:var(--text-xs); color:var(--text-muted);">Replay the 90-second keyboard and camera walkthrough</div>
+            <div style="font-weight:600; color:var(--text);" data-i18n="settings.tutorial_title">First-Run Onboarding Tutorial</div>
+            <div style="font-size:var(--text-xs); color:var(--text-muted);" data-i18n="settings.tutorial_desc">Replay the 90-second keyboard and camera walkthrough</div>
           </div>
           <div style="display:flex; gap:8px;">
-            <button type="button" class="btn btn-secondary" id="btn-replay-tutorial">Replay Tutorial</button>
-            <button type="button" class="btn btn-secondary" id="btn-settings-reset" style="color:var(--danger);">Reset Defaults</button>
+            <button type="button" class="btn btn-secondary" id="btn-replay-tutorial" data-i18n="settings.replay_tutorial">Replay Tutorial</button>
+            <button type="button" class="btn btn-secondary" id="btn-settings-reset" style="color:var(--danger);" data-i18n="settings.reset_defaults">Reset Defaults</button>
           </div>
         </div>
       </div>
@@ -801,39 +801,39 @@
   <div id="modal-onboarding" class="view-screen hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-step-title" style="justify-content:center; align-items:center; z-index:900; background:rgba(12,7,29,0.94);">
     <div class="panel" id="onboarding-panel" style="max-width:540px; width:92%; margin:auto;">
       <div class="panel-header">
-        <span class="panel-title" id="tutorial-step-title">🎮 Laboratory Controls Walkthrough</span>
-        <button type="button" class="btn btn-secondary" id="btn-skip-tutorial" style="padding:4px 8px;" aria-label="Skip Tutorial">Skip ✕</button>
+        <span class="panel-title" id="tutorial-step-title" data-i18n="onboarding.title">🎮 Laboratory Controls Walkthrough</span>
+        <button type="button" class="btn btn-secondary" id="btn-skip-tutorial" style="padding:4px 8px;" aria-label="Skip Tutorial" data-i18n="common.skip">Skip ✕</button>
       </div>
       <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-4);">
         <div id="tutorial-slide-1" class="tutorial-slide">
           <div style="font-size:2.4rem; text-align:center; margin-bottom:8px;">🚶</div>
-          <h3 style="text-align:center; margin-bottom:8px;">Step 1: Avatar Movement</h3>
-          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;">
+          <h3 style="text-align:center; margin-bottom:8px;" data-i18n="onboarding.step1_title">Step 1: Avatar Movement</h3>
+          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;" data-i18n="onboarding.step1_desc">
             Use <kbd class="command-kbd">W</kbd> <kbd class="command-kbd">A</kbd> <kbd class="command-kbd">S</kbd> <kbd class="command-kbd">D</kbd> or the Arrow Keys to walk around the laboratory. Press <kbd class="command-kbd">Shift</kbd> to sprint.
           </p>
         </div>
 
         <div id="tutorial-slide-2" class="tutorial-slide hidden">
           <div style="font-size:2.4rem; text-align:center; margin-bottom:8px;">🎥</div>
-          <h3 style="text-align:center; margin-bottom:8px;">Step 2: Camera &amp; Views</h3>
-          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;">
+          <h3 style="text-align:center; margin-bottom:8px;" data-i18n="onboarding.step2_title">Step 2: Camera &amp; Views</h3>
+          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;" data-i18n="onboarding.step2_desc">
             Hold right-click and drag to rotate the camera. Press <kbd class="command-kbd">C</kbd> to toggle Follow/Free camera, <kbd class="command-kbd">V</kbd> for 1st-person, and <kbd class="command-kbd">R</kbd> to re-center.
           </p>
         </div>
 
         <div id="tutorial-slide-3" class="tutorial-slide hidden">
           <div style="font-size:2.4rem; text-align:center; margin-bottom:8px;">🔬</div>
-          <h3 style="text-align:center; margin-bottom:8px;">Step 3: Station Interaction</h3>
-          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;">
+          <h3 style="text-align:center; margin-bottom:8px;" data-i18n="onboarding.step3_title">Step 3: Station Interaction</h3>
+          <p style="font-size:var(--text-sm); color:var(--text-muted); text-align:center; line-height:1.5;" data-i18n="onboarding.step3_desc">
             Walk up to an apparatus and press <kbd class="command-kbd">E</kbd> or click the action dock below. Press <kbd class="command-kbd">Space</kbd> or <kbd class="command-kbd">Enter</kbd> to execute operations.
           </p>
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(255,255,255,0.08); padding-top:var(--space-3); margin-top:var(--space-2);">
-          <div id="tutorial-dots" style="font-size:var(--text-xs); color:var(--text-muted); font-weight:600;">Step 1 of 3</div>
+          <div id="tutorial-dots" style="font-size:var(--text-xs); color:var(--text-muted); font-weight:600;" data-i18n="onboarding.step_counter">Step 1 of 3</div>
           <div style="display:flex; gap:8px;">
-            <button type="button" class="btn btn-secondary" id="btn-tutorial-prev" disabled>Back</button>
-            <button type="button" class="btn btn-primary" id="btn-tutorial-next">Next ➔</button>
+            <button type="button" class="btn btn-secondary" id="btn-tutorial-prev" disabled data-i18n="common.back">Back</button>
+            <button type="button" class="btn btn-primary" id="btn-tutorial-next" data-i18n="common.next">Next ➔</button>
           </div>
         </div>
       </div>
@@ -996,22 +996,22 @@
   <div id="screen-wakeup" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:9999; background:rgba(12,7,29,0.96);">
     <div class="brief-modal" style="text-align:center; max-width:460px;">
       <div style="font-size:3rem; margin-bottom:12px;">⏳</div>
-      <h2 id="wakeup-header-title" style="color:#38bdf8; font-size:1.5rem; margin-bottom:8px;">Lab waking up<span id="wakeup-dots">...</span> ~30s</h2>
-      <p style="color:#94a3b8; font-size:0.88rem; margin-bottom:16px; line-height:1.5;">
+      <h2 id="wakeup-header-title" style="color:#38bdf8; font-size:1.5rem; margin-bottom:8px;" data-i18n="wakeup.title">Lab waking up<span id="wakeup-dots">...</span> ~30s</h2>
+      <p style="color:#94a3b8; font-size:0.88rem; margin-bottom:16px; line-height:1.5;" data-i18n="wakeup.desc">
         Free hosting instances go to sleep when inactive. We are waking up the backend simulation engine. This usually takes 15–40 seconds.
       </p>
       
       <!-- Educational Rotating Tip -->
       <div id="wakeup-tip-container" class="card" style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); padding:10px 14px; text-align:left; margin-bottom:16px;">
-        <div style="font-size:var(--text-xs); font-weight:700; color:var(--accent); margin-bottom:4px;">💡 Simulation Tip</div>
-        <div id="wakeup-tip-text" style="font-size:var(--text-xs); color:var(--text-muted); line-height:1.4;">In orbital mechanics, burning prograde raises the apoapsis on the opposite side of Earth, not where you ignite.</div>
+        <div style="font-size:var(--text-xs); font-weight:700; color:var(--accent); margin-bottom:4px;" data-i18n="wakeup.tip_label">💡 Simulation Tip</div>
+        <div id="wakeup-tip-text" style="font-size:var(--text-xs); color:var(--text-muted); line-height:1.4;" data-i18n="wakeup.tip_default">In orbital mechanics, burning prograde raises the apoapsis on the opposite side of Earth, not where you ignite.</div>
       </div>
 
       <div id="wakeup-progress-bar-wrap" style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-bottom:16px;">
         <div id="wakeup-progress-bar" style="width:15%; height:100%; background:linear-gradient(90deg, #38bdf8, #a855f7); transition:width 0.4s ease;"></div>
       </div>
-      <div id="wakeup-status-text" style="font-size:0.8rem; color:#cbd5e1; font-family:var(--font-mono); margin-bottom:16px;">Checking /api/ping...</div>
-      <button type="button" class="btn-primary" id="btn-retry-wakeup" style="display:none; margin:0 auto;">Retry Wake-Up</button>
+      <div id="wakeup-status-text" style="font-size:0.8rem; color:#cbd5e1; font-family:var(--font-mono); margin-bottom:16px;" data-i18n="wakeup.checking_ping">Checking /api/ping...</div>
+      <button type="button" class="btn-primary" id="btn-retry-wakeup" style="display:none; margin:0 auto;" data-i18n="wakeup.btn_retry">Retry Wake-Up</button>
     </div>
   </div>
 
@@ -1021,23 +1021,23 @@
   <div id="modal-why-locked" class="view-screen hidden" style="justify-content:center; align-items:center; z-index:210; background:rgba(12,7,29,0.92);">
     <div class="panel" style="max-width:540px; width:90%; margin:auto;">
       <div class="panel-header">
-        <span class="panel-title" id="why-locked-title">🔒 District Locked</span>
+        <span class="panel-title" id="why-locked-title" data-i18n="why_locked.title">🔒 District Locked</span>
         <button type="button" class="btn btn-secondary" id="btn-close-why-locked" style="padding:4px 8px;" aria-label="Close why locked modal">✕</button>
       </div>
       <div class="panel-body" style="display:flex; flex-direction:column; gap:var(--space-3);">
-        <p id="why-locked-explanation" style="font-size:var(--text-sm); line-height:var(--line-height-body); color:var(--text-muted);">
+        <p id="why-locked-explanation" style="font-size:var(--text-sm); line-height:var(--line-height-body); color:var(--text-muted);" data-i18n="why_locked.desc">
           This simulation district is part of the advanced curriculum progression.
         </p>
         <div class="card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:var(--space-3);">
-          <div style="font-weight:600; font-size:var(--text-sm); color:var(--accent); margin-bottom:4px;">Educational Progression Path:</div>
+          <div style="font-weight:600; font-size:var(--text-sm); color:var(--accent); margin-bottom:4px;" data-i18n="why_locked.path_title">Educational Progression Path:</div>
           <ol style="margin:0; padding-left:20px; font-size:var(--text-xs); color:var(--text-muted); line-height:1.6;" id="why-locked-path">
-            <li>Complete Foundation Safety &amp; PPE protocols in Oral PK Ward</li>
-            <li>Master Acid-Base Neutralization &amp; Equivalence in Chemistry Bench</li>
-            <li>Attain Grade B or higher on laboratory protocols to unlock advanced districts</li>
+            <li data-i18n="why_locked.step1">Complete Foundation Safety &amp; PPE protocols in Oral PK Ward</li>
+            <li data-i18n="why_locked.step2">Master Acid-Base Neutralization &amp; Equivalence in Chemistry Bench</li>
+            <li data-i18n="why_locked.step3">Attain Grade B or higher on laboratory protocols to unlock advanced districts</li>
           </ol>
         </div>
         <div style="display:flex; justify-content:flex-end; margin-top:var(--space-2);">
-          <button type="button" class="btn btn-primary" id="btn-why-locked-ok">Understood</button>
+          <button type="button" class="btn btn-primary" id="btn-why-locked-ok" data-i18n="why_locked.btn_ok">Understood</button>
         </div>
       </div>
     </div>

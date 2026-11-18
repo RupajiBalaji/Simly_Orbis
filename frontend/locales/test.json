@@ -21,18 +21,107 @@
     "settings": "Test Settings",
     "model_cards": "Test Model Cards",
     "reality_check": "Test Reality Check",
-    "classic_2d": "Test 2D Play"
+    "classic_2d": "Test 2D Play",
+    "home": "[TEST] Home"
   },
   "lobby": {
     "select_district": "Select Test District",
     "hero_desc": "Test locale for automated multi-lingual verification.",
     "guided_mode": "🎯 Test Guided",
     "free_mode": "⚡ Test Practice",
-    "unlocked_badge": "● Test Unlocked",
-    "locked_badge": "🔒 Test Locked",
-    "why_locked": "Why Locked? [Test]",
-    "not_started": "Not Started [Test]",
+    "unlocked_badge": "[TEST] ● Unlocked",
+    "locked_badge": "[TEST] 🔒 Locked",
+    "why_locked": "[TEST] Why Locked?",
+    "not_started": "[TEST] Not started",
     "in_progress": "In Progress [Test]",
-    "completed": "Completed [Test]"
+    "completed": "Completed [Test]",
+    "guest_cadet": "[TEST] Guest Cadet",
+    "breadcrumb_lobby": "[TEST] Lobby",
+    "storage_mode_demo": "[TEST] ⚠️ Demo storage: scores are not saved",
+    "mode_instruction": "[TEST] Choose a district below, then select Start (Exam) or Practice (Sandbox) in the briefing.",
+    "exp_count_2": "[TEST] 2 Experiments",
+    "exp_count_1": "[TEST] 1 Experiment",
+    "time_5min": "[TEST] ⏱️ 5 min",
+    "time_8min": "[TEST] ⏱️ 8 min",
+    "time_6min": "[TEST] ⏱️ 6 min",
+    "time_7min": "[TEST] ⏱️ 7 min",
+    "time_10min": "[TEST] ⏱️ 10 min",
+    "diff_novice": "[TEST] Novice",
+    "diff_advanced": "[TEST] Advanced",
+    "enter_ward": "[TEST] Enter Ward ➔",
+    "enter_lab": "[TEST] Enter Lab ➔",
+    "enter_bench": "[TEST] Enter Bench ➔",
+    "curriculum_locked": "[TEST] 🔒 Curriculum Locked",
+    "coming_soon": "[TEST] Coming Soon",
+    "market_desc": "[TEST] High-frequency limit order books, automated market maker curves, and liquidity dynamics.",
+    "order_book_name": "[TEST] Order Book & AMM Bench",
+    "order_book_goal": "[TEST] Simulate adverse selection, bid-ask spread expansion, and token bonding curves."
+  },
+  "state": {
+    "offline_banner": "[TEST] ⚠️ Offline – working locally where possible, cloud features paused.",
+    "webgl_unavailable": "[TEST] WebGL Unavailable",
+    "webgl_desc": "[TEST] Your browser or device does not support hardware-accelerated WebGL. You can still play the 2D pharmacokinetics simulation game:",
+    "launch_2d_game": "[TEST] Launch Classic 2D Game"
+  },
+  "briefing": {
+    "learning_goals": "[TEST] Learning Goals",
+    "apparatus_equipment": "[TEST] Apparatus & Laboratory Equipment",
+    "mandatory_safety_rules": "[TEST] Mandatory Safety Rules",
+    "scoring_rubric": "[TEST] Scoring Rubric Preview",
+    "required_ppe": "[TEST] Required Personal Protective Equipment (PPE)",
+    "researcher_nickname": "[TEST] Researcher Nickname",
+    "btn_practice": "[TEST] ⚡ Practice (No Score, Free Hints)",
+    "btn_start": "[TEST] 🎯 Start Experiment (Exam Mode) ➔",
+    "default_title": "[TEST] Pharmacokinetics Ward"
+  },
+  "error": {
+    "title": "[TEST] ⚠️ Simulation Error",
+    "what_happened_label": "[TEST] What Happened:",
+    "default_what_happened": "[TEST] The laboratory encountered an unexpected simulation error or network timeout.",
+    "what_you_can_do_label": "[TEST] What You Can Do:",
+    "action_reload": "[TEST] Check your network connection and reload the laboratory session.",
+    "action_lobby": "[TEST] Return to the main lobby and select another experiment.",
+    "retry_experiment": "[TEST] Retry Experiment"
+  },
+  "settings": {
+    "title": "[TEST] ⚙️ Laboratory Settings",
+    "quality_tier": "[TEST] Graphics Quality Tier (Section 7.7)",
+    "sound_volume": "[TEST] Procedural Audio Volume",
+    "font_scale": "[TEST] Text Font Scale (WCAG 2.1 AA 100%–140%)",
+    "high_contrast": "[TEST] High Contrast Mode",
+    "high_contrast_desc": "[TEST] Enforce pure black background and elevated contrast ratios (7:1+)",
+    "colorblind_mode": "[TEST] Colorblind Vision Simulation",
+    "language_label": "[TEST] Language / Locale (i18n)",
+    "tutorial_title": "[TEST] First-Run Onboarding Tutorial",
+    "tutorial_desc": "[TEST] Replay the 90-second keyboard and camera walkthrough",
+    "replay_tutorial": "[TEST] Replay Tutorial",
+    "reset_defaults": "[TEST] Reset Defaults"
+  },
+  "onboarding": {
+    "title": "[TEST] 🎮 Laboratory Controls Walkthrough",
+    "step1_title": "[TEST] Step 1: Avatar Movement",
+    "step1_desc": "[TEST] Use WASD or the Arrow Keys to walk around the laboratory. Press Shift to sprint.",
+    "step2_title": "[TEST] Step 2: Camera & Views",
+    "step2_desc": "[TEST] Hold right-click and drag to rotate the camera. Press C to toggle Follow/Free camera, V for 1st-person, and R to re-center.",
+    "step3_title": "[TEST] Step 3: Station Interaction",
+    "step3_desc": "[TEST] Walk up to an apparatus and press E or click the action dock below. Press Space or Enter to execute operations.",
+    "step_counter": "[TEST] Step 1 of 3"
+  },
+  "wakeup": {
+    "title": "[TEST] Lab waking up",
+    "desc": "[TEST] Free hosting instances go to sleep when inactive. We are waking up the backend simulation engine. This usually takes 15–40 seconds.",
+    "tip_label": "[TEST] 💡 Simulation Tip",
+    "tip_default": "[TEST] In orbital mechanics, burning prograde raises the apoapsis on the opposite side of Earth, not where you ignite.",
+    "checking_ping": "[TEST] Checking /api/ping...",
+    "btn_retry": "[TEST] Retry Wake-Up"
+  },
+  "why_locked": {
+    "title": "[TEST] 🔒 District Locked",
+    "desc": "[TEST] This simulation district is part of the advanced curriculum progression.",
+    "path_title": "[TEST] Educational Progression Path:",
+    "step1": "[TEST] Complete Foundation Safety & PPE protocols in Oral PK Ward",
+    "step2": "[TEST] Master Acid-Base Neutralization & Equivalence in Chemistry Bench",
+    "step3": "[TEST] Attain Grade B or higher on laboratory protocols to unlock advanced districts",
+    "btn_ok": "[TEST] Understood"
   }
 }
