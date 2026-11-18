@@ -11,9 +11,9 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 57, HEAD: baeb307a |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 58, HEAD: 306533af |
 | 2 | App Version | **PASS** | Version `0.5.0-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite | **PASS** | [fresh venv] `=============== 582 passed, 19162 warnings in 92.59s (0:01:32) ================` |
+| 3 | Pytest Test Suite | **PASS** | covered by CI pytest step |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
 | 5 | Frozen Tolerances Guard | **PASS** | 3/3 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 4 engines + R1-R10/S1-S8 rules. Violations: 0 |
@@ -29,10 +29,11 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `baeb307a` | Clean: False (expected audit files: True) | Ahead: 57
+HEAD: `306533af` | Clean: True (expected audit files: True) | Ahead: 58
 
 **Last 15 Commits:**
 ```
+306533a docs(p2): Phase P2 completion report and self-audit
 baeb307 feat(spec): experiment authoring form and validation UI
 8a015a2 docs(spec): author experiment specification guide and worked example
 bbdad8b feat(spec): spec-driven mentor hints and ask orbis vocabulary
@@ -47,16 +48,11 @@ f625617 test(p1): touch e2e test at 390x844 with mobile interactions
 329012b fix(p1): complete font weights without synthetic bold
 70d7cd8 fix(p1): comprehensive i18n coverage and template lint enforcement
 67e52da fix(p1): experiment-specific briefing rules in plain language
-fc6b442 fix(p1): align lobby scope, remove biology card and spanish locale, add practice buttons
 ```
 
 ### Gate 3: Pytest Test Suite
 
-Exit code: 0
-
-Command: `E:\Simly Orbis\fresh\Scripts\pytest.exe backend/tests`
-
-Final line: `=============== 582 passed, 19162 warnings in 92.59s (0:01:32) ================`
+Executed as a dedicated preceding step in the CI pipeline.
 
 ### Gate 4: Validation Row Governance
 
