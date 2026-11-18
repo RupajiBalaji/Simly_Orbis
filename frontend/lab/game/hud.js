@@ -380,6 +380,38 @@ export class LabHUD {
     if (this.radialBackdrop) {
       this.radialBackdrop.onclick = () => this.closeRadialWheel();
     }
+
+    // Touch long-press (500ms hold) to open action wheel
+    let touchTimer = null;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    window.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchTimer = setTimeout(() => {
+          this.triggerProximityInteract();
+        }, 500);
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      if (touchTimer && e.touches.length === 1) {
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        if (Math.hypot(dx, dy) > 10) {
+          clearTimeout(touchTimer);
+          touchTimer = null;
+        }
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      if (touchTimer) {
+        clearTimeout(touchTimer);
+        touchTimer = null;
+      }
+    }, { passive: true });
   }
 
   initControlsModal() {
