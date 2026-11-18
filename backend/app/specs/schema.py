@@ -115,6 +115,7 @@ class RuleSpec(StrictModel):
     severity: Literal["info", "penalty", "block", "fail"]
     condition: str | None = None
     built_in_rule: str | None = None
+    hint: str | None = None
 
 
 class ScoringSpec(StrictModel):

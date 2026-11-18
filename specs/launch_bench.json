@@ -109,49 +109,57 @@
       "id": "S1",
       "text": "Flight computer checklist and guidance diagnostics must be run prior to launch.",
       "severity": "penalty",
-      "condition": "checklist_complete"
+      "condition": "checklist_complete",
+      "hint": "Execute preflight avionics and telemetry checklist before clearance requests."
     },
     {
       "id": "S2",
       "text": "Propellant load must not be empty or exceed maximum certified tank capacity.",
       "severity": "penalty",
-      "condition": "propellant_valid"
+      "condition": "propellant_valid",
+      "hint": "Load propellant within maximum structural capacity of tank stages."
     },
     {
       "id": "S3",
       "text": "Liftoff thrust-to-weight ratio must exceed 1.0 (TWR > 1.0) to achieve positive climb acceleration.",
       "severity": "fail",
-      "condition": "twr_above_one"
+      "condition": "twr_above_one",
+      "hint": "Maintain liftoff Thrust-to-Weight Ratio above 1.15 to clear launch pad."
     },
     {
       "id": "S4",
       "text": "Payload mass must be formally declared and within upper stage structural limits.",
       "severity": "penalty",
-      "condition": "payload_declared"
+      "condition": "payload_declared",
+      "hint": "Ensure payload mass remains strictly within launch vehicle LEO insertion limits."
     },
     {
       "id": "S5",
       "text": "Lower booster stage burnout required before staging separation and upper stage ignition.",
       "severity": "block",
-      "condition": "staging_order_valid"
+      "condition": "staging_order_valid",
+      "hint": "Separate depleted booster stage only after complete engine burnout."
     },
     {
       "id": "S6",
       "text": "Range safety radar tracking and downrange airspace clearance required before ignition.",
       "severity": "penalty",
-      "condition": "range_cleared"
+      "condition": "range_cleared",
+      "hint": "Obtain positive range safety tracking clearance prior to main engine ignition."
     },
     {
       "id": "S7",
       "text": "Trajectory budget must maintain at least a 5% delta-v reserve margin to avoid orbital decay.",
       "severity": "penalty",
-      "condition": "delta_v_margin_valid"
+      "condition": "delta_v_margin_valid",
+      "hint": "Achieve minimum orbital delta-v budget (9.3 km/s) for stable orbital insertion."
     },
     {
       "id": "S8",
       "text": "Telemetry review and flight debrief must be completed before submitting final flight report.",
       "severity": "penalty",
-      "condition": "flight_debriefed"
+      "condition": "flight_debriefed",
+      "hint": "Debrief flight computer telemetry before generating final mission report."
     }
   ],
   "scoring": {

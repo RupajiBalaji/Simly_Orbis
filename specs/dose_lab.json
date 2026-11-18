@@ -94,49 +94,57 @@
       "id": "D1",
       "text": "Administered dose must not exceed the maximum recommended adult single dose from drug specifications.",
       "severity": "fail",
-      "condition": "dose_under_max"
+      "condition": "dose_under_max",
+      "hint": "Stay within single-dose upper ceiling to prevent immediate acute toxicity."
     },
     {
       "id": "D2",
       "text": "Patients with renal impairment (CrCl < 60 mL/min) receiving renally cleared drugs require dose reduction.",
       "severity": "penalty",
-      "condition": "renal_adjusted"
+      "condition": "renal_adjusted",
+      "hint": "Adjust dose or extend interval tau when CrCl indicates renal clearance impairment (<60 mL/min)."
     },
     {
       "id": "D3",
       "text": "Selected administration route must be compatible with drug bioavailability.",
       "severity": "block",
-      "condition": "route_compatible"
+      "condition": "route_compatible",
+      "hint": "Select approved therapeutic agent and matching route from clinical formulary."
     },
     {
       "id": "D4",
       "text": "Patient parameters must remain within adult boundary limits (Age 18-90, Weight 40-150 kg, CrCl 15-150 mL/min).",
       "severity": "penalty",
-      "condition": "adult_covariates_valid"
+      "condition": "adult_covariates_valid",
+      "hint": "Configure adult patient covariates within safe ranges (age 18-90, weight 40-150 kg)."
     },
     {
       "id": "D5",
       "text": "Narrow therapeutic index drugs require at least 3 blood sampling observation timepoints.",
       "severity": "penalty",
-      "condition": "tdm_sampling_sufficient"
+      "condition": "tdm_sampling_sufficient",
+      "hint": "Schedule sampling points across absorption, Cmax peak, and terminal elimination phases."
     },
     {
       "id": "D6",
       "text": "Intravenous infusions must not be administered in under 15 minutes (< 0.25h) to avoid adverse reactions.",
       "severity": "penalty",
-      "condition": "infusion_duration_safe"
+      "condition": "infusion_duration_safe",
+      "hint": "Ensure IV infusion duration is at least 15 minutes (0.25h) to avoid rapid infusion reactions."
     },
     {
       "id": "D7",
       "text": "Enter predicted peak concentration and target window duration before executing simulation.",
       "severity": "penalty",
-      "condition": "prediction_recorded"
+      "condition": "prediction_recorded",
+      "hint": "Formulate scientific prediction of Cmax and therapeutic window time before simulation run."
     },
     {
       "id": "D8",
       "text": "Simulated Cmax must not exceed the toxic concentration threshold.",
       "severity": "fail",
-      "condition": "cmax_under_toxic"
+      "condition": "cmax_under_toxic",
+      "hint": "Optimize regimen so steady-state trough and peak remain inside target therapeutic band."
     }
   ],
   "scoring": {

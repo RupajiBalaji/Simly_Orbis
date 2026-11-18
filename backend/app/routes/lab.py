@@ -182,6 +182,15 @@ def _build_mentor_context(session: LabSession) -> tuple[str, str, str]:
             raw_title = curr_step.get("title") or f"Step {step_idx + 1}"
             step_title = f"Step {step_idx + 1}: {raw_title}"
             step_hint = curr_step.get("hint") or curr_step.get("hint_text") or "Follow standard laboratory safety protocols."
+            # Spec-driven hint override if available
+            try:
+                from app.routes.tutor import get_spec_mentor_hint
+                st_id = curr_step.get("id")
+                spec_h = get_spec_mentor_hint(session.experiment_id, step_id=st_id)
+                if spec_h:
+                    step_hint = spec_h
+            except Exception:
+                pass
         else:
             step_title = "Experiment Completed"
             step_hint = "All protocol steps completed. Ready to submit final lab report."
@@ -283,8 +292,16 @@ def _generate_rule_based_mentor_message(
     elif mode == "explain":
         if session.violations:
             v = session.violations[-1]
+            hint_msg = v.explanation
+            try:
+                from app.routes.tutor import get_spec_mentor_hint
+                rule_h = get_spec_mentor_hint(session.experiment_id, rule_id=v.rule_id)
+                if rule_h:
+                    hint_msg = rule_h
+            except Exception:
+                pass
             return (
-                f"Dr. Orbis: Regarding safety violation '{v.title}': {v.explanation} "
+                f"Dr. Orbis: Regarding safety violation '{v.title}': {hint_msg} "
                 "Follow standard PPE and containment guidelines."
             )
         return (

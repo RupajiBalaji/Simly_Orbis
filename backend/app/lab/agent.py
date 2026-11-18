@@ -90,6 +90,32 @@ class AgentPlanResponse(BaseModel):
 
 ALLOWED_ACTIONS = {a.value for a in ActionType}
 
+
+def get_allowed_actions(experiment_id: str | None = None) -> set[str]:
+    """Dynamically get allowed actions for an experiment from its spec, or global default."""
+    if experiment_id:
+        try:
+            from app.specs.loader import get_spec_by_id
+            spec = get_spec_by_id(experiment_id)
+            if spec and spec.ask_orbis.allowed_actions:
+                return set(spec.ask_orbis.allowed_actions)
+        except Exception:
+            pass
+    return set(ALLOWED_ACTIONS)
+
+
+def get_action_synonyms(experiment_id: str | None = None) -> dict[str, list[str]]:
+    """Dynamically get synonyms mapping for an experiment from its spec."""
+    if experiment_id:
+        try:
+            from app.specs.loader import get_spec_by_id
+            spec = get_spec_by_id(experiment_id)
+            if spec and spec.ask_orbis.synonyms:
+                return dict(spec.ask_orbis.synonyms)
+        except Exception:
+            pass
+    return {}
+
 FRIENDLY_ACTION_TITLES: dict[str, str] = {
     "wear_ppe": "Wear PPE Gear",
     "remove_ppe": "Remove PPE Gear",
@@ -1085,13 +1111,14 @@ def _build_agent_prompt(session: LabSession) -> tuple[str, str]:
 
     apparatus_ids = list(session.apparatus_state.keys())
     ppe_worn = list(session.ppe)
+    allowed_for_exp = get_allowed_actions(session.experiment_id)
 
     system_prompt = f"""You are the Autonomous Lab Planning Assistant ("Ask Orbis") for Simly Orbis virtual laboratory.
 Your task is to convert the student's request into a structured JSON execution plan of at most 12 atomic actions.
 
 IMPORTANT SAFETY & INTEGRITY RULES:
 1. ONLY propose actions from this strict allowlist of action vocabulary:
-   {', '.join(sorted(ALLOWED_ACTIONS))}
+   {', '.join(sorted(allowed_for_exp))}
 2. ONLY target apparatus that exist in this experiment:
    {', '.join(apparatus_ids)}, or special targets ('avatar', 'all', 'goggles', 'gloves', 'coat').
 3. NEVER invent apparatus, chemicals, or substances outside this experiment.

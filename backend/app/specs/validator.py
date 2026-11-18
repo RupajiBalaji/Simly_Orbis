@@ -109,6 +109,33 @@ def validate_spec_data(raw_data: dict[str, Any]) -> ValidationReport:
                 )
             )
 
+    for action_key, syn_list in spec.ask_orbis.synonyms.items():
+        if action_key not in valid_actions:
+            errors.append(
+                SpecValidationError(
+                    path=f"ask_orbis.synonyms.{action_key}",
+                    message=f"Synonym action '{action_key}' has no registered engine handler",
+                )
+            )
+        if not isinstance(syn_list, list) or len(syn_list) == 0:
+            errors.append(
+                SpecValidationError(
+                    path=f"ask_orbis.synonyms.{action_key}",
+                    message=f"Synonyms for action '{action_key}' must be a non-empty list",
+                )
+            )
+
+    # Validate rule hints
+    for r_idx, rule in enumerate(spec.rules):
+        rule_hint = rule.hint or rule.text
+        if not rule_hint or not rule_hint.strip():
+            errors.append(
+                SpecValidationError(
+                    path=f"rules[{r_idx}].hint",
+                    message=f"Rule '{rule.id}' must provide an educational hint or text explanation",
+                )
+            )
+
     # 4. Directives not in schema
     for key, directive in spec.visual_directive_mapping.items():
         if directive.type not in VALID_DIRECTIVE_TYPES:

@@ -122,61 +122,71 @@
       "id": "R1",
       "text": "Protective safety goggles must be equipped before handling active chemicals.",
       "severity": "penalty",
-      "condition": "ppe_goggles_worn"
+      "condition": "ppe_goggles_worn",
+      "hint": "Put on safety goggles from the equipment tray before opening reagent bottles."
     },
     {
       "id": "R2",
       "text": "Chemical-resistant gloves must be worn before manipulating hazardous reagents.",
       "severity": "penalty",
-      "condition": "ppe_gloves_worn"
+      "condition": "ppe_gloves_worn",
+      "hint": "Equip protective nitrile gloves to prevent direct skin contact with corrosive reagents."
     },
     {
       "id": "R3",
       "text": "Buttoned laboratory coat required before beginning experiments in active lab zones.",
       "severity": "penalty",
-      "condition": "ppe_coat_worn"
+      "condition": "ppe_coat_worn",
+      "hint": "Fasten your laboratory coat to protect clothing and skin from chemical splashes."
     },
     {
       "id": "R4",
       "text": "Analytical digital balance must be tared to zero with container in place prior to weighing samples.",
       "severity": "penalty",
-      "condition": "balance_tared"
+      "condition": "balance_tared",
+      "hint": "Place container on balance pan and press Tare to reset display to 0.000 g."
     },
     {
       "id": "R5",
       "text": "All beakers, vials, and solutions must be explicitly labeled with contents and concentration.",
       "severity": "penalty",
-      "condition": "solutions_labeled"
+      "condition": "solutions_labeled",
+      "hint": "Apply label specifying reagent identity and molar concentration to every container."
     },
     {
       "id": "R6",
       "text": "Always add acid to water slowly; never pour water directly into concentrated reagents.",
       "severity": "block",
-      "condition": "safe_acid_sequence"
+      "condition": "safe_acid_sequence",
+      "hint": "Pour acid slowly down the side of the container into water with constant stirring."
     },
     {
       "id": "R7",
       "text": "Rinse burette with titrant and never exceed graduated volumetric capacity.",
       "severity": "penalty",
-      "condition": "burette_conditioned"
+      "condition": "burette_conditioned",
+      "hint": "Flush burette walls with titrant to condition it and never fill beyond the 50 mL graduated zero line."
     },
     {
       "id": "R8",
       "text": "Administered medication dose must not exceed safe therapeutic threshold.",
       "severity": "fail",
-      "condition": "safe_dose"
+      "condition": "safe_dose",
+      "hint": "Verify dosage calculation against patient body weight and maximum therapeutic boundaries."
     },
     {
       "id": "R9",
       "text": "Chemical, biological, and sharps waste must be disposed into designated segregated waste receptacles.",
       "severity": "penalty",
-      "condition": "segregated_waste"
+      "condition": "segregated_waste",
+      "hint": "Discard spent chemical reagents into the designated chemical waste carboy."
     },
     {
       "id": "R10",
       "text": "Decontaminate hands and remove PPE in proper aseptic sequence before exiting laboratory.",
       "severity": "penalty",
-      "condition": "aseptic_handwash"
+      "condition": "aseptic_handwash",
+      "hint": "Remove gloves and coat without touching exterior surfaces, then wash hands with soap for 20 seconds."
     }
   ],
   "scoring": {

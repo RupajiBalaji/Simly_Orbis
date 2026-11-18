@@ -135,61 +135,71 @@
       "id": "R1",
       "text": "Protective safety goggles must be equipped before handling active drugs or chemicals.",
       "severity": "penalty",
-      "condition": "ppe_goggles_worn"
+      "condition": "ppe_goggles_worn",
+      "hint": "Don complete personal protective equipment (coat, goggles, gloves) before ward duties."
     },
     {
       "id": "R2",
       "text": "Chemical-resistant gloves must be worn before manipulating hazardous reagents or specimens.",
       "severity": "penalty",
-      "condition": "ppe_gloves_worn"
+      "condition": "ppe_gloves_worn",
+      "hint": "Equip nitrile gloves to protect hands during medication handling and biological sampling."
     },
     {
       "id": "R3",
       "text": "Buttoned laboratory coat required before beginning experiments in active lab zones.",
       "severity": "penalty",
-      "condition": "ppe_coat_worn"
+      "condition": "ppe_coat_worn",
+      "hint": "Fasten laboratory coat to protect against biological specimen and chemical contact."
     },
     {
       "id": "R4",
       "text": "Analytical digital balance must be tared to zero with container in place prior to weighing samples.",
       "severity": "penalty",
-      "condition": "balance_tared"
+      "condition": "balance_tared",
+      "hint": "Zero digital balance before placing powder boat to measure net sample weight."
     },
     {
       "id": "R5",
       "text": "All beakers, vials, and solutions must be explicitly labeled with contents and concentration.",
       "severity": "penalty",
-      "condition": "solutions_labeled"
+      "condition": "solutions_labeled",
+      "hint": "Label dosing cup with patient nickname, drug name, and exact administered dose."
     },
     {
       "id": "R6",
       "text": "Always add acid to water slowly; never pour water directly into concentrated reagents.",
       "severity": "block",
-      "condition": "safe_acid_sequence"
+      "condition": "safe_acid_sequence",
+      "hint": "Follow safe solution handling protocol when reconstituting and preparing oral medications."
     },
     {
       "id": "R7",
       "text": "Rinse burette with titrant and never exceed graduated volumetric capacity.",
       "severity": "penalty",
-      "condition": "burette_conditioned"
+      "condition": "burette_conditioned",
+      "hint": "Allow sufficient simulated elapsed time after dose for absorption before blood collection."
     },
     {
       "id": "R8",
       "text": "Administered medication dose must not exceed safe therapeutic threshold.",
       "severity": "fail",
-      "condition": "safe_dose"
+      "condition": "safe_dose",
+      "hint": "Prescribe within adult clinical dose bounds (e.g. 500mg-1000mg for paracetamol)."
     },
     {
       "id": "R9",
       "text": "Chemical, biological, and sharps waste must be disposed into designated segregated waste receptacles.",
       "severity": "penalty",
-      "condition": "segregated_waste"
+      "condition": "segregated_waste",
+      "hint": "Place used phlebotomy sharps and blood tubes into the rigid biohazard container."
     },
     {
       "id": "R10",
       "text": "Decontaminate hands and remove PPE in proper aseptic sequence before exiting laboratory.",
       "severity": "penalty",
-      "condition": "aseptic_handwash"
+      "condition": "aseptic_handwash",
+      "hint": "Remove contaminated PPE carefully and scrub hands at ward hygiene sink."
     }
   ],
   "scoring": {

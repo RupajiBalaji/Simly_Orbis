@@ -70,3 +70,23 @@ def load_all_specs(specs_dir: Path | str) -> dict[str, ExperimentSpec]:
         specs[spec.id] = spec
 
     return specs
+
+
+_SPEC_CACHE: dict[str, ExperimentSpec] = {}
+
+
+def get_spec_by_id(experiment_id: str, reload: bool = False) -> ExperimentSpec | None:
+    """Find, validate, and return an experiment spec by id with local caching."""
+    if not reload and experiment_id in _SPEC_CACHE:
+        return _SPEC_CACHE[experiment_id]
+
+    repo_root = Path(__file__).resolve().parent.parent.parent.parent
+    specs_dir = repo_root / "specs"
+    for ext in (".json", ".yaml", ".yml"):
+        candidate = specs_dir / f"{experiment_id}{ext}"
+        if candidate.is_file():
+            spec, report = load_and_validate_spec(candidate)
+            if report.valid and spec is not None:
+                _SPEC_CACHE[experiment_id] = spec
+                return spec
+    return None

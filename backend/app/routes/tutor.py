@@ -14,9 +14,62 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.config import settings
+from app.specs.loader import get_spec_by_id
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/tutor", tags=["tutor"])
+
+
+def get_spec_mentor_hint(
+    experiment_id: str,
+    step_id: str | None = None,
+    rule_id: str | None = None,
+) -> str | None:
+    """
+    Source Dr. Orbis mentor hints dynamically from the loaded ExperimentSpec.
+    Returns the step hint, rule hint/explanation, or common mistake remedy.
+    """
+    spec = get_spec_by_id(experiment_id)
+    if not spec:
+        return None
+
+    # 1. Rule hint check
+    if rule_id:
+        for r in spec.rules:
+            if r.id == rule_id:
+                return r.hint or r.text
+
+    # 2. Step hint check
+    if step_id and step_id in spec.mentor.hints_per_step:
+        hints = spec.mentor.hints_per_step[step_id]
+        if hints:
+            return hints[0]
+
+    # 3. Step matching by step.id
+    if step_id:
+        for step in spec.steps:
+            if step.id == step_id and step.id in spec.mentor.hints_per_step:
+                hints = spec.mentor.hints_per_step[step.id]
+                if hints:
+                    return hints[0]
+
+    return None
+
+
+def get_spec_allowed_actions(experiment_id: str) -> list[str]:
+    """Retrieve allowed actions list directly from an experiment spec."""
+    spec = get_spec_by_id(experiment_id)
+    if spec:
+        return list(spec.ask_orbis.allowed_actions)
+    return []
+
+
+def get_spec_synonyms(experiment_id: str) -> dict[str, list[str]]:
+    """Retrieve action synonyms dictionary directly from an experiment spec."""
+    spec = get_spec_by_id(experiment_id)
+    if spec:
+        return dict(spec.ask_orbis.synonyms)
+    return {}
 
 # ---------------------------------------------------------------------------
 # System prompt
@@ -65,28 +118,44 @@ class TutorResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 def _template_response(s: SimSummary) -> str:
-    """Generate a rule-based explanation when Gemini is unavailable."""
+    """Generate a rule-based explanation when Gemini is unavailable, sourced from spec.mentor."""
+    spec = get_spec_by_id("dose_lab") or get_spec_by_id("pk_ward")
+
     zone = "therapeutic" if s.pct_green > 50 else ("toxic" if s.pct_red > 20 else "sub-therapeutic")
     peak_note = (
         f"Your peak of {s.peak_concentration:.1f} mg/L was reached at "
         f"{s.time_of_peak:.1f} h after dosing."
     )
 
-    if s.pct_red > 20:
-        tip = (
-            "Try reducing the dose or extending the dosing interval to keep "
-            "levels below the toxic threshold."
-        )
-    elif s.pct_green < 30:
-        tip = (
-            "Try increasing the dose or adding more doses to maintain levels "
-            "in the therapeutic window longer."
-        )
-    else:
-        tip = (
-            "Good work! Fine-tune the interval between doses to keep the "
-            "trough concentrations above the lower therapeutic boundary."
-        )
+    tip: str | None = None
+    if spec and spec.mentor.common_mistakes:
+        if s.pct_red > 20:
+            for m in spec.mentor.common_mistakes:
+                if "toxic" in m.id or "overdose" in m.id:
+                    tip = f"Try: {m.remedy}"
+                    break
+        elif s.pct_green < 30:
+            for m in spec.mentor.common_mistakes:
+                if "subtherapeutic" in m.id or "underdose" in m.id:
+                    tip = f"Try: {m.remedy}"
+                    break
+
+    if not tip:
+        if s.pct_red > 20:
+            tip = (
+                "Try reducing the dose or extending the dosing interval to keep "
+                "levels below the toxic threshold."
+            )
+        elif s.pct_green < 30:
+            tip = (
+                "Try increasing the dose or adding more doses to maintain levels "
+                "in the therapeutic window longer."
+            )
+        else:
+            tip = (
+                "Good work! Fine-tune the interval between doses to keep the "
+                "trough concentrations above the lower therapeutic boundary."
+            )
 
     clearance_note = ""
     if s.clearance_multiplier < 0.8:
