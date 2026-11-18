@@ -897,6 +897,50 @@ async function openExperimentBrief(experimentId) {
       ppeBar.innerHTML = (exp.required_ppe || []).map((p) => `<span class="ppe-pill">🛡️ ${p.toUpperCase()}</span>`).join('');
     }
 
+    // Apparatus & Equipment list
+    const equipList = document.getElementById('brief-equipment-list');
+    if (equipList) {
+      const appKeys = Object.keys(exp.apparatus || {});
+      equipList.innerHTML = appKeys.length > 0
+        ? appKeys.map((k) => `<span class="badge badge-default" style="font-size:11px;">🔧 ${k.replace(/_/g, ' ')}</span>`).join('')
+        : '<span style="font-size:11px; color:var(--text-muted);">Standard laboratory workbench apparatus</span>';
+    }
+
+    // Safety rules list with R-numbers
+    const rulesList = document.getElementById('brief-rules-list');
+    if (rulesList) {
+      rulesList.innerHTML = `
+        <li><strong style="color:var(--accent);">R1:</strong> Mandatory PPE equipped before manipulating active agents</li>
+        <li><strong style="color:var(--accent);">R2:</strong> Analytical balance tare required before mass measurement</li>
+        <li><strong style="color:var(--accent);">R3:</strong> Verified dissolution &amp; labeling prior to administration or titration</li>
+        <li><strong style="color:var(--accent);">R4:</strong> Safe waste disposal and sink decontamination required at conclusion</li>
+      `;
+    }
+
+    // Scoring rubric preview
+    const rubricEl = document.getElementById('brief-scoring-rubric');
+    if (rubricEl) {
+      const weights = exp.scoring_weights || { safety: 40, accuracy: 30, technique: 20, protocol: 10 };
+      rubricEl.innerHTML = `
+        <div class="card" style="padding:6px 10px; background:rgba(255,255,255,0.03);">
+          <div style="font-size:10px; color:var(--ok); font-weight:700;">Safety: ${weights.safety ?? 40} pts</div>
+          <div style="font-size:10px; color:var(--text-muted);">-10 per PPE/spill violation</div>
+        </div>
+        <div class="card" style="padding:6px 10px; background:rgba(255,255,255,0.03);">
+          <div style="font-size:10px; color:var(--accent); font-weight:700;">Accuracy: ${weights.accuracy ?? 30} pts</div>
+          <div style="font-size:10px; color:var(--text-muted);">Dosing/endpoint precision</div>
+        </div>
+        <div class="card" style="padding:6px 10px; background:rgba(255,255,255,0.03);">
+          <div style="font-size:10px; color:var(--info); font-weight:700;">Technique: ${weights.technique ?? 20} pts</div>
+          <div style="font-size:10px; color:var(--text-muted);">Balance tare &amp; timing</div>
+        </div>
+        <div class="card" style="padding:6px 10px; background:rgba(255,255,255,0.03);">
+          <div style="font-size:10px; color:var(--warn); font-weight:700;">Protocol: ${weights.protocol ?? 10} pts</div>
+          <div style="font-size:10px; color:var(--text-muted);">Step sequence compliance</div>
+        </div>
+      `;
+    }
+
     showScreen('screen-brief');
   } catch (err) {
     toast.showInfo(`Could not load experiment details: ${err.message}`);

@@ -81,8 +81,8 @@ export class ReportScreen {
         </div>
       `
           : `
-        <div style="background:rgba(16,185,129,0.1); border-left:3px solid #10b981; padding:10px 14px; border-radius:6px; margin-bottom:20px; font-size:0.85rem; color:#6ee7b7;">
-          ✓ Flawless laboratory compliance: Zero safety or protocol violations detected.
+        <div class="empty-violations-state" style="background:rgba(16,185,129,0.1); border-left:3px solid #10b981; padding:10px 14px; border-radius:6px; margin-bottom:20px; font-size:0.85rem; color:#6ee7b7;">
+          ✓ Zero safety violations -- exemplary protocol discipline!
         </div>
       `
       }
@@ -188,9 +188,10 @@ export class ReportScreen {
         <div id="report-leaderboard-entries" style="font-size:0.8rem; font-family:var(--font-mono); color:#94a3b8;">Loading standings...</div>
       </div>
 
-      <div style="display:flex; gap:12px;">
-        <button type="button" class="btn-secondary" id="btn-report-lobby" style="flex:1;">Return to World Hub</button>
-        <button type="button" class="btn-primary" id="btn-report-replay" style="flex:1;">Restart Experiment</button>
+      <div style="display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" id="btn-report-lobby" style="flex:1; min-height:40px;">Return to Lobby</button>
+        <button type="button" class="btn btn-secondary" id="btn-report-print" style="flex:1; min-height:40px;">🖨️ Download PDF / Print</button>
+        <button type="button" class="btn btn-primary" id="btn-report-replay" style="flex:1; min-height:40px;">Try Again ➔</button>
       </div>
     `;
 
@@ -213,15 +214,29 @@ export class ReportScreen {
         });
     }
 
-    document.getElementById('btn-report-lobby').onclick = () => {
-      this.hide();
-      document.getElementById('screen-lobby').classList.remove('hidden');
-    };
+    const btnLobby = document.getElementById('btn-report-lobby');
+    if (btnLobby) {
+      btnLobby.onclick = () => {
+        this.hide();
+        window.location.hash = '#/lobby';
+      };
+    }
 
-    document.getElementById('btn-report-replay').onclick = () => {
-      this.hide();
-      window.startExperimentSession(state.experiment?.id, state.session?.nickname);
-    };
+    const btnPrint = document.getElementById('btn-report-print');
+    if (btnPrint) {
+      btnPrint.onclick = () => {
+        window.print();
+      };
+    }
+
+    const btnReplay = document.getElementById('btn-report-replay');
+    if (btnReplay) {
+      btnReplay.onclick = () => {
+        this.hide();
+        const expId = state.experiment?.id || 'pk_ward';
+        window.location.hash = `#/briefing?exp=${expId}`;
+      };
+    }
 
     // Load leaderboard
     if (state.experiment?.id) {

@@ -4007,6 +4007,86 @@ body.orbis-lab-body {
   }
 }
 
+/* ==========================================================================
+   Print & PDF Export Stylesheet (Spec 8.8, P1-T11)
+   ========================================================================== */
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 12pt;
+    margin: 0;
+    padding: 10mm;
+  }
+
+  /* Hide all interactive non-report UI elements */
+  #screen-lobby,
+  #screen-brief,
+  #screen-leaderboard,
+  #screen-settings,
+  #screen-model-cards,
+  #screen-reality-check,
+  #screen-404,
+  #lab-hud,
+  #webgl-container,
+  #touch-joystick-zone,
+  .hud-top-bar,
+  .hud-bottom-dock,
+  .app-nav,
+  .lobby-links,
+  .btn,
+  button,
+  .btn-primary,
+  .btn-secondary {
+    display: none !important;
+  }
+
+  #screen-report {
+    display: block !important;
+    position: static !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .report-modal {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #999999 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 15mm !important;
+    page-break-inside: avoid;
+  }
+
+  .report-grade-badge {
+    border: 2px solid #000000 !important;
+    color: #000000 !important;
+    font-size: 24pt !important;
+  }
+
+  .score-cell {
+    border: 1px solid #cccccc !important;
+    background: #f8f8f8 !important;
+  }
+
+  .score-cell-val,
+  .score-cell-label {
+    color: #000000 !important;
+  }
+}
+
 
 
 
