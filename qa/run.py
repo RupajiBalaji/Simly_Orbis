@@ -247,16 +247,25 @@ class QAHarnessRunner:
 
             with sync_playwright() as p:
                 print(f"[QA] Launching Playwright Chromium (headless={self.headless})...")
-                browser = p.chromium.launch(
-                    headless=self.headless,
-                    args=[
+                launch_kwargs = {
+                    "headless": self.headless,
+                    "args": [
                         "--enable-webgl",
                         "--use-gl=angle",
                         "--use-angle=swiftshader",
                         "--ignore-gpu-blocklist",
                         "--no-sandbox",
                     ],
-                )
+                }
+                localappdata = os.environ.get("LOCALAPPDATA", "")
+                if localappdata:
+                    for sub in ["chromium-1248", "chromium-1243"]:
+                        candidate = Path(localappdata) / "ms-playwright" / sub / "chrome-win64" / "chrome.exe"
+                        if candidate.exists():
+                            launch_kwargs["executable_path"] = str(candidate)
+                            break
+
+                browser = p.chromium.launch(**launch_kwargs)
 
                 context = browser.new_context(
                     record_video_dir=str(self.out_dir),

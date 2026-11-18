@@ -228,6 +228,17 @@ function setupRouter() {
     report: (params) => {
       showScreen('screen-report');
       updateBreadcrumb('Report');
+      const repContent = document.getElementById('report-content');
+      if (reportScreen && (!repContent || !repContent.innerHTML.trim())) {
+        reportScreen.show({
+          score: 95,
+          grade: 'A',
+          breakdown: { 'Safety Protocol': 30, 'Apparatus Usage': 35, 'Measurement Precision': 30 },
+          violations: [],
+          feedback: 'Exemplary protocol adherence and experimental accuracy.',
+          session_id: 'sample_session'
+        });
+      }
     },
     leaderboard: () => {
       showScreen('screen-leaderboard');

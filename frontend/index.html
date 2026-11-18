@@ -103,7 +103,7 @@
     <div class="controls-card">
       <div class="controls-header">
         <h3>🎮 Laboratory Controls & Shortcuts</h3>
-        <button type="button" class="btn-close-controls" id="btn-close-controls">&times;</button>
+        <button type="button" class="btn-close-controls" id="btn-close-controls" aria-label="Close Controls Dialog">&times;</button>
       </div>
       <div class="controls-grid">
         <div class="ctrl-row"><span class="ctrl-key">W A S D / Arrows</span><span class="ctrl-desc">Walk avatar</span></div>
@@ -416,7 +416,7 @@
           <span class="brief-district" id="brief-district">District: Pharma</span>
           <h2 class="brief-title" id="brief-title">Pharmacokinetics Ward</h2>
         </div>
-        <button type="button" class="brief-close" id="btn-close-brief">&times;</button>
+        <button type="button" class="brief-close" id="btn-close-brief" aria-label="Close Briefing">&times;</button>
       </div>
 
       <p id="brief-description" style="color:#cbd5e1; font-size:0.9rem; line-height:1.5; margin-bottom:16px;"></p>
@@ -452,7 +452,7 @@
       </div>
 
       <div class="practice-mode-wrap" style="display:flex; align-items:center; gap:8px; margin:12px 0;">
-        <input type="checkbox" id="brief-practice-mode" style="transform:scale(1.2); cursor:pointer;">
+        <input type="checkbox" id="brief-practice-mode" aria-label="Practice Mode" style="transform:scale(1.2); cursor:pointer;">
         <label for="brief-practice-mode" style="font-size:var(--text-sm, 0.88rem); color:var(--text); cursor:pointer;">
           <strong>Practice Mode</strong> (Sandbox run: no scorecard recorded to leaderboard)
         </label>
@@ -771,7 +771,7 @@
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <label class="slider-label" for="setting-sound-volume" style="margin:0;">Procedural Audio Volume</label>
             <label style="font-size:var(--text-xs); color:var(--text-muted); display:flex; align-items:center; gap:6px; cursor:pointer;">
-              <input type="checkbox" id="setting-audio-mute"> Mute All Sound
+              <input type="checkbox" id="setting-audio-mute" aria-label="Mute All Sound"> Mute All Sound
             </label>
           </div>
           <div class="slider-controls">
@@ -797,7 +797,7 @@
               <label for="setting-high-contrast" style="font-weight:600; color:var(--text); cursor:pointer;">High Contrast Mode</label>
               <div style="font-size:var(--text-xs); color:var(--text-muted);">Enforce pure black background and elevated contrast ratios (7:1+)</div>
             </div>
-            <input type="checkbox" id="setting-high-contrast" style="transform:scale(1.2); cursor:pointer;">
+            <input type="checkbox" id="setting-high-contrast" aria-label="High Contrast Mode" style="transform:scale(1.2); cursor:pointer;">
           </div>
         </div>
 
@@ -1093,7 +1093,7 @@
         <h2 style="font-size:1.4rem; color:#38bdf8; display:flex; align-items:center; gap:8px;">
           <span>⬡</span> About Simly Orbis
         </h2>
-        <button type="button" class="btn-close-modal" id="btn-close-about" style="background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">✕</button>
+        <button type="button" class="btn-close-modal" id="btn-close-about" aria-label="Close About Dialog" style="background:none; border:none; color:#94a3b8; font-size:1.4rem; cursor:pointer;">✕</button>
       </div>
 
       <div style="font-size:0.9rem; line-height:1.55; color:#cbd5e1; margin-bottom:16px;">
