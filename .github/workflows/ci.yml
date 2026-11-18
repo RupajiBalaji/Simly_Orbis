@@ -29,6 +29,10 @@ jobs:
         run: |
           pytest backend/tests
 
+      - name: Validate Experiment Specifications
+        run: |
+          python scripts/validate_specs.py
+
       - name: Run Claims Grep Gate
         run: |
           python scripts/check_claims.py
