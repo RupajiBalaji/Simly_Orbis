@@ -88,6 +88,7 @@ def check_git_status(repo_root: Path) -> GateResult:
             "docs/SELF_AUDIT_LATEST.md",
             "docs/STAGE3_REPORT.md",
             "docs/PHASE_0_REPORT.md",
+            "docs/PHASE_1_REPORT.md",
         }
         untracked_or_modified = []
         for line in dirty_lines:

@@ -11,15 +11,15 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 19, HEAD: 69b54fa1 |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 40, HEAD: d5dca9a5 |
 | 2 | App Version | **PASS** | Version `0.4.1-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite | **PASS** | [fresh venv] `==================== 419 passed, 12114 warnings in 14.17s =====================` |
+| 3 | Pytest Test Suite | **PASS** | [fresh venv] `==================== 465 passed, 16241 warnings in 18.97s =====================` |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
 | 5 | Frozen Tolerances Guard | **PASS** | 3/3 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 4 engines + R1-R10/S1-S8 rules. Violations: 0 |
 | 7 | CI Workflow Configuration | **PASS** | `.github/workflows/ci.yml` invokes bare `pytest backend/tests`. |
 | 8 | QA Playthrough Proof | **PASS** | Folder: `20261114_111033` | Media count: 55 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
-| 9 | First-Run Parser Baselines | **PASS** | Recorded first-run rates: Dose Lab baseline: 24.2% (15/62), Space Stage baseline: 89.1% |
+| 9 | First-Run Parser Baselines & Held-Out Status | **PASS** | Recorded rates & held-out status: Dose Lab baseline: 24.2% (15/62); Space Stage baseline: 89.1%; founder set: not provided; agent-written seed set, not founder-written (n=4/exp too small to be meaningful) |
 | 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 9 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
 | 11 | Gitignore Coverage | **PASS** | Coverage confirmed: qa/out (True), __pycache__ (True) |
 
@@ -29,25 +29,25 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `69b54fa1` | Clean: False (expected audit files: True) | Ahead: 19
+HEAD: `d5dca9a5` | Clean: False (expected audit files: True) | Ahead: 40
 
 **Last 15 Commits:**
 ```
-69b54fa feat(p0): PITCH_FACTS register and CI claims grep gate
-6f4310f feat(p0): config catalogue in DEPLOY.md, startup validation and ai_status in health
-f360eb0 docs(p0): model card skeletons and reality check links
-ef8b674 feat(p0): founder-written held-out harness and sha256 guard test
-819cf0e docs(p0): provenance and claims re-audit table
-ad90a50 ci(p0): branch strategy, claims gate and pip-audit in CI
-8cc6e7e docs(p0): baseline recheck, gap report and version bump
-d139815 docs: Stage 3 report and self-audit
-6ba1771 scripts: self-audit for stage gates
-000416a docs: pkpd physics, claims audit, judge Q&A, roadmap
-27eac57 qa: dose lab playthrough with real proof
-d2cc725 feat(pharma): mentor context and Ask Orbis for dose lab
-579ce49 feat(pharma): dose response UI and curves
-1dab90e feat(pharma): Dose Response Lab experiment, rules, scoring, report
-e2c2e0f feat(pharma): drug library v2 and hold-out calibration framework
+d5dca9a test(p1): P1 extra gate multi-viewport screenshots, axe audit, and keyboard navigation
+001c412 feat(p1): provenance popovers and reality check integration
+3881cd4 feat(p1): experiment briefings, report screens, and print stylesheet
+37e8e45 feat(p1): loading, empty, error, offline, and WebGL fallback states
+0b67319 test(p1): accessibility baseline, axe-core check, and focus trapping
+613e7c5 feat(p1): i18n localization scaffolding, dictionary, and lint script
+0586da8 feat(p1): phone-playable touch layout and responsive bottom sheet
+1de60c8 feat(p1): accessible HUD refactor, source chips, and actions panel
+bb3a2ee feat(p1): keyboard onboarding tutorial and persistent settings
+7d76b6b feat(p1): lobby district tiles, waking state, and market modal
+01e77b0 feat(p1): app shell, client router, route views, and 404 page
+03daf30 feat(p1): shared component library, showcase page, and DOM tests
+b7b09c0 feat(p1): design tokens, typography, and contrast verification script
+70a3c9e docs(p0): recheck table verifying P0 tasks and F1-F5 fixes
+eb4b2f6 docs(p0): audit sections 4-17 in gap report and clarify 20-section spec scope
 ```
 
 ### Gate 3: Pytest Test Suite
@@ -56,7 +56,7 @@ Exit code: 0
 
 Command: `E:\Simly Orbis\fresh\Scripts\pytest.exe backend/tests`
 
-Final line: `==================== 419 passed, 12114 warnings in 14.17s =====================`
+Final line: `==================== 465 passed, 16241 warnings in 18.97s =====================`
 
 ### Gate 4: Validation Row Governance
 
