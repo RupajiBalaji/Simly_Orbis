@@ -273,6 +273,8 @@
     },
     "notes": "Keplerian orbital mechanics and multi-stage Tsiolkovsky rocket equation."
   },
+  "approved": true,
+  "approval_status": "approved",
   "i18n_keys": {
     "title": "experiments.launch_bench.title",
     "steps.choose_rocket.title": "experiments.launch_bench.steps.choose_rocket.title",

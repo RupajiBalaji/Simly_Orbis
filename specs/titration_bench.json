@@ -297,6 +297,8 @@
     },
     "notes": "Standard analytical laboratory acid-base neutralization protocol."
   },
+  "approved": true,
+  "approval_status": "approved",
   "i18n_keys": {
     "title": "experiments.titration.title",
     "steps.wear_ppe.title": "experiments.titration.steps.wear_ppe.title",

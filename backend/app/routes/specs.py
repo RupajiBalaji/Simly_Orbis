@@ -10,10 +10,13 @@ Provides API endpoints for the Section 8.14 authoring form:
 from __future__ import annotations
 
 import copy
+import json
+import time
 import uuid
+from collections import defaultdict
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from app.lab.engine import apply_action, create_session
@@ -22,13 +25,24 @@ from app.lab.models import ActionRequest, ActionType, LabSession
 from app.specs.adapter import spec_to_experiment_definition
 from app.specs.validator import ValidationReport, validate_spec_data
 
-
 router = APIRouter(prefix="/api/specs", tags=["specs"])
 
+MAX_SPEC_PAYLOAD_BYTES = 512 * 1024  # 512 KB
+_VALIDATE_RATE_LIMIT = 60  # max 60 calls per minute per IP
+_IP_TIMESTAMPS: dict[str, list[float]] = defaultdict(list)
 
-class ValidateSpecRequest(BaseModel):
-    """Payload to validate an authoring spec."""
-    spec_data: dict[str, Any]
+
+def _check_rate_limit(client_ip: str) -> None:
+    """Enforce in-memory sliding window rate limit (Section 10.3 / Task F4)."""
+    now = time.time()
+    cutoff = now - 60.0
+    _IP_TIMESTAMPS[client_ip] = [t for t in _IP_TIMESTAMPS[client_ip] if t > cutoff]
+    if len(_IP_TIMESTAMPS[client_ip]) >= _VALIDATE_RATE_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded: maximum 60 spec validation requests per minute.",
+        )
+    _IP_TIMESTAMPS[client_ip].append(now)
 
 
 class FieldError(BaseModel):
@@ -37,24 +51,11 @@ class FieldError(BaseModel):
     message: str
 
 
-class ValidateSpecResponse(BaseModel):
-    """Response containing field-level validation results."""
-    valid: bool
-    error_count: int
-    errors: list[FieldError]
-
-
 class DryRunAction(BaseModel):
     """Single action to execute in dry run sequence."""
     action: ActionType
     target: str | None = None
     params: dict[str, Any] = Field(default_factory=dict)
-
-
-class DryRunRequest(BaseModel):
-    """Payload to dry-run an authoring spec with scripted action sequence."""
-    spec_data: dict[str, Any]
-    actions: list[DryRunAction] = Field(default_factory=list)
 
 
 class DryRunStepResult(BaseModel):
@@ -77,6 +78,26 @@ class DryRunResponse(BaseModel):
     step_results: list[DryRunStepResult]
 
 
+class DryRunRequest(BaseModel):
+    """Payload to dry-run an authoring spec with scripted action sequence."""
+    spec_data: dict[str, Any]
+    actions: list[DryRunAction] = Field(default_factory=list)
+
+
+class ValidateSpecRequest(BaseModel):
+    """Payload to validate an authoring spec."""
+    spec_data: dict[str, Any]
+    dry_run_actions: list[DryRunAction] = Field(default_factory=list)
+
+
+class ValidateSpecResponse(BaseModel):
+    """Response containing field-level validation results."""
+    valid: bool
+    error_count: int
+    errors: list[FieldError]
+    dry_run: DryRunResponse | None = None
+
+
 class ExportSpecRequest(BaseModel):
     """Payload to validate and export spec with admin approval flag."""
     spec_data: dict[str, Any]
@@ -90,14 +111,84 @@ class ExportSpecResponse(BaseModel):
 
 
 @router.post("/validate", response_model=ValidateSpecResponse, summary="Validate authoring spec")
-async def validate_spec_endpoint(body: ValidateSpecRequest) -> ValidateSpecResponse:
-    """Validate spec data and return field-level errors pointing at exact paths."""
-    report = validate_spec_data(body.spec_data)
+async def validate_spec_endpoint(request: Request) -> ValidateSpecResponse:
+    """
+    Validate spec data and return field-level errors pointing at exact paths.
+    Enforces maximum payload size limit (512KB), sliding-window rate limit,
+    strict schema-only parsing (no eval/exec), zero file writes, and optional dry run.
+    """
+    forwarded = request.headers.get("x-forwarded-for")
+    client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "127.0.0.1")
+    _check_rate_limit(client_ip)
+
+    # 1. Enforce payload size limit (512 KB)
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_SPEC_PAYLOAD_BYTES:
+                raise HTTPException(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail="Payload exceeds maximum limit of 512KB",
+                )
+        except ValueError:
+            pass
+
+    raw_bytes = await request.body()
+    if len(raw_bytes) > MAX_SPEC_PAYLOAD_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Payload exceeds maximum limit of 512KB",
+        )
+
+    # 2. Strict schema-only JSON parsing (no file writes, no code execution)
+    try:
+        payload = json.loads(raw_bytes.decode("utf-8"))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Malformed JSON: {e}",
+        )
+
+    if not isinstance(payload, dict) or "spec_data" not in payload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request body must be a JSON object containing 'spec_data'",
+        )
+
+    spec_data = payload["spec_data"]
+    if not isinstance(spec_data, dict):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="'spec_data' must be a JSON object",
+        )
+
+    # 3. Reject hostile prototype pollution or script injection keys
+    for hostile_key in ("__proto__", "constructor", "prototype", "__class__"):
+        if hostile_key in spec_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Hostile payload property detected: {hostile_key}",
+            )
+
+    report = validate_spec_data(spec_data)
     errors = [FieldError(path=e.path, message=e.message) for e in report.errors]
+
+    # 4. Optional dry run execution if scripted actions supplied in validation request
+    dry_run_res = None
+    dry_actions = payload.get("dry_run_actions")
+    if report.valid and dry_actions and isinstance(dry_actions, list):
+        try:
+            parsed_actions = [DryRunAction(**a) for a in dry_actions]
+            dry_req = DryRunRequest(spec_data=spec_data, actions=parsed_actions)
+            dry_run_res = await dry_run_spec_endpoint(dry_req)
+        except Exception as ex:
+            errors.append(FieldError(path="dry_run_actions", message=f"Dry run execution error: {ex}"))
+
     return ValidateSpecResponse(
-        valid=report.valid,
+        valid=report.valid and len(errors) == 0,
         error_count=len(errors),
         errors=errors,
+        dry_run=dry_run_res,
     )
 
 

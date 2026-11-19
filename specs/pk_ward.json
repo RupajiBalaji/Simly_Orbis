@@ -314,6 +314,8 @@
     },
     "notes": "Educational one-compartment oral pharmacokinetics model."
   },
+  "approved": true,
+  "approval_status": "approved",
   "i18n_keys": {
     "title": "experiments.pk_ward.title",
     "steps.wear_ppe.title": "experiments.pk_ward.steps.wear_ppe.title",

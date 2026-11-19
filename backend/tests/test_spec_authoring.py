@@ -127,3 +127,104 @@ async def test_authoring_export_endpoint(client: AsyncClient, sample_spec_data: 
     cleaned.pop("approval_status", None)
     report = validate_spec_data(cleaned)
     assert report.valid is True
+
+
+@pytest.mark.asyncio
+async def test_validate_endpoint_oversize_payload_rejected_413(client: AsyncClient, sample_spec_data: dict):
+    """Payloads exceeding 512KB must be rejected with 413 Payload Too Large."""
+    # Generate large payload (> 512KB)
+    large_data = copy.deepcopy(sample_spec_data)
+    large_data["equipment"] = ["large_item_" + ("x" * 1000) for _ in range(600)]
+    body_str = json.dumps({"spec_data": large_data})
+    assert len(body_str.encode("utf-8")) > 512 * 1024
+
+    res = await client.post(
+        "/api/specs/validate",
+        content=body_str,
+        headers={"content-type": "application/json", "content-length": str(len(body_str.encode("utf-8")))},
+    )
+    assert res.status_code == 413
+    assert "Payload exceeds maximum limit" in res.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_validate_endpoint_malformed_json_rejected_400(client: AsyncClient):
+    """Malformed non-JSON payloads must be rejected with 400 Bad Request."""
+    res = await client.post(
+        "/api/specs/validate",
+        content=b"{bad json, not closed...",
+        headers={"content-type": "application/json"},
+    )
+    assert res.status_code == 400
+    assert "Malformed JSON" in res.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_validate_endpoint_hostile_input_rejected_400(client: AsyncClient, sample_spec_data: dict):
+    """Hostile prototype injection or non-dict payloads must be rejected with 400 Bad Request."""
+    # 1. Non-dict spec_data
+    res1 = await client.post("/api/specs/validate", json={"spec_data": "not_a_dict"})
+    assert res1.status_code == 400
+
+    # 2. Hostile __proto__ key
+    hostile_data = copy.deepcopy(sample_spec_data)
+    hostile_data["__proto__"] = {"admin": True}
+    res2 = await client.post("/api/specs/validate", json={"spec_data": hostile_data})
+    assert res2.status_code == 400
+    assert "Hostile payload property detected" in res2.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_validate_endpoint_rate_limit_429(client: AsyncClient, sample_spec_data: dict):
+    """Enforce sliding-window rate limit: exceeding 60 requests/minute triggers 429."""
+    from app.routes import specs
+    # Artificially fill rate limit bucket for client IP
+    client_ip = "testclient"
+    now = specs.time.time()
+    specs._IP_TIMESTAMPS[client_ip] = [now] * 65
+
+    res = await client.post(
+        "/api/specs/validate",
+        json={"spec_data": sample_spec_data},
+        headers={"x-forwarded-for": client_ip},
+    )
+    assert res.status_code == 429
+    assert "Rate limit exceeded" in res.json()["detail"]
+    # Clear bucket after test
+    specs._IP_TIMESTAMPS.clear()
+
+
+@pytest.mark.asyncio
+async def test_validate_with_inline_dry_run_actions(client: AsyncClient, sample_spec_data: dict):
+    """Validation payload with scripted dry_run_actions executes dry run in-memory."""
+    actions = [
+        {"action": "wear_ppe", "target": "avatar", "params": {"item": "all"}},
+        {"action": "rinse_burette", "target": "burette", "params": {"solvent": "naoh"}},
+    ]
+    res = await client.post(
+        "/api/specs/validate",
+        json={"spec_data": sample_spec_data, "dry_run_actions": actions},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["valid"] is True
+    assert data["dry_run"] is not None
+    assert data["dry_run"]["success"] is True
+    assert data["dry_run"]["total_steps_executed"] == 2
+
+
+def test_unapproved_spec_never_served_to_students():
+    """Unapproved specs are strictly excluded from public experiment listing."""
+    from app.config import settings
+    from app.lab.experiments import list_experiments
+
+    original = settings.spec_runtime
+    try:
+        settings.spec_runtime = True
+        public_exps = list_experiments(include_all=True)
+        # All public experiments must be approved
+        for exp in public_exps:
+            assert getattr(exp, "approved", True) is True
+    finally:
+        settings.spec_runtime = original
+

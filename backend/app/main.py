@@ -121,15 +121,17 @@ class SecurityAndRateLimitMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path
 
-        # 1. Payload size check on POST / PUT / PATCH API endpoints (max 20 KB = 20,480 bytes)
+        # 1. Payload size check on POST / PUT / PATCH API endpoints (max 20 KB for standard API, 512 KB for /api/specs)
         if request.method in ("POST", "PUT", "PATCH") and path.startswith("/api"):
+            max_limit = 512 * 1024 if path.startswith("/api/specs") else 20480
             content_length = request.headers.get("content-length")
             if content_length:
                 try:
-                    if int(content_length) > 20480:
+                    if int(content_length) > max_limit:
+                        msg = "Payload exceeds maximum limit of 512KB" if path.startswith("/api/specs") else "Request payload too large (max 20 KB)."
                         return JSONResponse(
                             status_code=413,
-                            content={"detail": "Request payload too large (max 20 KB)."},
+                            content={"detail": msg},
                         )
                 except ValueError:
                     pass

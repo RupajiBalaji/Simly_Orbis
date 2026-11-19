@@ -193,4 +193,6 @@ class ExperimentSpec(StrictModel):
     ask_orbis: AskOrbisSpec
     model_card: str
     provenance: ProvenanceBlock
+    approved: bool = False
+    approval_status: str = "pending_admin_approval"
     i18n_keys: dict[str, str] = Field(default_factory=dict)

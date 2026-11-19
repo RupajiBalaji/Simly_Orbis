@@ -46,7 +46,8 @@ def _get_spec_experiment(experiment_id: str) -> ExperimentDefinition | None:
     from app.specs.adapter import spec_to_experiment_definition
 
     spec, report = load_and_validate_spec(spec_file)
-    if not report.valid or spec is None:
+    if not report.valid or spec is None or not spec.approved:
+        # Unapproved specs are never served to students/users (Section 10.3)
         return None
 
     legacy_base = _EXPERIMENTS.get(experiment_id)

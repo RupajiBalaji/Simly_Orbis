@@ -253,6 +253,8 @@
     },
     "notes": "Educational multi-compartment PK/PD simulation model."
   },
+  "approved": true,
+  "approval_status": "approved",
   "i18n_keys": {
     "title": "experiments.dose_lab.title",
     "steps.select_patient.title": "experiments.dose_lab.steps.select_patient.title",
