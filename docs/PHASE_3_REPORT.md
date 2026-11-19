@@ -1,6 +1,6 @@
 # Simly Orbis — Phase P3 Report: Chemistry Expansion
 
-**Platform Version:** `0.6.0-dev`  
+**Platform Version:** `0.7.0-dev`  
 **Phase:** P3 (Chemistry Expansion: Reaction Kinetics & Buffer Equilibrium)  
 **Governance Standard:** Educational Simulation &bull; Simplified Models &bull; Not Medical Advice &bull; Not Clinical Evidence  
 **Active Branch:** `phase-p3-chemistry`  

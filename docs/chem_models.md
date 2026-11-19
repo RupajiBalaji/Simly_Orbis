@@ -1,6 +1,6 @@
 # Simly Orbis Chemistry Physical Models & Numerical Implementations
 
-**Version:** 0.6.0-dev  
+**Version:** 0.7.0-dev  
 **Engines:** `chem.kinetics`, `chem.buffer`  
 **Governance:** Educational Simulation &bull; Unverified  
 

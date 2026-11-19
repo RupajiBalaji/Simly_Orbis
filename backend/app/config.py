@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     allowed_origins: str = "*"
     trust_proxy: bool = False
     git_sha: str = ""
-    app_version: str = "0.6.0-dev"
+    app_version: str = "0.7.0-dev"
     environment: str = "development"
     spec_runtime: bool = False
 

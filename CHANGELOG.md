@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.0-dev] - 2026-11-19
+
+### Added
+- **Phase P3 Chemistry Expansion**:
+  - Reaction Kinetics Engine (`chem.kinetics`) supporting 0th, 1st, 2nd order rate laws, consecutive reactions ($A \to B \to C$), Arrhenius temperature dependence, and RK4 numerical integration with seeded measurement noise.
+  - Aqueous Buffer Equilibrium Engine (`chem.buffer`) supporting exact electroneutrality charge-balance, Henderson-Hasselbalch discrepancy analysis, differential Van Slyke buffer capacity $\beta(\text{pH})$, and acid/base stress titrations.
+  - Interactive Reaction Kinetics Bench (`kinetics_bench`) and Buffer Solutions Bench (`buffer_bench`) with 3D scene apparatus and HUD parameter analysis panels.
+  - Real QA test suites with success, rule-violation, and failure runs for all six laboratory experiments.
+  - Chemistry validation tolerances file (`validation/chem_tolerances.yaml`) and frozen SHA-256 hash (`validation/chem_tolerances.sha256`).
+  - Natural language phrase parsing corpora for chemistry benches with generic grammar rules achieving 98.2% pass rates.
+  - Comprehensive model documentation (`docs/chem_models.md`), model cards (`docs/model_cards/chem_kinetics.md`, `docs/model_cards/chem_buffer.md`), and permanent recheck audit log (`docs/RECHECK_P3.md`).
+
 ## [0.6.0-dev] - 2026-11-19
 
 ### Added
