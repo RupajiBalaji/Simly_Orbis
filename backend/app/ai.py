@@ -78,19 +78,15 @@ async def call_ai_assistant(
             temperature=0.4,
         )
 
-        # Prioritize configured model, followed by reliable free-tier lite variants
+        # Prioritize configured model, followed by primary standard fallback
         models_to_try: list[str] = []
         preferred_model = settings.gemini_model.strip()
         if preferred_model:
             models_to_try.append(preferred_model)
-        for fallback_model in (
-            "gemini-flash-lite-latest",
-            "gemini-3.5-flash-lite",
-            "gemini-3.1-flash-lite",
-            "gemini-2.5-flash",
-        ):
+        for fallback_model in ("gemini-2.0-flash", "gemini-flash-lite-latest"):
             if fallback_model not in models_to_try:
                 models_to_try.append(fallback_model)
+                break  # At most one fallback model to prevent compounding latency
 
         last_error: Exception | None = None
         for model_name in models_to_try:
@@ -114,12 +110,23 @@ async def call_ai_assistant(
                     )
             except Exception as exc:  # noqa: BLE001
                 last_error = exc
+                err_str = str(exc).lower()
+                is_terminal = (
+                    isinstance(exc, (asyncio.TimeoutError, TimeoutError))
+                    or "quota" in err_str
+                    or "resource_exhausted" in err_str
+                    or "429" in err_str
+                    or "503" in err_str
+                )
                 log.warning(
-                    "Gemini model '%s' failed (%s: %s). Trying next candidate if available.",
+                    "Gemini model '%s' failed (%s: %s).",
                     model_name,
                     type(exc).__name__,
                     exc,
                 )
+                if is_terminal:
+                    log.info("Terminal AI error or timeout encountered. Falling back to rule-based assistant immediately.")
+                    break
                 continue
 
         if last_error:

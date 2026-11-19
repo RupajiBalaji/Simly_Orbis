@@ -106,6 +106,7 @@ class QAHarnessRunner:
         env["LOG_LEVEL"] = "warning"
         env["MONGODB_URI"] = ""  # Enforce in-memory DB for pure reproducible QA runs
         env["SPEC_RUNTIME"] = "true" if self.spec_runtime else "false"
+        env["QA_MODE"] = "true"
 
         server_log_path = self.out_dir / "server.log"
         self.server_log_file = open(server_log_path, "w", encoding="utf-8")

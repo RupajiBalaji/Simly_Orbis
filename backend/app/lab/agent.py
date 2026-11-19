@@ -1502,7 +1502,7 @@ async def generate_plan(session: LabSession, text: str) -> AgentPlanResponse:
     source: Literal["ai", "fallback"] = "ai"
     provider_tag = "AI - Gemini"
 
-    ai_res = await call_ai_assistant(system_prompt=system_prompt, user_content=user_payload, max_tokens=600)
+    ai_res = await call_ai_assistant(system_prompt=system_prompt, user_content=user_payload, max_tokens=600, timeout=6.0)
     if ai_res.text:
         try:
             # Strip potential ```json fences if returned

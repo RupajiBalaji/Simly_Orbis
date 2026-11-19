@@ -108,6 +108,8 @@ class SecurityAndRateLimitMiddleware(BaseHTTPMiddleware):
         is_test_runner = (
             request.url.netloc == "test"
             or request.headers.get("host") == "test"
+            or os.environ.get("ENVIRONMENT", "").lower() in ("test", "testing")
+            or os.environ.get("QA_MODE", "").lower() == "true"
         )
 
         trust_proxy = (
