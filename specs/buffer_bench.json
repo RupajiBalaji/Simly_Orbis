@@ -1,0 +1,237 @@
+{
+  "id": "buffer_bench",
+  "version": "1.0.0",
+  "district": "chemistry",
+  "title": "Buffer Solutions & Capacity Bench",
+  "learning_goals": [
+    "Maintain chemical laboratory PPE compliance (goggles, gloves, coat).",
+    "Select conjugate acid-base systems whose pKa closely matches target pH.",
+    "Prepare buffer solutions using Henderson-Hasselbalch and exact electroneutrality.",
+    "Calibrate pH meter with two-point standard buffers before taking measurements.",
+    "Determine experimental and theoretical Van Slyke buffer capacity (beta).",
+    "Stress-test buffer stability against strong acid and strong base additions.",
+    "Recognize buffer exhaustion when added strong titrant exceeds buffer capacity.",
+    "Neutralize and safely dispose of chemical waste in designated containers."
+  ],
+  "difficulty": "intermediate",
+  "est_minutes": 15,
+  "engine": {
+    "id": "chem.buffer",
+    "minimum_version": "0.1.0",
+    "parameter_bounds": {
+      "pka": {"min": 1.0, "max": 14.0, "unit": "pKa", "default": 4.76},
+      "acid_conc_m": {"min": 0.0001, "max": 5.0, "unit": "M", "default": 0.1},
+      "salt_conc_m": {"min": 0.0001, "max": 5.0, "unit": "M", "default": 0.1},
+      "volume_ml": {"min": 10.0, "max": 1000.0, "unit": "mL", "default": 100.0},
+      "stress_titrant_conc_m": {"min": 0.01, "max": 5.0, "unit": "M", "default": 1.0},
+      "stress_added_volume_ml": {"min": 0.0, "max": 100.0, "unit": "mL", "default": 10.0}
+    }
+  },
+  "equipment": [
+    "ph_meter",
+    "buffer_beaker",
+    "magnetic_stirrer",
+    "stress_burette",
+    "chemical_waste_bin",
+    "sink"
+  ],
+  "steps": [
+    {
+      "id": "wear_ppe",
+      "title": "Wear Personal Protective Equipment (PPE)",
+      "allowed_actions": ["wear_ppe"],
+      "preconditions": [],
+      "effects": ["ppe_worn"]
+    },
+    {
+      "id": "select_buffer_system",
+      "title": "Select Buffer Pair System",
+      "allowed_actions": ["select_buffer_system"],
+      "preconditions": [],
+      "effects": ["system_selected"]
+    },
+    {
+      "id": "prepare_buffer",
+      "title": "Prepare Buffer Solution",
+      "allowed_actions": ["prepare_buffer"],
+      "preconditions": [],
+      "effects": ["buffer_prepared"]
+    },
+    {
+      "id": "test_capacity",
+      "title": "Calibrate Meter & Test Capacity",
+      "allowed_actions": ["test_capacity"],
+      "preconditions": [],
+      "effects": ["meter_calibrated", "capacity_tested"]
+    },
+    {
+      "id": "stress_buffer",
+      "title": "Perform Acid/Base Stress Test",
+      "allowed_actions": ["stress_buffer"],
+      "preconditions": [],
+      "effects": ["stress_tested"]
+    },
+    {
+      "id": "submit_buffer_design",
+      "title": "Submit Buffer Evaluation",
+      "allowed_actions": ["submit_buffer_design"],
+      "preconditions": [],
+      "effects": ["evaluation_submitted"]
+    },
+    {
+      "id": "dispose_waste",
+      "title": "Dispose Chemical Waste",
+      "allowed_actions": ["dispose_waste"],
+      "preconditions": [],
+      "effects": ["waste_disposed"]
+    },
+    {
+      "id": "wash_hands",
+      "title": "Wash Hands at Sink",
+      "allowed_actions": ["wash_hands"],
+      "preconditions": [],
+      "effects": ["hands_washed"]
+    },
+    {
+      "id": "submit_report",
+      "title": "Submit Final Laboratory Report",
+      "allowed_actions": ["submit_report"],
+      "preconditions": [],
+      "effects": ["report_submitted"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "R1",
+      "text": "Full PPE (goggles, gloves, coat) must be worn before touching buffer solutions or corrosive acids/bases.",
+      "severity": "penalty",
+      "condition": "ppe_worn",
+      "hint": "Put on safety goggles, gloves, and coat before handling buffer reagents."
+    },
+    {
+      "id": "R2",
+      "text": "Dispose chemicals into designated chemical waste bin, never in sink.",
+      "severity": "fail",
+      "condition": "waste_disposed",
+      "hint": "Always discard spent buffer and acid/base solutions into the chemical waste receptacle."
+    },
+    {
+      "id": "R4",
+      "text": "Always wash hands at sink before leaving laboratory bench.",
+      "severity": "penalty",
+      "condition": "hands_washed",
+      "hint": "Clean hands with soap and water after handling buffer bench apparatus."
+    },
+    {
+      "id": "B2",
+      "text": "Select a buffer system whose pKa is within 1.2 pH units of target pH.",
+      "severity": "penalty",
+      "condition": "buffer_system_suitable",
+      "hint": "Match buffer pair pKa closely to target pH to provide robust buffer capacity."
+    },
+    {
+      "id": "B3",
+      "text": "Calibrate the pH meter before recording buffer and stress test readings.",
+      "severity": "penalty",
+      "condition": "ph_meter_calibrated",
+      "hint": "Standardize the pH meter with two-point standard buffers before measurement."
+    }
+  ],
+  "scoring": {
+    "weights": {
+      "safety": 30,
+      "accuracy": 40,
+      "technique": 20,
+      "protocol": 10
+    },
+    "grade_thresholds": {
+      "A": 90,
+      "B": 80,
+      "C": 70,
+      "D": 60
+    }
+  },
+  "mentor": {
+    "hints_per_step": {
+      "wear_ppe": ["Put on goggles, gloves, and lab coat before handling buffer solutions or acids."],
+      "select_buffer_system": ["Select a conjugate pair whose pKa is within 1 pH unit of your desired target pH."],
+      "prepare_buffer": ["Use the Henderson-Hasselbalch equation to calculate the exact acid and conjugate base concentrations."],
+      "test_capacity": ["Calibrate the pH meter before taking initial baseline readings of pH and buffer capacity beta."],
+      "stress_buffer": ["Titrate with 1.0 M HCl or 1.0 M NaOH to observe resistance to pH changes."],
+      "submit_buffer_design": ["Check your prepared pH against target pH and verify that experimental capacity matches theory."],
+      "dispose_waste": ["Pour all acidic, basic, and buffer mixtures into the chemical waste container."],
+      "wash_hands": ["Thoroughly wash hands with soap and water before concluding the lab session."],
+      "submit_report": ["Review your buffer capacity curve and submit your analytical report."]
+    },
+    "common_mistakes": [
+      {
+        "id": "poor_pka_match",
+        "trigger": "pka_diff_large",
+        "remedy": "Select a buffer pair with pKa within 1 pH unit of target pH for optimal buffer capacity."
+      }
+    ]
+  },
+  "ask_orbis": {
+    "allowed_actions": [
+      "wear_ppe",
+      "select_buffer_system",
+      "prepare_buffer",
+      "test_capacity",
+      "stress_buffer",
+      "submit_buffer_design",
+      "dispose_waste",
+      "wash_hands",
+      "submit_report"
+    ],
+    "synonyms": {
+      "wear_ppe": ["put on ppe", "don safety gear", "wear goggles", "put on gloves"],
+      "select_buffer_system": ["choose buffer", "pick buffer system", "select acetate", "select phosphate"],
+      "prepare_buffer": ["make buffer", "mix buffer", "formulate buffer", "prepare solution"],
+      "test_capacity": ["calibrate meter", "measure initial ph", "test buffer capacity", "read ph meter"],
+      "stress_buffer": ["add acid", "add base", "stress test", "titrate buffer", "add hcl", "add naoh"],
+      "submit_buffer_design": ["submit design", "evaluate buffer", "check accuracy", "submit results"],
+      "dispose_waste": ["empty beaker", "dispose chemicals", "throw waste", "dump buffer"],
+      "wash_hands": ["clean hands", "wash up", "soap and water"],
+      "submit_report": ["finish lab", "complete experiment", "submit report", "generate report"]
+    }
+  },
+  "model_card": "docs/model_cards/chem_buffer.md",
+  "provenance": {
+    "author": "Antigravity Chemistry Team",
+    "model_card": "docs/model_cards/chem_buffer.md",
+    "constants": {
+      "kw_water": {
+        "value": 1e-14,
+        "unit": "mol^2/L^2",
+        "source": "CRC Handbook of Chemistry and Physics, 97th Edition",
+        "citation": "CRC Press, Sec 5",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      },
+      "acetic_acid_pka": {
+        "value": 4.76,
+        "unit": "pKa",
+        "source": "CRC Handbook of Chemistry and Physics, 97th Edition",
+        "citation": "CRC Press, Dissociation Constants of Organic Acids and Bases",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      }
+    },
+    "notes": "Aqueous weak electrolyte equilibria and Van Slyke buffer capacity formulation. Game-balanced approximate, human verification needed."
+  },
+  "approved": true,
+  "approval_status": "approved",
+  "i18n_keys": {
+    "title": "experiments.buffer_bench.title",
+    "description": "experiments.buffer_bench.description",
+    "steps.wear_ppe.title": "experiments.buffer_bench.steps.wear_ppe.title",
+    "steps.select_buffer_system.title": "experiments.buffer_bench.steps.select_buffer_system.title",
+    "steps.prepare_buffer.title": "experiments.buffer_bench.steps.prepare_buffer.title",
+    "steps.test_capacity.title": "experiments.buffer_bench.steps.test_capacity.title",
+    "steps.stress_buffer.title": "experiments.buffer_bench.steps.stress_buffer.title",
+    "steps.submit_buffer_design.title": "experiments.buffer_bench.steps.submit_buffer_design.title",
+    "steps.dispose_waste.title": "experiments.buffer_bench.steps.dispose_waste.title",
+    "steps.wash_hands.title": "experiments.buffer_bench.steps.wash_hands.title",
+    "steps.submit_report.title": "experiments.buffer_bench.steps.submit_report.title"
+  }
+}

@@ -771,6 +771,11 @@ export class ActionMenu {
         window.renderKineticsPanel(state.session);
       }
 
+      // Render buffer panel for buffer bench (Spec 9.2 & P3-T5)
+      if (state.session?.experiment_id === 'buffer_bench' && typeof window.renderBufferPanel === 'function') {
+        window.renderBufferPanel(state.session);
+      }
+
       // Refresh session & available actions
       const updatedSession = await api.getSession(state.session.session_id);
       state.setSession(updatedSession);

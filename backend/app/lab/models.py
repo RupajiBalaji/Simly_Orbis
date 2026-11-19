@@ -76,9 +76,11 @@ class ActionType(str, Enum):
     submit_order_estimate = "submit_order_estimate"
 
     # Buffer Bench actions (Phase P3)
+    select_buffer_system = "select_buffer_system"
     prepare_buffer = "prepare_buffer"
     test_capacity = "test_capacity"
     stress_buffer = "stress_buffer"
+    submit_buffer_design = "submit_buffer_design"
 
 
 # ---------------------------------------------------------------------------

@@ -148,6 +148,9 @@ async def available_actions(session_id: str) -> list[AvailableAction]:
     if session.experiment_id == "kinetics_bench":
         from app.lab.experiments.kinetics_bench import get_kinetics_available_actions
         return get_kinetics_available_actions(session)
+    if session.experiment_id == "buffer_bench":
+        from app.lab.experiments.buffer_bench import get_buffer_available_actions
+        return get_buffer_available_actions(session)
     return get_available_actions(session)
 
 
@@ -165,6 +168,9 @@ async def execute_action(session_id: str, body: ActionRequest) -> ActionResult:
     if session.experiment_id == "kinetics_bench":
         from app.lab.experiments.kinetics_bench import apply_kinetics_action
         result = apply_kinetics_action(session, body)
+    elif session.experiment_id == "buffer_bench":
+        from app.lab.experiments.buffer_bench import apply_buffer_action
+        result = apply_buffer_action(session, body)
     else:
         result = apply_action(session, body)
 
@@ -288,6 +294,19 @@ def _build_mentor_context(session: LabSession) -> tuple[str, str, str]:
             f"Simulated Cmax: {cmax:.2f} mg/L (Target: {c_low:.1f}-{c_high:.1f} mg/L); Accumulation: {acc:.2f}x; "
             f"Limiting Factor: {limiting}"
         )
+    elif session.experiment_id == "kinetics_bench":
+        vessel = session.apparatus_state.get("reaction_vessel", {})
+        temp = vessel.get("temperature_c", 25.0)
+        conc = vessel.get("initial_conc_m", 1.0)
+        spec = session.apparatus_state.get("spectrophotometer", {})
+        fits = spec.get("linear_fits", {})
+        readouts.append(f"Vessel: Temp {temp:.1f} °C, [A]0 {conc:.2f} M; Linear fits: {len(fits)} orders evaluated")
+    elif session.experiment_id == "buffer_bench":
+        beaker = session.apparatus_state.get("buffer_beaker", {})
+        ph = beaker.get("ph")
+        beta = beaker.get("buffer_capacity_beta")
+        sys_id = beaker.get("system_id", "acetate")
+        readouts.append(f"Buffer System: {sys_id}, Current pH: {ph if ph is not None else 'Unmeasured'}, Beta: {beta if beta is not None else 'Unmeasured'} M/pH")
     readout_str = "; ".join(readouts) or "Normal baseline"
 
     context_text = f"""Experiment: {session.experiment_id}
@@ -744,6 +763,10 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
         lessons.append("Orbital Mechanics: Orbital insertion requires tangential velocity matching circular velocity (vis-viva) with staging mass ratios optimized by Tsiolkovsky's equation.")
     elif session.experiment_id == "dose_lab":
         lessons.append("Pharmacometrics: Drug concentration-time curves scale with clearance and volume of distribution, influenced by weight allometry and renal function.")
+    elif session.experiment_id == "kinetics_bench":
+        lessons.append("Chemical Kinetics: Reaction order is determined by the linear fit (R²) of integrated rate equations ([A], ln[A], 1/[A] vs time).")
+    elif session.experiment_id == "buffer_bench":
+        lessons.append("Buffer Equilibrium: Van Slyke buffer capacity reaches its maximum when solution pH equals conjugate acid pKa.")
 
     trial_res = body.trial_result if body else None
     if trial_res:
