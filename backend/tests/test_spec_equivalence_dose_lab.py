@@ -3,10 +3,18 @@ Golden-Equivalence Test Suite for Dose Response Lab (dose_lab).
 Proves that the declarative spec runtime (SPEC_RUNTIME=True) produces identical
 outcomes, scores, grade, and safety violations across 22 distinct scripted sequences
 compared to the legacy engine path (SPEC_RUNTIME=False).
+
+Baseline code state is pinned to commit 3d60be7 (P1 baseline HEAD).
+All golden outputs are computed dynamically at test time by running both
+the original pre-spec session engine and SpecRunner side-by-side on identical
+scripted inputs (no stored snapshots).
 """
 
 from __future__ import annotations
 
+import hashlib
+from pathlib import Path
+import subprocess
 from typing import Any
 import pytest
 
@@ -363,10 +371,17 @@ def test_dose_lab_golden_equivalence(seq_def: dict[str, Any]):
         assert v_old_ids == v_new_ids, (
             f"{step_label}: violations mismatch old={v_old_ids} new={v_new_ids}"
         )
-        # Visuals count
+        # Visuals count and directives equality
         assert len(r_old.visuals) == len(r_new.visuals), (
             f"{step_label}: visuals count mismatch old={len(r_old.visuals)} new={len(r_new.visuals)}"
         )
+        for v_idx, (v_o, v_n) in enumerate(zip(r_old.visuals, r_new.visuals)):
+            type_o = v_o.get("type") if isinstance(v_o, dict) else getattr(v_o, "type", None)
+            type_n = v_n.get("type") if isinstance(v_n, dict) else getattr(v_n, "type", None)
+            assert type_o == type_n, f"{step_label} visual {v_idx}: type mismatch ({type_o} != {type_n})"
+            target_o = v_o.get("target") if isinstance(v_o, dict) else getattr(v_o, "target", None)
+            target_n = v_n.get("target") if isinstance(v_n, dict) else getattr(v_n, "target", None)
+            assert target_o == target_n, f"{step_label} visual {v_idx}: target mismatch ({target_o} != {target_n})"
         # Dynamic score breakdown
         assert s_old == s_new, (
             f"{step_label}: score breakdown mismatch old={s_old} new={s_new}"
@@ -418,3 +433,28 @@ def test_api_route_switch_under_spec_runtime_dose_lab():
     res_fallback = client.get("/api/lab/experiments/dose_lab")
     assert res_fallback.status_code == 200
     assert "Spec v1.0.0" not in res_fallback.json()["description"]
+
+
+def test_legacy_session_module_unmodified_since_3d60be7():
+    """Verify that backend/app/lab/engine.py has 0 diff vs commit 3d60be7 (P1 baseline)."""
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    base_commit = "3d60be7"
+    rev_check = subprocess.run(
+        ["git", "cat-file", "-e", f"{base_commit}^{{commit}}"],
+        cwd=repo_root,
+        capture_output=True,
+    )
+    if rev_check.returncode == 0:
+        res = subprocess.run(
+            ["git", "diff", base_commit, "HEAD", "--", "backend/app/lab/engine.py"],
+            cwd=repo_root,
+            capture_output=True,
+            text=True,
+        )
+        assert res.stdout.strip() == "", f"engine.py has diverged from commit {base_commit}:\n{res.stdout}"
+    else:
+        # Fallback for shallow clone: sha256 checksum guard
+        engine_file = repo_root / "backend" / "app" / "lab" / "engine.py"
+        sha = hashlib.sha256(engine_file.read_bytes()).hexdigest()
+        assert sha == "a8a61a4376e8627628e22fa33c48079f03b3d562e0b7b76db6b7fefc48a3d92f"
+
