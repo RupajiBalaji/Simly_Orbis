@@ -59,8 +59,6 @@ async def lifespan(app: FastAPI):  # noqa: ANN001
     register(PharmaPKModule())
     register(ChemTitrationModule())
     register(PharmaTrialModule())
-    register(ChemKineticsModule())
-    register(ChemBufferModule())
     log.info("Storage mode: %s | App Version: %s", STORAGE_MODE, settings.app_version)
     yield
     await close_db()

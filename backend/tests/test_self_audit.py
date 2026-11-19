@@ -53,7 +53,7 @@ def test_audit_check_frozen_tolerances():
     res = check_frozen_tolerance_hashes(REPO_ROOT)
     assert res.gate_id == 5
     assert res.passed is True
-    assert "3/3" in res.evidence
+    assert "4/4" in res.evidence
 
 
 def test_audit_check_protected_files():

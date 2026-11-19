@@ -28,6 +28,10 @@ from httpx import ASGITransport, AsyncClient
 
 from app.main import app
 import app.db as _db
+from app.core.registry import register
+from app.modules.pharma_pk import PharmaPKModule
+from app.modules.chem_titration import ChemTitrationModule
+from app.modules.pharma_trial import PharmaTrialModule
 
 
 @pytest_asyncio.fixture
@@ -37,6 +41,9 @@ async def client():
     Ensures init_db() populates _db.database before any request arrives.
     """
     await _db.init_db()
+    register(PharmaPKModule())
+    register(ChemTitrationModule())
+    register(PharmaTrialModule())
     async with AsyncClient(
         transport=ASGITransport(app=app),
         base_url="http://test",

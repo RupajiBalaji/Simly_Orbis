@@ -40,6 +40,7 @@ FROZEN_TOLERANCES: dict[str, str] = {
     "validation/tolerances.yaml": "5b5d857ed4862b5172062aa492541aaafc73eaf99e701fc39ddbd13ff8f71d59",
     "validation/space_tolerances.yaml": "fc4ba76cb3ee9d65a48c602f3be2306ba8e24e78c448f30745c03335c8288de2",
     "validation/pkpd_tolerances.yaml": "443d18ab90e60b43e7070779c6b0ba2d5aea431a3f7ec3373ca0349ad1064e75",
+    "validation/chem_tolerances.yaml": "2288d01d83e2a5fc986f1a5817f83c2c32eb7afb56605241ea8552da07d3782a",
 }
 
 PROTECTED_ENGINE_FILES: list[str] = [
@@ -90,6 +91,7 @@ def check_git_status(repo_root: Path) -> GateResult:
             "docs/PHASE_0_REPORT.md",
             "docs/PHASE_1_REPORT.md",
             "docs/PHASE_2_REPORT.md",
+            "docs/PHASE_3_REPORT.md",
             "docs/screenshots/touch/01_lobby_touch.png",
             "docs/screenshots/touch/02_briefing_touch.png",
             "docs/screenshots/touch/03_joystick_drag.png",

@@ -102,23 +102,35 @@ class ChemKineticsModule(SimModule):
 
         exec_ms = (time.perf_counter() - start_t) * 1000.0
 
-        reality_check = RealityCheck(
-            is_physiologic=True,
-            warnings=[],
-            cmax_safe=True,
-            tmax_plausible=True,
-            auc_normal=True,
-        )
-
         return RunResult(
             module_id=self.id,
-            engine_version="1.0.0",
-            execution_time_ms=exec_ms,
-            parameters=p.model_dump(),
+            params=p.model_dump(),
             summary=summary,
-            time_series=time_series,
-            reality_check=reality_check,
-            visual_directives=[
-                {"type": "plot_kinetics", "target": "kinetics_graph"},
-            ],
+            series={
+                "time_s": [o.time_s for o in obs],
+                "concentration_m": [o.a_measured for o in obs],
+            },
+            warnings=[],
+            duration_ms=round(exec_ms, 3),
+            engine_version="1.0.0",
         )
+
+    def reality_checks(self) -> list[RealityCheck]:
+        import math
+        checks: list[RealityCheck] = []
+        k = 0.05
+        expected_thalf = math.log(2.0) / k
+        actual_thalf = half_life_order_1(k)
+        diff = abs(actual_thalf - expected_thalf) / expected_thalf
+        checks.append(
+            RealityCheck(
+                name="First-order half-life",
+                description="First-order half-life matches analytical formula t_1/2 = ln(2)/k within 0.1%.",
+                expected=expected_thalf,
+                actual=actual_thalf,
+                tolerance=0.001,
+                passed=diff <= 0.001,
+                source_note="Integrated first-order rate law t_1/2 = ln(2)/k.",
+            )
+        )
+        return checks

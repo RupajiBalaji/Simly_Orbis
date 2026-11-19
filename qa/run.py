@@ -1014,6 +1014,121 @@ class QAHarnessRunner:
                     self.failure_reasons.append("dose_lab report submitted without a letter grade.")
 
                 # ==============================================================
+                # 3d. REACTION KINETICS BENCH (kinetics_bench)
+                # ==============================================================
+                print("\n[QA] --- Step 3d: Reaction Kinetics Bench (kinetics_bench) ---")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); if (window.agentPanel) window.agentPanel.closePlanModal(); }")
+                page.click("#btn-report-lobby")
+                page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(500)
+
+                # Enter Kinetics Bench brief
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); }")
+                page.click('a[href="#/briefing?exp=kinetics_bench"]')
+                page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
+                page.wait_for_timeout(500)
+                self.capture_checkpoint(page, "kinetics_bench_brief")
+
+                # Launch 3D laboratory
+                page.click("#btn-start-experiment")
+                page.wait_for_selector("#lab-hud:not(.hidden)", timeout=10000)
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "kinetics_bench_first_view")
+
+                print("  [QA Kinetics Bench] Executing full protocol sequence...")
+                page.evaluate("""async () => {
+                    await window.actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+                    await window.actionMenu.executeAction('set_temperature', 'thermostat_bath', { temperature_c: 25.0 });
+                    await window.actionMenu.executeAction('prepare_reactant', 'reaction_vessel', { initial_conc_m: 1.0 });
+                    await window.actionMenu.executeAction('calibrate_spectrophotometer', 'spectrophotometer', {});
+                    await window.actionMenu.executeAction('start_reaction', 'reaction_vessel', { order: 1 });
+                    await window.actionMenu.executeAction('record_sampling', 'spectrophotometer', { duration_s: 60.0, num_samples: 10 });
+                    await window.actionMenu.executeAction('analyze_linear_plots', 'spectrophotometer', {});
+                    await window.actionMenu.executeAction('submit_order_estimate', 'spectrophotometer', { estimated_order: 1, estimated_k: 0.05 });
+                    await window.actionMenu.executeAction('dispose_waste', 'chemical_waste_bin', {});
+                    await window.actionMenu.executeAction('wash_hands', 'sink', {});
+                }""")
+                page.wait_for_timeout(1000)
+
+                # DOM assertion: linear regression R^2 rendered
+                r2_elem = page.inner_text("#r2-order-1").strip() if page.is_visible("#r2-order-1") else ""
+                print(f"  [QA Kinetics Bench] DOM R^2 Order 1: {r2_elem}")
+                if not r2_elem or "--" in r2_elem:
+                    self.failure_reasons.append("#r2-order-1 was not populated after linear analysis.")
+
+                self.capture_checkpoint(page, "kinetics_analysis_view")
+
+                # Finish and report
+                page.evaluate("async () => { const res = await window.api.finishSession(window.state.session.session_id); window.reportScreen.show(res); }")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "kinetics_bench_final_report")
+
+                kin_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                self.grades["kinetics_bench"] = kin_grade
+                print(f"  [QA Kinetics Bench] Grade: '{kin_grade}'")
+                if not kin_grade:
+                    self.failure_reasons.append("kinetics_bench report submitted without a letter grade.")
+
+                # ==============================================================
+                # 3e. BUFFER BENCH (buffer_bench)
+                # ==============================================================
+                print("\n[QA] --- Step 3e: Buffer Solutions & Capacity Bench (buffer_bench) ---")
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); if (window.agentPanel) window.agentPanel.closePlanModal(); }")
+                page.click("#btn-report-lobby")
+                page.wait_for_selector("#screen-lobby:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(500)
+
+                # Enter Buffer Bench brief
+                page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); }")
+                page.click('a[href="#/briefing?exp=buffer_bench"]')
+                page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
+                page.wait_for_timeout(500)
+                self.capture_checkpoint(page, "buffer_bench_brief")
+
+                # Launch 3D laboratory
+                page.click("#btn-start-experiment")
+                page.wait_for_selector("#lab-hud:not(.hidden)", timeout=10000)
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "buffer_bench_first_view")
+
+                print("  [QA Buffer Bench] Executing full protocol sequence...")
+                page.evaluate("""async () => {
+                    await window.actionMenu.executeAction('wear_ppe', 'avatar', { item: 'all' });
+                    await window.actionMenu.executeAction('select_buffer_system', 'buffer_beaker', { system: 'acetate', target_ph: 4.75 });
+                    await window.actionMenu.executeAction('prepare_buffer', 'buffer_beaker', { target_ph: 4.75, total_conc_m: 0.2, volume_ml: 100.0 });
+                    await window.actionMenu.executeAction('test_capacity', 'ph_meter', {});
+                    await window.actionMenu.executeAction('stress_buffer', 'stress_burette', { titrant: 'hcl', titrant_conc_m: 1.0, max_added_ml: 10.0, num_steps: 20 });
+                    await window.actionMenu.executeAction('submit_buffer_design', 'avatar', {});
+                    await window.actionMenu.executeAction('dispose_waste', 'chemical_waste_bin', {});
+                    await window.actionMenu.executeAction('wash_hands', 'sink', {});
+                }""")
+                page.wait_for_timeout(1000)
+
+                # DOM assertions: current pH and beta rendered
+                buf_ph = page.inner_text("#buffer-current-ph").strip() if page.is_visible("#buffer-current-ph") else ""
+                buf_beta = page.inner_text("#buffer-beta-val").strip() if page.is_visible("#buffer-beta-val") else ""
+                print(f"  [QA Buffer Bench] DOM Current pH: {buf_ph}, Beta: {buf_beta}")
+                if not buf_ph or "--" in buf_ph:
+                    self.failure_reasons.append("#buffer-current-ph was not populated after stress test.")
+                if not buf_beta or "--" in buf_beta:
+                    self.failure_reasons.append("#buffer-beta-val was not populated after test capacity.")
+
+                self.capture_checkpoint(page, "buffer_stress_view")
+
+                # Finish and report
+                page.evaluate("async () => { const res = await window.api.finishSession(window.state.session.session_id); window.reportScreen.show(res); }")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(1000)
+                self.capture_checkpoint(page, "buffer_bench_final_report")
+
+                buf_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                self.grades["buffer_bench"] = buf_grade
+                print(f"  [QA Buffer Bench] Grade: '{buf_grade}'")
+                if not buf_grade:
+                    self.failure_reasons.append("buffer_bench report submitted without a letter grade.")
+
+                # ==============================================================
                 # 4. CAMERA RIG & AVATAR FRAMING ACCEPTANCE TEST (__camTest)
                 # ==============================================================
                 print("\n[QA] --- Step 4: Camera Rig & Viewport Framing Acceptance (__camTest) ---")
@@ -1206,6 +1321,8 @@ class QAHarnessRunner:
             f"| **titration_bench Report Grade** | {'✅ PASS' if summary['grades'].get('titration_bench') else '❌ FAIL'} | Grade: `{summary['grades'].get('titration_bench', 'None')}` |",
             f"| **launch_bench Report Grade** | {'✅ PASS' if summary['grades'].get('launch_bench') else '❌ FAIL'} | Grade: `{summary['grades'].get('launch_bench', 'None')}` |",
             f"| **dose_lab Report Grade** | {'✅ PASS' if summary['grades'].get('dose_lab') else '❌ FAIL'} | Grade: `{summary['grades'].get('dose_lab', 'None')}` |",
+            f"| **kinetics_bench Report Grade** | {'✅ PASS' if summary['grades'].get('kinetics_bench') else '❌ FAIL'} | Grade: `{summary['grades'].get('kinetics_bench', 'None')}` |",
+            f"| **buffer_bench Report Grade** | {'✅ PASS' if summary['grades'].get('buffer_bench') else '❌ FAIL'} | Grade: `{summary['grades'].get('buffer_bench', 'None')}` |",
             f"",
             f"---",
             f"",

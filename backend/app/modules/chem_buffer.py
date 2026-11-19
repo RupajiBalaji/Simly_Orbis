@@ -92,23 +92,36 @@ class ChemBufferModule(SimModule):
 
         exec_ms = (time.perf_counter() - start_t) * 1000.0
 
-        reality_check = RealityCheck(
-            is_physiologic=True,
-            warnings=[],
-            cmax_safe=True,
-            tmax_plausible=True,
-            auc_normal=True,
-        )
-
         return RunResult(
             module_id=self.id,
-            engine_version="1.0.0",
-            execution_time_ms=exec_ms,
-            parameters=p.model_dump(),
+            params=p.model_dump(),
             summary=summary,
-            time_series=time_series,
-            reality_check=reality_check,
-            visual_directives=[
-                {"type": "plot_buffer_curve", "target": "buffer_graph"},
-            ],
+            series={
+                "stress_volume_ml": [pt["added_volume_ml"] for pt in time_series] if time_series else [],
+                "ph_curve": [pt["ph"] for pt in time_series] if time_series else [state.ph],
+            },
+            warnings=[],
+            duration_ms=round(exec_ms, 3),
+            engine_version="1.0.0",
         )
+
+    def reality_checks(self) -> list[RealityCheck]:
+        import math
+        from app.chem.buffer import max_buffer_capacity
+        checks: list[RealityCheck] = []
+        c = 0.2
+        expected_beta = math.log(10.0) * (2.0 * math.sqrt(1e-14) + 0.25 * c)
+        actual_beta = max_buffer_capacity(c)
+        diff = abs(actual_beta - expected_beta) / expected_beta
+        checks.append(
+            RealityCheck(
+                name="Maximum buffer capacity",
+                description="Van Slyke maximum buffer capacity matches beta_max = ln(10)*(2*sqrt(Kw) + C/4) within 0.1%.",
+                expected=expected_beta,
+                actual=actual_beta,
+                tolerance=0.001,
+                passed=diff <= 0.001,
+                source_note="Van Slyke equation maximum at pH = pKa.",
+            )
+        )
+        return checks
