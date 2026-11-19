@@ -376,7 +376,13 @@ def _generate_rule_based_mentor_message(
             "headache", "my mother", "my father", "my child", "my fever", "back pain",
             "for my infection", "should i take", "can i take", "prescribe", "swallow right now",
             "pills should i", "medical advice", "what dose should i", "cure my", "for me",
-            "my cough", "my disease", "my pain",
+            "my cough", "my disease", "my pain", "toothache", "migraine", "arthritis",
+            "pneumonia", "sepsis", "infection", "asthma", "heart disease", "anxiety",
+            "sore throat", "chest infection", "hangover", "hypertension", "blood pressure",
+            "patient dose", "dosing advice", "clinical prescription", "prescription",
+            "how many mg should", "how many tablets should", "how many pills", "give me a prescription",
+            "what dose should a real", "treat my", "for relief of", "for treating", "for pain relief",
+            "prescribe for", "dosage for a real", "safe for my", "should they take", "should someone take",
         ]
         if any(m in q_lower for m in med_triggers):
             return (
@@ -579,12 +585,33 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
             "headache", "my mother", "my father", "my child", "my fever", "back pain",
             "for my infection", "should i take", "can i take", "prescribe", "swallow right now",
             "pills should i", "medical advice", "what dose should i", "cure my", "for me",
-            "my cough", "my disease", "my pain",
+            "my cough", "my disease", "my pain", "toothache", "migraine", "arthritis",
+            "pneumonia", "sepsis", "infection", "asthma", "heart disease", "anxiety",
+            "sore throat", "chest infection", "hangover", "hypertension", "blood pressure",
+            "patient dose", "dosing advice", "clinical prescription", "prescription",
+            "how many mg should", "how many tablets should", "how many pills", "give me a prescription",
+            "what dose should a real", "treat my", "for relief of", "for treating", "for pain relief",
+            "prescribe for", "dosage for a real", "safe for my", "should they take", "should someone take",
         ]
         if any(m in q_low for m in med_triggers):
             refusal = (
                 "Dr. Orbis: I cannot provide medical advice. Orbis Lab is an educational simulation. "
                 "For medical questions, consult a qualified healthcare professional."
+            )
+            return MentorResponse(
+                message=refusal,
+                source="fallback",
+                provider=None,
+                provider_tag="Safety Refusal",
+                fallback_reason=None,
+                calls_left=calls_left,
+            )
+
+        paed_triggers = ["child", "pediatric", "paediatric", "toddler", "infant", "baby", "8 years", "5 years", "10 years"]
+        if any(p in q_low for p in paed_triggers):
+            refusal = (
+                "Dr. Orbis: Orbis Lab only supports adult patients (age 18-90, weight 40-150 kg). "
+                "Paediatric dosing and pharmacology are not supported."
             )
             return MentorResponse(
                 message=refusal,

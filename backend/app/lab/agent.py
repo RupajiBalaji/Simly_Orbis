@@ -922,7 +922,13 @@ def _parse_single_clause(
         "headache", "my mother", "my father", "my child", "my fever", "back pain",
         "for my infection", "should i take", "can i take", "prescribe", "swallow right now",
         "pills should i", "medical advice", "what dose should i", "cure my", "for me",
-        "my cough", "my disease", "my pain",
+        "my cough", "my disease", "my pain", "toothache", "migraine", "arthritis",
+        "pneumonia", "sepsis", "infection", "asthma", "heart disease", "anxiety",
+        "sore throat", "chest infection", "hangover", "hypertension", "blood pressure",
+        "patient dose", "dosing advice", "clinical prescription", "prescription",
+        "how many mg should", "how many tablets should", "how many pills", "give me a prescription",
+        "what dose should a real", "treat my", "for relief of", "for treating", "for pain relief",
+        "prescribe for", "dosage for a real", "safe for my", "should they take", "should someone take",
     ]
     paed_triggers = ["child", "pediatric", "paediatric", "toddler", "infant", "baby", "8 years", "5 years", "10 years"]
     if any(m in t for m in med_triggers) or any(p in t for p in paed_triggers):
@@ -1449,7 +1455,13 @@ async def generate_plan(session: LabSession, text: str) -> AgentPlanResponse:
         "headache", "my mother", "my father", "my child", "my fever", "back pain",
         "for my infection", "should i take", "can i take", "prescribe", "swallow right now",
         "pills should i", "medical advice", "what dose should i", "cure my", "for me",
-        "my cough", "my disease", "my pain",
+        "my cough", "my disease", "my pain", "toothache", "migraine", "arthritis",
+        "pneumonia", "sepsis", "infection", "asthma", "heart disease", "anxiety",
+        "sore throat", "chest infection", "hangover", "hypertension", "blood pressure",
+        "patient dose", "dosing advice", "clinical prescription", "prescription",
+        "how many mg should", "how many tablets should", "how many pills", "give me a prescription",
+        "what dose should a real", "treat my", "for relief of", "for treating", "for pain relief",
+        "prescribe for", "dosage for a real", "safe for my", "should they take", "should someone take",
     ]
     if any(m in t_lower for m in med_triggers):
         return AgentPlanResponse(
