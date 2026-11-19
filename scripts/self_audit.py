@@ -92,6 +92,7 @@ def check_git_status(repo_root: Path) -> GateResult:
             "docs/PHASE_1_REPORT.md",
             "docs/PHASE_2_REPORT.md",
             "docs/PHASE_3_REPORT.md",
+            "docs/PHASE_4_REPORT.md",
             "docs/screenshots/touch/01_lobby_touch.png",
             "docs/screenshots/touch/02_briefing_touch.png",
             "docs/screenshots/touch/03_joystick_drag.png",
@@ -196,7 +197,7 @@ def check_pytest_run(repo_root: Path, skip_venv: bool = False) -> GateResult:
             cwd=repo_root,
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=360,
         )
         stdout = proc.stdout.strip()
         lines = [line.strip() for line in stdout.splitlines() if line.strip()]

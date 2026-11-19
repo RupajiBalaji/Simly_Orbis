@@ -1,7 +1,7 @@
 # Simly Orbis Stage Gate Self-Audit Report
 
 **Status:** PASS  
-**Platform Version:** 0.6.0-dev  
+**Platform Version:** 0.7.0-dev  
 **Single Source of Truth:** Backend Simulators  
 **Governance Standard:** Educational Simulation &bull; Not Medical Advice &bull; Not Clinical Evidence  
 
@@ -11,16 +11,16 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 76, HEAD: 09e098d5 |
-| 2 | App Version | **PASS** | Version `0.6.0-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite | **PASS** | [fresh venv] `=============== 703 passed, 26936 warnings in 91.46s (0:01:31) ================` |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 92, HEAD: fd47f3ae |
+| 2 | App Version | **PASS** | Version `0.7.0-dev` declared in `backend/app/config.py` |
+| 3 | Pytest Test Suite | **PASS** | [fresh venv] `=============== 773 passed, 29877 warnings in 153.32s (0:02:33) ===============` |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
 | 5 | Frozen Tolerances Guard | **PASS** | 4/4 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 4 engines + R1-R10/S1-S8 rules. Violations: 0 |
 | 7 | CI Workflow Configuration | **PASS** | `.github/workflows/ci.yml` invokes bare `pytest backend/tests`. |
-| 8 | QA Playthrough Proof | **PASS** | Folder: `20261119_153733` (fresh (post-frontend commit)) | Media count: 70 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
-| 9 | First-Run Parser Baselines & Held-Out Status | **PASS** | Recorded rates & held-out status: Dose Lab baseline: 24.2% (15/62); Space Stage baseline: 89.1%; founder set: not provided; agent-written seed set, not founder-written (n=4/exp too small to be meaningful) |
-| 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 19 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
+| 8 | QA Playthrough Proof | **PASS** | Folder: `20261119_182132` (fresh (post-frontend commit)) | Media count: 74 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
+| 9 | First-Run Parser Baselines & Held-Out Status | **PASS** | All 6 corpora first-run baseline rates verified in PHASE_4_REPORT.md; seed & founder status confirmed |
+| 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 20 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
 | 11 | Gitignore Coverage | **PASS** | Coverage confirmed: qa/out (True), __pycache__ (True) |
 
 ---
@@ -29,25 +29,25 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `09e098d5` | Clean: False (expected audit files: True) | Ahead: 76
+HEAD: `fd47f3ae` | Clean: False (expected audit files: True) | Ahead: 92
 
 **Last 15 Commits:**
 ```
-09e098d test(qa): add kinetics and buffer QA sequences, reality checks, and self-audit guard for chemistry tolerances
-e786432 docs(chem): chemistry engines documentation and model cards
-201bd5f test(ai): author and hard phrase corpora for Kinetics and Buffer Benches
-762e227 feat(validation): chemistry kinetics and buffer validation tolerances and frozen hash
-7857217 feat(spec): Buffer Bench declarative specification and interactive UI
-3e1b502 feat(spec): Kinetics Bench declarative specification and interactive UI
-c50cc9f feat(chem): live titration curve with indicator transition band
-6b6bc5e feat(chem): buffer equilibrium and buffer capacity engine
-8c9609b feat(chem): chemical reaction kinetics engine with analytic and RK4 solutions
-360d908 docs(p2): complete RECHECK_P2.md and update Phase P2 report with honest disclosures
-0d671f7 test(ai): record parser corpora pass rates under spec-driven vocabulary
-a6c838a ci: align and document python version matrix across runtime, ci, and docker
-64a2829 chore: bump platform version to 0.6.0-dev
-32840b0 feat(spec): harden spec validation with dry-run, approval flag, size limits, and security guards
-249822a docs(spec): restore MVP_SPEC.md and re-cite report section references against canonical spec
+fd47f3a docs(pharma): author PK/PD model documentation and updated clinical model cards
+a20e26f test(pharma): add red-team adversarial suite refusing personal dosing queries
+174e6fd feat(pharma): add parameter calibration harness with synthetic recovery validation
+4b09026 feat(pharma): enhance dose lab interactive regimen overlay and renal adjustments
+c8b6762 feat(pharma): expand and freeze drug library with G5 provenance declarations
+7600f39 feat(pharma): add virtual trial v2 crowd visualization and distribution analytics
+4fe050d feat(pharma): implement virtual trial v2 multi-compartment population simulation
+e2e6ab9 chore(version): bump platform version to 0.7.0-dev for Phase P4
+e343fe9 docs(p3): complete RECHECK_P3.md and update Phase 3 report with honest disclosures
+78d9ceb test(briefing): verify strict rule set isolation across all six laboratory experiments
+b35bd46 docs(chem): document G5 provenance for buffer and kinetics constants with physical caveats
+18166a3 docs(validation): clarify self-consistency checks vs external validation for chemistry engines
+4e24219 test(qa): add rule-violation and failure runs for kinetics and buffer benches
+76bff4b feat(audit): enforce comprehensive first-run rate reporting and report presence in gate 9
+73ca657 fix(parser): remove exact phrases and distill generic grammar rules for kinetics and buffer
 ```
 
 ### Gate 3: Pytest Test Suite
@@ -56,7 +56,7 @@ Exit code: 0
 
 Command: `E:\Simly Orbis\fresh\Scripts\pytest.exe backend/tests`
 
-Final line: `=============== 703 passed, 26936 warnings in 91.46s (0:01:31) ================`
+Final line: `=============== 773 passed, 29877 warnings in 153.32s (0:02:33) ===============`
 
 ### Gate 4: Validation Row Governance
 
@@ -76,6 +76,20 @@ All rows strictly comply with Rule R2/R3.
 - `backend/app/chem/titration.py`: 0 diff vs `cb9b66f` (PASS)
 - `backend/app/space/orbit.py`: 0 diff vs `cb9b66f` (PASS)
 - Rules R1-R10 and S1-S8: Unmodified (PASS)
+
+### Gate 9: First-Run Parser Baselines & Held-Out Status
+
+Latest Phase Report: PHASE_4_REPORT.md
+Corpora Parser Rates (First-Run vs. Final):
+  - pk        : first-run 22/22 (100.0%)     | final 22/22 (100.0%)     [present in PHASE_4_REPORT.md]
+  - titration : first-run 20/20 (100.0%)     | final 20/20 (100.0%)     [present in PHASE_4_REPORT.md]
+  - space     : first-run 49/55 (89.1%)      | final 55/55 (100.0%)     [present in PHASE_4_REPORT.md]
+  - dose      : first-run 15/62 (24.2%)      | final 62/62 (100.0%)     [present in PHASE_4_REPORT.md]
+  - kinetics  : first-run 9/55 (16.4%)       | final 54/55 (98.2%)      [present in PHASE_4_REPORT.md]
+  - buffer    : first-run 10/55 (18.2%)      | final 54/55 (98.2%)      [present in PHASE_4_REPORT.md]
+Held-Out Datasets Status:
+  - agent-written seed set, not founder-written (n=4/exp too small to be meaningful) [10/16, 62.5%]
+  - founder set: not provided
 
 ### Gate 10: Claims & Compliance Audit (Rule R4/R6)
 
