@@ -1,0 +1,83 @@
+# Tolerances for Simly Orbis Chemistry Kinetics & Buffer Engine Validation
+# Declares per-quantity validation tolerances and reference benchmark values
+# for chemical reaction kinetics and aqueous buffer equilibrium.
+#
+# Governance:
+# - verified_by is strictly "unverified"
+# - retrieved_on is strictly empty ("")
+# - Literature citations provided under G5 / R5 with human verification disclaimer.
+
+min_verified_pass_rate: 0.85
+
+quantities:
+  kinetics_rate_constant_at_25c:
+    quantity: "rate_constant"
+    reference_value: 0.05
+    unit: "1/s"
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    source_citation: "Atkins P, de Paula J. Physical Chemistry. 10th ed. Oxford University Press; 2014:Chap 20."
+    source_url_or_doi: "ISBN:978-0-19-969740-3"
+    verified_by: "unverified"
+    retrieved_on: ""
+    notes: "First-order reference reaction rate constant at 25 °C (298.15 K). Game-balanced approximate, not label or literature data, human verification needed."
+
+  kinetics_activation_energy:
+    quantity: "activation_energy"
+    reference_value: 45000.0
+    unit: "J/mol"
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    source_citation: "Atkins P, de Paula J. Physical Chemistry. 10th ed. Oxford University Press; 2014:Chap 20."
+    source_url_or_doi: "ISBN:978-0-19-969740-3"
+    verified_by: "unverified"
+    retrieved_on: ""
+    notes: "Arrhenius activation energy Ea for model unimolecular reaction. Game-balanced approximate, not label or literature data, human verification needed."
+
+  kinetics_half_life_formula:
+    quantity: "half_life"
+    reference_value: 13.8629
+    unit: "s"
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    source_citation: "Atkins P, de Paula J. Physical Chemistry. 10th ed. Oxford University Press; 2014:Chap 20."
+    source_url_or_doi: "ISBN:978-0-19-969740-3"
+    verified_by: "unverified"
+    retrieved_on: ""
+    notes: "First-order half-life t1/2 = ln(2) / k = 0.693147 / 0.05 = 13.8629 s. Game-balanced approximate, not label or literature data, human verification needed."
+
+  buffer_acetic_acid_pka:
+    quantity: "pka"
+    reference_value: 4.76
+    unit: "pKa"
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    source_citation: "Haynes WM, ed. CRC Handbook of Chemistry and Physics. 97th ed. CRC Press; 2016:Dissociation Constants of Organic Acids and Bases."
+    source_url_or_doi: "ISBN:978-1-4987-5428-6"
+    verified_by: "unverified"
+    retrieved_on: ""
+    notes: "Acetic acid aqueous acid dissociation constant pKa at 25 °C. Game-balanced approximate, not label or literature data, human verification needed."
+
+  buffer_van_slyke_beta_max:
+    quantity: "buffer_capacity"
+    reference_value: 0.1151
+    unit: "M/pH"
+    fold_tolerance: 1.02
+    percent_tolerance: 2.0
+    source_citation: "Van Slyke DD. On the measurement of buffer values and on the relationship of buffer value to the concentration and reaction of the buffer solution. J Biol Chem. 1922;52(2):525-570."
+    source_url_or_doi: "https://doi.org/10.1016/S0021-9258(18)85845-8"
+    verified_by: "unverified"
+    retrieved_on: ""
+    notes: "Maximum Van Slyke buffer capacity beta_max = ln(10) * C / 4 for total buffer concentration C = 0.2 M: beta_max = 2.302585 * 0.05 = 0.1151 M/pH. Game-balanced approximate, not label or literature data, human verification needed."
+
+  buffer_equimolar_ph:
+    quantity: "ph"
+    reference_value: 4.76
+    unit: "pH"
+    fold_tolerance: 1.01
+    percent_tolerance: 1.0
+    source_citation: "Atkins P, de Paula J. Physical Chemistry. 10th ed. Oxford University Press; 2014:Chap 6."
+    source_url_or_doi: "ISBN:978-0-19-969740-3"
+    verified_by: "unverified"
+    retrieved_on: ""
+    notes: "Equimolar weak acid / conjugate base buffer pH = pKa + log10(1) = 4.76. Game-balanced approximate, not label or literature data, human verification needed."
