@@ -11,14 +11,14 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 92, HEAD: fd47f3ae |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 95, HEAD: 10889d89 |
 | 2 | App Version | **PASS** | Version `0.7.0-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite | **PASS** | [fresh venv] `=============== 773 passed, 29877 warnings in 153.32s (0:02:33) ===============` |
+| 3 | Pytest Test Suite | **PASS** | [fresh venv] `=============== 773 passed, 29877 warnings in 118.80s (0:01:58) ===============` |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
 | 5 | Frozen Tolerances Guard | **PASS** | 4/4 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 4 engines + R1-R10/S1-S8 rules. Violations: 0 |
 | 7 | CI Workflow Configuration | **PASS** | `.github/workflows/ci.yml` invokes bare `pytest backend/tests`. |
-| 8 | QA Playthrough Proof | **PASS** | Folder: `20261119_182132` (fresh (post-frontend commit)) | Media count: 74 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
+| 8 | QA Playthrough Proof | **PASS** | Folder: `20261119_214905` (fresh (post-frontend commit)) | Media count: 74 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
 | 9 | First-Run Parser Baselines & Held-Out Status | **PASS** | All 6 corpora first-run baseline rates verified in PHASE_4_REPORT.md; seed & founder status confirmed |
 | 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 20 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
 | 11 | Gitignore Coverage | **PASS** | Coverage confirmed: qa/out (True), __pycache__ (True) |
@@ -29,10 +29,13 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `fd47f3ae` | Clean: False (expected audit files: True) | Ahead: 92
+HEAD: `10889d89` | Clean: False (expected audit files: True) | Ahead: 95
 
 **Last 15 Commits:**
 ```
+10889d8 fix(qa): optimize AI model cascading timeouts and bypass rate limiter during automated QA
+1e699f2 fix(audit): resolve static audit issues across backend routes, audit script, and authoring UI
+d63e2f7 docs(p4): generate Phase 4 report and stage-gate self-audit
 fd47f3a docs(pharma): author PK/PD model documentation and updated clinical model cards
 a20e26f test(pharma): add red-team adversarial suite refusing personal dosing queries
 174e6fd feat(pharma): add parameter calibration harness with synthetic recovery validation
@@ -45,9 +48,6 @@ e343fe9 docs(p3): complete RECHECK_P3.md and update Phase 3 report with honest d
 78d9ceb test(briefing): verify strict rule set isolation across all six laboratory experiments
 b35bd46 docs(chem): document G5 provenance for buffer and kinetics constants with physical caveats
 18166a3 docs(validation): clarify self-consistency checks vs external validation for chemistry engines
-4e24219 test(qa): add rule-violation and failure runs for kinetics and buffer benches
-76bff4b feat(audit): enforce comprehensive first-run rate reporting and report presence in gate 9
-73ca657 fix(parser): remove exact phrases and distill generic grammar rules for kinetics and buffer
 ```
 
 ### Gate 3: Pytest Test Suite
@@ -56,7 +56,7 @@ Exit code: 0
 
 Command: `E:\Simly Orbis\fresh\Scripts\pytest.exe backend/tests`
 
-Final line: `=============== 773 passed, 29877 warnings in 153.32s (0:02:33) ===============`
+Final line: `=============== 773 passed, 29877 warnings in 118.80s (0:01:58) ===============`
 
 ### Gate 4: Validation Row Governance
 
