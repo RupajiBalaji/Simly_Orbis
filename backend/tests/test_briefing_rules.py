@@ -10,13 +10,17 @@ EXPECTED_RULES = {
     "titration_bench": [f"R{i}" for i in range(1, 11)],
     "launch_bench": [f"S{i}" for i in range(1, 9)],
     "dose_lab": [f"D{i}" for i in range(1, 9)],
+    "kinetics_bench": [f"K{i}" for i in range(1, 5)],
+    "buffer_bench": [f"B{i}" for i in range(1, 5)],
 }
 
 OTHER_RULE_PREFIXES = {
-    "pk_ward": ("S", "D"),
-    "titration_bench": ("S", "D"),
-    "launch_bench": ("R", "D"),
-    "dose_lab": ("R", "S"),
+    "pk_ward": ("S", "D", "K", "B"),
+    "titration_bench": ("S", "D", "K", "B"),
+    "launch_bench": ("R", "D", "K", "B"),
+    "dose_lab": ("R", "S", "K", "B"),
+    "kinetics_bench": ("R", "S", "D", "B"),
+    "buffer_bench": ("R", "S", "D", "K"),
 }
 
 
