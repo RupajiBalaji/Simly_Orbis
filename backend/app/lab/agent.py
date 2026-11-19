@@ -1642,5 +1642,10 @@ async def generate_plan(session: LabSession, text: str) -> AgentPlanResponse:
         calls_left=new_calls_left,
     )
 
+    if len(_agent_plan_cache) > 200:
+        stale_keys = [k for k, (ts, _) in _agent_plan_cache.items() if now - ts > 120.0]
+        for k in stale_keys:
+            _agent_plan_cache.pop(k, None)
+
     _agent_plan_cache[cache_key] = (now, response)
     return response

@@ -276,11 +276,15 @@ async def list_runs(
     """List recent simulation runs ordered by created_at descending."""
     filter_dict = {"module_id": module_id} if module_id else {}
     import pymongo  # noqa: PLC0415
-    docs = await database["runs"].find(
+    res = database["runs"].find(
         filter_dict,
         sort=[("created_at", pymongo.DESCENDING)],
         limit=min(limit, 100),
     )
+    if hasattr(res, "to_list"):
+        docs = await res.to_list(length=min(limit, 100))
+    else:
+        docs = await res
     # Strip MongoDB internal _id if present
     for d in docs:
         d.pop("_id", None)

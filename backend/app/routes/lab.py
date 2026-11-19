@@ -972,6 +972,12 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
     await _db.save_lab_report(report_doc)
     await _db.upsert_lab_session(session.model_dump())
 
+    # Clean up session mentor locks and cache to prevent memory leaks
+    _mentor_locks.pop(session_id, None)
+    cache_keys_to_remove = [k for k in _mentor_cache if k.startswith(f"{session_id}:")]
+    for k in cache_keys_to_remove:
+        _mentor_cache.pop(k, None)
+
     return LabReportResponse(**report_doc)
 
 

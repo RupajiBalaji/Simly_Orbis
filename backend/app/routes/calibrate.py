@@ -102,7 +102,7 @@ def parse_csv_data(csv_text: str) -> tuple[list[float], list[float]]:
     times: list[float] = []
     concs: list[float] = []
 
-    for r_idx, row in enumerate(data_rows):
+    for row in data_rows:
         if not row or len(row) <= max(time_col, conc_col):
             continue
         try:
@@ -162,8 +162,23 @@ async def calibrate_dataset(body: CalibrationRequest) -> CalibrationResponse:
         test_concs=test_concs,
     )
 
-    route_enum = RouteType(body.route)
-    model_enum = ModelType(body.model_type)
+    try:
+        route_enum = RouteType(body.route)
+    except ValueError:
+        valid_routes = [r.value for r in RouteType]
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid route '{body.route}'. Must be one of: {', '.join(valid_routes)}",
+        )
+
+    try:
+        model_enum = ModelType(body.model_type)
+    except ValueError:
+        valid_models = [m.value for m in ModelType]
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid model_type '{body.model_type}'. Must be one of: {', '.join(valid_models)}",
+        )
 
     base = PKPDParams(
         model_type=model_enum,

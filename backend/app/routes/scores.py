@@ -103,11 +103,15 @@ async def leaderboard(
 ) -> list[LeaderboardEntry]:
     """Return the top-10 scores for *level_id*, sorted by score descending."""
     try:
-        docs = await _db.database["scores"].find(
+        res = _db.database["scores"].find(
             {"level_id": level_id},
             sort=[("score", pymongo.DESCENDING)],
             limit=10,
         )
+        if hasattr(res, "to_list"):
+            docs = await res.to_list(length=10)
+        else:
+            docs = await res
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Leaderboard query failed: {exc}") from exc
 
