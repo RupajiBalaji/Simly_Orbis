@@ -1141,8 +1141,8 @@ def _parse_single_clause(
     # -----------------------------------------------------------------------
     # Kinetics Bench Actions (chem.kinetics)
     # -----------------------------------------------------------------------
-    # Kinetics 1: Set Temperature
-    if any(k in t for k in ["set temperature", "set bath temp", "adjust temperature", "change water bath", "change temp", "warm up thermostat", "water bath temp"]) or (re.search(r"\b(?:temp|temperature)\b", t) and any(v in t for v in ["set", "change", "adjust", "c", "bath"])):
+    # Kinetics 1: Set Temperature (Generic: bath/thermostat temp setting)
+    if (re.search(r"\b(?:temp|temperature|bath|thermostat)\b", t) and any(v in t for v in ["set", "change", "adjust", "warm", "heat"])) or "set temperature" in t:
         temp_c = 25.0
         t_m = re.search(r"(\d+(?:\.\d+)?)\s*(?:c|°c|deg)?\b", t)
         if t_m:
@@ -1159,8 +1159,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Kinetics 2: Prepare Reactant
-    if any(k in t for k in ["prepare reactant", "pipette reactant", "charge reactant", "add reactant", "pour reactant"]) or (re.search(r"\breactant\b", t) and any(v in t for v in ["prepare", "pipette", "charge", "add", "vessel", "flask"])):
+    # Kinetics 2: Prepare Reactant (Generic: reactant charge and conc extraction)
+    if re.search(r"\breactant\b", t) and any(v in t for v in ["prepare", "pipette", "charge", "add", "pour", "load"]):
         conc_m = 1.0
         c_m = re.search(r"(\d+(?:\.\d+)?)\s*m\b", t)
         if c_m:
@@ -1177,8 +1177,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Kinetics 3: Calibrate Spectrophotometer
-    if any(k in t for k in ["calibrate spectrophotometer", "zero spectrophotometer", "blank cuvette", "zero blank", "zero spec", "zero spectrometer", "calibrate spec"]) or (re.search(r"\b(?:spectrophotometer|spectrometer)\b", t) and any(v in t for v in ["calibrate", "zero", "blank"])):
+    # Kinetics 3: Calibrate Spectrophotometer (Generic: zero/blank spec/cuvette)
+    if (re.search(r"\b(?:spectrophotometer|spectrometer|spec|cuvette)\b", t) and any(v in t for v in ["calibrate", "zero", "blank"])) or "zero blank" in t:
         return [
             AgentProposedStep(
                 action=ActionType.calibrate_spectrophotometer,
@@ -1188,8 +1188,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Kinetics 4: Start Reaction
-    if any(k in t for k in ["start reaction", "begin kinetics", "trigger reaction", "initiate chemical reaction", "start run", "trigger kinetic run", "begin reaction"]):
+    # Kinetics 4: Start Reaction (Generic: initiate reaction/kinetics/run)
+    if any(v in t for v in ["start", "begin", "trigger", "initiate"]) and any(k in t for k in ["reaction", "kinetics", "run"]):
         return [
             AgentProposedStep(
                 action=ActionType.start_reaction,
@@ -1199,8 +1199,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Kinetics 5: Record Sampling
-    if any(k in t for k in ["record sampling", "collect kinetic samples", "sample concentration", "take absorbance", "time series samples", "kinetic samples", "take samples"]):
+    # Kinetics 5: Record Sampling (Generic: collect/sample time series or absorbance)
+    if (any(v in t for v in ["record", "collect", "take"]) and any(k in t for k in ["sample", "samples", "sampling", "absorbance"])) or (re.search(r"\bsampl", t) and any(k in t for k in ["concentration", "time", "kinetic"])) or "time series" in t:
         return [
             AgentProposedStep(
                 action=ActionType.record_sampling,
@@ -1210,8 +1210,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Kinetics 6: Analyze Linear Plots
-    if any(k in t for k in ["analyze linear plots", "plot linearised", "linear regression on kinetics", "check linearity", "perform linear regression", "plot ln a", "linear plots"]):
+    # Kinetics 6: Analyze Linear Plots (Generic: linearity/regression plots evaluation)
+    if (any(v in t for v in ["plot", "check", "perform", "fit", "view", "analyze", "evaluate"]) and any(k in t for k in ["linear", "regression", "rate data"])) or "linearity" in t:
         return [
             AgentProposedStep(
                 action=ActionType.analyze_linear_plots,
@@ -1221,8 +1221,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Kinetics 7: Submit Order Estimate
-    if any(k in t for k in ["submit order estimate", "submit reaction order", "enter rate constant", "submit estimated k", "submit order", "estimate order"]):
+    # Kinetics 7: Submit Order Estimate (Generic: submit/estimate order & k)
+    if any(k in t for k in ["submit order", "estimate order", "reaction order", "submit estimated", "rate constant"]):
         ord_val = 1
         ord_m = re.search(r"\border\s*(\d+)\b", t)
         if ord_m:
@@ -1242,8 +1242,8 @@ def _parse_single_clause(
     # -----------------------------------------------------------------------
     # Buffer Bench Actions (chem.buffer)
     # -----------------------------------------------------------------------
-    # Buffer 1: Select Buffer System
-    if any(k in t for k in ["select buffer", "choose buffer", "pick buffer", "buffer system", "buffer pair"]) or (any(b in t for b in ["acetate", "phosphate", "formate", "tris"]) and any(v in t for v in ["select", "choose", "pick", "pair", "buffer"])):
+    # Buffer 1: Select Buffer System (Generic: buffer system pair / conjugate couple)
+    if any(k in t for k in ["select buffer", "choose buffer", "pick buffer", "buffer system", "buffer pair", "buffer couple"]) or (any(b in t for b in ["acetate", "phosphate", "formate", "tris"]) and any(v in t for v in ["select", "choose", "pick", "pair", "buffer"])):
         sys_id = "acetate"
         if "phosphate" in t:
             sys_id = "phosphate"
@@ -1260,8 +1260,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Buffer 2: Prepare Buffer
-    if any(k in t for k in ["prepare buffer", "mix buffer solution", "formulate buffer", "make buffer solution", "prepare solution in beaker", "make buffer"]):
+    # Buffer 2: Prepare Buffer (Generic: formulate/prepare buffer solution with pH)
+    if any(k in t for k in ["prepare buffer", "mix buffer", "formulate buffer", "make buffer"]) or (re.search(r"\bbuffer\b", t) and any(v in t for v in ["prepare", "mix", "formulate", "make"])):
         ph_val = 4.75
         ph_m = re.search(r"(?:ph)\s*(\d+(?:\.\d+)?)\b", t)
         if ph_m:
@@ -1278,8 +1278,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Buffer 3: Test Capacity / Calibrate Meter
-    if any(k in t for k in ["test capacity", "calibrate ph meter", "measure baseline ph", "read ph meter and beta", "read ph meter", "calibrate meter and test capacity", "calibrate meter", "baseline ph"]):
+    # Buffer 3: Test Capacity / Calibrate Meter (Generic: capacity beta / pH meter)
+    if any(k in t for k in ["test capacity", "buffer capacity", "calibrate meter", "calibrate ph meter", "baseline ph", "read ph meter", "measure ph"]) or (re.search(r"\bph meter\b", t) and any(v in t for v in ["calibrate", "read", "zero", "check"])):
         return [
             AgentProposedStep(
                 action=ActionType.test_capacity,
@@ -1289,8 +1289,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Buffer 4: Stress Buffer
-    if any(k in t for k in ["stress buffer", "add hcl", "titrate buffer with naoh", "acid stress test", "stress test buffer", "perturb buffer", "dispense 10 ml hcl", "run buffer stress test", "run acid stress test", "titrate with naoh", "stress test"]):
+    # Buffer 4: Stress Buffer (Generic: acid/base stress or perturbation test)
+    if any(k in t for k in ["stress buffer", "stress test", "perturb buffer", "perturb"]) or (exp_id == "buffer_bench" and any(k in t for k in ["titrate", "hcl", "naoh", "acid stress", "base stress"])):
         titrant = "naoh" if ("naoh" in t or "base" in t) else "hcl"
         return [
             AgentProposedStep(
@@ -1301,8 +1301,8 @@ def _parse_single_clause(
             )
         ], ctx
 
-    # Buffer 5: Submit Buffer Design
-    if any(k in t for k in ["submit buffer design", "evaluate buffer accuracy", "submit design evaluation", "check buffer evaluation", "submit buffer", "evaluate buffer", "submit design"]):
+    # Buffer 5: Submit Buffer Design (Generic: submit/evaluate buffer formulation)
+    if any(k in t for k in ["submit buffer", "submit design", "evaluate buffer", "check buffer", "buffer evaluation", "design evaluation"]):
         return [
             AgentProposedStep(
                 action=ActionType.submit_buffer_design,
