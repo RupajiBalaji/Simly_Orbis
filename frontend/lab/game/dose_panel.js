@@ -420,6 +420,7 @@ export class DosePanel {
       wSlider.oninput = (e) => {
         this.weightKg = Math.max(40.0, Math.min(150.0, parseFloat(e.target.value)));
         if (wVal) wVal.textContent = `${this.weightKg.toFixed(1)} kg`;
+        this.scheduleLiveReRun();
       };
     }
 
@@ -429,6 +430,7 @@ export class DosePanel {
       aSlider.oninput = (e) => {
         this.ageYr = Math.max(18.0, Math.min(90.0, parseFloat(e.target.value)));
         if (aVal) aVal.textContent = `${this.ageYr.toFixed(0)} yr`;
+        this.scheduleLiveReRun();
       };
     }
 
@@ -438,6 +440,7 @@ export class DosePanel {
       cSlider.oninput = (e) => {
         this.crclMlMin = Math.max(15.0, Math.min(150.0, parseFloat(e.target.value)));
         if (cVal) cVal.textContent = `${this.crclMlMin.toFixed(1)} mL/min`;
+        this.scheduleLiveReRun();
       };
     }
 
@@ -569,6 +572,26 @@ export class DosePanel {
         toast.showSuccess(res.message);
       };
     }
+  }
+
+  scheduleLiveReRun() {
+    clearTimeout(this._liveDebounceTimer);
+    this._liveDebounceTimer = setTimeout(async () => {
+      if (state.session?.session_id && this.isOpen) {
+        try {
+          const sId = state.session.session_id;
+          await api.applyAction(sId, 'set_covariates', 'patient_monitor', {
+            weight_kg: this.weightKg,
+            age_yr: this.ageYr,
+            crcl_ml_min: this.crclMlMin,
+          });
+          const simRes = await api.applyAction(sId, 'run_simulation', 'pkpd_chart_display', {});
+          this.processSimulationResult(simRes);
+        } catch (e) {
+          console.debug('Live re-run debounced:', e.message);
+        }
+      }
+    }, 250);
   }
 
   setCovariatesUI(wt, age, crcl) {
