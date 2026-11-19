@@ -1,15 +1,20 @@
 # Simly Orbis — Phase P2 Report: Spec Platform
 
-**Platform Version:** `0.5.0-dev`  
+**Platform Version:** `0.6.0-dev`  
 **Phase:** P2 (Spec Platform & Authoring Ecosystem)  
 **Governance Standard:** Educational Simulation &bull; Not Medical Advice &bull; Not Clinical Evidence &bull; Not Mission-Planning Software  
 **HEAD Commit:** `baeb307`  
 
 ---
 
-## 1. Executive Summary & Blockers
+## 1. Executive Summary & Partial / Deferred Items
 
-*None.* All six Phase P2 tasks (P2-T1 through P2-T6) have completed successfully in one uninterrupted run. Every task landed in its own isolated git commit. All four operational lab experiments (`titration_bench`, `pk_ward`, `launch_bench`, `dose_lab`) have been migrated from imperative code to declarative JSON experiment specifications schema-checked against strict Pydantic models. Golden-equivalence suites confirm bit-for-bit equivalence between imperative legacy flows and spec-driven execution (92/92 tests passing). The full test suite runs cleanly at 582 tests (0 failures), and the self-audit passes all 11 stage gates.
+While the core declarative spec runtime, schema validation, authoring guide, validation UI, and migration for all four experiments (`titration_bench`, `pk_ward`, `launch_bench`, `dose_lab`) completed with 100% passing golden equivalence suites (92/92 tests passing at P2 HEAD, now 96/96 with immutability guards), several items remain partial, deferred, or qualified:
+
+1. **Software-Render FPS (Not Representative):** The headless Chromium QA runner in automated environments executes via software WebGL emulation (e.g. SwiftShader / Mesa llvmpipe), reporting ~14–17 FPS rather than native hardware acceleration (>=30 FPS). As mandated by governance rules, software-rendered performance metrics are explicitly documented as "software render, not representative of native GPU client performance".
+2. **Multi-User Spec Storage Deferred:** Authoring in P2 delivers client-side schema validation, live dry-run action testing, and export/import via `/api/specs/validate` and `frontend/authoring.html`. Persistent multi-tenant database persistence, publishing permissions, and catalog storage are deferred to subsequent platform milestones; only validated, locally approved specs are registered into the runtime.
+3. **Founder Held-Out Set Pending Founder Input:** The held-out natural language evaluation suite was separated into an agent-written seed set (`agent_seed_heldout_phrases.json`, 16 phrases, 10/16 passing [62.5%], n=4 per experiment — sample size acknowledged as too small to be statistically meaningful) and an external founder set (`founder_heldout_phrases.json`). Because the agent is strictly prohibited from fabricating or creating the founder file, its status is honestly reported as `founder set: not provided` pending founder input.
+4. **Authoring UI P2-T6 Scope:** The web UI provides dry-run validation, error visualization, and JSON inspection, but visual drag-and-drop apparatus assembly was scoped as a future extension beyond the MVP JSON-based spec builder.
 
 ---
 
