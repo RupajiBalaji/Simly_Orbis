@@ -73,7 +73,25 @@ def evaluate_author_corpora():
     dose_pass = sum(1 for item in dose_data if check_item(item, dose_session))
     results["dose_lab_author"] = (dose_pass, len(dose_data))
 
-    # 4. Agent Seed Held-Out (agent_seed_heldout_phrases.json)
+    # 4. Kinetics Bench (ask_orbis_phrases_kinetics.json)
+    kin_file = DATA_DIR / "ask_orbis_phrases_kinetics.json"
+    if kin_file.exists():
+        with open(kin_file, "r", encoding="utf-8") as f:
+            kin_data = json.load(f)
+        kin_session = create_session("kinetics_bench", "Chemist")
+        kin_pass = sum(1 for item in kin_data if check_item(item, kin_session))
+        results["kinetics_bench_author"] = (kin_pass, len(kin_data))
+
+    # 5. Buffer Bench (ask_orbis_phrases_buffer.json)
+    buf_file = DATA_DIR / "ask_orbis_phrases_buffer.json"
+    if buf_file.exists():
+        with open(buf_file, "r", encoding="utf-8") as f:
+            buf_data = json.load(f)
+        buf_session = create_session("buffer_bench", "Chemist")
+        buf_pass = sum(1 for item in buf_data if check_item(item, buf_session))
+        results["buffer_bench_author"] = (buf_pass, len(buf_data))
+
+    # 6. Agent Seed Held-Out (agent_seed_heldout_phrases.json)
     seed_file = DATA_DIR / "agent_seed_heldout_phrases.json"
     with open(seed_file, "r", encoding="utf-8") as f:
         seed_data = json.load(f)

@@ -339,6 +339,80 @@ def _clean_and_bound_params(action: ActionType, params: dict[str, Any]) -> dict[
         except (ValueError, TypeError):
             cleaned["t_in_window_predicted"] = 8.0
 
+    elif action == ActionType.set_temperature:
+        try:
+            cleaned["temperature_c"] = max(10.0, min(80.0, float(params.get("temperature_c", 25.0))))
+        except (ValueError, TypeError):
+            cleaned["temperature_c"] = 25.0
+
+    elif action == ActionType.prepare_reactant:
+        try:
+            cleaned["initial_conc_m"] = max(0.1, min(5.0, float(params.get("initial_conc_m", 1.0))))
+        except (ValueError, TypeError):
+            cleaned["initial_conc_m"] = 1.0
+
+    elif action == ActionType.start_reaction:
+        try:
+            ord_val = int(params.get("order", 1))
+            cleaned["order"] = ord_val if ord_val in (0, 1, 2) else 1
+        except (ValueError, TypeError):
+            cleaned["order"] = 1
+
+    elif action == ActionType.record_sampling:
+        try:
+            cleaned["duration_s"] = max(5.0, min(600.0, float(params.get("duration_s", 60.0))))
+        except (ValueError, TypeError):
+            cleaned["duration_s"] = 60.0
+        try:
+            cleaned["num_samples"] = max(2, min(50, int(params.get("num_samples", 10))))
+        except (ValueError, TypeError):
+            cleaned["num_samples"] = 10
+
+    elif action == ActionType.submit_order_estimate:
+        try:
+            ord_val = int(params.get("estimated_order", 1))
+            cleaned["estimated_order"] = ord_val if ord_val in (0, 1, 2) else 1
+        except (ValueError, TypeError):
+            cleaned["estimated_order"] = 1
+        try:
+            cleaned["estimated_k"] = max(0.0001, min(100.0, float(params.get("estimated_k", 0.05))))
+        except (ValueError, TypeError):
+            cleaned["estimated_k"] = 0.05
+
+    elif action == ActionType.select_buffer_system:
+        sys_str = str(params.get("system", "acetate")).lower()
+        cleaned["system"] = sys_str if sys_str in ("acetate", "phosphate", "formate", "tris") else "acetate"
+        try:
+            cleaned["target_ph"] = max(1.0, min(14.0, float(params.get("target_ph", 4.75))))
+        except (ValueError, TypeError):
+            cleaned["target_ph"] = 4.75
+
+    elif action == ActionType.prepare_buffer:
+        try:
+            cleaned["target_ph"] = max(1.0, min(14.0, float(params.get("target_ph", 4.75))))
+        except (ValueError, TypeError):
+            cleaned["target_ph"] = 4.75
+        try:
+            cleaned["total_conc_m"] = max(0.01, min(5.0, float(params.get("total_conc_m", 0.2))))
+        except (ValueError, TypeError):
+            cleaned["total_conc_m"] = 0.2
+        try:
+            cleaned["volume_ml"] = max(10.0, min(1000.0, float(params.get("volume_ml", 100.0))))
+        except (ValueError, TypeError):
+            cleaned["volume_ml"] = 100.0
+
+    elif action == ActionType.stress_buffer:
+        t_type = str(params.get("titrant", "hcl")).lower()
+        cleaned["titrant"] = t_type if t_type in ("hcl", "naoh") else "hcl"
+        try:
+            cleaned["titrant_conc_m"] = max(0.01, min(5.0, float(params.get("titrant_conc_m", 1.0))))
+        except (ValueError, TypeError):
+            cleaned["titrant_conc_m"] = 1.0
+        try:
+            cleaned["max_added_ml"] = max(0.1, min(50.0, float(params.get("max_added_ml", 15.0))))
+        except (ValueError, TypeError):
+            cleaned["max_added_ml"] = 15.0
+
     return cleaned
 
 
@@ -358,7 +432,7 @@ def _parse_single_clause(
     ctx = dict(context)
 
     # 1. Wear PPE
-    if any(k in t for k in ["put on ppe", "wear ppe", "don ppe", "wear gear", "put on goggles", "wear gloves", "wear coat", "goggles", "gloves", "lab coat"]) or re.search(r"\bppe\b", t):
+    if any(k in t for k in ["put on ppe", "wear ppe", "don ppe", "wear gear", "safety gear", "put on goggles", "wear gloves", "wear coat", "goggles", "gloves", "lab coat"]) or re.search(r"\bppe\b", t):
         return [
             AgentProposedStep(
                 action=ActionType.wear_ppe,
@@ -369,7 +443,7 @@ def _parse_single_clause(
         ], ctx
 
     # 2. Tare balance
-    if any(k in t for k in ["tare balance", "tare digital balance", "zero balance", "zero the balance", "calibrate balance"]) or re.search(r"\btare\b", t) or re.search(r"\bzero\b", t):
+    if (any(k in t for k in ["tare balance", "tare digital balance", "zero balance", "zero the balance", "calibrate balance"]) or re.search(r"\btare\b", t) or re.search(r"\bzero\b", t)) and not any(s in t for s in ["spec", "spectro", "cuvette", "blank"]):
         ctx["target"] = "digital_balance"
         return [
             AgentProposedStep(
@@ -582,7 +656,7 @@ def _parse_single_clause(
 
     # 12. Pipette analyte
     pip_match = re.search(r"\bpipette\s+(\d+(?:\.\d+)?)\s*ml\b", t)
-    if pip_match or re.search(r"\bpipette\b", t):
+    if (pip_match or re.search(r"\bpipette\b", t)) and "reactant" not in t:
         vol = float(pip_match.group(1)) if pip_match else 25.0
         analyte = "hcl"
         ctx["target"] = "conical_flask"
@@ -619,6 +693,17 @@ def _parse_single_clause(
     # 14. Titrate
     tit_match = re.search(r"\btitrate\s+(\d+(?:\.\d+)?)\s*ml\b", t)
     if tit_match or re.search(r"\btitrate\b", t):
+        if exp_id == "buffer_bench" or "buffer" in t:
+            titrant = "naoh" if ("naoh" in t or "base" in t) else "hcl"
+            vol = float(tit_match.group(1)) if tit_match else 15.0
+            return [
+                AgentProposedStep(
+                    action=ActionType.stress_buffer,
+                    target="stress_burette",
+                    params={"titrant": titrant, "titrant_conc_m": 1.0, "max_added_ml": vol, "num_steps": 25},
+                    why=f"Stress-test buffer stability against incremental {titrant.upper()} addition.",
+                )
+            ], ctx
         vol = float(tit_match.group(1)) if tit_match else 5.0
         ctx["target"] = "burette"
         return [
@@ -657,8 +742,8 @@ def _parse_single_clause(
         ], ctx
 
     # 17. Dispose waste
-    if any(k in t for k in ["dispose", "throw waste", "discard", "waste bin"]) or re.search(r"\b(?:dispose|trash)\b", t):
-        target = "chemical_waste_bin" if exp_id == "titration_bench" else "biohazard_bin"
+    if any(k in t for k in ["dispose", "throw waste", "discard", "waste bin", "empty reaction vessel", "empty beaker", "dump chemicals", "dump reaction", "dump buffer", "pour solution into waste", "discard buffer", "discard reaction", "empty into chemical waste"]) or re.search(r"\b(?:dispose|trash|dump)\b", t):
+        target = "chemical_waste_bin" if exp_id in ("titration_bench", "kinetics_bench", "buffer_bench") else "biohazard_bin"
         return [
             AgentProposedStep(
                 action=ActionType.dispose_waste,
@@ -669,7 +754,7 @@ def _parse_single_clause(
         ], ctx
 
     # 18. Wash hands
-    if any(k in t for k in ["wash hands", "wash hand", "clean hands", "wash with soap"]) or (re.search(r"\bwash\b", t) and re.search(r"\bhands?\b", t)):
+    if any(k in t for k in ["wash hands", "wash hand", "clean hands", "wash with soap", "rinse hands", "wash up", "soap and water", "soap and rinse", "clean hands with soap"]) or (re.search(r"\bwash\b", t) and re.search(r"\bhands?\b", t)):
         ctx["target"] = "sink"
         return [
             AgentProposedStep(
@@ -681,7 +766,7 @@ def _parse_single_clause(
         ], ctx
 
     # 19. Submit report / Finish
-    if any(k in t for k in ["submit report", "finish experiment", "end experiment", "submit lab report"]):
+    if any(k in t for k in ["submit report", "finish experiment", "end experiment", "submit lab report", "finish lab", "complete experiment", "generate report", "complete kinetics", "conclude", "wrap up", "finalize"]):
         return [
             AgentProposedStep(
                 action=ActionType.submit_report,
@@ -1043,13 +1128,187 @@ def _parse_single_clause(
             ], ctx
 
     # Dose 12: Sampling
-    if any(k in t for k in ["sampling", "sample times", "blood sample", "tdm"]):
+    if any(k in t for k in ["sampling", "sample times", "blood sample", "tdm"]) and exp_id == "dose_lab":
         return [
             AgentProposedStep(
                 action=ActionType.set_sampling,
                 target="sampling_slate",
                 params={"sample_times_h": [0.0, 1.0, 2.0, 4.0, 8.0, 12.0, 24.0]},
                 why="Establish blood sampling protocol schedule for TDM.",
+            )
+        ], ctx
+
+    # -----------------------------------------------------------------------
+    # Kinetics Bench Actions (chem.kinetics)
+    # -----------------------------------------------------------------------
+    # Kinetics 1: Set Temperature
+    if any(k in t for k in ["set temperature", "set bath temp", "adjust temperature", "change water bath", "change temp", "warm up thermostat", "water bath temp"]) or (re.search(r"\b(?:temp|temperature)\b", t) and any(v in t for v in ["set", "change", "adjust", "c", "bath"])):
+        temp_c = 25.0
+        t_m = re.search(r"(\d+(?:\.\d+)?)\s*(?:c|°c|deg)?\b", t)
+        if t_m:
+            try:
+                temp_c = float(t_m.group(1))
+            except (ValueError, TypeError):
+                temp_c = 25.0
+        return [
+            AgentProposedStep(
+                action=ActionType.set_temperature,
+                target="thermostat_bath",
+                params={"temperature_c": temp_c},
+                why=f"Set thermostat bath temperature to {temp_c:.1f} °C.",
+            )
+        ], ctx
+
+    # Kinetics 2: Prepare Reactant
+    if any(k in t for k in ["prepare reactant", "pipette reactant", "charge reactant", "add reactant", "pour reactant"]) or (re.search(r"\breactant\b", t) and any(v in t for v in ["prepare", "pipette", "charge", "add", "vessel", "flask"])):
+        conc_m = 1.0
+        c_m = re.search(r"(\d+(?:\.\d+)?)\s*m\b", t)
+        if c_m:
+            try:
+                conc_m = float(c_m.group(1))
+            except (ValueError, TypeError):
+                conc_m = 1.0
+        return [
+            AgentProposedStep(
+                action=ActionType.prepare_reactant,
+                target="reaction_vessel",
+                params={"initial_conc_m": conc_m},
+                why=f"Charge reactant solution ({conc_m:.1f} M) into reaction vessel.",
+            )
+        ], ctx
+
+    # Kinetics 3: Calibrate Spectrophotometer
+    if any(k in t for k in ["calibrate spectrophotometer", "zero spectrophotometer", "blank cuvette", "zero blank", "zero spec", "zero spectrometer", "calibrate spec"]) or (re.search(r"\b(?:spectrophotometer|spectrometer)\b", t) and any(v in t for v in ["calibrate", "zero", "blank"])):
+        return [
+            AgentProposedStep(
+                action=ActionType.calibrate_spectrophotometer,
+                target="spectrophotometer",
+                params={},
+                why="Zero optical spectrophotometer blank with solvent cuvette.",
+            )
+        ], ctx
+
+    # Kinetics 4: Start Reaction
+    if any(k in t for k in ["start reaction", "begin kinetics", "trigger reaction", "initiate chemical reaction", "start run", "trigger kinetic run", "begin reaction"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.start_reaction,
+                target="reaction_vessel",
+                params={"order": 1},
+                why="Initiate chemical reaction run and start tracking timer.",
+            )
+        ], ctx
+
+    # Kinetics 5: Record Sampling
+    if any(k in t for k in ["record sampling", "collect kinetic samples", "sample concentration", "take absorbance", "time series samples", "kinetic samples", "take samples"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.record_sampling,
+                target="spectrophotometer",
+                params={"duration_s": 60.0, "num_samples": 10},
+                why="Collect spectrophotometric absorbance time-series samples.",
+            )
+        ], ctx
+
+    # Kinetics 6: Analyze Linear Plots
+    if any(k in t for k in ["analyze linear plots", "plot linearised", "linear regression on kinetics", "check linearity", "perform linear regression", "plot ln a", "linear plots"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.analyze_linear_plots,
+                target="spectrophotometer",
+                params={},
+                why="Transform concentration data to evaluate 0th, 1st, and 2nd order linearity.",
+            )
+        ], ctx
+
+    # Kinetics 7: Submit Order Estimate
+    if any(k in t for k in ["submit order estimate", "submit reaction order", "enter rate constant", "submit estimated k", "submit order", "estimate order"]):
+        ord_val = 1
+        ord_m = re.search(r"\border\s*(\d+)\b", t)
+        if ord_m:
+            try:
+                ord_val = int(ord_m.group(1))
+            except (ValueError, TypeError):
+                ord_val = 1
+        return [
+            AgentProposedStep(
+                action=ActionType.submit_order_estimate,
+                target="spectrophotometer",
+                params={"estimated_order": ord_val, "estimated_k": 0.05},
+                why=f"Submit reaction order ({ord_val}) and rate constant estimate.",
+            )
+        ], ctx
+
+    # -----------------------------------------------------------------------
+    # Buffer Bench Actions (chem.buffer)
+    # -----------------------------------------------------------------------
+    # Buffer 1: Select Buffer System
+    if any(k in t for k in ["select buffer", "choose buffer", "pick buffer", "buffer system", "buffer pair"]) or (any(b in t for b in ["acetate", "phosphate", "formate", "tris"]) and any(v in t for v in ["select", "choose", "pick", "pair", "buffer"])):
+        sys_id = "acetate"
+        if "phosphate" in t:
+            sys_id = "phosphate"
+        elif "formate" in t:
+            sys_id = "formate"
+        elif "tris" in t:
+            sys_id = "tris"
+        return [
+            AgentProposedStep(
+                action=ActionType.select_buffer_system,
+                target="buffer_beaker",
+                params={"system": sys_id},
+                why=f"Select {sys_id.capitalize()} conjugate acid-base buffer system.",
+            )
+        ], ctx
+
+    # Buffer 2: Prepare Buffer
+    if any(k in t for k in ["prepare buffer", "mix buffer solution", "formulate buffer", "make buffer solution", "prepare solution in beaker", "make buffer"]):
+        ph_val = 4.75
+        ph_m = re.search(r"(?:ph)\s*(\d+(?:\.\d+)?)\b", t)
+        if ph_m:
+            try:
+                ph_val = float(ph_m.group(1))
+            except (ValueError, TypeError):
+                ph_val = 4.75
+        return [
+            AgentProposedStep(
+                action=ActionType.prepare_buffer,
+                target="buffer_beaker",
+                params={"target_ph": ph_val, "total_conc_m": 0.2, "volume_ml": 100.0},
+                why=f"Formulate aqueous buffer solution targeting pH {ph_val:.2f}.",
+            )
+        ], ctx
+
+    # Buffer 3: Test Capacity / Calibrate Meter
+    if any(k in t for k in ["test capacity", "calibrate ph meter", "measure baseline ph", "read ph meter and beta", "read ph meter", "calibrate meter and test capacity", "calibrate meter", "baseline ph"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.test_capacity,
+                target="ph_meter",
+                params={},
+                why="Calibrate pH meter and determine baseline buffer capacity beta.",
+            )
+        ], ctx
+
+    # Buffer 4: Stress Buffer
+    if any(k in t for k in ["stress buffer", "add hcl", "titrate buffer with naoh", "acid stress test", "stress test buffer", "perturb buffer", "dispense 10 ml hcl", "run buffer stress test", "run acid stress test", "titrate with naoh", "stress test"]):
+        titrant = "naoh" if ("naoh" in t or "base" in t) else "hcl"
+        return [
+            AgentProposedStep(
+                action=ActionType.stress_buffer,
+                target="stress_burette",
+                params={"titrant": titrant, "titrant_conc_m": 1.0, "max_added_ml": 15.0, "num_steps": 25},
+                why=f"Stress-test buffer stability against incremental {titrant.upper()} addition.",
+            )
+        ], ctx
+
+    # Buffer 5: Submit Buffer Design
+    if any(k in t for k in ["submit buffer design", "evaluate buffer accuracy", "submit design evaluation", "check buffer evaluation", "submit buffer", "evaluate buffer", "submit design"]):
+        return [
+            AgentProposedStep(
+                action=ActionType.submit_buffer_design,
+                target="avatar",
+                params={},
+                why="Submit buffer formulation accuracy and buffer capacity assessment.",
             )
         ], ctx
 
