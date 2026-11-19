@@ -10,11 +10,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 
 from app.core.registry import get_module
 from app.modules.pharma_trial import PharmaTrialModule, PharmaTrialParams
+from app.pharma.pkpd.trial_v2 import (
+    TrialRegimen,
+    TrialV2Result,
+    VirtualCohortConfig,
+    compare_trials_v2,
+    generate_trial_v2_csv,
+    simulate_trial_v2,
+)
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/trial", tags=["trial"])
@@ -111,3 +119,57 @@ async def run_single_trial(body: PharmaTrialParams) -> dict[str, Any]:
 
     res = mod.run(body)
     return res.model_dump()
+
+
+# ---------------------------------------------------------------------------
+# Virtual Trial v2 Endpoints
+# ---------------------------------------------------------------------------
+
+
+class TrialV2RunRequest(BaseModel):
+    """Payload to execute Virtual Trial v2."""
+
+    regimen: TrialRegimen = Field(default_factory=TrialRegimen)
+    cohort: VirtualCohortConfig = Field(default_factory=VirtualCohortConfig)
+
+
+class TrialV2CompareRequest(BaseModel):
+    """Payload to compare two Virtual Trial v2 regimens."""
+
+    regimen_a: TrialRegimen = Field(..., description="Experimental regimen")
+    regimen_b: TrialRegimen = Field(..., description="Comparator regimen")
+    cohort: VirtualCohortConfig = Field(default_factory=VirtualCohortConfig)
+
+
+@router.post("/v2/run", response_model=TrialV2Result, summary="Run Virtual Trial v2 population simulation")
+async def run_trial_v2(body: TrialV2RunRequest) -> TrialV2Result:
+    """
+    Run multi-compartment population simulation on virtual adult cohort.
+    Always returns:
+    - Crowd gallery with color and icon per patient
+    - Distributions of Cmax and AUC
+    - Percent inside target window, below, and above
+    - Deterministic code-written insight statement
+    - Label: 'virtual population, not a clinical trial'
+    """
+    return simulate_trial_v2(body.regimen, body.cohort)
+
+
+@router.post("/v2/compare", summary="Compare two Virtual Trial v2 regimens")
+async def compare_trial_v2_endpoint(body: TrialV2CompareRequest) -> dict[str, Any]:
+    """Compare two regimens on the identical virtual population (reproducible seed)."""
+    return compare_trials_v2(body.regimen_a, body.regimen_b, body.cohort)
+
+
+@router.post("/v2/export_csv", summary="Export Virtual Trial v2 results to CSV")
+async def export_trial_v2_csv(body: TrialV2RunRequest) -> Response:
+    """Run simulation and return formatted CSV for educational data analysis."""
+    result = simulate_trial_v2(body.regimen, body.cohort)
+    csv_content = generate_trial_v2_csv(result)
+    filename = f"virtual_trial_{body.regimen.drug_id}_seed{body.cohort.seed}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+

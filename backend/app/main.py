@@ -31,6 +31,7 @@ from app.modules.chem_kinetics import ChemKineticsModule
 from app.modules.chem_titration import ChemTitrationModule
 from app.modules.pharma_pk import PharmaPKModule
 from app.modules.pharma_trial import PharmaTrialModule
+from app.modules.pharma_trial_v2 import PharmaTrialV2Module
 from app.routes import drugs, lab, levels, modules, runs, scores, simulate, specs, trial, tutor, validation
 from app.security import rate_limiter, validate_startup_config
 
@@ -59,6 +60,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN001
     register(PharmaPKModule())
     register(ChemTitrationModule())
     register(PharmaTrialModule())
+    register(PharmaTrialV2Module())
     log.info("Storage mode: %s | App Version: %s", STORAGE_MODE, settings.app_version)
     yield
     await close_db()
