@@ -48,12 +48,16 @@ In accordance with platform governance rules (R1–R10 / G1–G12), the followin
 
 As required by Task P3-T7 and Spec Section 12, first-run pass rates were recorded on raw, unmodified corpora prior to any vocabulary tuning, followed by vocabulary expansion to achieve production threshold (>=90%).
 
-### 3.1 First-Run vs. Final Pass Rates
+### 3.1 First-Run vs. Final Pass Rates (All Platform Corpora)
 
-| Corpus | First-Run Normal (n=40) | First-Run Hard (n=15) | First-Run Total (n=55) | Final Normal (n=40) | Final Hard (n=15) | Final Total (n=55) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Kinetics Bench** | 7 / 40 (17.5%) | 2 / 15 (13.3%) | **9 / 55 (16.4%)** | 39 / 40 (97.5%) | 15 / 15 (100.0%) | **54 / 55 (98.2%)** |
-| **Buffer Bench** | 8 / 40 (20.0%) | 2 / 15 (13.3%) | **10 / 55 (18.2%)** | 39 / 40 (97.5%) | 15 / 15 (100.0%) | **54 / 55 (98.2%)** |
+| Corpus | First-Run Normal | First-Run Hard | First-Run Total | Final Normal | Final Hard | Final Total | Status |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| **PK Ward (`pk`)** | 18 / 18 (100.0%) | 4 / 4 (100.0%) | **22 / 22 (100.0%)** | 18 / 18 (100.0%) | 4 / 4 (100.0%) | **22 / 22 (100.0%)** | Baseline preserved |
+| **Titration Bench (`titration`)** | 15 / 15 (100.0%) | 5 / 5 (100.0%) | **20 / 20 (100.0%)** | 15 / 15 (100.0%) | 5 / 5 (100.0%) | **20 / 20 (100.0%)** | Baseline preserved |
+| **Launch Bench (`space`)** | 36 / 40 (90.0%) | 13 / 15 (86.7%) | **49 / 55 (89.1%)** | 40 / 40 (100.0%) | 15 / 15 (100.0%) | **55 / 55 (100.0%)** | Space baseline reconciled |
+| **Dose Lab (`dose`)** | 12 / 45 (26.7%) | 3 / 17 (17.6%) | **15 / 62 (24.2%)** | 45 / 45 (100.0%) | 17 / 17 (100.0%) | **62 / 62 (100.0%)** | Stage 3 baseline preserved |
+| **Kinetics Bench (`kinetics`)** | 7 / 40 (17.5%) | 2 / 15 (13.3%) | **9 / 55 (16.4%)** | 39 / 40 (97.5%) | 15 / 15 (100.0%) | **54 / 55 (98.2%)** | Generic rules |
+| **Buffer Bench (`buffer`)** | 8 / 40 (20.0%) | 2 / 15 (13.3%) | **10 / 55 (18.2%)** | 39 / 40 (97.5%) | 15 / 15 (100.0%) | **54 / 55 (98.2%)** | Generic rules |
 
 ### 3.2 Full Platform Parser Corpora Summary
 

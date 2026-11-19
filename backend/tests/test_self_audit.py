@@ -81,6 +81,26 @@ def test_audit_check_parser_pass_rate():
     assert res.gate_id == 9
     assert res.passed is True
     assert "baseline" in res.evidence
+    assert "pk" in res.details
+    assert "buffer" in res.details
+    assert "founder set: not provided" in res.details
+
+
+def test_audit_check_parser_pass_rate_fails_when_corpus_missing(tmp_path):
+    # Create fake repo structure with a report missing one corpus
+    docs_dir = tmp_path / "docs"
+    docs_dir.mkdir()
+    fake_report = docs_dir / "PHASE_9_REPORT.md"
+    fake_report.write_text("Only pk baseline 100% mentioned here.", encoding="utf-8")
+
+    data_dir = tmp_path / "backend" / "tests" / "data"
+    data_dir.mkdir(parents=True)
+    (data_dir / "agent_seed_heldout_phrases.json").write_text("{}", encoding="utf-8")
+
+    res = check_parser_pass_rate(tmp_path)
+    assert res.gate_id == 9
+    assert res.passed is False
+    assert "Missing first-run baseline rates" in res.evidence
 
 
 def test_audit_check_risky_claims():
