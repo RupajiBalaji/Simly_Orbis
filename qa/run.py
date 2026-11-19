@@ -1065,10 +1065,44 @@ class QAHarnessRunner:
                 self.capture_checkpoint(page, "kinetics_bench_final_report")
 
                 kin_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                api_kin_grade = page.evaluate("() => window.state?.session?.report?.grade || ''")
+                if api_kin_grade and kin_grade:
+                    assert kin_grade == api_kin_grade, f"Kinetics DOM grade '{kin_grade}' != API grade '{api_kin_grade}'"
+                    print(f"  [QA Kinetics Bench] DOM-vs-API Assertion PASSED: Grade '{kin_grade}' matches API exactly.")
                 self.grades["kinetics_bench"] = kin_grade
                 print(f"  [QA Kinetics Bench] Grade: '{kin_grade}'")
                 if not kin_grade:
                     self.failure_reasons.append("kinetics_bench report submitted without a letter grade.")
+
+                # Kinetics Bench Rule-Violation Run: Starting reaction without PPE (Rule K1)
+                print("  [QA Kinetics Bench] Rule-Violation Run: Starting reaction without wearing PPE (Rule K1)...")
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('kinetics_bench');
+                    window.location.hash = '#/lab?exp=kinetics_bench';
+                    await window.actionMenu.executeAction('set_temperature', 'thermostat_bath', { temperature_c: 25.0 });
+                    await window.actionMenu.executeAction('prepare_reactant', 'reaction_vessel', { initial_conc_m: 1.0 });
+                    await window.actionMenu.executeAction('start_reaction', 'reaction_vessel', { order: 1 });
+                }""")
+                page.wait_for_timeout(800)
+                self.capture_checkpoint(page, "kinetics_rule_violation")
+
+                # Kinetics Bench Failure Run: Operating without PPE and submitting inaccurate reaction order
+                print("  [QA Kinetics Bench] Failure Run: Submitting inaccurate reaction order without analysis or PPE...")
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('kinetics_bench');
+                    window.location.hash = '#/lab?exp=kinetics_bench';
+                    await window.actionMenu.executeAction('prepare_reactant', 'reaction_vessel', { initial_conc_m: 1.0 });
+                    await window.actionMenu.executeAction('start_reaction', 'reaction_vessel', { order: 1 });
+                    await window.actionMenu.executeAction('submit_order_estimate', 'spectrophotometer', { estimated_order: 2, estimated_k: 25.0 });
+                    const failRep = await window.api.finishSession(window.state.session.session_id);
+                    window.reportScreen.show(failRep);
+                }""")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(800)
+                dom_fail_kin = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                print(f"  [QA Kinetics Bench] Failure Run Grade: '{dom_fail_kin}'")
+                assert dom_fail_kin in ("F", "D"), f"Expected kinetics failure grade, got '{dom_fail_kin}'"
+                self.capture_checkpoint(page, "kinetics_failure_report")
 
                 # ==============================================================
                 # 3e. BUFFER BENCH (buffer_bench)
@@ -1123,10 +1157,46 @@ class QAHarnessRunner:
                 self.capture_checkpoint(page, "buffer_bench_final_report")
 
                 buf_grade = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                api_buf_grade = page.evaluate("() => window.state?.session?.report?.grade || ''")
+                if api_buf_grade and buf_grade:
+                    assert buf_grade == api_buf_grade, f"Buffer DOM grade '{buf_grade}' != API grade '{api_buf_grade}'"
+                    print(f"  [QA Buffer Bench] DOM-vs-API Assertion PASSED: Grade '{buf_grade}' matches API exactly.")
                 self.grades["buffer_bench"] = buf_grade
                 print(f"  [QA Buffer Bench] Grade: '{buf_grade}'")
                 if not buf_grade:
                     self.failure_reasons.append("buffer_bench report submitted without a letter grade.")
+
+                # Buffer Bench Rule-Violation Run: Stressing buffer without PPE (Rule B1)
+                print("  [QA Buffer Bench] Rule-Violation Run: Stressing buffer without wearing PPE (Rule B1)...")
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('buffer_bench');
+                    window.location.hash = '#/lab?exp=buffer_bench';
+                    await window.actionMenu.executeAction('select_buffer_system', 'buffer_beaker', { system: 'acetate', target_ph: 4.75 });
+                    await window.actionMenu.executeAction('prepare_buffer', 'buffer_beaker', { target_ph: 4.75, total_conc_m: 0.2, volume_ml: 100.0 });
+                    await window.actionMenu.executeAction('stress_buffer', 'stress_burette', { titrant: 'hcl', titrant_conc_m: 1.0, max_added_ml: 10.0, num_steps: 20 });
+                }""")
+                page.wait_for_timeout(800)
+                self.capture_checkpoint(page, "buffer_rule_violation")
+
+                # Buffer Bench Failure Run: Preparing severely mis-targeted buffer outside capacity range without PPE
+                print("  [QA Buffer Bench] Failure Run: Preparing acetate buffer targeted to pH 1.0 without PPE or calibration resulting in failure...")
+                page.evaluate("""async () => {
+                    window.state.session = await window.api.createSession('buffer_bench');
+                    window.location.hash = '#/lab?exp=buffer_bench';
+                    await window.actionMenu.executeAction('select_buffer_system', 'buffer_beaker', { system: 'acetate', target_ph: 1.0 });
+                    await window.actionMenu.executeAction('prepare_buffer', 'buffer_beaker', { target_ph: 1.0, total_conc_m: 0.2, volume_ml: 100.0 });
+                    await window.actionMenu.executeAction('stress_buffer', 'stress_burette', { titrant: 'hcl', titrant_conc_m: 1.0, max_added_ml: 15.0, num_steps: 20 });
+                    await window.actionMenu.executeAction('submit_buffer_design', 'avatar', {});
+                    await window.actionMenu.executeAction('dispose_waste', 'chemical_waste_bin', {});
+                    const failRep = await window.api.finishSession(window.state.session.session_id);
+                    window.reportScreen.show(failRep);
+                }""")
+                page.wait_for_selector("#screen-report:not(.hidden)", timeout=8000)
+                page.wait_for_timeout(800)
+                dom_fail_buf = page.inner_text(".report-grade-badge").strip() if page.is_visible(".report-grade-badge") else ""
+                print(f"  [QA Buffer Bench] Failure Run Grade: '{dom_fail_buf}'")
+                assert dom_fail_buf in ("F", "D"), f"Expected buffer failure grade, got '{dom_fail_buf}'"
+                self.capture_checkpoint(page, "buffer_failure_report")
 
                 # ==============================================================
                 # 4. CAMERA RIG & AVATAR FRAMING ACCEPTANCE TEST (__camTest)

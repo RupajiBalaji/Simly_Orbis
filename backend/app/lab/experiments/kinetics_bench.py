@@ -107,6 +107,28 @@ KINETICS_BENCH_EXPERIMENT = ExperimentDefinition(
         "technique": 20,
         "protocol": 10,
     },
+    rules=[
+        {
+            "rule_id": "K1",
+            "title": "PPE Compliance for Chemical & Thermal Safety",
+            "explanation": "Safety goggles, protective gloves, and a buttoned lab coat must be equipped before operating spectrophotometer, thermostat, or handling reagents.",
+        },
+        {
+            "rule_id": "K2",
+            "title": "Spectrophotometer Blank Calibration Required",
+            "explanation": "The spectrophotometer must be calibrated with a pure solvent blank before recording reaction kinetics time-series data.",
+        },
+        {
+            "rule_id": "K3",
+            "title": "Thermal Equilibrium & Bath Temperature Boundaries",
+            "explanation": "Reaction temperature must be set and equilibrated within 10.0 °C to 60.0 °C before initiating kinetic runs.",
+        },
+        {
+            "rule_id": "K4",
+            "title": "Kinetic Analysis Before Submission",
+            "explanation": "Linear regression analysis on [A], ln[A], and 1/[A] plots must be performed before submitting final reaction order estimates.",
+        },
+    ],
 )
 
 
@@ -254,7 +276,7 @@ def apply_kinetics_action(session: LabSession, req: ActionRequest) -> ActionResu
         temp_c = float(params.get("temperature_c", 25.0))
         if temp_c > 80.0:
             violations.append(Violation(
-                rule_id="K2",
+                rule_id="K3",
                 title="Excessive Thermostat Temperature",
                 severity="warning",
                 penalty_points=10,
@@ -271,7 +293,7 @@ def apply_kinetics_action(session: LabSession, req: ActionRequest) -> ActionResu
     elif action == "prepare_reactant":
         if not has_ppe:
             violations.append(Violation(
-                rule_id="R1",
+                rule_id="K1",
                 title="Missing Personal Protective Equipment",
                 severity="critical",
                 penalty_points=20,
@@ -301,7 +323,7 @@ def apply_kinetics_action(session: LabSession, req: ActionRequest) -> ActionResu
     elif action == "start_reaction":
         if not has_ppe:
             violations.append(Violation(
-                rule_id="R1",
+                rule_id="K1",
                 title="Chemical Reaction Started Without PPE",
                 severity="critical",
                 penalty_points=15,
@@ -330,7 +352,7 @@ def apply_kinetics_action(session: LabSession, req: ActionRequest) -> ActionResu
     elif action == "record_sampling":
         if not spec_dev.get("calibrated", False):
             violations.append(Violation(
-                rule_id="K1",
+                rule_id="K2",
                 title="Uncalibrated Optical Detector",
                 severity="warning",
                 penalty_points=10,
@@ -435,7 +457,7 @@ def apply_kinetics_action(session: LabSession, req: ActionRequest) -> ActionResu
     elif action == "dispose_waste":
         if not has_ppe:
             violations.append(Violation(
-                rule_id="R1",
+                rule_id="K1",
                 title="Hazardous Waste Handled Without PPE",
                 severity="critical",
                 penalty_points=15,

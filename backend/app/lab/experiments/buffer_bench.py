@@ -141,40 +141,24 @@ BUFFER_BENCH_EXPERIMENT = ExperimentDefinition(
     ],
     rules=[
         {
-            "id": "R1",
-            "title": "PPE Violation: Corrosive & Buffer Safety",
+            "rule_id": "B1",
+            "title": "PPE Compliance for Corrosive & Buffer Safety",
             "explanation": "Always wear safety goggles, gloves, and a lab coat before handling buffer reagents, concentrated acids, or bases.",
-            "penalty": "15",
         },
         {
-            "id": "B2",
+            "rule_id": "B2",
             "title": "Inappropriate Buffer System Selection",
             "explanation": "The selected buffer pKa should be within +/- 1.2 pH unit of target pH for adequate buffering capacity.",
-            "penalty": "10",
         },
         {
-            "id": "B3",
+            "rule_id": "B3",
             "title": "Uncalibrated pH Meter Measurement",
             "explanation": "The pH meter must be calibrated with standard reference buffers before measuring buffer solutions.",
-            "penalty": "10",
         },
         {
-            "id": "B4",
+            "rule_id": "B4",
             "title": "Unmonitored Extreme Stress Addition",
             "explanation": "Stress titrant addition should be performed with gradual monitoring to capture the buffer breakdown inflection.",
-            "penalty": "10",
-        },
-        {
-            "id": "R2",
-            "title": "Improper Chemical Waste Disposal",
-            "explanation": "Spent buffer mixtures and acid/base stress solutions must be poured into the chemical waste container.",
-            "penalty": "10",
-        },
-        {
-            "id": "R4",
-            "title": "Hygiene Violation: Exit Without Handwashing",
-            "explanation": "Hands must be washed at the sink after completing chemical bench procedures.",
-            "penalty": "5",
         },
     ],
 )
@@ -350,7 +334,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         message = f"Put on personal protective equipment: {', '.join(sorted(session.ppe))}."
         if "wear_ppe" not in session.protocol_progress:
             session.protocol_progress.append("wear_ppe")
-            session.score_parts["safety"] = min(100, session.score_parts.get("safety", 0) + 15)
+            session.score_parts["safety"] = min(40, session.score_parts.get("safety", 40))
         visuals.append({"type": "particle", "target": "avatar", "name": "sparkle"})
         events.append({"type": "ppe_donned", "detail": "Equipped PPE"})
 
@@ -358,7 +342,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
     elif action == "select_buffer_system":
         if not has_ppe:
             v = Violation(
-                rule_id="R1",
+                rule_id="B1",
                 title="PPE Violation",
                 explanation="Handled buffer chemicals without protective equipment.",
                 severity="warning",
@@ -366,7 +350,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
             )
             violations.append(v)
             session.violations.append(v)
-            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 100) - 15)
+            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 40) - 15)
 
         sys_id = params.get("system", "acetate")
         if sys_id not in BUFFER_SYSTEMS:
@@ -386,7 +370,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
             )
             violations.append(v)
             session.violations.append(v)
-            session.score_parts["accuracy"] = max(0, session.score_parts.get("accuracy", 100) - 10)
+            session.score_parts["accuracy"] = max(0, session.score_parts.get("accuracy", 30) - 10)
 
         beaker["system_id"] = sys_id
         beaker["target_ph"] = target_ph
@@ -394,14 +378,13 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         message = f"Selected buffer system: {sys_info['name']} (pKa {pka:.2f}) for target pH {target_ph:.2f}."
         if "select_buffer_system" not in session.protocol_progress:
             session.protocol_progress.append("select_buffer_system")
-            session.score_parts["accuracy"] = min(100, session.score_parts.get("accuracy", 0) + 15)
         events.append({"type": "system_selected", "system": sys_id, "target_ph": target_ph})
 
     # 3. Prepare Buffer
     elif action == "prepare_buffer":
         if not has_ppe:
             v = Violation(
-                rule_id="R1",
+                rule_id="B1",
                 title="PPE Violation",
                 explanation="Prepared buffer solutions without laboratory goggles, gloves, or coat.",
                 severity="warning",
@@ -409,7 +392,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
             )
             violations.append(v)
             session.violations.append(v)
-            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 100) - 15)
+            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 40) - 15)
 
         target_ph = float(params.get("target_ph", beaker.get("target_ph", 4.75)))
         total_conc = float(params.get("total_conc_m", 0.2))
@@ -442,7 +425,6 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         )
         if "prepare_buffer" not in session.protocol_progress:
             session.protocol_progress.append("prepare_buffer")
-            session.score_parts["technique"] = min(100, session.score_parts.get("technique", 0) + 20)
         visuals.append({"type": "liquid", "target": "buffer_beaker", "name": "fill", "level": vol_ml / 150.0})
         events.append({"type": "buffer_prepared", "ph": state.ph, "beta": state.buffer_capacity_beta})
 
@@ -459,7 +441,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         message = f"pH meter calibrated. Measured baseline buffer pH = {ph_val:.2f}, Van Slyke buffer capacity β = {beta:.4f} M/pH."
         if "test_capacity" not in session.protocol_progress:
             session.protocol_progress.append("test_capacity")
-            session.score_parts["accuracy"] = min(100, session.score_parts.get("accuracy", 0) + 15)
+        session.score_parts["technique"] = min(20, (10 if ph_meter.get("calibrated") else 0) + (10 if burette.get("stress_tested") and ph_meter.get("calibrated") else 0))
         visuals.append({"type": "readout", "target": "ph_meter", "value": ph_val, "unit": "pH"})
         events.append({"type": "capacity_tested", "ph": ph_val, "beta": beta})
 
@@ -467,7 +449,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
     elif action == "stress_buffer":
         if not has_ppe:
             v = Violation(
-                rule_id="R1",
+                rule_id="B1",
                 title="PPE Violation",
                 explanation="Performed strong acid/base additions without PPE.",
                 severity="warning",
@@ -475,7 +457,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
             )
             violations.append(v)
             session.violations.append(v)
-            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 100) - 15)
+            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 40) - 15)
 
         if not beaker.get("prepared"):
             return ActionResult(accepted=False, message="Prepare a buffer before running stress test.")
@@ -490,12 +472,23 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
             )
             violations.append(v)
             session.violations.append(v)
-            session.score_parts["accuracy"] = max(0, session.score_parts.get("accuracy", 100) - 10)
+            session.score_parts["accuracy"] = max(0, session.score_parts.get("accuracy", 30) - 10)
 
         titrant = str(params.get("titrant", "hcl")).lower()
         titrant_conc = float(params.get("titrant_conc_m", 1.0))
         max_ml = float(params.get("max_added_ml", 15.0))
         num_steps = int(params.get("num_steps", 25))
+
+        if max_ml > 30.0 or num_steps < 5:
+            v = Violation(
+                rule_id="B4",
+                title="Unmonitored Extreme Stress Addition",
+                explanation="Stress titrant addition should be performed with gradual monitoring to capture the buffer breakdown inflection.",
+                severity="warning",
+                penalty_points=10,
+            )
+            violations.append(v)
+            session.violations.append(v)
 
         ka = 10.0 ** (-beaker["pka"])
         curve_pts = simulate_buffer_stress(
@@ -535,7 +528,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         )
         if "stress_buffer" not in session.protocol_progress:
             session.protocol_progress.append("stress_buffer")
-            session.score_parts["technique"] = min(100, session.score_parts.get("technique", 0) + 20)
+        session.score_parts["technique"] = min(20, (10 if ph_meter.get("calibrated") else 0) + (10 if burette.get("stress_tested") and ph_meter.get("calibrated") else 0))
         visuals.append({"type": "animation", "target": "stress_burette", "name": "dispense"})
         visuals.append({"type": "readout", "target": "ph_meter", "value": round(final_pt.ph, 2), "unit": "pH"})
         events.append({"type": "stress_tested", "titrant": titrant, "delta_ph": round(delta_ph, 2)})
@@ -545,15 +538,30 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         if not burette.get("stress_tested"):
             return ActionResult(accepted=False, message="Perform stress test before submitting evaluation.")
 
-        target_ph = beaker.get("target_ph", 4.75)
-        prepared_ph = beaker.get("ph", target_ph)
+        target_ph = float(beaker.get("target_ph", 4.75))
+        prepared_ph_raw = beaker.get("ph")
+        prepared_ph = float(prepared_ph_raw) if prepared_ph_raw is not None else target_ph
         ph_error = abs(prepared_ph - target_ph)
-        accuracy_pts = max(5, int(20 - ph_error * 20))
+
+        if ph_error <= 0.05:
+            accuracy_pts = 30
+        elif ph_error <= 0.20:
+            accuracy_pts = 20
+        elif ph_error <= 0.50:
+            accuracy_pts = 10
+        elif ph_error <= 1.0:
+            accuracy_pts = 5
+        else:
+            accuracy_pts = 0
+
+        if any(v.rule_id in ("B2", "B3") for v in session.violations):
+            accuracy_pts = min(accuracy_pts, 5)
+
+        session.score_parts["accuracy"] = accuracy_pts
 
         message = f"Buffer evaluation submitted. Target pH: {target_ph:.2f}, Prepared pH: {prepared_ph:.2f} (Error: {ph_error:.2f})."
         if "submit_buffer_design" not in session.protocol_progress:
             session.protocol_progress.append("submit_buffer_design")
-            session.score_parts["accuracy"] = min(100, session.score_parts.get("accuracy", 0) + accuracy_pts)
         visuals.append({"type": "particle", "target": "avatar", "name": "sparkle"})
         events.append({"type": "design_submitted", "target_ph": target_ph, "prepared_ph": prepared_ph})
 
@@ -561,7 +569,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
     elif action == "dispose_waste":
         if not has_ppe:
             v = Violation(
-                rule_id="R1",
+                rule_id="B1",
                 title="PPE Violation",
                 explanation="Handled chemical waste without protective gear.",
                 severity="warning",
@@ -569,7 +577,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
             )
             violations.append(v)
             session.violations.append(v)
-            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 100) - 15)
+            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 40) - 15)
 
         waste_bin["items"].append(f"Buffer mixture ({beaker.get('volume_ml', 100):.0f} mL)")
         beaker["prepared"] = False
@@ -579,7 +587,6 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         message = "Neutralized and disposed of buffer solutions into chemical waste container."
         if "dispose_waste" not in session.protocol_progress:
             session.protocol_progress.append("dispose_waste")
-            session.score_parts["protocol"] = min(100, session.score_parts.get("protocol", 0) + 15)
         visuals.append({"type": "pour", "target": "chemical_waste_bin"})
         events.append({"type": "waste_disposed", "target": "chemical_waste_bin"})
 
@@ -589,7 +596,6 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         message = "Washed hands thoroughly with soap and warm water."
         if "wash_hands" not in session.protocol_progress:
             session.protocol_progress.append("wash_hands")
-            session.score_parts["safety"] = min(100, session.score_parts.get("safety", 0) + 10)
         visuals.append({"type": "particle", "target": "sink", "name": "bubbles"})
         events.append({"type": "hands_washed"})
 
@@ -599,7 +605,7 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
         session.status = "completed"
         if "wash_hands" not in session.protocol_progress:
             v = Violation(
-                rule_id="R4",
+                rule_id="B1",
                 title="Hygiene Violation",
                 explanation="Exited laboratory bench without washing hands at sink.",
                 severity="warning",
@@ -607,12 +613,14 @@ def apply_buffer_action(session: LabSession, req: ActionRequest) -> ActionResult
             )
             violations.append(v)
             session.violations.append(v)
-            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 100) - 5)
+            session.score_parts["safety"] = max(0, session.score_parts.get("safety", 40) - 5)
+
+        n_proto = len([step for step in ["wear_ppe", "select_buffer_system", "prepare_buffer", "test_capacity", "stress_buffer", "submit_buffer_design", "dispose_waste", "wash_hands"] if step in session.protocol_progress])
+        session.score_parts["protocol"] = min(10, int(round(10.0 * n_proto / 8)))
 
         message = "Submitted completed Buffer Solutions & Capacity Bench analytical report."
         if "submit_report" not in session.protocol_progress:
             session.protocol_progress.append("submit_report")
-            session.score_parts["protocol"] = min(100, session.score_parts.get("protocol", 0) + 15)
         visuals.append({"type": "particle", "target": "avatar", "name": "confetti"})
         events.append({"type": "report_submitted"})
 

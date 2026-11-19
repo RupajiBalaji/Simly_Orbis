@@ -105,13 +105,13 @@ def test_buffer_bench_success_workflow():
 def test_buffer_bench_rule_violations():
     session = create_session("buffer_bench", nickname="CarelessResearcher")
 
-    # Action without PPE (Rule R1)
+    # Action without PPE (Rule B1)
     r1 = apply_buffer_action(
         session,
         ActionRequest(action=ActionType.select_buffer_system, params={"system": "acetate", "target_ph": 4.75}),
     )
     assert r1.accepted
-    assert any(v.rule_id == "R1" for v in session.violations)
+    assert any(v.rule_id == "B1" for v in session.violations)
 
     # Suboptimal pKa selection (acetate pKa 4.76 for target pH 8.0) -> Rule B2
     session.ppe = {"goggles", "gloves", "coat"}
@@ -137,11 +137,11 @@ def test_buffer_bench_rule_violations():
     assert r3.accepted
     assert any(v.rule_id == "B3" for v in session.violations)
 
-    # Exit without washing hands (Rule R4)
+    # Exit without washing hands (Rule B1 hygiene)
     apply_buffer_action(session, ActionRequest(action=ActionType.submit_buffer_design, params={}))
     r4 = apply_buffer_action(session, ActionRequest(action=ActionType.submit_report, params={}))
     assert r4.accepted
-    assert any(v.rule_id == "R4" for v in session.violations)
+    assert any(v.rule_id == "B1" for v in session.violations)
 
 
 def test_buffer_bench_failure_workflow():

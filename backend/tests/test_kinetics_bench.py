@@ -97,23 +97,23 @@ def test_kinetics_bench_success_workflow():
 def test_kinetics_bench_rule_violations():
     session = create_session("kinetics_bench", "Violator")
 
-    # Rule R1: Handling reactant without PPE
+    # Rule K1: Handling reactant without PPE
     r1 = apply_kinetics_action(session, ActionRequest(action="prepare_reactant", params={"initial_conc_m": 1.0}))
     assert len(r1.violations) == 1
-    assert r1.violations[0].rule_id == "R1"
+    assert r1.violations[0].rule_id == "K1"
     assert session.score_parts["safety"] < 30
 
-    # Rule K1: Sampling without calibration
+    # Rule K2: Sampling without calibration
     apply_kinetics_action(session, ActionRequest(action="start_reaction", params={"order": 0}))
     r2 = apply_kinetics_action(session, ActionRequest(action="record_sampling", params={"num_samples": 5}))
     assert len(r2.violations) == 1
-    assert r2.violations[0].rule_id == "K1"
+    assert r2.violations[0].rule_id == "K2"
     assert session.score_parts["technique"] < 20
 
-    # Rule K2: Excess temperature > 80°C
+    # Rule K3: Excess temperature > 80°C
     r3 = apply_kinetics_action(session, ActionRequest(action="set_temperature", params={"temperature_c": 95.0}))
     assert len(r3.violations) == 1
-    assert r3.violations[0].rule_id == "K2"
+    assert r3.violations[0].rule_id == "K3"
 
 
 def test_kinetics_bench_failure_workflow():
