@@ -26,6 +26,7 @@ from app.config import settings
 from app.core.registry import list_modules, register
 from app.db import STORAGE_MODE, close_db, init_db
 import app.db as _db
+from app.modules.chem_buffer import ChemBufferModule
 from app.modules.chem_kinetics import ChemKineticsModule
 from app.modules.chem_titration import ChemTitrationModule
 from app.modules.pharma_pk import PharmaPKModule
@@ -59,6 +60,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN001
     register(ChemTitrationModule())
     register(PharmaTrialModule())
     register(ChemKineticsModule())
+    register(ChemBufferModule())
     log.info("Storage mode: %s | App Version: %s", STORAGE_MODE, settings.app_version)
     yield
     await close_db()
