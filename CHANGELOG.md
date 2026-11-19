@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.0-dev] - 2026-11-19
+
+### Added
+- **Phase P2 Spec Platform**:
+  - Declarative experiment specification format (`ExperimentSpec`) implementing Section 10 of MVP Build Specification.
+  - Comprehensive Pydantic schema validation (`backend/app/specs/validator.py`) and CLI validator tool (`scripts/validate_specs.py`).
+  - Migration of Titration Bench, PK Ward, Launch Bench, and Dose Response Lab to declarative specs (`specs/*.json`).
+  - Strict golden-equivalence testing framework (`backend/tests/test_spec_equivalence_*.py`) running legacy and spec runtime on 22 scripted sequences per experiment (96 tests total, 100% pass).
+  - Dual-mode `SPEC_RUNTIME` configuration flag with legacy fallback retention and QA harness support.
+  - Dynamic spec-driven Ask Orbis vocabulary and Dr. Orbis mentor hints.
+  - Spec authoring UI (`frontend/authoring.html`), documentation (`docs/EXPERIMENT_SPEC_GUIDE.md`), worked example fixture (`specs/fixtures/worked_example_neutralization.json`), size limits, rate limiting, and security hardening.
+
 ## [0.5.0-dev] - 2026-11-18
 
 ### Added
