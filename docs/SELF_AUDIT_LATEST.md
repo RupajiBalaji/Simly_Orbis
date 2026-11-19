@@ -1,7 +1,7 @@
 # Simly Orbis Stage Gate Self-Audit Report
 
 **Status:** PASS  
-**Platform Version:** 0.5.0-dev  
+**Platform Version:** 0.6.0-dev  
 **Single Source of Truth:** Backend Simulators  
 **Governance Standard:** Educational Simulation &bull; Not Medical Advice &bull; Not Clinical Evidence  
 
@@ -11,16 +11,16 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 58, HEAD: 306533af |
-| 2 | App Version | **PASS** | Version `0.5.0-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite | **PASS** | covered by CI pytest step |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 76, HEAD: 09e098d5 |
+| 2 | App Version | **PASS** | Version `0.6.0-dev` declared in `backend/app/config.py` |
+| 3 | Pytest Test Suite | **PASS** | [fresh venv] `=============== 703 passed, 26936 warnings in 91.46s (0:01:31) ================` |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
-| 5 | Frozen Tolerances Guard | **PASS** | 3/3 frozen tolerance files verified. |
+| 5 | Frozen Tolerances Guard | **PASS** | 4/4 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 4 engines + R1-R10/S1-S8 rules. Violations: 0 |
 | 7 | CI Workflow Configuration | **PASS** | `.github/workflows/ci.yml` invokes bare `pytest backend/tests`. |
-| 8 | QA Playthrough Proof | **PASS** | Folder: `20261118_085910` (fresh (post-frontend commit)) | Media count: 62 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
+| 8 | QA Playthrough Proof | **PASS** | Folder: `20261119_153733` (fresh (post-frontend commit)) | Media count: 70 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
 | 9 | First-Run Parser Baselines & Held-Out Status | **PASS** | Recorded rates & held-out status: Dose Lab baseline: 24.2% (15/62); Space Stage baseline: 89.1%; founder set: not provided; agent-written seed set, not founder-written (n=4/exp too small to be meaningful) |
-| 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 10 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
+| 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 19 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
 | 11 | Gitignore Coverage | **PASS** | Coverage confirmed: qa/out (True), __pycache__ (True) |
 
 ---
@@ -29,30 +29,34 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `306533af` | Clean: True (expected audit files: True) | Ahead: 58
+HEAD: `09e098d5` | Clean: False (expected audit files: True) | Ahead: 76
 
 **Last 15 Commits:**
 ```
-306533a docs(p2): Phase P2 completion report and self-audit
-baeb307 feat(spec): experiment authoring form and validation UI
-8a015a2 docs(spec): author experiment specification guide and worked example
-bbdad8b feat(spec): spec-driven mentor hints and ask orbis vocabulary
-84ff27b feat(spec): migrate PK Ward, Launch Bench, and Dose Response Lab to declarative specs
-ef18cf4 feat(spec): migrate Titration Bench to declarative spec with golden-equivalence tests
-9480cc1 feat(spec): experiment specification schema, loader, validator, and CLI
-770cb62 docs(p1): record newest QA run 20261118_081803 in RECHECK_P1
-712648f docs(p1): P1 recheck report with verification evidence
-a041a00 test(p1): QA full run for 4 experiments and frontend freshness self-audit check
-f625617 test(p1): touch e2e test at 390x844 with mobile interactions
-778a313 chore: bump version to 0.5.0-dev
-329012b fix(p1): complete font weights without synthetic bold
-70d7cd8 fix(p1): comprehensive i18n coverage and template lint enforcement
-67e52da fix(p1): experiment-specific briefing rules in plain language
+09e098d test(qa): add kinetics and buffer QA sequences, reality checks, and self-audit guard for chemistry tolerances
+e786432 docs(chem): chemistry engines documentation and model cards
+201bd5f test(ai): author and hard phrase corpora for Kinetics and Buffer Benches
+762e227 feat(validation): chemistry kinetics and buffer validation tolerances and frozen hash
+7857217 feat(spec): Buffer Bench declarative specification and interactive UI
+3e1b502 feat(spec): Kinetics Bench declarative specification and interactive UI
+c50cc9f feat(chem): live titration curve with indicator transition band
+6b6bc5e feat(chem): buffer equilibrium and buffer capacity engine
+8c9609b feat(chem): chemical reaction kinetics engine with analytic and RK4 solutions
+360d908 docs(p2): complete RECHECK_P2.md and update Phase P2 report with honest disclosures
+0d671f7 test(ai): record parser corpora pass rates under spec-driven vocabulary
+a6c838a ci: align and document python version matrix across runtime, ci, and docker
+64a2829 chore: bump platform version to 0.6.0-dev
+32840b0 feat(spec): harden spec validation with dry-run, approval flag, size limits, and security guards
+249822a docs(spec): restore MVP_SPEC.md and re-cite report section references against canonical spec
 ```
 
 ### Gate 3: Pytest Test Suite
 
-Executed as a dedicated preceding step in the CI pipeline.
+Exit code: 0
+
+Command: `E:\Simly Orbis\fresh\Scripts\pytest.exe backend/tests`
+
+Final line: `=============== 703 passed, 26936 warnings in 91.46s (0:01:31) ================`
 
 ### Gate 4: Validation Row Governance
 
@@ -63,6 +67,7 @@ All rows strictly comply with Rule R2/R3.
 - validation/tolerances.yaml: `5b5d857ed4862b51...` OK
 - validation/space_tolerances.yaml: `fc4ba76cb3ee9d65...` OK
 - validation/pkpd_tolerances.yaml: `443d18ab90e60b43...` OK
+- validation/chem_tolerances.yaml: `2288d01d83e2a5fc...` OK
 
 ### Gate 6: Engine Immutability (Rule R1/R7)
 
