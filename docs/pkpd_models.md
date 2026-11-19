@@ -1,141 +1,159 @@
-# Pharmacokinetic & Pharmacodynamic Mathematical Models (`pharma.pkpd`)
+# Pharmacokinetic & Pharmacodynamic (PK/PD) Mathematical Models
 
-> **DISCLAIMER: Educational simulation platform. Not medical advice. Not clinical evidence.**
-> Simly Orbis is an interactive laboratory learning simulator designed to build scientific intuition. It does not output clinical dosing recommendations for real patients and does not replace animal studies, physical bench trials, or human clinical trials.
-
-This document specifies the mathematical formulations, differential equations, analytical solutions, covariate scaling rules, and explicit assumptions implemented in the `backend/app/pharma/pkpd` simulation engine.
-
----
-
-## 1. Overview & Scope
-
-The `pharma.pkpd` engine simulates time-concentration profiles and pharmacodynamic effect curves for therapeutic drugs across single- and multiple-dose regimens in adult patients.
-
-### Scope & Constraints
-- **Target Population**: Adults aged 18–90 years, body weight 40–150 kg, creatinine clearance ($CrCl$) 15–150 mL/min.
-- **Pediatric Exclusion**: Paediatric pharmacokinetics are strictly unsupported and rejected by input validation.
-- **Administration Routes**: Oral (first-order absorption), Intravenous (IV) bolus, and Constant-rate IV infusion.
-- **Compartmental Topologies**: 1-compartment open model and 2-compartment open mammillary model with first-order linear elimination from the central compartment.
+**Platform Version:** `0.7.0-dev`  
+**Compliance Classification:** Educational Simulation &bull; Non-Clinical  
+**Rule Adherence:** R1 (Engine Single Source of Truth), R5 (G5 Provenance & Blank Retrieved-On), R6 (Honest Educational Disclaimers, Adult Covariates Only)
 
 ---
 
-## 2. Pharmacokinetic Compartmental Physics
+## 1. Single-Compartment Pharmacokinetics (`pharma.pk`)
 
-### 2.1 One-Compartment Oral Absorption Model
+### 1.1 Model Overview
+The 1-compartment model treats the body as a single well-mixed kinetic pool with instantaneous and uniform distribution. Elimination occurs as a first-order process proportional to the central plasma concentration.
 
-The classical Bateman open one-compartment model describes a drug absorbed from the gastrointestinal tract into the systemic central volume with first-order absorption rate constant $k_a$ and first-order elimination rate constant $k_{el} = \frac{CL}{V_d}$.
+### 1.2 Mathematical Formulations
 
-#### Differential Equations
-$$\frac{dA_d}{dt} = -k_a \cdot A_d$$
-$$\frac{dA_c}{dt} = k_a \cdot A_d - \left(\frac{CL}{V_d}\right) \cdot A_c$$
-
-where $A_d(t)$ is drug amount in the gut absorption depot, $A_c(t)$ is drug amount in the central compartment, and systemic plasma concentration is:
-$$C_p(t) = \frac{A_c(t)}{V_d}$$
-
-#### Analytical Single-Dose Solution
-$$C_p(t) = \frac{F \cdot \text{Dose} \cdot k_a}{V_d \cdot (k_a - k_{el})} \left(e^{-k_{el} \cdot t} - e^{-k_a \cdot t}\right)$$
-
-where $F$ is systemic bioavailability ($0 < F \le 1$).
-
-#### Key Metric Derivations
-- **Time to Peak Concentration ($T_{\max}$)**:
-  $$T_{\max} = \frac{\ln(k_a / k_{el})}{k_a - k_{el}}$$
-- **Peak Concentration ($C_{\max}$)**:
-  $$C_{\max} = C_p(T_{\max})$$
-- **Total Area Under the Curve ($\text{AUC}_{0-\infty}$)**:
-  $$\text{AUC}_{0-\infty} = \frac{F \cdot \text{Dose}}{CL}$$
-
----
-
-### 2.2 Two-Compartment Model (IV Bolus & Infusion)
-
-The two-compartment open mammillary model describes disposition between a central compartment ($V_c$) and a peripheral tissue compartment ($V_p$) linked by intercompartmental clearance $Q$.
-
-#### Differential Equations
-$$\frac{dA_c}{dt} = R_{inf}(t) - \left(\frac{CL + Q}{V_c}\right) A_c + \left(\frac{Q}{V_p}\right) A_p$$
-$$\frac{dA_p}{dt} = \left(\frac{Q}{V_c}\right) A_c - \left(\frac{Q}{V_p}\right) A_p$$
-
-where $R_{inf}(t) = \frac{\text{Dose}}{t_{inf}}$ during an active infusion ($0 \le t \le t_{inf}$) and zero otherwise.
-
-#### Micro-Constants
-$$k_{10} = \frac{CL}{V_c}, \quad k_{12} = \frac{Q}{V_c}, \quad k_{21} = \frac{Q}{V_p}$$
-
-#### Hybrid Rate Constants ($\alpha$ and $\beta$)
-The roots of the characteristic polynomial determine the rapid distribution rate ($\alpha$) and terminal elimination rate ($\beta$):
-$$\alpha + \beta = k_{10} + k_{12} + k_{21}$$
-$$\alpha \cdot \beta = k_{10} \cdot k_{21}$$
-$$\alpha, \beta = \frac{(k_{10} + k_{12} + k_{21}) \pm \sqrt{(k_{10} + k_{12} + k_{21})^2 - 4 k_{10} k_{21}}}{2}$$
-where $\alpha > \beta$.
-
-#### Analytical IV Bolus Solution
-$$C_p(t) = A \cdot e^{-\alpha \cdot t} + B \cdot e^{-\beta \cdot t}$$
-where coefficients are:
-$$A = \frac{\text{Dose}}{V_c} \cdot \frac{\alpha - k_{21}}{\alpha - \beta}, \quad B = \frac{\text{Dose}}{V_c} \cdot \frac{k_{21} - \beta}{\alpha - \beta}$$
-
-#### Terminal Half-Life
-$$t_{1/2,\beta} = \frac{\ln(2)}{\beta}$$
-
----
-
-### 2.3 Multiple-Dose Superposition & Steady-State Accumulation
-
-Under linear pharmacokinetics, multi-dose regimens at fixed dosing interval $\tau$ are simulated via exact analytical linear superposition:
-$$C_{p,multi}(t) = \sum_{n=0}^{N-1} C_{p,single}(t - n\tau) \cdot H(t - n\tau)$$
-where $H(x)$ is the Heaviside step function.
-
-#### Accumulation Ratio ($R_{accum}$)
-At steady state, accumulation for a 1-compartment model is:
-$$R_{accum} = \frac{1}{1 - e^{-k_{el} \cdot \tau}}$$
-
----
-
-## 3. Pharmacodynamic Modeling ($E_{\max}$ Model)
-
-Therapeutic and biomarker responses are modeled using the Hill sigmoidal $E_{\max}$ pharmacodynamic relationship:
-
-$$E(C_p) = E_0 + \frac{E_{\max} \cdot C_p^\gamma}{EC_{50}^\gamma + C_p^\gamma}$$
-
+#### Intravenous (IV) Bolus
+For an instantaneous IV injection of dose $D$ into distribution volume $V_d$:
+$$C(t) = \frac{D}{V_d} e^{-k_e t}$$
 where:
-- $E_0$: Baseline physiological response in the absence of drug.
-- $E_{\max}$: Maximum drug-induced effect above baseline.
-- $EC_{50}$: Plasma concentration producing 50% of maximum effect.
-- $\gamma$: Hill sigmoidicity coefficient ($\gamma = 1.0$ for hyperbolic, $\gamma > 1$ for sigmoidal switches).
+- $k_e = \frac{CL}{V_d}$ is the elimination rate constant ($h^{-1}$).
+- Elimination half-life: $t_{1/2} = \frac{\ln(2)}{k_e}$.
+- Total systemic exposure: $\text{AUC}_{0-\infty} = \frac{D}{CL}$.
+
+#### Extravascular (Oral) Administration (Bateman Function)
+Following oral dosing with bioavailability $F$ and absorption rate $k_a$ ($k_a \neq k_e$):
+$$C(t) = \frac{D \cdot F \cdot k_a}{V_d (k_a - k_e)} \left( e^{-k_e t} - e^{-k_a t} \right)$$
+Key derived analytical metrics:
+- Time of peak concentration ($t_{\max}$):
+  $$t_{\max} = \frac{\ln(k_a / k_e)}{k_a - k_e}$$
+- Peak concentration ($C_{\max}$):
+  $$C_{\max} = C(t_{\max})$$
+- Area under the curve:
+  $$\text{AUC}_{0-\infty} = \int_0^\infty C(t) dt = \frac{F \cdot D}{CL}$$
+
+#### Multiple Dosing at Steady State
+Under repeated oral dosing at interval $\tau$:
+$$C_{\text{ss}}(t) = \frac{D \cdot F \cdot k_a}{V_d (k_a - k_e)} \left( \frac{e^{-k_e t}}{1 - e^{-k_e \tau}} - \frac{e^{-k_a t}}{1 - e^{-k_a \tau}} \right)$$
+- Steady-state average concentration: $C_{\text{avg,ss}} = \frac{F \cdot D}{CL \cdot \tau}$.
+- Accumulation factor: $R = \frac{1}{1 - e^{-k_e \tau}}$.
 
 ---
 
-## 4. Covariate Scaling & Patient Allometry
+## 2. Two-Compartment Pharmacokinetics (`pharma.pkpd` / `pharma.trial_v2`)
 
-Patient physiological covariates dynamically modify central clearance and volume of distribution relative to a standard adult ($70\text{ kg}$, age $40\text{ yr}$, $CrCl = 100\text{ mL/min}$).
+### 2.1 Model Overview
+The 2-compartment model accounts for rapid initial vascular distribution followed by slower reversible exchange with a peripheral tissue compartment.
+
+### 2.2 Micro-Constants & Differential System
+$$\frac{dA_1}{dt} = - (k_{10} + k_{12}) A_1 + k_{21} A_2$$
+$$\frac{dA_2}{dt} = k_{12} A_1 - k_{21} A_2$$
+where:
+- $A_1(t)$ is the drug amount in the central compartment ($V_1$), with plasma concentration $C_p(t) = A_1(t) / V_1$.
+- $A_2(t)$ is the drug amount in the peripheral tissue compartment ($V_2$).
+- $k_{10} = \frac{CL}{V_1}$ (central elimination rate constant).
+- $k_{12} = \frac{Q}{V_1}$ (inter-compartmental transfer rate from central to peripheral).
+- $k_{21} = \frac{Q}{V_2}$ (inter-compartmental transfer rate from peripheral to central).
+- $Q$ is inter-compartmental clearance ($L/h$).
+
+### 2.3 Macro-Constants (Biexponential Solution)
+Following IV bolus administration ($A_1(0) = D, A_2(0) = 0$):
+$$C(t) = A e^{-\alpha t} + B e^{-\beta t}$$
+The hybrid distribution ($\alpha$) and terminal disposition ($\beta$) rate constants satisfy:
+$$\alpha + \beta = k_{10} + k_{12} + k_{21}$$
+$$\alpha \beta = k_{10} k_{21}$$
+$$\alpha, \beta = \frac{(k_{10} + k_{12} + k_{21}) \pm \sqrt{(k_{10} + k_{12} + k_{21})^2 - 4 k_{10} k_{21}}}{2}$$
+The initial coefficient amplitudes are:
+$$A = \frac{D}{V_1} \frac{\alpha - k_{21}}{\alpha - \beta}, \quad B = \frac{D}{V_1} \frac{k_{21} - \beta}{\alpha - \beta}$$
+
+---
+
+## 3. Pharmacodynamics & Effect Compartment (`pharma.pkpd`)
+
+### 3.1 Sigmoid $E_{\max}$ (Hill) Model
+The relationship between concentration and pharmacological effect is governed by the Hill equation:
+$$E(C) = E_0 + \frac{E_{\max} \cdot C^\gamma}{EC_{50}^\gamma + C^\gamma}$$
+where:
+- $E_0$ is the baseline pharmacological effect.
+- $E_{\max}$ is the maximum achievable drug effect above baseline.
+- $EC_{50}$ is the concentration producing 50% of maximum effect.
+- $\gamma$ (Hill coefficient) governs the steepness of the concentration-response sigmoidal curve ($\gamma = 1$: hyperbolic; $\gamma > 1$: positive cooperativity; $\gamma < 1$: shallow response).
+
+### 3.2 Effect Compartment ($k_{e0}$) & Hysteresis
+To capture temporal delay between plasma drug peak and clinical effect (hysteresis loop), a hypothetical effect compartment is modeled:
+$$\frac{dC_e}{dt} = k_{e0} (C_p(t) - C_e(t))$$
+where:
+- $C_e(t)$ is the active biophase / effect-site concentration.
+- $k_{e0}$ is the first-order rate constant of effect equilibration ($h^{-1}$).
+- Half-life of equilibration: $t_{1/2,ke0} = \frac{\ln(2)}{k_{e0}}$.
+
+---
+
+## 4. Adult Covariate Scaling Models
+
+Orbis Lab restricts all covariate modifications strictly to adult physiological bounds (Age 18–90 years, Weight 40–150 kg, Creatinine Clearance 15–150 mL/min). Paediatric populations are strictly unsupported.
 
 ### 4.1 Allometric Weight Scaling
-Allometric scaling reflects physiological scaling laws across body mass:
-$$V_{scaled} = V_{ref} \cdot \left(\frac{WT}{70}\right)^{1.0}$$
-$$CL_{scaled,allometric} = CL_{ref} \cdot \left(\frac{WT}{70}\right)^{0.75}$$
+Based on Kleiber's law and standard physiological allometry:
+$$V_{d,i} = V_{d,\text{ref}} \cdot \left(\frac{W_i}{70}\right)^{1.0}$$
+$$CL_i = CL_{\text{ref}} \cdot \left(\frac{W_i}{70}\right)^{0.75}$$
+where reference values correspond to a standard 70 kg adult.
 
-### 4.2 Renal Function Scaling (Cockcroft-Gault)
-Clearance of renally eliminated drugs is adjusted using estimated creatinine clearance ($CrCl$) and the fraction excreted unchanged in urine ($f_e$):
-$$CL_{adj} = CL_{scaled} \cdot \left[(1 - f_e) + f_e \cdot \frac{CrCl}{100}\right]$$
+### 4.2 Renal Function Adjustment (Cockcroft-Gault Fraction)
+For drugs eliminated in whole or in part by glomerular filtration:
+$$CL_i = CL_{\text{ref}} \cdot \left( (1 - f_e) + f_e \cdot \frac{\text{CrCl}_i}{120} \right)$$
+where:
+- $f_e$ is the fraction of drug eliminated unchanged by the kidneys ($0.0 \le f_e \le 1.0$).
+- $120\text{ mL/min}$ is baseline reference creatinine clearance.
+- Renal impairment tiers:
+  - Normal: $\text{CrCl} \ge 90\text{ mL/min}$
+  - Mild impairment: $60 \le \text{CrCl} < 90\text{ mL/min}$
+  - Moderate impairment: $30 \le \text{CrCl} < 60\text{ mL/min}$
+  - Severe impairment: $15 \le \text{CrCl} < 30\text{ mL/min}$
 
-### 4.3 Adult Bounds & Guardrails
-- **Age**: 18 to 90 years.
-- **Weight**: 40 to 150 kg.
-- **CrCl**: 15 to 150 mL/min.
-- Values outside these bounds are clamped with an educational warning or rejected. Pediatric inputs are explicitly prohibited.
-
----
-
-## 5. Calibrated Drug Library (v2)
-
-| Drug | Model Topology | Default Route | Reference CL (L/h) | Reference Vc (L) | Target Window (mg/L) | Toxic Cutoff (mg/L) | $f_e$ (Renal fraction) |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Theophylline** | 1-Compartment | Oral | 2.8 | 35.0 | 10.0 – 20.0 | > 20.0 | 0.10 |
-| **Vancomycin** | 2-Compartment | IV Infusion | 4.0 | 25.0 ($V_p = 35$) | 15.0 – 20.0 (trough) | > 25.0 | 0.85 |
-| **Gentamicin** | 1-Compartment | IV Infusion / Bolus | 4.5 | 18.0 | 4.0 – 10.0 (peak) | > 12.0 peak / > 2.0 trough | 0.90 |
+### 4.3 Age Scaling
+In elderly adult populations ($\text{Age} > 65$ years), renal and hepatic metabolic reserve declines:
+$$CL_{\text{age}} = CL_i \cdot \left(1.0 - 0.005 \cdot (\text{Age} - 65)\right)$$
+capped at a minimum of 40% of baseline clearance.
 
 ---
 
-## 6. Numerical Verification & Analytic Integrity
+## 5. Virtual Trial v2 Population Methodology (`pharma.trial_v2`)
 
-1. **Analytical vs RK4 Equivalence**: Automated tests in `backend/tests/test_pharma_pkpd.py` verify that explicit 4th-order Runge-Kutta numerical integration matches analytical closed-form equations within $< 1.0\%$ relative tolerance across single- and multi-dose regimens.
-2. **Deterministic Reproducibility**: Given identical patient covariates and dosing parameters, simulation outputs yield bitwise identical floating-point vectors.
-3. **Frozen Baseline Hashes**: SHA-256 reference hashes protect all calibration datasets in `validation/data/` from unrecorded modification.
+### 5.1 Inter-Individual Variability (IIV)
+Pharmacokinetic parameters across virtual cohorts are modeled with log-normal distributions to preserve non-negativity:
+$$P_i = P_{\text{pop}} \cdot \exp(\eta_{P,i}), \quad \eta_{P,i} \sim \mathcal{N}(0, \omega_P^2)$$
+where $\omega_P = \sqrt{\ln(1 + CV^2)}$.
+
+### 5.2 Synthetic Adult Demographic Sampling
+Virtual subjects are generated with realistic physiological distributions:
+- Weight $W_i \sim \mathcal{N}(74.0, 14.0^2)\text{ kg}$, bounded $[40.0, 140.0]$.
+- Age $A_i \sim \mathcal{N}(48.0, 16.0^2)\text{ yr}$, bounded $[18.0, 85.0]$.
+- $\text{CrCl}_i$ derived from age and weight distribution with log-normal variability ($\sim 105 \pm 28\text{ mL/min}$, bounded $[15.0, 150.0]$).
+
+### 5.3 Distribution Analytics & Percentiles
+For cohort sample sizes $N \in [10, 1000]$:
+- Time curves compute 5th, 25th, 50th (median), 75th, and 95th percentiles at each evaluation knot.
+- Population summary metrics calculate mean, standard deviation, interquartile range (IQR), and non-parametric 90% confidence bounds $[P_5, P_{95}]$.
+
+---
+
+## 6. Simplifications, Caveats & First-Order Error Analysis
+
+| Model Assumption | Simplification in Engine | First-Order Error & Clinical Caveat |
+| :--- | :--- | :--- |
+| **Compartment Structure** | 1-compartment model assumes instantaneous mixing across all tissues. | Neglects distribution phase $\alpha$. For highly lipophilic drugs (e.g. fentanyl, propofol), peak concentrations immediately post-dose are underestimated by ~20–40%. |
+| **Linear Elimination** | Elimination rate is strictly first-order ($CL$ is constant over dose). | Fails when metabolic enzymes or transporters saturate (Michaelis-Menten kinetics, e.g. phenytoin, high-dose ethanol, aspirin). Overdoses will exhibit disproportionate non-linear accumulation. |
+| **Protein Binding** | Models simulate total drug concentration, assuming constant free fraction ($f_u$). | Critical illness, severe hypoalbuminemia, or uraemia alters $f_u$ by ~10–50%, altering free active drug exposure without changing measured total drug. |
+| **Bioavailability Variance** | Bioavailability $F$ is treated as constant across doses and meals. | Food effect (high-fat meal delay or enhancement) can shift $t_{\max}$ by 1–3 hours and $F$ by 20–50% in real physiology. |
+| **Absorption Kinetics** | First-order absorption rate $k_a$ assumes uniform GI transit. | Gastric emptying delays, enteric coatings, and colon transit variability create multi-peak or delayed absorption profiles not modeled here. |
+| **Pediatric Kinetics** | Strict prohibition on pediatric modeling. | Maturation of CYP enzymes and glomerular filtration in infants is non-allometric; adults-only formulas must NEVER be extrapolated to children. |
+
+---
+
+## 7. G5 Provenance & Educational Verification Status
+
+All 12 compounds in the Orbis Lab drug library (`backend/data/pharma_drugs.yaml`) are calibrated for educational demonstration and relative dynamic range:
+- **Validation Status:** `unverified` across all compounds.
+- **Retrieved On:** Strictly blank (`""`) per G5 provenance rules.
+- **Verification Statement:** Parameters represent game-balanced educational approximations designed to illustrate pharmacological principles (therapeutic window, half-life, renal clearance adjustment, effect delays), NOT verified patient clinical guidelines or FDA package insert references. Real-world dosing must be determined by qualified healthcare clinicians.

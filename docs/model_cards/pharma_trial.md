@@ -49,3 +49,4 @@ $$\text{CI}_{90\%} = [P_{5}, P_{95}]$$
 ## 6. Changelog
 - `0.2.0-dev`: Initial cohort generator with seeded pseudo-random generator.
 - `0.4.1-dev`: Model card formalized per MVP Specification Section 14.4.
+- `0.7.0-dev`: Retained for backward equivalence; population simulations extended by pharma.trial_v2.

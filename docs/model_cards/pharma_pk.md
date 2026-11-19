@@ -51,3 +51,4 @@ $$C(t) = \frac{\text{Dose}}{V_1} e^{-k_e t}$$
 - `0.2.0-dev`: Initial single-compartment oral simulation and visual contract.
 - `0.4.0-dev`: Parameter boundary locking and provenance documentation.
 - `0.4.1-dev`: Model card standardized per MVP Specification Section 14.4.
+- `0.7.0-dev`: Drug library expanded to 12 compounds with G5 provenance and pedagogical declarations.
