@@ -27,6 +27,18 @@ $$[C](t) = [A]_0 - [A](t) - [B](t)$$
 ### 2.3 Arrhenius Temperature Dependence
 $$k(T) = A \exp\left(-\frac{E_a}{R T}\right), \quad R = 8.314462618\text{ J}/(\text{mol}\cdot\text{K})$$
 
+### 2.4 Reaction Constants & G5 Provenance Table
+All kinetic rate constants and activation parameters are specified under Governance Rule G5 / R5:
+
+| Parameter | Symbol | Nominal Value | Unit | Provenance Label | `retrieved_on` | Physical Caveats & Scope |
+|:---|:---:|:---:|:---:|:---|:---:|:---|
+| First-order rate constant (25 °C) | $k_1$ | 0.05 | $\text{s}^{-1}$ | game-balanced approximate, not label or literature data, human verification needed | *blank* | Model unimolecular decomposition; $t_{1/2} = 13.86\text{ s}$. |
+| Activation energy | $E_a$ | 45,000.0 | $\text{J}/\text{mol}$ | game-balanced approximate, not label or literature data, human verification needed | *blank* | Governs temperature acceleration; $45.0\text{ kJ}/\text{mol}$. |
+| Arrhenius pre-exponential factor | $A$ | $3.5 \times 10^6$ | $\text{s}^{-1}$ | game-balanced approximate, not label or literature data, human verification needed | *blank* | Frequency factor yielding $k=0.05\text{ s}^{-1}$ at $T=298.15\text{ K}$. |
+| Second-order rate constant (25 °C) | $k_2$ | 0.05 | $\text{M}^{-1}\text{s}^{-1}$ | game-balanced approximate, not label or literature data, human verification needed | *blank* | Model bimolecular reaction kinetics. |
+| Zero-order rate constant (25 °C) | $k_0$ | 0.01 | $\text{M}\cdot\text{s}^{-1}$ | game-balanced approximate, not label or literature data, human verification needed | *blank* | Surface-saturated or enzyme-saturated pseudo zero-order regime. |
+| Universal gas constant | $R$ | 8.314462618 | $\text{J}/(\text{mol}\cdot\text{K})$ | CODATA 2018 standard constant | *blank* | Physical constant. |
+
 ---
 
 ## 3. Assumptions & Parameter Bounds

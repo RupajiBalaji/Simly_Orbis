@@ -39,24 +39,40 @@ BUFFER_SYSTEMS = {
         "pka": 4.76,
         "optimal_range": [3.76, 5.76],
         "default_target_ph": 4.75,
+        "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+        "notes": "Acetic acid dissociation constant at 25 °C. pKa is slightly temperature dependent.",
     },
     "phosphate": {
         "name": "Dihydrogen phosphate / Monohydrogen phosphate",
         "pka": 7.20,
         "optimal_range": [6.20, 8.20],
         "default_target_ph": 7.40,
+        "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+        "notes": "Phosphoric acid second dissociation constant Ka2 at 25 °C.",
+    },
+    "bicarbonate": {
+        "name": "Carbonic acid / Sodium bicarbonate",
+        "pka": 6.35,
+        "optimal_range": [5.35, 7.35],
+        "default_target_ph": 6.40,
+        "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+        "notes": "Modeled as an idealized closed aqueous system with no atmospheric CO2 gas exchange. pKa depends on temperature.",
     },
     "formate": {
         "name": "Formic acid / Sodium formate",
         "pka": 3.75,
         "optimal_range": [2.75, 4.75],
         "default_target_ph": 3.80,
+        "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+        "notes": "Formic acid dissociation constant at 25 °C.",
     },
     "tris": {
         "name": "Tris base / Tris-HCl",
         "pka": 8.06,
         "optimal_range": [7.06, 9.06],
         "default_target_ph": 8.10,
+        "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+        "notes": "TRIS buffer pKa exhibits significant negative temperature dependence (dpKa/dT ≈ -0.028/°C).",
     },
 }
 
@@ -65,8 +81,9 @@ BUFFER_BENCH_EXPERIMENT = ExperimentDefinition(
     title="Buffer Solutions & Capacity Bench",
     district="chemistry",
     description=(
-        "Design aqueous buffer systems for target pH values, evaluate Van Slyke buffer capacity, "
-        "and stress-test buffer resistance against strong acid (HCl) and strong base (NaOH) additions."
+        "Design aqueous buffer systems (acetate, phosphate, bicarbonate, TRIS) for target pH values, evaluate Van Slyke buffer capacity, "
+        "and stress-test buffer resistance against strong acid (HCl) and strong base (NaOH) additions. "
+        "Physical caveats: pKa depends on temperature (TRIS especially, dpKa/dT ≈ -0.028/°C), and bicarbonate is modeled as an idealized closed system with no CO2 gas exchange."
     ),
     learning_goals=[
         "Maintain chemical laboratory PPE compliance (goggles, gloves, coat).",

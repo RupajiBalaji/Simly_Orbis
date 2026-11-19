@@ -28,6 +28,18 @@ $$\beta_{\max} = \ln(10) \left( 2\sqrt{K_w} + \frac{C_{\text{total}}}{4} \right)
 ### 2.3 Henderson-Hasselbalch Formula (Educational Reference)
 $$\text{pH} = \text{p}K_a + \log_{10}\left(\frac{[A^-]}{[HA]}\right)$$
 
+### 2.4 Buffer System Constants & G5 Provenance Table
+All thermodynamic dissociation constants are specified at standard reference temperature $25^\circ\text{C}$ (298.15 K) under Governance Rule G5 / R5:
+
+| System ID | Conjugate Pair | $\text{p}K_a$ (at $25^\circ\text{C}$) | Optimal Buffer Range | Provenance Label | `retrieved_on` | Physical Caveats & Limitations |
+|:---|:---|:---:|:---:|:---|:---:|:---|
+| `acetate` | Acetic acid / Sodium acetate | 4.76 | 3.76 – 5.76 | game-balanced approximate, not label or literature data, human verification needed | *blank* | Carboxylate buffer; slight temperature dependence ($\approx -0.0002\text{ K}^{-1}$). |
+| `phosphate` | $\text{H}_2\text{PO}_4^- / \text{HPO}_4^{2-}$ | 7.20 | 6.20 – 8.20 | game-balanced approximate, not label or literature data, human verification needed | *blank* | Second dissociation step $K_{a2}$; moderate ionic strength dependence. |
+| `bicarbonate` | $\text{H}_2\text{CO}_3 / \text{HCO}_3^-$ | 6.35 | 5.35 – 7.35 | game-balanced approximate, not label or literature data, human verification needed | *blank* | **Modeled strictly as a closed system with no atmospheric $\text{CO}_2$ gas exchange.** Open-air $\text{CO}_2$ stripping is neglected. |
+| `tris` | Tris base / Tris-HCl | 8.06 | 7.06 – 9.06 | game-balanced approximate, not label or literature data, human verification needed | *blank* | **$\text{p}K_a$ exhibits strong temperature dependence ($d\text{p}K_a/dT \approx -0.028\text{ K}^{-1}$); $\text{p}K_a$ drops by $\approx 0.28$ units from $20^\circ\text{C}$ to $30^\circ\text{C}$.** |
+| `formate` | Formic acid / Sodium formate | 3.75 | 2.75 – 4.75 | game-balanced approximate, not label or literature data, human verification needed | *blank* | Low molecular weight carboxylic buffer. |
+| `water` | $\text{H}_2\text{O} \rightleftharpoons \text{H}^+ + \text{OH}^-$ ($K_w$) | 14.00 ($1.0\times 10^{-14}$) | N/A | game-balanced approximate, not label or literature data, human verification needed | *blank* | Auto-protolysis product at $25^\circ\text{C}$. |
+
 ---
 
 ## 3. Assumptions & Parameter Bounds
