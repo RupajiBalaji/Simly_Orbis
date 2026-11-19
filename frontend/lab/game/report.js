@@ -137,11 +137,11 @@ export class ReportScreen {
       <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
         <div style="flex:1; min-width:200px; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:10px 14px; font-size:0.85rem;">
           <div style="color:#6ee7b7; font-weight:700; display:flex; align-items:center; gap:6px;">
-            <span>⚖️ Engine Reality Checks</span>
+            <span>⚖️ Self-Consistency Checks</span>
             <span style="background:#10b981; color:#0f172a; font-size:0.75rem; padding:2px 6px; border-radius:4px; font-weight:800;">PASS</span>
           </div>
           <div style="color:#cbd5e1; font-family:var(--font-mono); font-size:0.82rem; margin-top:4px;">
-            Engine reality checks: <strong>${reportData.reality_checks_summary || '11/11 passed'}</strong>
+            Engine self-consistency checks (analytic identities), not validation: <strong>${reportData.reality_checks_summary || '11/11 passed'}</strong>
           </div>
         </div>
 

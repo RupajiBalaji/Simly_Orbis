@@ -110,3 +110,13 @@ Valid only when $[H^+] \ll [HA]$ and $[OH^-] \ll [A^-]$ ($4 < \text{pH} < 10$ an
 | Temperature Effects on $K_a$ | Constant $K_a$ over temperature | van 't Hoff equation $\Delta H^\circ$ | $\approx \pm 0.05\text{ p}K_a$ per $10^\circ\text{C}$ |
 | Reversible Kinetics | Irreversible $A \to P$ assumption | Equilibrium back-reaction $P \to A$ | Negligible for $K_{eq} > 10^3$ |
 | Numerical Dispersion (RK4) | Fixed step size $h \le 0.05\text{ s}$ | Adaptive step-size embedded RK45 | Local truncation error $< 10^{-10}\text{ M}$ |
+
+---
+
+## 5. Self-Consistency Checks vs. Validation Status
+
+The engine `reality_checks()` output represents **engine self-consistency checks (analytic identities), not validation**. 
+
+- `validation/chem_tolerances.yaml` defines parameter boundaries and tolerances with a frozen SHA-256 hash in `validation/chem_tolerances.sha256`, but contains **no reference rows** from external experimental datasets.
+- The 11 reality checks implemented in `ChemKineticsModule` and `ChemBufferModule` verify algebraic and physical self-consistency (e.g. zero-order non-negativity truncation, first-order half-life formula identity $t_{1/2} = \ln(2)/k$, Arrhenius monotonic temperature scaling, electroneutrality charge balance, and equimolar $\text{pH} = \text{p}K_a$ identity).
+- In accordance with Governance Rule G5 / R5, these internal analytic identity checks must not be confused with empirical benchmark validation against real-world chemical assay data. All reference rows remain omitted until exact empirical citations are established; all existing tolerance records are strictly labeled `verified_by: "unverified"` with `retrieved_on: ""`.

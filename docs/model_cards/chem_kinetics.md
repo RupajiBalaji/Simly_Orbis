@@ -47,9 +47,10 @@ $$k(T) = A \exp\left(-\frac{E_a}{R T}\right), \quad R = 8.314462618\text{ J}/(\t
 ---
 
 ## 5. Validation Status & Provenance
-- **Validation File:** `validation/chem_tolerances.yaml` (SHA-256 frozen in `validation/chem_tolerances.sha256`).
-- **Verified Status:** `verified_by: "unverified"`, `retrieved_on: ""` per governance rule R3 & R5.
-- **Reference Literature:** Atkins & de Paula, *Physical Chemistry*, 10th Ed., Oxford University Press, 2014, Chapter 20. Game-balanced approximate, human verification needed.
+- **Engine Self-Consistency Checks:** The engine's `reality_checks()` output represents **engine self-consistency checks (analytic identities), not validation**. It verifies analytic identities (e.g., $t_{1/2} = \ln(2)/k$, mass conservation, and positive monotonicity under Arrhenius scaling).
+- **Validation File:** `validation/chem_tolerances.yaml` (SHA-256 frozen in `validation/chem_tolerances.sha256`). Notice: `chem_tolerances.yaml` has a frozen hash but contains **no reference rows** from external experimental benchmark datasets.
+- **Verified Status:** Strictly `verified_by: "unverified"`, `retrieved_on: ""` per governance rule R3 & R5.
+- **Reference Literature:** Atkins & de Paula, *Physical Chemistry*, 10th Ed., Oxford University Press, 2014, Chapter 20. Game-balanced approximate, not label or literature data, human verification needed.
 
 ---
 

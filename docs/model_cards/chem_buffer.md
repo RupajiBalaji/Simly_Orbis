@@ -49,12 +49,13 @@ $$\text{pH} = \text{p}K_a + \log_{10}\left(\frac{[A^-]}{[HA]}\right)$$
 ---
 
 ## 5. Validation Status & Provenance
-- **Validation File:** `validation/chem_tolerances.yaml` (SHA-256 frozen in `validation/chem_tolerances.sha256`).
-- **Verified Status:** `verified_by: "unverified"`, `retrieved_on: ""` per governance rule R3 & R5.
+- **Engine Self-Consistency Checks:** The engine's `reality_checks()` output represents **engine self-consistency checks (analytic identities), not validation**. It evaluates analytic electroneutrality charge-balance closure and Van Slyke capacity identity at equimolar $\text{pH} = \text{p}K_a$.
+- **Validation File:** `validation/chem_tolerances.yaml` (SHA-256 frozen in `validation/chem_tolerances.sha256`). Notice: `chem_tolerances.yaml` has a frozen hash but contains **no reference rows** from external experimental benchmark datasets.
+- **Verified Status:** Strictly `verified_by: "unverified"`, `retrieved_on: ""` per governance rule R3 & R5.
 - **Reference Literature:** 
   - Van Slyke DD. *J Biol Chem*. 1922;52(2):525-570.
   - Haynes WM, ed. *CRC Handbook of Chemistry and Physics*. 97th ed. CRC Press; 2016.
-  - Atkins & de Paula, *Physical Chemistry*, 10th Ed., Oxford University Press, 2014, Chapter 6. Game-balanced approximate, human verification needed.
+  - Atkins & de Paula, *Physical Chemistry*, 10th Ed., Oxford University Press, 2014, Chapter 6. Game-balanced approximate, not label or literature data, human verification needed.
 
 ---
 
