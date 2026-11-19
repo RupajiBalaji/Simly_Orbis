@@ -66,6 +66,20 @@ class ActionType(str, Enum):
     compare_regimens = "compare_regimens"
     debrief_pkpd = "debrief_pkpd"
 
+    # Reaction Kinetics Bench actions (Phase P3)
+    set_temperature = "set_temperature"
+    prepare_reactant = "prepare_reactant"
+    calibrate_spectrophotometer = "calibrate_spectrophotometer"
+    start_reaction = "start_reaction"
+    record_sampling = "record_sampling"
+    analyze_linear_plots = "analyze_linear_plots"
+    submit_order_estimate = "submit_order_estimate"
+
+    # Buffer Bench actions (Phase P3)
+    prepare_buffer = "prepare_buffer"
+    test_capacity = "test_capacity"
+    stress_buffer = "stress_buffer"
+
 
 # ---------------------------------------------------------------------------
 # Visual Directives Contract (Rendered by 3D Client)

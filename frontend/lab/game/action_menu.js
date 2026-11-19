@@ -766,6 +766,11 @@ export class ActionMenu {
         window.renderTitrationLiveCurve(titCurve);
       }
 
+      // Render kinetics panel for kinetics bench (Spec 9.2 & P3-T4)
+      if (state.session?.experiment_id === 'kinetics_bench' && typeof window.renderKineticsPanel === 'function') {
+        window.renderKineticsPanel(state.session);
+      }
+
       // Refresh session & available actions
       const updatedSession = await api.getSession(state.session.session_id);
       state.setSession(updatedSession);

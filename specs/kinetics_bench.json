@@ -1,0 +1,270 @@
+{
+  "id": "kinetics_bench",
+  "version": "1.0.0",
+  "district": "chemistry",
+  "title": "Reaction Kinetics Bench",
+  "learning_goals": [
+    "Maintain chemical laboratory PPE compliance (goggles, gloves, coat).",
+    "Calibrate spectrophotometer with solvent blank before recording kinetic runs.",
+    "Set and equilibrate reaction temperature using a circulating thermostat bath.",
+    "Collect time-series concentration measurements with realistic measurement noise.",
+    "Construct linearised kinetic plots ([A], ln[A], and 1/[A] vs time).",
+    "Identify reaction order from linear regression correlation coefficients (R^2).",
+    "Calculate experimental rate constants and evaluate temperature dependence.",
+    "Safely neutralize and dispose of chemical reaction mixtures in designated waste."
+  ],
+  "difficulty": "intermediate",
+  "est_minutes": 15,
+  "engine": {
+    "id": "chem.kinetics",
+    "minimum_version": "0.1.0",
+    "parameter_bounds": {
+      "temperature_c": {"min": 10.0, "max": 80.0, "unit": "C", "default": 25.0},
+      "initial_conc_m": {"min": 0.1, "max": 2.0, "unit": "M", "default": 1.0},
+      "duration_s": {"min": 10.0, "max": 300.0, "unit": "s", "default": 60.0},
+      "num_samples": {"min": 5.0, "max": 30.0, "unit": "samples", "default": 12.0}
+    }
+  },
+  "equipment": [
+    "thermostat_bath",
+    "reaction_vessel",
+    "spectrophotometer",
+    "timer",
+    "chemical_waste_bin",
+    "sink"
+  ],
+  "steps": [
+    {
+      "id": "wear_ppe",
+      "title": "Wear Personal Protective Equipment (PPE)",
+      "allowed_actions": ["wear_ppe"],
+      "preconditions": [],
+      "effects": ["ppe_worn"]
+    },
+    {
+      "id": "set_temperature",
+      "title": "Set Reaction Temperature",
+      "allowed_actions": ["set_temperature"],
+      "preconditions": [],
+      "effects": ["temperature_set"]
+    },
+    {
+      "id": "prepare_reactant",
+      "title": "Prepare Reactant Solution",
+      "allowed_actions": ["prepare_reactant"],
+      "preconditions": [],
+      "effects": ["reactant_charged"]
+    },
+    {
+      "id": "calibrate_spectrophotometer",
+      "title": "Calibrate Spectrophotometer Blank",
+      "allowed_actions": ["calibrate_spectrophotometer"],
+      "preconditions": [],
+      "effects": ["spectrophotometer_calibrated"]
+    },
+    {
+      "id": "start_reaction",
+      "title": "Initiate Reaction Run",
+      "allowed_actions": ["start_reaction"],
+      "preconditions": [],
+      "effects": ["reaction_running"]
+    },
+    {
+      "id": "record_sampling",
+      "title": "Collect Kinetic Samples",
+      "allowed_actions": ["record_sampling"],
+      "preconditions": [],
+      "effects": ["samples_recorded"]
+    },
+    {
+      "id": "analyze_linear_plots",
+      "title": "Analyze Linearised Rate Plots",
+      "allowed_actions": ["analyze_linear_plots"],
+      "preconditions": [],
+      "effects": ["linear_plots_analyzed"]
+    },
+    {
+      "id": "submit_order_estimate",
+      "title": "Submit Order & Rate Constant Estimate",
+      "allowed_actions": ["submit_order_estimate"],
+      "preconditions": [],
+      "effects": ["estimate_submitted"]
+    },
+    {
+      "id": "dispose_waste",
+      "title": "Dispose Chemical Waste",
+      "allowed_actions": ["dispose_waste"],
+      "preconditions": [],
+      "effects": ["waste_disposed"]
+    },
+    {
+      "id": "wash_hands",
+      "title": "Wash Hands at Sink",
+      "allowed_actions": ["wash_hands"],
+      "preconditions": [],
+      "effects": ["hands_washed"]
+    },
+    {
+      "id": "submit_report",
+      "title": "Submit Final Laboratory Report",
+      "allowed_actions": ["submit_report"],
+      "preconditions": [],
+      "effects": ["report_submitted"]
+    }
+  ],
+  "rules": [
+    {
+      "id": "R1",
+      "text": "Full PPE (goggles, gloves, coat) must be worn before touching chemicals.",
+      "severity": "penalty",
+      "condition": "ppe_worn",
+      "hint": "Put on safety goggles, gloves, and coat before handling reactant reagents."
+    },
+    {
+      "id": "R2",
+      "text": "Dispose chemicals into designated chemical waste bin, never in sink.",
+      "severity": "fail",
+      "condition": "waste_disposed",
+      "hint": "Always discard spent reaction solutions into the chemical waste receptacle."
+    },
+    {
+      "id": "R4",
+      "text": "Always wash hands at sink before leaving laboratory bench.",
+      "severity": "penalty",
+      "condition": "hands_washed",
+      "hint": "Clean hands with soap and water after handling chemical apparatus."
+    },
+    {
+      "id": "K1",
+      "text": "Calibrate spectrophotometer with solvent blank before taking kinetic readings.",
+      "severity": "penalty",
+      "condition": "spectrophotometer_calibrated",
+      "hint": "Zero the optical detector using a solvent blank cuvette."
+    },
+    {
+      "id": "K2",
+      "text": "Do not operate thermostat bath above 80°C to avoid solvent vapor hazards.",
+      "severity": "penalty",
+      "condition": "temperature_safe",
+      "hint": "Keep reaction temperature within the safe 10-80°C operating window."
+    }
+  ],
+  "scoring": {
+    "weights": {
+      "safety": 30,
+      "accuracy": 40,
+      "technique": 20,
+      "protocol": 10
+    },
+    "grade_thresholds": {
+      "A": 90,
+      "B": 80,
+      "C": 70,
+      "D": 60
+    }
+  },
+  "visual_directive_mapping": {
+    "prepare_reactant": {
+      "type": "liquid",
+      "target": "reaction_vessel",
+      "hex": "#38bdf8"
+    },
+    "start_reaction": {
+      "type": "effect",
+      "target": "reaction_vessel",
+      "name": "bubbles"
+    },
+    "calibrate_spectrophotometer": {
+      "type": "effect",
+      "target": "spectrophotometer",
+      "name": "glow"
+    },
+    "record_sampling": {
+      "type": "readout",
+      "target": "spectrophotometer"
+    }
+  },
+  "mentor": {
+    "hints_per_step": {
+      "wear_ppe": ["Put on goggles, gloves, and lab coat before handling glassware."],
+      "set_temperature": ["Set the water bath to standard room temperature (25 °C) or desired experimental setpoint."],
+      "prepare_reactant": ["Pipette standard reactant solution into the reaction vessel."],
+      "calibrate_spectrophotometer": ["Always zero the spectrophotometer with pure solvent before measuring reaction mixtures."],
+      "start_reaction": ["Mix reactants and trigger the timer to monitor concentration decay."],
+      "record_sampling": ["Collect regular time-series samples to obtain an accurate kinetic profile."],
+      "analyze_linear_plots": ["Compare R-squared values for [A] vs t (order 0), ln[A] vs t (order 1), and 1/[A] vs t (order 2)."],
+      "submit_order_estimate": ["The plot with R-squared closest to 1.0 reveals the true reaction order."],
+      "dispose_waste": ["Empty reaction vessel into the chemical waste bin."],
+      "wash_hands": ["Clean hands at sink with running water."],
+      "submit_report": ["Review your kinetic parameters and submit your final report."]
+    },
+    "common_mistakes": [
+      {
+        "id": "uncalibrated_detector",
+        "trigger": "record_sampling_without_calibrate",
+        "remedy": "Zero spectrophotometer with solvent blank before taking kinetic readings."
+      }
+    ]
+  },
+  "ask_orbis": {
+    "allowed_actions": [
+      "wear_ppe",
+      "set_temperature",
+      "prepare_reactant",
+      "calibrate_spectrophotometer",
+      "start_reaction",
+      "record_sampling",
+      "analyze_linear_plots",
+      "submit_order_estimate",
+      "dispose_waste",
+      "wash_hands",
+      "submit_report"
+    ],
+    "synonyms": {
+      "wear_ppe": ["put on ppe", "don safety gear", "wear goggles", "put on gloves"],
+      "set_temperature": ["set temp", "change temperature", "adjust water bath", "set thermostat"],
+      "prepare_reactant": ["add reactant", "pipette reactant", "charge vessel", "pour reactant a"],
+      "calibrate_spectrophotometer": ["calibrate spec", "zero spectrometer", "blank cuvette", "zero blank"],
+      "start_reaction": ["start run", "begin kinetics", "trigger reaction", "start kinetic trial"],
+      "record_sampling": ["take samples", "measure absorbance", "record readings", "sample concentration"],
+      "analyze_linear_plots": ["plot data", "linear regression", "find order", "plot ln a", "check linearity"],
+      "submit_order_estimate": ["submit estimate", "submit order", "record order", "enter rate constant"],
+      "dispose_waste": ["empty vessel", "dispose chemicals", "throw waste", "dump reaction mixture"],
+      "wash_hands": ["clean hands", "wash up", "soap and water"],
+      "submit_report": ["finish lab", "complete experiment", "submit report", "generate report"]
+    }
+  },
+  "model_card": "docs/model_cards/chem_kinetics.md",
+  "provenance": {
+    "author": "Antigravity Chemistry Team",
+    "model_card": "docs/model_cards/chem_kinetics.md",
+    "constants": {
+      "r_gas_constant": {
+        "value": 8.314462618,
+        "unit": "J/(mol*K)",
+        "source": "CODATA Recommended Values of the Fundamental Physical Constants: 2018",
+        "citation": "NIST SP 959",
+        "verified_by": "unverified",
+        "retrieved_on": ""
+      }
+    },
+    "notes": "Physical chemistry standard integrated rate laws and Arrhenius formulation. Game-balanced approximate, human verification needed."
+  },
+  "approved": true,
+  "approval_status": "approved",
+  "i18n_keys": {
+    "title": "experiments.kinetics_bench.title",
+    "description": "experiments.kinetics_bench.description",
+    "steps.wear_ppe.title": "experiments.kinetics_bench.steps.wear_ppe.title",
+    "steps.set_temperature.title": "experiments.kinetics_bench.steps.set_temperature.title",
+    "steps.prepare_reactant.title": "experiments.kinetics_bench.steps.prepare_reactant.title",
+    "steps.calibrate_spectrophotometer.title": "experiments.kinetics_bench.steps.calibrate_spectrophotometer.title",
+    "steps.start_reaction.title": "experiments.kinetics_bench.steps.start_reaction.title",
+    "steps.record_sampling.title": "experiments.kinetics_bench.steps.record_sampling.title",
+    "steps.analyze_linear_plots.title": "experiments.kinetics_bench.steps.analyze_linear_plots.title",
+    "steps.submit_order_estimate.title": "experiments.kinetics_bench.steps.submit_order_estimate.title",
+    "steps.dispose_waste.title": "experiments.kinetics_bench.steps.dispose_waste.title",
+    "steps.wash_hands.title": "experiments.kinetics_bench.steps.wash_hands.title",
+    "steps.submit_report.title": "experiments.kinetics_bench.steps.submit_report.title"
+  }
+}

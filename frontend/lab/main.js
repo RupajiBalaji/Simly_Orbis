@@ -21,6 +21,7 @@ import { DrOrbisMentor } from './game/mentor.js';
 import { RealityCheckPanel } from './game/reality_check_panel.js';
 import { AskOrbisAgentPanel } from './game/agent_panel.js';
 import { renderTitrationLiveCurve } from './game/titration_curve_view.js';
+import { renderKineticsPanel } from './game/kinetics_view.js';
 import { toast } from './game/toast.js';
 import { soundFX } from './audio/sound_fx.js';
 import { runCameraAcceptanceTest } from './world/camera_test.js';

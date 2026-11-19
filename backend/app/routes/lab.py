@@ -145,6 +145,9 @@ async def available_actions(session_id: str) -> list[AvailableAction]:
     if not doc:
         raise HTTPException(status_code=404, detail=f"Lab session '{session_id}' not found.")
     session = LabSession(**doc)
+    if session.experiment_id == "kinetics_bench":
+        from app.lab.experiments.kinetics_bench import get_kinetics_available_actions
+        return get_kinetics_available_actions(session)
     return get_available_actions(session)
 
 
@@ -159,7 +162,11 @@ async def execute_action(session_id: str, body: ActionRequest) -> ActionResult:
         body.params["text"] = sanitize_text(body.params.get("text", ""), max_length=60)
 
     session = LabSession(**doc)
-    result = apply_action(session, body)
+    if session.experiment_id == "kinetics_bench":
+        from app.lab.experiments.kinetics_bench import apply_kinetics_action
+        result = apply_kinetics_action(session, body)
+    else:
+        result = apply_action(session, body)
 
     # Attach live titration curve for chemistry titration experiment
     if session.experiment_id == "titration_bench":

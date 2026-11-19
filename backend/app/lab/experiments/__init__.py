@@ -10,6 +10,7 @@ from pathlib import Path
 from app.config import settings
 from app.lab.experiments.base import ExperimentDefinition
 from app.lab.experiments.dose_lab import DOSE_LAB_EXPERIMENT
+from app.lab.experiments.kinetics_bench import KINETICS_BENCH_EXPERIMENT
 from app.lab.experiments.launch_bench import LAUNCH_BENCH_EXPERIMENT
 from app.lab.experiments.pk_ward import PK_WARD_EXPERIMENT
 from app.lab.experiments.titration import TITRATION_BENCH_EXPERIMENT
@@ -19,6 +20,7 @@ _EXPERIMENTS: dict[str, ExperimentDefinition] = {
     TITRATION_BENCH_EXPERIMENT.id: TITRATION_BENCH_EXPERIMENT,
     LAUNCH_BENCH_EXPERIMENT.id: LAUNCH_BENCH_EXPERIMENT,
     DOSE_LAB_EXPERIMENT.id: DOSE_LAB_EXPERIMENT,
+    KINETICS_BENCH_EXPERIMENT.id: KINETICS_BENCH_EXPERIMENT,
 }
 
 _SPECS_CACHE: dict[str, ExperimentDefinition] = {}

@@ -12,6 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field
 DISTRICTS = {"chemistry", "pharma", "space"}
 SUPPORTED_ENGINES = {
     "chem.titration",
+    "chem.kinetics",
+    "chem.buffer",
     "pharma.pk",
     "pharma.trial",
     "pharma.pkpd",
@@ -44,6 +46,19 @@ ENGINE_LIMITS: dict[str, dict[str, tuple[float, float]]] = {
         "analyte_molarity": (0.001, 5.0),
         "titrant_molarity": (0.001, 5.0),
         "temperature_c": (0.0, 100.0),
+    },
+    "chem.kinetics": {
+        "temperature_c": (10.0, 80.0),
+        "initial_conc_m": (0.05, 5.0),
+        "duration_s": (5.0, 600.0),
+        "num_samples": (2.0, 50.0),
+    },
+    "chem.buffer": {
+        "acid_conc_m": (0.0001, 5.0),
+        "salt_conc_m": (0.0001, 5.0),
+        "volume_ml": (10.0, 1000.0),
+        "pka": (1.0, 14.0),
+        "stress_volume_ml": (0.0, 200.0),
     },
     "pharma.pk": {
         "dose_mg": (1.0, 5000.0),
