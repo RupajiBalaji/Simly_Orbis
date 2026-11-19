@@ -1,0 +1,140 @@
+"""
+backend/tests/test_titration_live_curve.py
+Verification suite for Titration Live Curve & Indicator Transition Band (Spec 9.2 & P3-T3).
+
+Standard:
+- Live curve points drawn from backend simulation through an ADDED field.
+- Indicator transition band correctly rendered for phenolphthalein, methyl orange, bromothymol blue.
+- DOM chart summary equals API outcome.
+"""
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+
+from app.chem.titration_curve import INDICATOR_BANDS, build_titration_curve
+from app.main import app
+
+
+# ===========================================================================
+# 1. Pure Engine & Curve Generator Tests
+# ===========================================================================
+
+def test_build_titration_curve_strong_acid():
+    curve = build_titration_curve(
+        analyte="hcl_0.1M",
+        analyte_volume_ml=25.0,
+        titrant_conc_m=0.1,
+        titrant_added_ml=20.0,
+        indicator="phenolphthalein",
+    )
+    assert curve["analyte"] == "hcl_0.1M"
+    assert curve["equivalence_volume_ml"] == 25.0
+    assert curve["equivalence_ph"] == 7.0
+    assert len(curve["points"]) >= 20
+    assert curve["indicator_band"]["transition_low"] == 8.2
+    assert curve["indicator_band"]["transition_high"] == 10.0
+    assert "summary_text" in curve
+    assert "pH:" in curve["summary_text"]
+    assert "Equivalence: 25.00 mL" in curve["summary_text"]
+
+
+def test_build_titration_curve_weak_acid():
+    curve = build_titration_curve(
+        analyte="acetic_0.1M",
+        analyte_volume_ml=25.0,
+        titrant_conc_m=0.1,
+        titrant_added_ml=12.5,
+        indicator="phenolphthalein",
+    )
+    assert curve["analyte"] == "acetic_0.1M"
+    assert curve["equivalence_volume_ml"] == 25.0
+    # Equivalence pH for 0.05 M sodium acetate is ~8.72
+    assert 8.5 < curve["equivalence_ph"] < 9.0
+    # Half equivalence pH is close to pKa 4.76
+    assert abs(curve["current_ph"] - 4.76) < 0.1
+
+
+def test_indicator_bands_metadata():
+    for ind_name in ("phenolphthalein", "methyl_orange", "bromothymol_blue"):
+        assert ind_name in INDICATOR_BANDS
+        band = INDICATOR_BANDS[ind_name]
+        assert "transition_low" in band
+        assert "transition_high" in band
+        assert band["transition_low"] < band["transition_high"]
+        assert "color_acid" in band
+        assert "color_base" in band
+
+
+# ===========================================================================
+# 2. API Endpoint & Added Field Verification
+# ===========================================================================
+
+@pytest.mark.asyncio
+async def test_api_action_attaches_titration_curve_field(client: AsyncClient):
+    # Create titration session
+    res = await client.post("/api/lab/sessions", json={"experiment_id": "titration_bench", "nickname": "Chemist"})
+    assert res.status_code == 201
+    sess_data = res.json()
+    sid = sess_data["session_id"]
+
+    # Wear PPE
+    await client.post(f"/api/lab/sessions/{sid}/actions", json={"action": "wear_ppe", "params": {"item": "all"}})
+    # Fill burette
+    await client.post(f"/api/lab/sessions/{sid}/actions", json={"action": "fill_burette", "params": {"titrant": "naoh_0.1M", "volume_ml": 50.0}})
+    # Pipette analyte
+    await client.post(f"/api/lab/sessions/{sid}/actions", json={"action": "pipette_analyte", "params": {"analyte": "hcl_0.1M", "volume_ml": 25.0}})
+    # Add indicator
+    await client.post(f"/api/lab/sessions/{sid}/actions", json={"action": "add_indicator", "params": {"indicator": "phenolphthalein", "drops": 3}})
+
+    # Perform titrate action (single dispense clamped to 10.0 mL max)
+    act_res = await client.post(f"/api/lab/sessions/{sid}/actions", json={"action": "titrate", "params": {"volume_ml": 10.0}})
+    assert act_res.status_code == 200
+    data = act_res.json()
+
+    # Verify ADDED field 'titration_curve'
+    assert "titration_curve" in data, "ActionResult must contain added field 'titration_curve'"
+    tc = data["titration_curve"]
+    assert tc is not None
+    assert tc["titrant_added_ml"] == 10.0
+    assert tc["indicator"] == "phenolphthalein"
+    assert tc["indicator_band"]["transition_low"] == 8.2
+    assert tc["indicator_band"]["transition_high"] == 10.0
+    assert len(tc["points"]) > 10
+
+    # Verify stored apparatus state in session also has titration_curve
+    sess_res = await client.get(f"/api/lab/sessions/{sid}")
+    assert sess_res.status_code == 200
+    sess_detail = sess_res.json()
+    flask = sess_detail["apparatus_state"]["conical_flask"]
+    assert "titration_curve" in flask
+    assert flask["titration_curve"]["titrant_added_ml"] == 10.0
+
+
+# ===========================================================================
+# 3. DOM Chart Summary Equals API Outcome Contract
+# ===========================================================================
+
+def test_dom_chart_summary_equals_api_outcome():
+    """
+    Contract assertion: verify that formatting DOM summary from curveData
+    produces the exact string generated by backend summary_text.
+    """
+    curve = build_titration_curve(
+        analyte="hcl_0.1M",
+        analyte_volume_ml=25.0,
+        titrant_conc_m=0.1,
+        titrant_added_ml=25.0,
+        indicator="phenolphthalein",
+    )
+    expected_api_summary = curve["summary_text"]
+
+    # Emulate frontend DOM formatter logic
+    dom_text = (
+        f"pH: {curve['current_ph']:.2f} | V: {curve['titrant_added_ml']:.2f} mL | "
+        f"Equivalence: {curve['equivalence_volume_ml']:.2f} mL (pH {curve['equivalence_ph']:.2f}) | "
+        f"Indicator Band: {curve['indicator_band']['transition_low']:.1f}-{curve['indicator_band']['transition_high']:.1f}"
+    )
+
+    assert dom_text == expected_api_summary, (
+        f"DOM chart summary representation mismatch:\nDOM: {dom_text}\nAPI: {expected_api_summary}"
+    )

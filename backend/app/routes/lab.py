@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 
 from app import db as _db
 from app.config import settings
+from app.chem.titration_curve import build_titration_curve
 from app.lab.engine import apply_action, create_session, get_available_actions
 from app.lab.experiments import get_experiment, list_experiments
 from app.lab.agent import AgentPlanRequest, AgentPlanResponse, generate_plan
@@ -159,6 +160,21 @@ async def execute_action(session_id: str, body: ActionRequest) -> ActionResult:
 
     session = LabSession(**doc)
     result = apply_action(session, body)
+
+    # Attach live titration curve for chemistry titration experiment
+    if session.experiment_id == "titration_bench":
+        flask = session.apparatus_state.get("conical_flask", {})
+        analyte = flask.get("analyte") or "hcl_0.1M"
+        titrant_added = float(flask.get("titrant_added_ml", 0.0))
+        indicator = flask.get("indicator") or "phenolphthalein"
+        curve = build_titration_curve(
+            analyte=analyte,
+            analyte_volume_ml=25.0,
+            titrant_added_ml=titrant_added,
+            indicator=indicator,
+        )
+        result.titration_curve = curve
+        flask["titration_curve"] = curve
 
     # Persist updated session
     await _db.upsert_lab_session(session.model_dump())

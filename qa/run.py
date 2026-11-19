@@ -657,6 +657,20 @@ class QAHarnessRunner:
                 page.wait_for_timeout(300)
                 self.execute_action_shot(page, "titrate", "burette", {"volume_ml": 5.0}, "titration_action_5_endpoint")
 
+                # P3-T3 Assertion: DOM chart summary equals API outcome
+                curve_assert = page.evaluate("""() => {
+                    const el = document.getElementById('titration-curve-summary');
+                    const sess = window.state?.session;
+                    const flask = sess?.apparatus_state?.conical_flask;
+                    const titCurve = flask?.titration_curve;
+                    if (!el || !titCurve) return { ok: false, error: 'Element or titration_curve missing' };
+                    const domText = el.textContent.trim();
+                    const apiText = titCurve.summary_text ? titCurve.summary_text.trim() : '';
+                    return { ok: domText === apiText, dom: domText, api: apiText };
+                }""")
+                assert curve_assert["ok"], f"DOM chart summary '{curve_assert.get('dom')}' != API outcome '{curve_assert.get('api')}'"
+                print(f"  [QA Titration] P3-T3 Live Curve Assertion PASSED: DOM chart summary equals API outcome: {curve_assert.get('dom')}")
+
                 print("  [QA] CP2 Proof 4: Titration Endpoint Color Change & Meniscus Mesh...")
                 page.evaluate("""() => {
                     const sm = window.sceneManager;

@@ -33,14 +33,12 @@ import app.db as _db
 @pytest_asyncio.fixture
 async def client():
     """
-    Spin up the full ASGI app (with lifespan) and return an httpx client.
-
-    We drive the lifespan manually via the app's router context manager so
-    that init_db() populates _db.database before any request arrives.
+    Spin up the full ASGI app and return an httpx client.
+    Ensures init_db() populates _db.database before any request arrives.
     """
-    async with app.router.lifespan_context(app):
-        async with AsyncClient(
-            transport=ASGITransport(app=app),
-            base_url="http://test",
-        ) as ac:
-            yield ac
+    await _db.init_db()
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as ac:
+        yield ac

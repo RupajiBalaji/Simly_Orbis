@@ -190,6 +190,7 @@ class ActionResult(BaseModel):
     score_delta: int = 0
     hints: list[str] = Field(default_factory=list)
     status: Literal["active", "completed", "failed"] = "active"
+    titration_curve: dict[str, Any] | None = None
 
 
 class MentorRequest(BaseModel):

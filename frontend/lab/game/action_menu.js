@@ -760,6 +760,12 @@ export class ActionMenu {
         window.dosePanel.processSimulationResult(result);
       }
 
+      // Render live titration curve with indicator transition band (Spec 9.2 & P3-T3)
+      const titCurve = result?.titration_curve || state.session?.apparatus_state?.conical_flask?.titration_curve;
+      if (titCurve && typeof window.renderTitrationLiveCurve === 'function') {
+        window.renderTitrationLiveCurve(titCurve);
+      }
+
       // Refresh session & available actions
       const updatedSession = await api.getSession(state.session.session_id);
       state.setSession(updatedSession);
