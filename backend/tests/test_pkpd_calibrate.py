@@ -119,3 +119,41 @@ def test_holdout_misspecified_model_reports_worse_test_error():
     assert metrics.test_rmse > 0.1
     assert "cl" in metrics.fitted_params
     assert "v1" in metrics.fitted_params
+
+
+@pytest.mark.asyncio
+async def test_api_calibration_endpoint():
+    """Verify HTTP API endpoint for parameter calibration and holdout reporting."""
+    from httpx import ASGITransport, AsyncClient
+    from app.main import app
+
+    csv_data = """time_h,concentration
+0.5,3.2
+1.0,6.5
+2.0,8.1
+4.0,5.4
+8.0,2.1
+12.0,0.8
+16.0,0.3
+24.0,0.05
+"""
+    payload = {
+        "csv_data": csv_data,
+        "route": "oral",
+        "dose_mg": 500.0,
+        "model_type": "one_compartment",
+        "train_ratio": 0.7,
+    }
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        res = await client.post("/api/pharma/calibrate", json=payload)
+        assert res.status_code == 200
+        data = res.json()
+        assert data["label"] == "fit to your data, not validation"
+        assert "cl" in data["fitted_params"]
+        assert "v1" in data["fitted_params"]
+        assert "ka" in data["fitted_params"]
+        assert data["train_rmse"] >= 0.0
+        assert data["test_rmse"] >= 0.0
+        assert data["converged"] is True
