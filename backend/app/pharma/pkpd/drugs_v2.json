@@ -15,7 +15,20 @@
     "target_window_high": 20.0,
     "max_game_dose_mg": 1000.0,
     "what_this_drug_teaches": "First-order oral absorption kinetics vs zero-order rate-controlled infusion; hepatic metabolism with minimal unchanged renal excretion.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Rawlins MD et al. Eur J Clin Pharmacol. 1977;11(4):283-286. doi:10.1007/BF00607678 (human verification needed)",
+      "v1": "Forrest JA et al. Clin Pharmacokinet. 1982;7(2):93-107. doi:10.2165/00003088-198207020-00001 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "game-balanced approximate, not label or literature data, human verification needed",
+      "ka": "Rawlins MD et al. Eur J Clin Pharmacol. 1977;11(4):283-286. doi:10.1007/BF00607678 (human verification needed)",
+      "f_bioav": "Prescott LF. Br J Clin Pharmacol. 1980;10(Suppl 2):291S-298S. doi:10.1111/j.1365-2125.1980.tb01812.x (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Prescott LF. Br J Clin Pharmacol. 1980;10(Suppl 2):291S-298S (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Acetaminophen 500 mg Oral Tablet (NDA 019794) (human verification needed)"
+    }
   },
   "ibuprofen": {
     "name": "Ibuprofen",
@@ -33,7 +46,20 @@
     "target_window_high": 30.0,
     "max_game_dose_mg": 800.0,
     "what_this_drug_teaches": "Extensively plasma protein-bound NSAID with small volume of distribution (0.15 L/kg) and rapid first-order oral absorption.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Davies NM. Clin Pharmacokinet. 1998;34(2):101-154. doi:10.2165/00003088-199834020-00002 (human verification needed)",
+      "v1": "Davies NM. Clin Pharmacokinet. 1998;34(2):101-154. doi:10.2165/00003088-199834020-00002 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "game-balanced approximate, not label or literature data, human verification needed",
+      "ka": "Albert KS, Gernaat CM. Am J Med. 1984;77(1A):40-46. doi:10.1016/s0002-9343(84)80017-0 (human verification needed)",
+      "f_bioav": "Albert KS, Gernaat CM. Am J Med. 1984;77(1A):40-46. doi:10.1016/s0002-9343(84)80017-0 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Davies NM. Clin Pharmacokinet. 1998;34(2):101-154 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Motrin 400 mg Tablets (NDA 017463) (human verification needed)"
+    }
   },
   "caffeine": {
     "name": "Caffeine",
@@ -51,7 +77,20 @@
     "target_window_high": 8.0,
     "max_game_dose_mg": 300.0,
     "what_this_drug_teaches": "Rapid and virtually complete oral absorption (F near 1.0) with total body water distribution.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Blanchard J, Sawers SJ. Eur J Clin Pharmacol. 1983;24(1):93-98. doi:10.1007/BF00613933 (human verification needed)",
+      "v1": "Blanchard J, Sawers SJ. Eur J Clin Pharmacol. 1983;24(1):93-98. doi:10.1007/BF00613933 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "game-balanced approximate, not label or literature data, human verification needed",
+      "ka": "Bonati M et al. Clin Pharmacokinet. 1982;7(1):1-25. doi:10.2165/00003088-198207010-00001 (human verification needed)",
+      "f_bioav": "Bonati M et al. Clin Pharmacokinet. 1982;7(1):1-25. doi:10.2165/00003088-198207010-00001 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Tang-Liu DD et al. J Pharmacokinet Biopharm. 1983;11(3):265-273 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "game-balanced approximate, not label or literature data, human verification needed"
+    }
   },
   "aspirin": {
     "name": "Aspirin (Acetylsalicylic Acid)",
@@ -69,7 +108,20 @@
     "target_window_high": 30.0,
     "max_game_dose_mg": 1000.0,
     "what_this_drug_teaches": "Rapid esterase hydrolysis producing extremely short parent drug half-life and conversion to active salicylate.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Needs CJ, Brooks PM. Clin Pharmacokinet. 1985;10(2):164-177. doi:10.2165/00003088-198510020-00004 (human verification needed)",
+      "v1": "Needs CJ, Brooks PM. Clin Pharmacokinet. 1985;10(2):164-177. doi:10.2165/00003088-198510020-00004 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "game-balanced approximate, not label or literature data, human verification needed",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "Needs CJ, Brooks PM. Clin Pharmacokinet. 1985;10(2):164-177 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA OTC Monograph: Aspirin (human verification needed)"
+    }
   },
   "amoxicillin": {
     "name": "Amoxicillin",
@@ -87,7 +139,20 @@
     "target_window_high": 10.0,
     "max_game_dose_mg": 1000.0,
     "what_this_drug_teaches": "Predominantly renally cleared aminopenicillin (fe = 0.70) where impaired creatinine clearance sharply decreases clearance.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Sjovall J et al. Clin Pharmacokinet. 1985;10(2):184-188. doi:10.2165/00003088-198510020-00005 (human verification needed)",
+      "v1": "Sjovall J et al. Clin Pharmacokinet. 1985;10(2):184-188. doi:10.2165/00003088-198510020-00005 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "game-balanced approximate, not label or literature data, human verification needed",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "Sjovall J et al. Clin Pharmacokinet. 1985;10(2):184-188 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Sjovall J et al. Clin Pharmacokinet. 1985;10(2):184-188 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Amoxil (NDA 050542) (human verification needed)"
+    }
   },
   "metformin": {
     "name": "Metformin",
@@ -105,7 +170,20 @@
     "target_window_high": 3.0,
     "max_game_dose_mg": 1000.0,
     "what_this_drug_teaches": "Deep tissue erythrocyte and gut accumulation (two-compartment) with almost exclusively unchanged renal tubular secretion.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Graham GG et al. Clin Pharmacokinet. 2011;50(2):81-98. doi:10.2165/11534750-000000000-00000 (human verification needed)",
+      "v1": "Graham GG et al. Clin Pharmacokinet. 2011;50(2):81-98. doi:10.2165/11534750-000000000-00000 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "Graham GG et al. Clin Pharmacokinet. 2011;50(2):81-98 (human verification needed)",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "Graham GG et al. Clin Pharmacokinet. 2011;50(2):81-98 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Graham GG et al. Clin Pharmacokinet. 2011;50(2):81-98 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Glucophage (NDA 020357) (human verification needed)"
+    }
   },
   "atenolol": {
     "name": "Atenolol",
@@ -123,7 +201,20 @@
     "target_window_high": 1.0,
     "max_game_dose_mg": 100.0,
     "what_this_drug_teaches": "Hydrophilic beta-blocker with moderate incomplete oral bioavailability and heavy renal excretion dependence.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Mason WD et al. Clin Pharmacol Ther. 1979;25(4):408-415. doi:10.1002/cpt1979254408 (human verification needed)",
+      "v1": "Mason WD et al. Clin Pharmacol Ther. 1979;25(4):408-415. doi:10.1002/cpt1979254408 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "game-balanced approximate, not label or literature data, human verification needed",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "Mason WD et al. Clin Pharmacol Ther. 1979;25(4):408-415 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Mason WD et al. Clin Pharmacol Ther. 1979;25(4):408-415 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Tenormin (NDA 018240) (human verification needed)"
+    }
   },
   "theophylline": {
     "name": "Theophylline",
@@ -141,7 +232,20 @@
     "target_window_high": 20.0,
     "max_game_dose_mg": 400.0,
     "what_this_drug_teaches": "Classic narrow therapeutic index methylxanthine where small dose adjustments determine safety vs toxicity.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Hendeles L et al. Clin Pharmacokinet. 1978;3(4):294-312. doi:10.2165/00003088-197803040-00003 (human verification needed)",
+      "v1": "Hendeles L et al. Clin Pharmacokinet. 1978;3(4):294-312. doi:10.2165/00003088-197803040-00003 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "game-balanced approximate, not label or literature data, human verification needed",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "Hendeles L et al. Clin Pharmacokinet. 1978;3(4):294-312 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Hendeles L et al. Clin Pharmacokinet. 1978;3(4):294-312 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Theo-Dur (NDA 085023) (human verification needed)"
+    }
   },
   "gentamicin": {
     "name": "Gentamicin",
@@ -159,7 +263,20 @@
     "target_window_high": 12.0,
     "max_game_dose_mg": 350.0,
     "what_this_drug_teaches": "Aminoglycoside antibiotic requiring peak concentration for bactericidal efficacy and low trough to avoid renal accumulation.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Schentag JJ et al. J Pharmacokinet Biopharm. 1977;5(6):559-577. doi:10.1007/BF01061937 (human verification needed)",
+      "v1": "Schentag JJ et al. J Pharmacokinet Biopharm. 1977;5(6):559-577. doi:10.1007/BF01061937 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "Schentag JJ et al. J Pharmacokinet Biopharm. 1977;5(6):559-577 (human verification needed)",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "game-balanced approximate, not label or literature data, human verification needed",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Schentag JJ et al. J Pharmacokinet Biopharm. 1977;5(6):559-577 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Gentamicin Sulfate Injection (ANDA 062366) (human verification needed)"
+    }
   },
   "vancomycin": {
     "name": "Vancomycin",
@@ -177,7 +294,20 @@
     "target_window_high": 25.0,
     "max_game_dose_mg": 1500.0,
     "what_this_drug_teaches": "Two-compartment glycopeptide antibiotic infused slowly to avoid histamine release and monitored by target AUC/MIC and trough.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Rybak MJ et al. Am J Health Syst Pharm. 2020;77(11):835-864. doi:10.1093/ajhp/zxaa036 (human verification needed)",
+      "v1": "Rybak MJ et al. Am J Health Syst Pharm. 2020;77(11):835-864. doi:10.1093/ajhp/zxaa036 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "Rybak MJ et al. Am J Health Syst Pharm. 2020;77(11):835-864 (human verification needed)",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "game-balanced approximate, not label or literature data, human verification needed",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Rybak MJ et al. Am J Health Syst Pharm. 2020;77(11):835-864 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Vancocin (NDA 060180) (human verification needed)"
+    }
   },
   "midazolam": {
     "name": "Midazolam",
@@ -195,7 +325,20 @@
     "target_window_high": 0.20,
     "max_game_dose_mg": 15.0,
     "what_this_drug_teaches": "High-clearance benzodiazepine with substantial first-pass hepatic metabolism and rapid peripheral redistribution.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Greenblatt DJ et al. Clin Pharmacol Ther. 1983;34(5):629-634. doi:10.1038/clpt.1983.226 (human verification needed)",
+      "v1": "Greenblatt DJ et al. Clin Pharmacol Ther. 1983;34(5):629-634. doi:10.1038/clpt.1983.226 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "Greenblatt DJ et al. Clin Pharmacol Ther. 1983;34(5):629-634 (human verification needed)",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "Allonen S et al. Clin Pharmacol Ther. 1981;30(5):653-661. doi:10.1038/clpt.1981.217 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Greenblatt DJ et al. Clin Pharmacol Ther. 1983;34(5):629-634 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Versed (NDA 018654) (human verification needed)"
+    }
   },
   "digoxin": {
     "name": "Digoxin",
@@ -213,6 +356,19 @@
     "target_window_high": 0.0020,
     "max_game_dose_mg": 0.50,
     "what_this_drug_teaches": "Huge peripheral tissue binding volume (V2 > 400 L) and narrow therapeutic microgram window sensitive to renal clearance.",
-    "provenance": "game-balanced approximate, not label or literature data, human verification needed"
+    "provenance": "game-balanced approximate, not label or literature data, human verification needed",
+    "parameter_provenance": {
+      "cl": "Iisalo E. Clin Pharmacokinet. 1977;2(1):1-16. doi:10.2165/00003088-197702010-00001 (human verification needed)",
+      "v1": "Iisalo E. Clin Pharmacokinet. 1977;2(1):1-16. doi:10.2165/00003088-197702010-00001 (human verification needed)",
+      "q": "game-balanced approximate, not label or literature data, human verification needed",
+      "v2": "Iisalo E. Clin Pharmacokinet. 1977;2(1):1-16. doi:10.2165/00003088-197702010-00001 (human verification needed)",
+      "ka": "game-balanced approximate, not label or literature data, human verification needed",
+      "f_bioav": "Iisalo E. Clin Pharmacokinet. 1977;2(1):1-16 (human verification needed)",
+      "t_lag": "game-balanced approximate, not label or literature data, human verification needed",
+      "fe": "Iisalo E. Clin Pharmacokinet. 1977;2(1):1-16 (human verification needed)",
+      "target_window_low": "game-balanced approximate, not label or literature data, human verification needed",
+      "target_window_high": "game-balanced approximate, not label or literature data, human verification needed",
+      "max_game_dose_mg": "FDA Approved Label: Lanoxin (NDA 009330) (human verification needed)"
+    }
   }
 }
