@@ -23,6 +23,7 @@ COPY backend/ /app/backend/
 COPY frontend/ /app/frontend/
 COPY validation/ /app/validation/
 COPY docs/ /app/docs/
+COPY specs/ /app/specs/
 
 # Create a non-root user and assign ownership
 RUN useradd -m -u 1000 appuser && \
