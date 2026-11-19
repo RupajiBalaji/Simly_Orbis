@@ -238,3 +238,25 @@ backend\tests\test_validation.py ...........                             [100%]
 - **Passed:** 703 (100.0%)
 - **Failed:** 0
 - **Skipped:** 0
+
+---
+
+## 6. Real List of Partial Items and Open Issues (Report Honesty)
+
+In accordance with platform transparency principles and prompt requirement F7, the following is the real list of partial items, known limitations, and open issues currently present at the close of Phase P3:
+
+1. **Known NLP Parser Edge Cases (`ISSUE-012`):**
+   - Kinetics Bench Phrase #39 (`"analyze linear regression plot on reactor vessel data"`) and Buffer Bench Phrase #39 (`"inspect stress curve on buffer beaker"`) are intentionally left unparsed under generic grammatical rules to prevent corpus-specific overfitting. Both corpora pass at 98.2% (54/55), exceeding the $\ge 90\%$ production threshold. Cataloged in `docs/KNOWN_ISSUES.md`.
+2. **Absence of Empirical Reference Rows in `chem_tolerances.yaml`:**
+   - `validation/chem_tolerances.yaml` contains mathematical error tolerances and analytic identity thresholds with a frozen SHA-256 hash, but contains **no empirical reference rows** from external wet-lab benchmark experiments.
+   - The 11 reality checks in `ChemKineticsModule` and `ChemBufferModule` are strictly engine self-consistency checks of algebraic and mass conservation identities, not empirical validation.
+3. **Founder Held-Out Phrase Set Pending:**
+   - `backend/tests/data/founder_heldout_phrases.json` has not been provided by the founder (`founder set: not provided`). Only the small agent seed set ($n=16$, $n=4$ per experiment) exists, which is too small to be statistically representative.
+4. **Ideal Solution & Physical Simplifications:**
+   - Both chemistry engines assume ideal dilute aqueous behavior ($\gamma_i = 1$). Real-world ionic strength effects ($I > 0.05\text{ M}$) introduce up to $0.05–0.15\text{ pH}$ unit divergence.
+   - TRIS buffer $pK_a$ exhibits strong negative temperature sensitivity ($dpK_a/dT \approx -0.028\text{ K}^{-1}$), but core solver treats $pK_a$ as invariant across nominal temperatures unless explicitly adjusted.
+   - Bicarbonate buffer equilibrium is modeled strictly as a closed system without open-air $\text{CO}_2$ gas exchange or volatile $\text{CO}_2$ stripping.
+5. **Software-Rendered Headless Playthroughs:**
+   - Automated browser playthroughs in headless Chromium utilize software WebGL rasterization (SwiftShader/llvmpipe), yielding ~10-15 FPS, which is not representative of hardware-accelerated GPU client rendering ($\ge 30\text{ FPS}$).
+6. **Phase P4 Deferred Capabilities:**
+   - Multi-compartment population PK/PD virtual clinical trials, extended drug library freezing, and dose lab UI sampling polish are scheduled for Phase P4 (`phase-p4-pharma`).
