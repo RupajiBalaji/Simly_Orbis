@@ -71,10 +71,14 @@ def compute_file_md5(file_path: Path) -> str:
 class QAHarnessRunner:
     """Authoritative end-to-end test harness orchestrator."""
 
-    def __init__(self, port: int | None = None, is_ci: bool = False, headless: bool = True) -> None:
+    def __init__(self, port: int | None = None, is_ci: bool = False, headless: bool = True, spec_runtime: bool | None = None) -> None:
         self.port = port or get_free_port()
         self.is_ci = is_ci
         self.headless = headless
+        if spec_runtime is not None:
+            self.spec_runtime = spec_runtime
+        else:
+            self.spec_runtime = os.environ.get("SPEC_RUNTIME", "").lower() in ("1", "true", "yes")
         self.base_url = f"http://127.0.0.1:{self.port}"
         self.timeout_ms = int(os.environ.get("QA_TIMEOUT_MS", "30000"))
 
@@ -101,6 +105,7 @@ class QAHarnessRunner:
         env["PYTHONPATH"] = str(self.backend_dir)
         env["LOG_LEVEL"] = "warning"
         env["MONGODB_URI"] = ""  # Enforce in-memory DB for pure reproducible QA runs
+        env["SPEC_RUNTIME"] = "true" if self.spec_runtime else "false"
 
         server_log_path = self.out_dir / "server.log"
         self.server_log_file = open(server_log_path, "w", encoding="utf-8")
@@ -1167,6 +1172,7 @@ class QAHarnessRunner:
             f"# Simly Orbis QA Playthrough Report",
             f"",
             f"**Execution Timestamp:** `{summary['timestamp']}`  ",
+            f"**Runtime Mode:** `{'Spec Runtime (SPEC_RUNTIME=true)' if self.spec_runtime else 'Legacy Engine (SPEC_RUNTIME=false)'}`  ",
             f"**Status:** {status_badge}  ",
             f"**Total Duration:** `{summary['duration_seconds']}s`  ",
             f"**Browser:** Chromium Headless (1280x720, WebGL SwiftShader)  ",
@@ -1303,9 +1309,11 @@ def main() -> int:
     parser.add_argument("--port", type=int, default=None, help="Specific port to run backend on")
     parser.add_argument("--ci", action="store_true", help="CI mode: reports FPS without gating")
     parser.add_argument("--headful", action="store_true", help="Launch visible headful browser")
+    parser.add_argument("--spec-runtime", dest="spec_runtime", action="store_true", default=None, help="Run backend with SPEC_RUNTIME=true")
+    parser.add_argument("--legacy", dest="spec_runtime", action="store_false", help="Run backend with SPEC_RUNTIME=false (legacy engine)")
     args = parser.parse_args()
 
-    runner = QAHarnessRunner(port=args.port, is_ci=args.ci, headless=not args.headful)
+    runner = QAHarnessRunner(port=args.port, is_ci=args.ci, headless=not args.headful, spec_runtime=args.spec_runtime)
     summary = runner.run()
 
     if not summary["passed"]:
