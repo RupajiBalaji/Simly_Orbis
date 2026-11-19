@@ -35,8 +35,8 @@ export class TrialPanel {
         <button type="button" class="btn-close-trial" id="btn-close-trial" title="Exit viewing gallery">✕ Exit</button>
       </div>
 
-      <div class="trial-disclaimer">
-        Statistical simulation with simplified parameters. Educational only. Not clinical evidence.
+      <div class="trial-disclaimer" id="trial-disclaimer-label">
+        virtual population, not a clinical trial
       </div>
 
       <div class="trial-sliders-section">
@@ -84,6 +84,7 @@ export class TrialPanel {
       <div class="trial-actions-row">
         <button type="button" class="btn-primary trial-btn-run" id="btn-run-trial">⚡ Run Trial</button>
         <button type="button" class="btn-secondary trial-btn-compare" id="btn-compare-trial">⚖️ Compare vs Standard</button>
+        <button type="button" class="btn-secondary trial-btn-export" id="btn-export-trial-csv" title="Download population trial dataset as CSV">📥 Export CSV</button>
       </div>
 
       <!-- Live Results Area -->
@@ -112,6 +113,12 @@ export class TrialPanel {
 
         <div class="trial-verdict-box" id="trial-verdict-text">
           Evaluating population exposure...
+        </div>
+
+        <!-- Virtual Crowd Gallery Section -->
+        <div class="trial-gallery-section" id="trial-gallery-section">
+          <div class="chart-title">Virtual Crowd Gallery (Sample Cohort)</div>
+          <div class="trial-crowd-grid" id="trial-crowd-grid"></div>
         </div>
 
         <!-- Canvas Visualizations -->
@@ -214,6 +221,9 @@ export class TrialPanel {
 
     const btnCompare = document.getElementById('btn-compare-trial');
     if (btnCompare) btnCompare.onclick = () => this.runTrialComparison();
+
+    const btnExport = document.getElementById('btn-export-trial-csv');
+    if (btnExport) btnExport.onclick = () => this.exportCsv();
   }
 
   prefillCurrentRegimen() {
@@ -336,56 +346,91 @@ export class TrialPanel {
 
     try {
       const params = this.getFormParams();
-      const result = await api.runTrial(params);
+      const regimen = {
+        drug_id: params.drug_id,
+        route: 'oral',
+        dose_mg: params.dose_mg,
+        n_doses: params.n_doses,
+        interval_h: params.interval_h,
+      };
+      const cohort = {
+        n_patients: params.n_patients,
+        seed: params.seed,
+      };
+
+      let result;
+      try {
+        result = await api.runTrialV2(regimen, cohort);
+      } catch (errV2) {
+        console.warn('Trial v2 fallback to legacy trial:', errV2);
+        result = await api.runTrial(params);
+      }
+
       this.lastResult = result;
       state.lastTrialResult = result.summary; // Store for final lab report tie-in!
 
       const summary = result.summary;
-      const series = result.series;
+      const patients = result.patients || [];
+      const series = result.series || result.time_series_representative || {};
 
       // Unhide results area
       const resultsArea = document.getElementById('trial-results-area');
       if (resultsArea) resultsArea.classList.remove('hidden');
 
       // Update regimen banners
-      const regDesc = `Simulated Regimen: Paracetamol ${params.dose_mg} mg × ${params.n_doses} dose(s) q${params.interval_h}h (Cohort: ${summary.n_patients} pts, ${params.pct_reduced_liver}% impaired liver)`;
+      const drugTitle = summary.drug_name || 'Paracetamol';
+      const regDesc = `Simulated Regimen: ${drugTitle} ${params.dose_mg} mg × ${params.n_doses} dose(s) q${params.interval_h}h (Cohort: ${summary.n_patients} pts)`;
       const regBanner = document.getElementById('trial-regimen-banner');
       if (regBanner) regBanner.textContent = regDesc;
       const crowdReg = document.getElementById('crowd-regimen-badge');
-      if (crowdReg) crowdReg.textContent = `Simulated Regimen: Paracetamol ${params.dose_mg} mg × ${params.n_doses} dose(s) q${params.interval_h}h`;
+      if (crowdReg) crowdReg.textContent = `Simulated Regimen: ${drugTitle} ${params.dose_mg} mg × ${params.n_doses} dose(s) q${params.interval_h}h`;
 
-      // Update headline numbers
-      document.getElementById('stat-pct-in-range').textContent = `${summary.pct_in_range}%`;
-      document.getElementById('stat-pct-toxic').textContent = `${summary.pct_toxic}%`;
-      document.getElementById('stat-pct-sub').textContent = `${summary.pct_subtherapeutic}%`;
-      document.getElementById('stat-mean-peak').textContent = `${summary.mean_peak} mg/L`;
+      // Update headline numbers strictly from API summary (ACCEPT: DOM values equal API values)
+      const pctTarget = summary.pct_target ?? summary.pct_in_range ?? 0;
+      const pctToxic = summary.pct_above ?? summary.pct_toxic ?? 0;
+      const pctSub = summary.pct_below ?? summary.pct_subtherapeutic ?? 0;
+      const peakVal = summary.cmax_dist ? summary.cmax_dist.median : (summary.mean_peak ?? 0);
 
-      // Plain-code insight generated from the data (no AI)
+      document.getElementById('stat-pct-in-range').textContent = `${pctTarget}%`;
+      document.getElementById('stat-pct-toxic').textContent = `${pctToxic}%`;
+      document.getElementById('stat-pct-sub').textContent = `${pctSub}%`;
+      document.getElementById('stat-mean-peak').textContent = `${typeof peakVal === 'number' ? peakVal.toFixed(1) : peakVal} mg/L`;
+
+      // Deterministic code-written insight statement
       const verdictEl = document.getElementById('trial-verdict-text');
       if (verdictEl) {
-        let insight = '';
-        if (summary.median_peak < summary.green_low) {
-          insight = `Median peak ${summary.median_peak.toFixed(1)} mg/L is below the ${summary.green_low.toFixed(1)} mg/L therapeutic minimum, so one ${params.dose_mg} mg dose is too low for most patients.`;
-          verdictEl.style.borderColor = '#f59e0b';
-          verdictEl.style.color = '#fde68a';
-        } else if (summary.pct_toxic > 5.0) {
-          insight = `Median peak ${summary.median_peak.toFixed(1)} mg/L exceeds the ${summary.red_threshold.toFixed(1)} mg/L safety ceiling, causing ${summary.pct_toxic}% toxic exposure across the cohort.`;
+        const insightText = summary.insight || (summary.median_peak < summary.green_low
+          ? `Median peak ${summary.median_peak.toFixed(1)} mg/L is below the ${summary.green_low.toFixed(1)} mg/L therapeutic minimum, so one ${params.dose_mg} mg dose is too low for most patients.`
+          : summary.pct_toxic > 5.0
+          ? `Median peak ${summary.median_peak.toFixed(1)} mg/L exceeds the ${summary.red_threshold.toFixed(1)} mg/L safety ceiling, causing ${summary.pct_toxic}% toxic exposure across the cohort.`
+          : `Median peak ${summary.median_peak.toFixed(1)} mg/L maintains safe therapeutic coverage (green window) for ${summary.pct_in_range}% of virtual patients with 0% toxicity.`);
+        verdictEl.textContent = insightText;
+        if (pctToxic > 5.0) {
           verdictEl.style.borderColor = '#ef4444';
           verdictEl.style.color = '#fca5a5';
-        } else {
-          insight = `Median peak ${summary.median_peak.toFixed(1)} mg/L maintains safe therapeutic coverage (green window) for ${summary.pct_in_range}% of virtual patients with 0% toxicity.`;
+        } else if (pctTarget >= 80.0) {
           verdictEl.style.borderColor = '#10b981';
           verdictEl.style.color = '#6ee7b7';
+        } else {
+          verdictEl.style.borderColor = '#f59e0b';
+          verdictEl.style.color = '#fde68a';
         }
-        verdictEl.textContent = insight;
       }
 
+      // Render Virtual Crowd Gallery
+      this.renderCrowdGrid(patients);
+
       // Redraw canvas charts
-      this.drawPercentileChart(series.time_h, series, summary);
-      this.drawHistogram(series.hist_bins, series.hist_counts, summary);
+      if (series.time_h) {
+        this.drawPercentileChart(series.time_h, series, summary);
+      }
+      if (series.hist_bins) {
+        this.drawHistogram(series.hist_bins, series.hist_counts, summary);
+      }
 
       // Trigger 3D InstancedMesh color wave!
-      if (this.trialHall && series.outcomes) {
+      const outcomes = series.outcomes || patients.map(p => p.status === 'target' ? 1 : p.status === 'above' ? 2 : 0);
+      if (this.trialHall && outcomes.length > 0) {
         const cntHelped = document.getElementById('cnt-helped');
         const cntBelow = document.getElementById('cnt-below');
         const cntToxic = document.getElementById('cnt-toxic');
@@ -394,7 +439,7 @@ export class TrialPanel {
         if (cntTotal) cntTotal.textContent = summary.n_patients;
 
         this.trialHall.startWave(
-          series.outcomes,
+          outcomes,
           state.skipAnimation,
           (progressData) => {
             if (cntHelped) cntHelped.textContent = progressData.helped;
@@ -412,7 +457,7 @@ export class TrialPanel {
       // Update Virtual Trial Wall Screen with real result counts and colored matrix
       const screenObj = this.scene?.getApparatus('virtual_trial_screen');
       if (screenObj?.userData?.updateResults) {
-        screenObj.userData.updateResults(summary, series.outcomes);
+        screenObj.userData.updateResults(summary, outcomes);
       }
 
       toast.showSuccess(`Trial completed across ${summary.n_patients} virtual patients!`);
@@ -424,6 +469,54 @@ export class TrialPanel {
         btnRun.disabled = false;
         btnRun.textContent = '⚡ Run Trial';
       }
+    }
+  }
+
+  renderCrowdGrid(patients) {
+    const gridEl = document.getElementById('trial-crowd-grid');
+    if (!gridEl) return;
+    if (!patients || patients.length === 0) {
+      gridEl.innerHTML = '<div style="color:#64748b; font-size:0.75rem;">Run simulation to populate crowd gallery.</div>';
+      return;
+    }
+    const sample = patients.slice(0, 32);
+    gridEl.innerHTML = sample.map(p => `
+      <div class="patient-pill" style="display:inline-flex; align-items:center; gap:4px; padding:2px 6px; margin:2px; border-radius:4px; background:#1e293b; border-left:3px solid ${p.color}; font-size:0.75rem; color:#cbd5e1;" title="Patient #${p.patient_id}: ${p.weight_kg}kg, ${p.age_yr}yo, CrCl ${p.crcl_ml_min}mL/min | Cmax: ${p.cmax} mg/L">
+        <span>${p.status === 'target' ? '🛡️' : p.status === 'above' ? '⚠️' : '⬇️'}</span>
+        <span style="font-weight:600;">#${p.patient_id}</span>
+        <span style="color:${p.color};">${p.cmax}</span>
+      </div>
+    `).join('');
+  }
+
+  async exportCsv() {
+    try {
+      const params = this.getFormParams();
+      const regimen = {
+        drug_id: params.drug_id,
+        route: 'oral',
+        dose_mg: params.dose_mg,
+        n_doses: params.n_doses,
+        interval_h: params.interval_h,
+      };
+      const cohort = {
+        n_patients: params.n_patients,
+        seed: params.seed,
+      };
+      const csvData = await api.exportTrialV2Csv(regimen, cohort);
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `virtual_trial_${params.drug_id}_${params.dose_mg}mg_seed${params.seed}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.showSuccess('Exported virtual trial cohort CSV.');
+    } catch (err) {
+      console.error('CSV Export error:', err);
+      toast.showError(`Export failed: ${err.message}`);
     }
   }
 

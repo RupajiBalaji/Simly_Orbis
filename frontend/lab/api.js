@@ -75,11 +75,34 @@ export const api = {
     });
   },
 
+  async runTrialV2(regimen, cohort = {}) {
+    return await request('/api/trial/v2/run', {
+      method: 'POST',
+      body: JSON.stringify({ regimen, cohort }),
+    });
+  },
+
   async compareTrial(regimenA, regimenB = null) {
     return await request('/api/trial/compare', {
       method: 'POST',
       body: JSON.stringify({ regimen_a: regimenA, regimen_b: regimenB }),
     });
+  },
+
+  async compareTrialV2(regimenA, regimenB, cohort = {}) {
+    return await request('/api/trial/v2/compare', {
+      method: 'POST',
+      body: JSON.stringify({ regimen_a: regimenA, regimen_b: regimenB, cohort }),
+    });
+  },
+
+  async exportTrialV2Csv(regimen, cohort = {}) {
+    const res = await fetch('/api/trial/v2/export_csv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regimen, cohort }),
+    });
+    return await res.text();
   },
 
   async getLeaderboard(experimentId) {
