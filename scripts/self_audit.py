@@ -26,6 +26,7 @@ import argparse
 import csv
 from datetime import datetime
 import hashlib
+import inspect
 import json
 import os
 from pathlib import Path
@@ -379,8 +380,27 @@ def check_frozen_tolerance_hashes(repo_root: Path) -> GateResult:
     )
 
 
+def compute_rule_definition_sha256(rule: Any) -> str:
+    """Computes a deterministic canonical SHA-256 hash of a safety rule definition.
+
+    Captures rule ID, title, severity, penalty points, explanation, and checker function source.
+    Any alteration to thresholds, logic, or text produces a mismatched hash.
+    """
+    src = inspect.getsource(rule.checker)
+    src_clean = "\n".join(line.rstrip() for line in src.replace("\r\n", "\n").strip().splitlines())
+    canonical = (
+        f"rule_id:{rule.rule_id}\n"
+        f"title:{rule.title}\n"
+        f"severity:{rule.severity}\n"
+        f"penalty_points:{rule.penalty_points}\n"
+        f"explanation:{rule.explanation}\n"
+        f"checker:\n{src_clean}"
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> GateResult:
-    """Gate 6: Protected engine files unchanged since base commit."""
+    """Gate 6: Protected engine files unchanged since base commit, and rules match per-rule snapshots."""
     # 1. Existence check: Fail if any listed path does not exist on disk
     missing_paths = [p for p in PROTECTED_ENGINE_FILES if not (repo_root / p).is_file()]
     if missing_paths:
@@ -444,51 +464,70 @@ def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> Gate
         else:
             diff_results.append(f"`{p}`: 0 diff vs `{cmp_commit[:7]}` (PASS)")
 
-    # 3. Verify that Safety Rules R1-R10, S1-S8, and D1-D8 were not deleted
-    rules_path = "backend/app/lab/rules.py"
-    rules_file = repo_root / rules_path
-    if not rules_file.exists():
+    # 3. Verify Safety Rules R1-R10, S1-S8, and D1-D8 against per-rule snapshots (Task H2)
+    snapshots_path = repo_root / "tests" / "data" / "rule_snapshots.json"
+    if not snapshots_path.exists():
+        snapshots_path = repo_root / "backend" / "tests" / "data" / "rule_snapshots.json"
+
+    if not snapshots_path.exists():
         return GateResult(
             gate_id=6,
             name="Engine Immutability (Rule R1/R7)",
             passed=False,
-            evidence="FAILED: rules.py does not exist on disk",
-            details="- Missing: backend/app/lab/rules.py",
+            evidence="FAILED: rule_snapshots.json missing on disk",
+            details="- Missing: tests/data/rule_snapshots.json",
         )
 
-    res_rules = subprocess.run(
-        ["git", "diff", base_commit, "HEAD", "--", rules_path],
-        cwd=repo_root,
-        capture_output=True,
-        text=True,
-    )
-    rules_diff = res_rules.stdout
+    with open(snapshots_path, "r", encoding="utf-8") as f:
+        snapshots = json.load(f)
 
-    # Parse rule IDs from deleted lines: rule_id="<ID>" or id="<ID>"
-    rule_id_pattern = re.compile(r'rule_id\s*=\s*["\']([A-Za-z0-9_-]+)["\']')
-    deleted_rule_ids: list[str] = []
+    # Ensure backend is on sys.path to import app.lab.rules
+    backend_dir = str((repo_root / "backend").resolve())
+    if backend_dir not in sys.path:
+        sys.path.insert(0, backend_dir)
 
-    # Valid rule IDs pattern for R1-R10, S1-S8, D1-D8
-    protected_id_re = re.compile(r'^(R(?:10|[1-9])(?:_[A-Z0-9_]+)?|S[1-8](?:_[A-Z0-9_]+)?|D[1-8](?:_[A-Z0-9_]+)?)$')
+    try:
+        from app.lab.rules import SAFETY_RULES, SPACE_RULES, DOSE_LAB_RULES
+        current_rules = SAFETY_RULES + SPACE_RULES + DOSE_LAB_RULES
+    except Exception as e:
+        return GateResult(
+            gate_id=6,
+            name="Engine Immutability (Rule R1/R7)",
+            passed=False,
+            evidence=f"FAILED to import rules from app.lab.rules: {e}",
+            details=f"- Import error: {e}",
+        )
 
-    for line in rules_diff.splitlines():
-        if line.startswith("-") and not line.startswith("---"):
-            for m in rule_id_pattern.finditer(line):
-                rid = m.group(1)
-                if protected_id_re.match(rid):
-                    deleted_rule_ids.append(rid)
+    current_rule_map = {r.rule_id: r for r in current_rules}
+    rule_mismatches: list[str] = []
 
-    altered_rules = len(deleted_rule_ids) > 0
-    if altered_rules:
-        for rid in deleted_rule_ids:
-            diff_results.append(f"SAFETY RULE DELETION DETECTED: Rule ID `{rid}` removed")
+    for rule_id, snap in snapshots.items():
+        if rule_id not in current_rule_map:
+            rule_mismatches.append(f"MISSING RULE: Rule ID `{rule_id}` missing from active rules")
+            continue
+        expected_hash = snap.get("sha256") if isinstance(snap, dict) else str(snap)
+        rule_obj = current_rule_map[rule_id]
+        actual_hash = compute_rule_definition_sha256(rule_obj)
+        if actual_hash != expected_hash:
+            rule_mismatches.append(
+                f"RULE DEFINITION CHANGED: Rule ID `{rule_id}` differs from baseline snapshot! "
+                f"Expected `{expected_hash[:12]}...`, got `{actual_hash[:12]}...`"
+            )
+
+    for r in current_rules:
+        if r.rule_id not in snapshots:
+            rule_mismatches.append(f"UNSNAPSHOTTED RULE: Active rule `{r.rule_id}` has no snapshot")
+
+    if rule_mismatches:
+        for rm in rule_mismatches:
+            diff_results.append(f"SAFETY RULE VIOLATION: {rm}")
     else:
-        diff_results.append("Rules R1-R10, S1-S8, and D1-D8: Unmodified (PASS)")
+        diff_results.append("Rules R1-R10, S1-S8, and D1-D8: 26/26 matched snapshot SHA-256 (PASS)")
 
-    passed = (len(failed_files) == 0) and (not altered_rules)
+    passed = (len(failed_files) == 0) and (len(rule_mismatches) == 0)
     evidence = (
-        f"Protected files checked: {len(PROTECTED_ENGINE_FILES)} engines + R1-R10/S1-S8/D1-D8 rules. "
-        f"Violations: {len(failed_files)} files, {len(deleted_rule_ids)} deleted rules."
+        f"Protected files checked: {len(PROTECTED_ENGINE_FILES)} engines + {len(snapshots)} rules. "
+        f"Violations: {len(failed_files)} files, {len(rule_mismatches)} rule mismatches."
     )
     details = "\n".join(f"- {d}" for d in diff_results)
     return GateResult(

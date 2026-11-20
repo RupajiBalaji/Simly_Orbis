@@ -94,28 +94,73 @@ def test_audit_check_protected_files_fails_on_planted_change(monkeypatch):
     assert "UNAUTHORIZED MODIFICATION in `backend/app/modules/pharma_pk.py`" in res.details
 
 
-def test_audit_check_protected_files_fails_on_deleted_rule(monkeypatch):
-    orig_run = subprocess.run
+def test_audit_check_protected_files_fails_on_changed_threshold(monkeypatch):
+    """Gate 6 must fail if a rule checker's numeric threshold is modified."""
+    from app.lab import rules as lab_rules
 
-    def mock_run(cmd, *args, **kwargs):
-        if len(cmd) >= 4 and cmd[0] == "git" and cmd[1] == "cat-file" and "commit" in cmd[3]:
-            class MockRev:
-                returncode = 0
-            return MockRev()
-        if len(cmd) >= 5 and cmd[0] == "git" and cmd[1] == "diff" and "backend/app/lab/rules.py" in cmd:
-            class MockProc:
-                returncode = 0
-                stdout = '--- a/backend/app/lab/rules.py\n+++ b/backend/app/lab/rules.py\n-    rule_id="D1",\n-    title="Dose Exceeds Maximum Safe Single Dose",'
-                stderr = ""
-            return MockProc()
-        return orig_run(cmd, *args, **kwargs)
+    # Copy rules so we don't pollute global state permanently
+    orig_rules = list(lab_rules.DOSE_LAB_RULES)
+    d1_orig = orig_rules[0]
 
-    monkeypatch.setattr(subprocess, "run", mock_run)
+    # Planted altered checker with mutated threshold
+    def _mutated_checker(session, req):
+        threshold = 999.0  # Modified threshold
+        return False
+
+    mutated_rule = lab_rules.SafetyRule(
+        rule_id=d1_orig.rule_id,
+        title=d1_orig.title,
+        severity=d1_orig.severity,
+        penalty_points=d1_orig.penalty_points,
+        explanation=d1_orig.explanation,
+        checker=_mutated_checker,
+    )
+
+    monkeypatch.setattr(lab_rules, "DOSE_LAB_RULES", [mutated_rule] + orig_rules[1:])
     res = check_protected_files(REPO_ROOT, base_commit="cb9b66f")
     assert res.gate_id == 6
     assert res.passed is False
-    assert "1 deleted rules" in res.evidence
-    assert "SAFETY RULE DELETION DETECTED: Rule ID `D1` removed" in res.details
+    assert "1 rule mismatches" in res.evidence
+    assert f"RULE DEFINITION CHANGED: Rule ID `{d1_orig.rule_id}` differs from baseline snapshot!" in res.details
+
+
+def test_audit_check_protected_files_fails_on_changed_text(monkeypatch):
+    """Gate 6 must fail if a rule's title or explanation text is modified."""
+    from app.lab import rules as lab_rules
+
+    orig_rules = list(lab_rules.SAFETY_RULES)
+    r1_orig = orig_rules[0]
+
+    mutated_rule = lab_rules.SafetyRule(
+        rule_id=r1_orig.rule_id,
+        title="Altered Non-Compliant Title",
+        severity=r1_orig.severity,
+        penalty_points=r1_orig.penalty_points,
+        explanation="Altered explanation text that weakens safety pedagogy.",
+        checker=r1_orig.checker,
+    )
+
+    monkeypatch.setattr(lab_rules, "SAFETY_RULES", [mutated_rule] + orig_rules[1:])
+    res = check_protected_files(REPO_ROOT, base_commit="cb9b66f")
+    assert res.gate_id == 6
+    assert res.passed is False
+    assert "1 rule mismatches" in res.evidence
+    assert f"RULE DEFINITION CHANGED: Rule ID `{r1_orig.rule_id}` differs from baseline snapshot!" in res.details
+
+
+def test_audit_check_protected_files_fails_on_missing_rule(monkeypatch):
+    """Gate 6 must fail if any snapshotted rule is omitted from the active rule set."""
+    from app.lab import rules as lab_rules
+
+    orig_rules = list(lab_rules.SPACE_RULES)
+    omitted_rule = orig_rules[0]
+
+    # Omit S1
+    monkeypatch.setattr(lab_rules, "SPACE_RULES", orig_rules[1:])
+    res = check_protected_files(REPO_ROOT, base_commit="cb9b66f")
+    assert res.gate_id == 6
+    assert res.passed is False
+    assert f"MISSING RULE: Rule ID `{omitted_rule.rule_id}` missing from active rules" in res.details
 
 
 def test_audit_check_ci_workflow():

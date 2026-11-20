@@ -196,7 +196,7 @@ The backend exposes a fully typed REST API with automatic OpenAPI interactive do
 | `GET` | `/api/modules` | List registered simulation engines (`pharma.pk`, `chem.titration`, etc.) | 120 / min |
 | `GET` | `/api/modules/{id}/model-card` | Get scientific documentation, governing equations, and boundaries | 120 / min |
 | `GET` | `/api/modules/{id}/reality-check` | Execute analytical mathematical invariant verification checks | 120 / min |
-| `POST` | `/api/run` | Execute parameter-validated simulation runs | 120 / min |
+| `POST` | `/api/run` | Execute parameter-checked simulation runs | 120 / min |
 | `GET` | `/api/lab/experiments` | List active laboratory benches | 120 / min |
 | `POST` | `/api/lab/sessions` | Create a new stateful laboratory session (`nickname`, `experiment_id`) | 20 / min |
 | `GET` | `/api/lab/sessions/{id}` | Fetch live apparatus state, clock, inventory, and checklist | 120 / min |

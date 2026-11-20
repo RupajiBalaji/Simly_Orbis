@@ -1,0 +1,210 @@
+{
+  "D1": {
+    "explanation": "Administered dose exceeds the maximum recommended adult single dose from drug specifications.",
+    "introduced_at": "1dab90e",
+    "penalty_points": 15,
+    "severity": "major",
+    "sha256": "b8e0528416163caa01c502118152d6de3dcbf1ad9ce5e0b908b518c92e042cba",
+    "title": "Dose Exceeds Maximum Safe Single Dose"
+  },
+  "D2": {
+    "explanation": "Patients with renal impairment (CrCl < 60 mL/min) receiving renally cleared drugs (fe > 0.4) require dose reduction.",
+    "introduced_at": "1dab90e",
+    "penalty_points": 20,
+    "severity": "critical",
+    "sha256": "fbacb035e735b6eb5175e36479c54c08b27f823430c185250773550d73a7d552",
+    "title": "Unadjusted Dose in Renal Impairment"
+  },
+  "D3": {
+    "explanation": "Selected administration route is incompatible with drug bioavailability (e.g. oral route for aminoglycosides or glycopeptides).",
+    "introduced_at": "1dab90e",
+    "penalty_points": 10,
+    "severity": "major",
+    "sha256": "793d5d3dc0b7132b4cffe6dde186d08b13b0936c7b1658dd44f19d7d33158576",
+    "title": "Route Mismatch (Incompatible Bioavailability)"
+  },
+  "D4": {
+    "explanation": "Patient parameters must remain within adult boundary limits (Age 18-90, Weight 40-150 kg, CrCl 15-150 mL/min).",
+    "introduced_at": "1dab90e",
+    "penalty_points": 5,
+    "severity": "warning",
+    "sha256": "93557a6e6e267a77d57fcbed51ba1d255243a1b25b6b3fc032487f38d71045f3",
+    "title": "Out-of-Bounds Adult Covariates Requested"
+  },
+  "D5": {
+    "explanation": "Narrow therapeutic index drugs require at least 3 blood sampling observation timepoints to characterize PK curve.",
+    "introduced_at": "1dab90e",
+    "penalty_points": 10,
+    "severity": "warning",
+    "sha256": "5b4270822ece6f435b0534a05f0bb5fb05c77604e22335b08c0d23c747660eba",
+    "title": "Inadequate Sampling Count for Narrow Therapeutic Index Drug"
+  },
+  "D6": {
+    "explanation": "Intravenous infusions must not be administered in under 15 minutes (< 0.25h) to avoid adverse infusion reactions.",
+    "introduced_at": "1dab90e",
+    "penalty_points": 15,
+    "severity": "major",
+    "sha256": "0633bb3b0555f0a60c3f9ac594c4351cf327e6d2f9b02fbfd3edf4d80a465d36",
+    "title": "Excessive Infusion Rate / Duration Too Short"
+  },
+  "D7": {
+    "explanation": "Enter your predicted peak concentration and target window duration before executing simulation.",
+    "introduced_at": "1dab90e",
+    "penalty_points": 5,
+    "severity": "warning",
+    "sha256": "7d587d444d1c841072ae6b9e62c0537a1f5db59e3ec0b42f5a58d08b9c4f897a",
+    "title": "Missing Target Window Prediction"
+  },
+  "D8": {
+    "explanation": "Simulated Cmax exceeds the toxic concentration threshold (toxicity risk). Regimen adjustment required.",
+    "introduced_at": "1dab90e",
+    "penalty_points": 25,
+    "severity": "critical",
+    "sha256": "8cb60bd342fb1fa20d89125473cd4b6092ad74db757c155fbbbaa6529dfefabc",
+    "title": "Toxic Peak Concentration Exceeded"
+  },
+  "R10_CLEAN_FINISH": {
+    "explanation": "Always doff PPE and perform thorough hygienic handwashing at the sink before handling documentation and submitting official laboratory records.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 10,
+    "severity": "warning",
+    "sha256": "f55882a3503ac033bbca130e470603b0ed7de240d5338baa78dcc9b9514bc1fa",
+    "title": "Aseptic Handwash / PPE Removal Incomplete"
+  },
+  "R1_GOGGLES": {
+    "explanation": "Safety goggles must be worn whenever handling chemicals, drugs, or blood to prevent permanent corneal caustic burns or ocular pathogen transmission.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 25,
+    "severity": "critical",
+    "sha256": "44531d67914f0520f132e7c058f88ea2531ffd741f92e0922e09f4b32f846b10",
+    "title": "Eye Protection Missing"
+  },
+  "R2_GLOVES": {
+    "explanation": "Protective gloves must be worn when manipulating acids, bases, or patient blood to prevent chemical contact burns and biohazard contamination.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 15,
+    "severity": "major",
+    "sha256": "76bcb12c16bdb0517b3da6fe172c4cbc6db112f5fcc22a0f92b383c2588edd68",
+    "title": "Protective Gloves Missing"
+  },
+  "R3_LAB_COAT": {
+    "explanation": "A standard buttoned lab coat shields everyday clothing and exposed skin from accidental chemical droplets, drug powders, and aerosol contamination.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 10,
+    "severity": "warning",
+    "sha256": "7894df06e2af24d3f55cfd3ad1d187cf73ed29dc12e082d9462ff39f508ca0f6",
+    "title": "Protective Lab Coat Missing"
+  },
+  "R4_TARE_FIRST": {
+    "explanation": "Digital analytical balances must always be zeroed (tared) with the tare dish prior to weighing active medicinal ingredients to avoid systematic dose errors.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 10,
+    "severity": "warning",
+    "sha256": "021d3db2173819317a620721b294435c5fb9fad4ef973e6fb0dbab0600aecaab",
+    "title": "Balance Not Tared"
+  },
+  "R5_LABEL_SAMPLES": {
+    "explanation": "Venous collection tubes and medication cups must be explicitly labelled before use to prevent catastrophic specimen misidentification or wrong-patient administration.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 15,
+    "severity": "major",
+    "sha256": "178833c16f3a1f938509c5c78e600e53f2a1ab566aef15a81dad5da72b59ba14",
+    "title": "Unlabelled Specimen or Medication"
+  },
+  "R6_ACID_INTO_WATER": {
+    "explanation": "Always add acid slowly to water ('AAA'). Adding water directly to concentrated acid generates sudden localized boiling and violent corrosive acid splattering.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 20,
+    "severity": "major",
+    "sha256": "f6974c08f65b155b5db693969b886acdf97463c10e9668dd279c3caf43e23678",
+    "title": "Hazardous Acid Dilution Sequence"
+  },
+  "R7_BURETTE_OVERFILL": {
+    "explanation": "Burettes must be conditioned with titrant rinse to prevent water dilution error, and must never be filled above the calibrated 50 mL meniscus limit.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 10,
+    "severity": "warning",
+    "sha256": "17d9db5330c7aafd0c30e52fc6fbccda6242462a9f20b1328dbca45238c0425e",
+    "title": "Burette Conditioning or Capacity Breach"
+  },
+  "R8_DOSE_LIMIT": {
+    "explanation": "Administering paracetamol above the maximum adult single dose limit (1000 mg) depletes endogenous glutathione and induces acute hepatic parenchymal necrosis.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 30,
+    "severity": "critical",
+    "sha256": "15d68ef77476dbbf36b337de6b022afcd181400c1fbb5d5f8cacfa6a01543720",
+    "title": "Exceeded Maximum Safe Single Dose"
+  },
+  "R9_WASTE_BINS": {
+    "explanation": "Biological sharps and blood tubes must be deposited strictly in biohazard containers; chemical reagents must enter chemical waste to prevent dangerous autoclave explosions.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 15,
+    "severity": "major",
+    "sha256": "23373ba9f1f1aed241944f04bdb15d47d87b67cf997e22f27698d8ddb2855033",
+    "title": "Hazardous Waste Incompatible Segregation"
+  },
+  "S1_PREFLIGHT_CHECKLIST": {
+    "explanation": "Flight computer preflight systems diagnostic checklist must be executed and confirmed before initiating terminal launch countdown and engine ignition sequence.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 25,
+    "severity": "critical",
+    "sha256": "c05ee522ca1fce72866a6c35445f144ca48d1f8fe039841498ac9d9e7b633207",
+    "title": "Launch Attempted Without Preflight Checklist"
+  },
+  "S2_PROPELLANT_CAPACITY": {
+    "explanation": "Rocket stage propellant tanks must be loaded with positive mass within rated structural tank capacity limits to prevent catastrophic tank rupture or dry engine ignition.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 20,
+    "severity": "major",
+    "sha256": "bd4d7b7100b6ff30010f6f82291f6022b21d8e94f475d4cbe5bb747a01d94531",
+    "title": "Propellant Tank Capacity Exceeded or Empty"
+  },
+  "S3_TWR_LIFTOFF": {
+    "explanation": "Liftoff thrust must strictly exceed vehicle liftoff weight (TWR > 1.0). An under-powered rocket cannot lift off, pinning the vehicle to the pad while exhaust destroys pad infrastructure.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 30,
+    "severity": "critical",
+    "sha256": "ce87717c04dec55af5e45775268de63797bd3394901bc2f10c6fc4b23b06bc27",
+    "title": "Insufficient Thrust-to-Weight Ratio (TWR <= 1.0)"
+  },
+  "S4_PAYLOAD_DECLARED": {
+    "explanation": "Orbital payload mass must be declared and must not exceed the vehicle's structural payload capacity to preserve mission aerodynamic and mass budget stability.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 15,
+    "severity": "major",
+    "sha256": "9463be442a075d3d9da2fad3ad3d2ad7ce2e654511cf410436dd5c84207be15f",
+    "title": "Undeclared or Excessive Payload Mass"
+  },
+  "S5_STAGING_ORDER": {
+    "explanation": "Lower booster stages must complete their burn before upper stage ignition and interstage separation. Igniting upper stages prematurely causes plume impingement and vehicle breakup.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 25,
+    "severity": "critical",
+    "sha256": "f9072ee81374012984db7f436cc1a9dfbf12e4f245f5e70abc0408b4fbf1afe1",
+    "title": "Premature Upper Stage Ignition / Staging Order Breach"
+  },
+  "S6_RANGE_SAFETY": {
+    "explanation": "Launch operations require affirmative range clearance from tracking radar and downrange safety officers to protect airspace, shipping corridors, and populated zones.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 20,
+    "severity": "major",
+    "sha256": "b34b88ab4009494ca2fd0a30095746cefbc267145146ce41738b0c78cc1a6620",
+    "title": "Launch Attempted Without Range Clearance"
+  },
+  "S7_DV_MARGIN": {
+    "explanation": "Sound mission planning requires at least a 5% delta-v reserve margin above nominal orbital insertion requirements to absorb atmospheric drag and steering losses.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 10,
+    "severity": "warning",
+    "sha256": "74040d79a4753d9a73d466d84c95994c8a1086ad1471ab3eaa1760deed7f8162",
+    "title": "Insufficient Delta-V Margin (<5%)"
+  },
+  "S8_DEBRIEF_CLEANUP": {
+    "explanation": "Flight telemetry, achieved orbital parameters, and propellant margins must be debriefed with tracking station before submitting final mission analytical documentation.",
+    "introduced_at": "cb9b66f",
+    "penalty_points": 10,
+    "severity": "warning",
+    "sha256": "142056ab55982158070d075a5587a8e7568faffd72d6941364c466181cc29d3f",
+    "title": "Report Submitted Without Mission Debrief"
+  }
+}
