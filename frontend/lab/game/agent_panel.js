@@ -357,11 +357,11 @@ export class AskOrbisAgentPanel {
           <div class="step-number">${step.step_index}</div>
           <div class="step-details">
             <div class="step-title-line">
-              <span class="step-title">${step.friendly_title}</span>
-              <span class="step-target">@ ${step.target || 'lab'}</span>
+              <span class="step-title">${this.escapeHTML(step.friendly_title)}</span>
+              <span class="step-target">@ ${this.escapeHTML(step.target || 'lab')}</span>
               ${badgeHtml}
             </div>
-            <div class="step-why">${step.why || ''} <span class="step-params-hint">${this.escapeHTML(paramsStr)}</span></div>
+            <div class="step-why">${this.escapeHTML(step.why || '')} <span class="step-params-hint">${this.escapeHTML(paramsStr)}</span></div>
             ${
               step.predicted_violations && step.predicted_violations.length > 0
                 ? `<div class="step-violation-warning">⚠️ ${this.escapeHTML(step.predicted_violations[0].explanation)}</div>`

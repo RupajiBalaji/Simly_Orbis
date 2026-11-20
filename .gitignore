@@ -32,3 +32,6 @@ Thumbs.db
 # QA Artifacts
 qa/out/
 
+# Security Audit
+AUDIT.md
+

@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # RC1 Hardening & Cost Protection
     mentor_daily_cap: int = 300
     ai_enabled: bool = True
-    allowed_origins: str = "*"
+    allowed_origins: str = "http://localhost:8000,http://127.0.0.1:8000"
     trust_proxy: bool = False
     git_sha: str = ""
     app_version: str = "0.7.0-dev"
