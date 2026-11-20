@@ -78,7 +78,7 @@ def get_available_actions(session: LabSession) -> list[AvailableAction]:
     is_active = session.status == "active"
     actions: list[AvailableAction] = []
 
-    if session.experiment_id == "launch_bench" or exp.district == "space":
+    if session.experiment_id == "launch_bench":
         r_state = session.apparatus_state.get("rocket", {})
         fc = session.apparatus_state.get("flight_computer", {})
         rc = session.apparatus_state.get("range_control", {})
@@ -1266,29 +1266,6 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
                 name="camera_shake",
                 duration_ms=2000,
             ).model_dump())
-        elif outcome == "orbit_eccentric":
-            v_kms = achieved_orbit.get("velocity_kms", 7.6)
-            ap_km = achieved_orbit.get("apoapsis_km", target_alt_km * 1.5)
-            pe_km = achieved_orbit.get("periapsis_km", target_alt_km * 0.7)
-            msg = f"ECCENTRIC ORBIT: Insertion velocity {v_kms:.2f} km/s. Apogee {ap_km:.0f} km, Perigee {pe_km:.0f} km. Eccentricity exceeded circular limit."
-            visuals.append(VisualDirective(
-                type="failure",
-                target="earth_orbit",
-                failure="orbit_eccentric",
-            ).model_dump())
-            pts = kepler_orbit_points(pe_km, ap_km, n_points=64)
-            visuals.append(VisualDirective(
-                type="orbit_path",
-                target="earth_orbit",
-                orbit_path=pts,
-            ).model_dump())
-        elif outcome == "transfer_failed":
-            msg = "HOHMANN TRANSFER FAILED: Insufficient delta-v to circularize at target geostationary altitude."
-            visuals.append(VisualDirective(
-                type="failure",
-                target="earth_orbit",
-                failure="transfer_failed",
-            ).model_dump())
         else:
             ap_km = achieved_orbit.get("apoapsis_km", target_alt_km)
             pe_km = achieved_orbit.get("periapsis_km", target_alt_km)
@@ -1821,7 +1798,7 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
         else:
             session.score_parts["accuracy"] = 10 if flask.get("titrant_added_ml", 0.0) > 0 else 0
 
-    elif session.experiment_id == "launch_bench" or exp.district == "space":
+    elif session.experiment_id == "launch_bench":
         # 1. Accuracy (30 max)
         tracking = session.apparatus_state.get("tracking_station", {})
         outcome = tracking.get("outcome")
