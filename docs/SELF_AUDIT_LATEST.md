@@ -11,7 +11,7 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 96, HEAD: d4b5d511 |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 97, HEAD: 4d62686f |
 | 2 | App Version | **PASS** | Version `0.7.0-dev` declared in `backend/app/config.py` |
 | 3 | Pytest Test Suite | **PASS** | covered by CI pytest step |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
@@ -29,10 +29,11 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `d4b5d511` | Clean: True (expected audit files: True) | Ahead: 96
+HEAD: `4d62686f` | Clean: True (expected audit files: True) | Ahead: 97
 
 **Last 15 Commits:**
 ```
+4d62686 docs(audit): finalize stage-gate audit report for Phase P4
 d4b5d51 docs(audit): update stage-gate self-audit report and touch e2e screenshots
 10889d8 fix(qa): optimize AI model cascading timeouts and bypass rate limiter during automated QA
 1e699f2 fix(audit): resolve static audit issues across backend routes, audit script, and authoring UI
@@ -47,7 +48,6 @@ c8b6762 feat(pharma): expand and freeze drug library with G5 provenance declarat
 e2e6ab9 chore(version): bump platform version to 0.7.0-dev for Phase P4
 e343fe9 docs(p3): complete RECHECK_P3.md and update Phase 3 report with honest disclosures
 78d9ceb test(briefing): verify strict rule set isolation across all six laboratory experiments
-b35bd46 docs(chem): document G5 provenance for buffer and kinetics constants with physical caveats
 ```
 
 ### Gate 3: Pytest Test Suite
