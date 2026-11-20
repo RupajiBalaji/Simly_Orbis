@@ -321,3 +321,37 @@ def test_tolerances_configuration_frozen():
         f"got {computed_sha256}. Tolerances are frozen to prevent loosening thresholds."
     )
 
+
+def test_frozen_hashes_byte_identical_to_git_baseline():
+    """H1 Guard: Verifies that every .sha256 file and frozen tolerance YAML
+    is byte-identical to its git baseline object.
+    """
+    import subprocess
+
+    base_dir = Path(__file__).resolve().parent.parent.parent
+    files_to_check = [
+        "validation/tolerances.yaml",
+        "validation/space_tolerances.yaml",
+        "validation/pkpd_tolerances.yaml",
+        "validation/chem_tolerances.yaml",
+        "validation/chem_tolerances.sha256",
+        "backend/tests/data/agent_seed_heldout.sha256",
+    ]
+
+    for rel_path in files_to_check:
+        full_path = base_dir / rel_path
+        assert full_path.exists(), f"Missing file: {rel_path}"
+
+        # Ensure git diff since before CRLF change is empty
+        proc = subprocess.run(
+            ["git", "diff", "19892ee~1", "HEAD", "--", rel_path],
+            cwd=base_dir,
+            capture_output=True,
+            text=True,
+        )
+        assert proc.returncode == 0, f"git diff failed for {rel_path}: {proc.stderr}"
+        assert proc.stdout.strip() == "", (
+            f"File '{rel_path}' diverged from git object baseline before CRLF fix! Diff:\n{proc.stdout}"
+        )
+
+
