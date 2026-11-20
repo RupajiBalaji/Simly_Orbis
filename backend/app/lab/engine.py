@@ -78,7 +78,7 @@ def get_available_actions(session: LabSession) -> list[AvailableAction]:
     is_active = session.status == "active"
     actions: list[AvailableAction] = []
 
-    if session.experiment_id == "launch_bench":
+    if session.experiment_id == "launch_bench" or exp.district == "space":
         r_state = session.apparatus_state.get("rocket", {})
         fc = session.apparatus_state.get("flight_computer", {})
         rc = session.apparatus_state.get("range_control", {})
@@ -1798,7 +1798,7 @@ def apply_action(session: LabSession, req: ActionRequest) -> ActionResult:
         else:
             session.score_parts["accuracy"] = 10 if flask.get("titrant_added_ml", 0.0) > 0 else 0
 
-    elif session.experiment_id == "launch_bench":
+    elif session.experiment_id == "launch_bench" or exp.district == "space":
         # 1. Accuracy (30 max)
         tracking = session.apparatus_state.get("tracking_station", {})
         outcome = tracking.get("outcome")

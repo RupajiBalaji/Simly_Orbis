@@ -773,7 +773,9 @@ DOSE_LAB_RULES: list[SafetyRule] = [
 def check_safety_rules(session: LabSession, req: ActionRequest) -> list[Violation]:
     """Evaluate active safety rules for the given action and return detected violations."""
     violations: list[Violation] = []
-    if session.experiment_id == "launch_bench":
+    if session.experiment_id == "launch_bench" or session.experiment_id in (
+        "first_orbit", "fuel_limited_orbit", "hohmann_transfer", "twr_abort", "mass_budget_design"
+    ):
         active_rules = SPACE_RULES
     elif session.experiment_id == "dose_lab":
         active_rules = DOSE_LAB_RULES

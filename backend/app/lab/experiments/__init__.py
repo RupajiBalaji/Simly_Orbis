@@ -55,6 +55,8 @@ def _get_spec_experiment(experiment_id: str) -> ExperimentDefinition | None:
         return None
 
     legacy_base = _EXPERIMENTS.get(experiment_id)
+    if legacy_base is None and spec.district == "space":
+        legacy_base = LAUNCH_BENCH_EXPERIMENT
     base_app = legacy_base.apparatus if legacy_base else {}
     base_inv = legacy_base.inventory if legacy_base else {}
     base_ppe = legacy_base.required_ppe if legacy_base else None
@@ -94,9 +96,15 @@ def get_experiment(experiment_id: str) -> ExperimentDefinition:
         if spec_exp is not None:
             return spec_exp
 
-    if experiment_id not in _EXPERIMENTS:
-        raise KeyError(f"Unknown experiment: {experiment_id!r}. Available: {list(_EXPERIMENTS)}")
-    return _EXPERIMENTS[experiment_id]
+    if experiment_id in _EXPERIMENTS:
+        return _EXPERIMENTS[experiment_id]
+
+    # Check if a declarative spec exists for scenarios
+    spec_exp = _get_spec_experiment(experiment_id)
+    if spec_exp is not None:
+        return spec_exp
+
+    raise KeyError(f"Unknown experiment: {experiment_id!r}. Available: {list(_EXPERIMENTS)}")
 
 
 __all__ = [
