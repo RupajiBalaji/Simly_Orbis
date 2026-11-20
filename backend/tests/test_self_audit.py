@@ -74,14 +74,14 @@ def test_audit_check_protected_files_fails_on_planted_change(monkeypatch):
     orig_run = subprocess.run
 
     def mock_run(cmd, *args, **kwargs):
-        if len(cmd) >= 4 and cmd[0] == "git" and cmd[1] == "cat-file":
+        if len(cmd) >= 4 and cmd[0] == "git" and cmd[1] == "cat-file" and "commit" in cmd[3]:
             class MockRev:
                 returncode = 0
             return MockRev()
-        if len(cmd) >= 5 and cmd[0] == "git" and cmd[1] == "diff" and "backend/app/chem/kinetics.py" in cmd:
+        if len(cmd) >= 5 and cmd[0] == "git" and cmd[1] == "diff" and "backend/app/modules/pharma_pk.py" in cmd:
             class MockProc:
                 returncode = 0
-                stdout = "diff --git a/kinetics.py b/kinetics.py\n+ planted unauthorized mutation"
+                stdout = "diff --git a/pharma_pk.py b/pharma_pk.py\n+ planted unauthorized mutation"
                 stderr = ""
             return MockProc()
         return orig_run(cmd, *args, **kwargs)
@@ -91,14 +91,14 @@ def test_audit_check_protected_files_fails_on_planted_change(monkeypatch):
     assert res.gate_id == 6
     assert res.passed is False
     assert "Violations: 1 files" in res.evidence
-    assert "UNAUTHORIZED MODIFICATION in `backend/app/chem/kinetics.py`" in res.details
+    assert "UNAUTHORIZED MODIFICATION in `backend/app/modules/pharma_pk.py`" in res.details
 
 
 def test_audit_check_protected_files_fails_on_deleted_rule(monkeypatch):
     orig_run = subprocess.run
 
     def mock_run(cmd, *args, **kwargs):
-        if len(cmd) >= 4 and cmd[0] == "git" and cmd[1] == "cat-file":
+        if len(cmd) >= 4 and cmd[0] == "git" and cmd[1] == "cat-file" and "commit" in cmd[3]:
             class MockRev:
                 returncode = 0
             return MockRev()
