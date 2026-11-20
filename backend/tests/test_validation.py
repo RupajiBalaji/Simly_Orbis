@@ -265,7 +265,7 @@ def test_pkpd_tolerances_configuration_frozen():
     tol_file = base_dir / "validation" / "pkpd_tolerances.yaml"
     assert tol_file.exists(), "validation/pkpd_tolerances.yaml missing"
 
-    content = tol_file.read_bytes()
+    content = tol_file.read_bytes().replace(b"\r\n", b"\n")
     computed_sha256 = hashlib.sha256(content).hexdigest()
 
     FROZEN_PKPD_TOLERANCES_SHA256 = "443d18ab90e60b43e7070779c6b0ba2d5aea431a3f7ec3373ca0349ad1064e75"
@@ -286,7 +286,7 @@ def test_space_tolerances_configuration_frozen():
     tol_file = base_dir / "validation" / "space_tolerances.yaml"
     assert tol_file.exists(), "validation/space_tolerances.yaml missing"
 
-    content = tol_file.read_bytes()
+    content = tol_file.read_bytes().replace(b"\r\n", b"\n")
     computed_sha256 = hashlib.sha256(content).hexdigest()
 
     FROZEN_SPACE_TOLERANCES_SHA256 = "fc4ba76cb3ee9d65a48c602f3be2306ba8e24e78c448f30745c03335c8288de2"
@@ -310,7 +310,7 @@ def test_tolerances_configuration_frozen():
     tol_file = base_dir / "validation" / "tolerances.yaml"
     assert tol_file.exists(), "validation/tolerances.yaml missing"
 
-    content = tol_file.read_bytes()
+    content = tol_file.read_bytes().replace(b"\r\n", b"\n")
     computed_sha256 = hashlib.sha256(content).hexdigest()
 
     # Frozen baseline hash computed from validation/tolerances.yaml

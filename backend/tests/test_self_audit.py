@@ -74,6 +74,10 @@ def test_audit_check_protected_files_fails_on_planted_change(monkeypatch):
     orig_run = subprocess.run
 
     def mock_run(cmd, *args, **kwargs):
+        if len(cmd) >= 4 and cmd[0] == "git" and cmd[1] == "cat-file":
+            class MockRev:
+                returncode = 0
+            return MockRev()
         if len(cmd) >= 5 and cmd[0] == "git" and cmd[1] == "diff" and "backend/app/chem/kinetics.py" in cmd:
             class MockProc:
                 returncode = 0
@@ -94,6 +98,10 @@ def test_audit_check_protected_files_fails_on_deleted_rule(monkeypatch):
     orig_run = subprocess.run
 
     def mock_run(cmd, *args, **kwargs):
+        if len(cmd) >= 4 and cmd[0] == "git" and cmd[1] == "cat-file":
+            class MockRev:
+                returncode = 0
+            return MockRev()
         if len(cmd) >= 5 and cmd[0] == "git" and cmd[1] == "diff" and "backend/app/lab/rules.py" in cmd:
             class MockProc:
                 returncode = 0

@@ -224,7 +224,7 @@ def check_pytest_run(repo_root: Path, skip_venv: bool = False) -> GateResult:
             # 1. git clone into temp dir
             repo_url = "file:///" + str(repo_root.resolve()).replace("\\", "/")
             clone_res = subprocess.run(
-                ["git", "clone", "--depth=1", repo_url, str(repo_copy)],
+                ["git", "clone", repo_url, str(repo_copy)],
                 capture_output=True,
                 text=True,
             )

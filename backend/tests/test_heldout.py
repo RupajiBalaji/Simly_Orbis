@@ -32,7 +32,7 @@ def test_agent_seed_heldout_corpus_hash_guard():
     assert AGENT_SEED_JSON.exists(), "agent_seed_heldout_phrases.json missing"
     assert AGENT_SEED_SHA.exists(), "agent_seed_heldout.sha256 missing"
 
-    actual_hash = hashlib.sha256(AGENT_SEED_JSON.read_bytes()).hexdigest()
+    actual_hash = hashlib.sha256(AGENT_SEED_JSON.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     expected_hash = AGENT_SEED_SHA.read_text(encoding="utf-8").strip()
 
     assert actual_hash == expected_hash, (

@@ -25,7 +25,7 @@ def test_chem_tolerances_configuration_frozen():
     assert tol_file.exists(), "validation/chem_tolerances.yaml missing"
     assert sha_file.exists(), "validation/chem_tolerances.sha256 missing"
 
-    content = tol_file.read_bytes()
+    content = tol_file.read_bytes().replace(b"\r\n", b"\n")
     computed_sha = hashlib.sha256(content).hexdigest()
     recorded_sha = sha_file.read_text().strip()
 
