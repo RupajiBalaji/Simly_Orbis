@@ -105,12 +105,17 @@ class SecurityAndRateLimitMiddleware(BaseHTTPMiddleware):
 
         client_ip = None
         forwarded_for = request.headers.get("x-forwarded-for")
-        is_test_runner = (
-            request.url.netloc == "test"
-            or request.headers.get("host") == "test"
-            or os.environ.get("ENVIRONMENT", "").lower() in ("test", "testing")
-            or os.environ.get("QA_MODE", "").lower() == "true"
+        is_production = (
+            os.environ.get("ENVIRONMENT", "").lower() == "production"
+            or os.environ.get("RENDER", "").lower() in ("true", "1")
         )
+        if is_production:
+            is_test_runner = False
+        else:
+            is_test_runner = (
+                os.environ.get("ENVIRONMENT", "").lower() in ("test", "testing")
+                or os.environ.get("QA_MODE", "").lower() == "true"
+            )
 
         trust_proxy = (
             getattr(settings, "trust_proxy", False)
@@ -153,7 +158,7 @@ class SecurityAndRateLimitMiddleware(BaseHTTPMiddleware):
         # 2. Rate limiting check on /api/ endpoints (when client_ip is resolved)
         if client_ip and path.startswith("/api"):
             category = "general"
-            if "/mentor" in path or path.endswith("/tutor"):
+            if "/mentor" in path or path.endswith("/tutor") or "/agent/plan" in path:
                 category = "ai"
             elif path == "/api/lab/sessions" and request.method == "POST":
                 category = "session_create"
@@ -178,6 +183,7 @@ class SecurityAndRateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=()"
 
         # CSP Policy: Tightened with connect-src 'self' only (wildcard removed).
         # 'unsafe-inline' is retained in script-src/style-src for <script type="importmap"> and dynamic HUD DOM styles.

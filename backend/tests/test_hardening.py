@@ -6,7 +6,9 @@ Rate Limiting, Health, and Ping Endpoints.
 from __future__ import annotations
 
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
+
+from app.main import app
 
 from app.config import settings
 from app.security import (
@@ -188,3 +190,69 @@ async def test_mentor_fallback_when_cap_reached(client: AsyncClient):
         assert "AI mentor resting" in (data["fallback_reason"] or "")
     finally:
         settings.mentor_daily_cap = orig_cap
+
+
+# ---------------------------------------------------------------------------
+# 7. Rate Limit Bypass Hardening (F12)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_production_mode_with_qa_mode_and_host_test_must_rate_limit(monkeypatch: pytest.MonkeyPatch):
+    """
+    F12: is_test_runner must be false in production mode even if QA_MODE=true
+    and client passes Host: test or netloc test. Rate limit must be enforced.
+    """
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("QA_MODE", "true")
+    monkeypatch.delenv("RENDER", raising=False)
+    rate_limiter._buckets.clear()
+
+    transport = ASGITransport(app=app)
+    # base_url="http://test" sets host to test
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        # Category "session_create" has limit 20 req/min
+        for i in range(20):
+            resp = await ac.post("/api/lab/sessions", json={"experiment_id": "pk_ward"})
+            assert resp.status_code != 429, f"Premature 429 at request {i}"
+
+        # 21st request must trigger 429
+        resp21 = await ac.post("/api/lab/sessions", json={"experiment_id": "pk_ward"})
+        assert resp21.status_code == 429
+        data = resp21.json()
+        assert "Rate limit exceeded" in data["detail"]
+
+
+@pytest.mark.asyncio
+async def test_render_production_mode_must_rate_limit(monkeypatch: pytest.MonkeyPatch):
+    """
+    F12: RENDER=true counts as production; must rate-limit even if ENVIRONMENT=test.
+    """
+    monkeypatch.setenv("ENVIRONMENT", "test")
+    monkeypatch.setenv("RENDER", "true")
+    rate_limiter._buckets.clear()
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        for i in range(20):
+            resp = await ac.post("/api/lab/sessions", json={"experiment_id": "pk_ward"})
+            assert resp.status_code != 429, f"Premature 429 at request {i}"
+
+        resp21 = await ac.post("/api/lab/sessions", json={"experiment_id": "pk_ward"})
+        assert resp21.status_code == 429
+        assert "Rate limit exceeded" in resp21.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_non_production_test_environment_bypasses_rate_limit(monkeypatch: pytest.MonkeyPatch):
+    """
+    F12: Non-production test environment (ENVIRONMENT=test, no RENDER) bypasses rate-limiting.
+    """
+    monkeypatch.setenv("ENVIRONMENT", "test")
+    monkeypatch.delenv("RENDER", raising=False)
+    rate_limiter._buckets.clear()
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        for _ in range(25):
+            resp = await ac.post("/api/lab/sessions", json={"experiment_id": "pk_ward"})
+            assert resp.status_code != 429
