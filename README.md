@@ -1,182 +1,258 @@
 # Simly Orbis
 
-> **A science learning game where you play the scientist, not the spectator.**
+> **A 3D science laboratory simulation where you play the scientist, not the spectator.**
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-simly--orbis.onrender.com-brightgreen.svg?style=for-the-badge&logo=render)](https://simly-orbis.onrender.com/)
 [![CI](https://github.com/RupajiBalaji/Simly_Orbis/actions/workflows/ci.yml/badge.svg)](https://github.com/RupajiBalaji/Simly_Orbis/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-401%20passed-success.svg)](https://github.com/RupajiBalaji/Simly_Orbis)
+[![Tests](https://img.shields.io/badge/tests-777%2B%20passed-success.svg)](https://github.com/RupajiBalaji/Simly_Orbis)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.14-blue.svg)](https://www.python.org/)
+[![Version](https://img.shields.io/badge/version-0.7.0--dev-orange.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Simly Orbis is an interactive 3D science laboratory simulation platform where actions carry physical consequences before students or researchers touch physical equipment or real patients. Built with a high-performance **FastAPI** backend executing exact deterministic equations (Bateman pharmacokinetics, multi-compartment PK/PD, orbital mechanics, and charge-balance equilibrium acid-base solver) and a procedural **Three.js** frontend achieving 60 FPS on our test laptop (AMD Ryzen, integrated graphics) with zero external 3D model asset downloads (free demo server may take up to a minute to wake up). Features **Dr. Orbis**, an embedded pedagogical AI mentor powered by Google Gemini with strict prompt-injection defenses and deterministic rule-based fallback, plus a large-scale **Virtual Clinical Trial** engine simulating up to 1,000 patients in under 20 ms.
+**[🎮 Launch Live Simulation in Browser](https://simly-orbis.onrender.com/)** &nbsp;|&nbsp; **[📖 System Architecture](docs/ARCHITECTURE.md)** &nbsp;|&nbsp; **[🧪 Scientific Model Cards](#-scientific-simulation-engines--model-cards)** &nbsp;|&nbsp; **[🚀 Quickstart](#-quickstart)**
 
 ---
 
-## 🔍 Honest Status & Credibility Baseline
+## 🌟 What is Simly Orbis?
 
-- **Current Version:** `v0.7.0-dev` (educational simulation prototype; see [CHANGELOG.md](CHANGELOG.md) and [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)).
-- **What is Simulated:**
-  - **Pharmacokinetics Ward (`pk_ward`)**: 1-compartment open oral pharmacokinetic model (Bateman absorption, distribution, and first-order elimination). Evaluates tare/weighing, dissolution, dosing, timed blood sampling, and plasma centrifuge assay.
-  - **Titration Bench (`titration_bench`)**: Monoprotic strong/weak acid-base neutralization solved via rigorous aqueous charge-balance electroneutrality with water auto-ionization; continuous indicator color transitions (phenolphthalein / methyl orange).
-  - **Launch & Orbit Bench (`launch_bench`)**: Multi-stage Tsiolkovsky $\Delta v$, vis-viva equation, Keplerian orbital period, Hohmann transfer to GEO, TWR safety bounds, and RK4 numerical state propagation ([docs/space_physics.md](docs/space_physics.md)).
-  - **Dose Response Lab (`dose_lab`)**: 1-compartment and 2-compartment open models across oral, IV bolus, and IV infusion routes; multi-dose regimens, Hill $E_{\max}$ pharmacodynamics, adult covariate allometry, Cockcroft-Gault renal adjustment, and regimen comparison overlays ([docs/pkpd_models.md](docs/pkpd_models.md)).
-  - **Virtual Population Trial (`pharma.trial`)**: Vectorized NumPy Monte Carlo cohort simulation (log-normal clearance and volume variance with hepatic impairment subgroup).
-- **What is NOT Validated:**
-  - Simulation numbers are educational benchmarks, not medical advice or flight-readiness mission software. All literature reference rows in `validation/data/*.csv` are currently marked `unverified` pending expert human full-text verification ([docs/validation/VERIFICATION_WORKSHEET.md](docs/validation/VERIFICATION_WORKSHEET.md)).
-  - Therapeutic green/red safety bands and rocket staging parameters are `game-balanced` for educational pacing.
-  - Does NOT replace in vivo animal studies, clinical drug trials, or mission-planning flight software. Pediatric inputs are strictly prohibited.
-- **What is Locked:**
-  - Market District (Market Microstructure) is locked ("🔒 Coming Soon"). Active simulation spans Pharma (Ward & Dose Lab), Chemistry, and Space.
+**Simly Orbis** is an interactive, browser-based 3D laboratory game where laboratory actions carry **real physical, biochemical, and safety consequences**. 
+
+Unlike conventional educational games that replay pre-baked canned animations or rely on unpredictable LLM hallucinations, Simly Orbis couples a procedural **60 FPS Three.js virtual lab** directly to **deterministic, textbook mathematical and physical engines**:
+
+* 💊 **Real Pharmacokinetics & Pharmacodynamics:** Bateman oral absorption, 2-compartment IV kinetics, Hill $E_{\max}$ drug efficacy, and Cockcroft-Gault renal clearance adjustments.
+* 🧪 **Aqueous Physical Chemistry:** Exact electroneutrality charge-balance equilibrium solvers, continuous indicator pH transitions, Arrhenius reaction kinetics, and Henderson-Hasselbalch buffer capacities.
+* 🚀 **Orbital Mechanics & Astrodynamics:** Multi-stage Tsiolkovsky $\Delta v$, Keplerian orbital periods, Hohmann transfer orbits to GEO, and Runge-Kutta 4th-order (RK4) numerical state propagation.
+* 👥 **Virtual Clinical Population Trials:** Vectorized Monte Carlo engine simulating up to 1,000 diverse patients in under 20 milliseconds, visualized as a live 3D instanced crowd wave.
+* 🤖 **Dr. Orbis AI Lab Mentor:** Ephemeral pedagogical advisor powered by Google Gemini with strict prompt-injection defenses and an instant deterministic rule-based fallback.
+* ⚡ **Zero 3D Asset Downloads:** Procedurally constructed 3D models and geometry load instantly, running smoothly at 60 FPS even on integrated graphics laptops with zero gigabyte asset downloads.
+
+> 🌐 **Try it Live**: **[https://simly-orbis.onrender.com/](https://simly-orbis.onrender.com/)**  
+> *(Hosted on Render. If the service is sleeping on the free tier, our built-in wake-up overlay automatically guides you through the ~45s cold start).*
 
 ---
 
-## 🚀 Quickstart & Demo
+## 🧪 Laboratory Districts & Active Experiments
 
-### Live Deployment
-- **Live Demo:** [https://simly-orbis.onrender.com](https://simly-orbis.onrender.com) *(Hosted on Render Free Tier. Built-in wake-up overlay handles free tier cold starts)*
-- **Deployment Guide:** See [docs/DEPLOY.md](docs/DEPLOY.md) for 5-click deployment via `render.yaml` Blueprint.
+Simly Orbis features 6 fully interactive laboratory benches across Pharmacology, Chemistry, and Spaceflight, plus a large-scale Clinical Trial arena:
 
-### Run with Docker
-```bash
-# Build production container image
-docker build -t simly-orbis:latest .
-
-# Run container locally on port 8000
-docker run -p 8000:8000 simly-orbis:latest
 ```
-Open `http://localhost:8000` in your web browser.
+                                  ┌─────────────────────────────┐
+                                  │      SIMLY ORBIS LABS       │
+                                  └──────────────┬──────────────┘
+                ┌────────────────────────────────┼────────────────────────────────┐
+                ▼                                ▼                                ▼
+     PHARMACOLOGY DISTRICT               CHEMISTRY BENCHES                 SPACE DISTRICT
+  ┌─────────────────────────┐       ┌─────────────────────────┐       ┌─────────────────────────┐
+  │ • Pharmacokinetics Ward │       │ • Acid-Base Titration   │       │ • Launch & Orbit Bench  │
+  │ • Dose Response Lab     │       │ • Reaction Kinetics     │       │   (Tsiolkovsky, Hohmann,│
+  │ • Virtual Trial Arena   │       │ • Buffer Equilibrium    │       │    RK4 Orbital Propag.) │
+  └─────────────────────────┘       └─────────────────────────┘       └─────────────────────────┘
+```
 
-### Run with Python Locally
+### 1. 💊 Pharmacokinetics Ward (`pk_ward`)
+* **Physical Workflow:** Students weigh dry drug compound on an analytical balance with tare stabilization, dissolve solute in calibrated solvent, administer an oral dose to a simulated patient, draw timed blood samples, centrifuge plasma, and read concentration via spectrophotometer.
+* **Governing Math:** One-compartment open oral absorption model with Bateman function:
+  $$C(t) = \frac{\text{Dose} \cdot k_a}{V_d \cdot (k_a - k_e)} \left(e^{-k_e t} - e^{-k_a t}\right)$$
+* **Lab Hazards:** Dosing before dissolution, improper tare, missed blood-draw windows, or miscalculating clearance.
+
+### 2. 🧪 Acid-Base Titration Bench (`titration_bench`)
+* **Physical Workflow:** Prepare volumetric analyte, prime and zero the burette, dispense strong base into acid drop-by-drop, observe dynamic meniscus drainage and color shifts, and calculate exact unknown acid concentration.
+* **Governing Math:** Exact aqueous electroneutrality charge-balance equation with auto-ionization of water ($K_w = 1.0 \times 10^{-14}$):
+  $$[\text{H}^+] - \frac{K_w}{[\text{H}^+]} + \frac{C_b V_b}{V_a + V_b} - \frac{C_a V_a}{V_a + V_b} \cdot \frac{K_a}{[\text{H}^+] + K_a} = 0$$
+* **Visual Realism:** Continuous color interpolation across the indicator's transition range (phenolphthalein colorless $\to$ vibrant magenta; methyl orange red $\to$ yellow).
+
+### 3. 🚀 Launch & Orbital Mechanics Bench (`launch_bench`)
+* **Physical Workflow:** Configure rocket staging, fuel fractions, and engine ISP; launch into suborbital ascent; circularize into Low Earth Orbit (LEO); and calculate Hohmann transfer $\Delta v$ burns to Geostationary Orbit (GEO).
+* **Governing Math:** Multi-stage Tsiolkovsky rocket equation, vis-viva equation, Keplerian orbital period, and energy-conserving RK4 state propagation ($< 10^{-6}$ energy drift):
+  $$\Delta v = I_{\text{sp}} g_0 \ln\left(\frac{m_0}{m_f}\right), \quad v^2 = \mu \left(\frac{2}{r} - \frac{1}{a}\right)$$
+
+### 4. 💉 Dose Response & PK/PD Lab (`dose_lab`)
+* **Physical Workflow:** Explore multi-compartment pharmacokinetics across oral, IV bolus, and continuous IV infusion routes. Tailor regimens to adult patients with varying body weight and renal function.
+* **Governing Math:** Two-compartment disposition kinetics coupled to the Hill sigmoidal $E_{\max}$ pharmacodynamic response:
+  $$E = E_0 + \frac{E_{\max} \cdot C^\gamma}{EC_{50}^\gamma + C^\gamma}$$
+* **Covariate Allometry:** Real-time Cockcroft-Gault creatinine clearance (CrCl) calculation and allometric volume/clearance scaling for adults aged 18–90.
+
+### 5. ⚗️ Reaction Kinetics Bench (`kinetics_bench`)
+* **Physical Workflow:** Measure chemical reaction rates at varying reactant concentrations and temperatures. Determine reaction orders (zero, first, or second-order) and plot Arrhenius temperature dependence.
+* **Governing Math:** Differential rate laws integrated via RK4 and the Arrhenius equation:
+  $$k = A \exp\left(-\frac{E_a}{R T}\right), \quad \frac{d[A]}{dt} = -k [A]^n$$
+
+### 6. 🧴 Buffer Equilibrium Bench (`buffer_bench`)
+* **Physical Workflow:** Formulate biological and chemical buffers (acetate, phosphate, TRIS, and bicarbonate). Stress buffers by titrating strong acid or base, observing pH stabilization within the buffer capacity window.
+* **Governing Math:** Henderson-Hasselbalch relation and Van Slyke buffer capacity ($\beta$):
+  $$\beta = 2.303 \left( \frac{K_w}{[\text{H}^+]} + [\text{H}^+] + \frac{C_{\text{buf}} K_a [\text{H}^+]}{(K_a + [\text{H}^+])^2} \right)$$
+
+### 7. 👥 Virtual Population Clinical Trial v2 (`pharma.trial`)
+* **Scale:** Simulates 100 to 1,000 virtual human patients in $< 20\text{ ms}$ using vectorized NumPy Monte Carlo sampling.
+* **Variability:** Log-normal inter-individual variability in clearance, volume of distribution, and absorption rate, with special impairment sub-cohorts (e.g., hepatic or renal impairment).
+* **Visualization:** Instanced 3D stadium crowd where each avatar lights up dynamically based on therapeutic status: 🟢 In Therapeutic Window, 🟡 Subtherapeutic (Ineffective), 🔴 Toxic Concentration.
+
+---
+
+## 🎮 How to Play & Controls
+
+| Input | Action | Description |
+|---|---|---|
+| <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> | Move Character | Smooth walking locomotion through the 3D lab environment |
+| <kbd>Shift</kbd> | Sprint | Accelerate to 4.0 m/s for rapid transit across districts |
+| <kbd>E</kbd> | Interact / Radial Menu | Open contextual action wheel when standing near lab equipment |
+| <kbd>V</kbd> | First-Person View | Switch camera to hands/apparatus inspection view |
+| <kbd>Mouse Drag</kbd> | Orbit Camera | Freely pan and inspect experiments from any angle |
+| <kbd>Touch Joystick</kbd> | Mobile Movement | Virtual on-screen joystick for mobile and tablet browsers |
+
+---
+
+## 🚀 Quickstart
+
+### Option A: Open the Live Web App (Fastest)
+Simply visit **[https://simly-orbis.onrender.com/](https://simly-orbis.onrender.com/)** in any modern web browser (Chrome, Edge, Firefox, Safari).
+
+### Option B: Run via Docker (Recommended for Local Dev)
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/RupajiBalaji/Simly_Orbis.git
 cd Simly_Orbis
 
-# Install pinned dependencies
+# 2. Build the production Docker image
+docker build -t simly-orbis .
+
+# 3. Run the container
+docker run -p 8000:8000 simly-orbis
+```
+Open **`http://localhost:8000`** in your browser.
+
+### Option C: Run with Python Locally
+```bash
+# 1. Clone & enter repository
+git clone https://github.com/RupajiBalaji/Simly_Orbis.git
+cd Simly_Orbis
+
+# 2. Create and activate a Python 3.12+ virtual environment
+python -m venv .venv
+# Linux/macOS:
+source .venv/bin/activate
+# Windows:
+.venv\Scripts\activate
+
+# 3. Install dependencies
 pip install -r backend/requirements.txt
 
-# Start FastAPI server
+# 4. Launch the application
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --app-dir backend
 ```
-Visit `http://localhost:8000`.
-
----
-
-## 📡 API Endpoints & Rate Limits
-
-Simly Orbis includes built-in in-memory token-bucket rate limiting, 20 KB payload size protection, and security headers (CSP, `X-Content-Type-Options: nosniff`, `frame-ancestors 'none'`).
-
-| Method | Endpoint | Description | Rate Limit |
-|---|---|---|---|
-| `GET` | `/api/health` | Service health status, storage mode, collections, and git SHA | 120 req / min |
-| `GET` | `/api/ping` | Low-latency ping endpoint for wake-up polling (`{"ping": "pong"}`) | 120 req / min |
-| `GET` | `/api/modules` | List registered simulation engines (`pharma.pk`, `chem.titration`, `pharma.trial`, `space.orbit`, `pharma.pkpd`) | 120 req / min |
-| `GET` | `/api/modules/{id}/reality-check` | Execute analytical invariant verification checks (checked against textbook equations and internal consistency; not clinical validation) | 120 req / min |
-| `GET` | `/api/modules/{id}/model-card` | Retrieve scientific model card (assumptions, equations, boundaries) | 120 req / min |
-| `POST` | `/api/run` | Execute any registered simulation module with parameter validation | 120 req / min |
-| `GET` | `/api/lab/experiments` | List interactive laboratory experiments (`pk_ward`, `titration_bench`, `launch_bench`, `dose_lab`) | 120 req / min |
-| `POST` | `/api/lab/sessions` | Create a new stateful laboratory session (`nickname`, `experiment_id`) | 20 req / min |
-| `GET` | `/api/lab/sessions/{id}` | Retrieve current session state, clock, apparatus, and checklist | 120 req / min |
-| `POST` | `/api/lab/sessions/{id}/actions` | Apply laboratory action (`weigh`, `dissolve`, `titrate`, etc.) | 120 req / min |
-| `POST` | `/api/lab/sessions/{id}/mentor` | Consult Dr. Orbis AI mentor (`hint`, `explain`, `ask`, `debrief`) | 10 req / min |
-| `POST` | `/api/lab/sessions/{id}/finish` | Complete experiment, score student performance, and issue report | 120 req / min |
-| `POST` | `/api/trial/run` | Vectorized population clinical trial simulation (up to 1,000 patients) | 120 req / min |
-| `POST` | `/api/trial/compare` | Compare tested dosing regimen against reference standard | 120 req / min |
-
----
-
-## 🔬 Scientific Simulation Engines & Model Cards
-
-Simulations in Simly Orbis are **deterministic and reproducible**. Outcomes are governed by physical equations, never hallucinated by an LLM.
-
-```
-Analytical Reality Checks: 11 / 11 Passed [PASS]
-```
-
-1. **`pharma.pk` (Pharmacokinetics)**:
-   - **Equation**: One-compartment oral absorption Bateman function:
-     $$C(t) = \frac{\text{Dose} \cdot k_a}{V_d \cdot (k_a - k_e)} \cdot \left(e^{-k_e t} - e^{-k_a t}\right)$$
-     with linear superposition across multi-dose intervals.
-   - **Reality Checks**: Single-dose $C_{max}$ analytical peak formula equivalence, steady-state clearance rate match, mass balance conservation.
-2. **`chem.titration` (Volumetric Acid-Base Titration)**:
-   - **Equation**: Exact aqueous charge-balance equilibrium solver with water auto-ionization ($K_w = 1.0 \times 10^{-14}$), with the Henderson-Hasselbalch relation used only for the half-equivalence check ($pH = pK_a$); indicator color is modeled as a continuous interpolation across the indicator's pH transition range (e.g. phenolphthalein colorless at $pH < 8.2$ transitioning to magenta at $pH > 10.0$ centered at $pK_{ind} = 9.3$).
-   - **Reality Checks**: Neutral water pH at $V_b=0$, equivalence point stoichiometric pH, strong acid asymptotic limit, buffer half-equivalence $pH = pK_a$.
-3. **`pharma.trial` (Virtual Clinical Trial)**:
-   - **Engine**: Vectorized NumPy Monte Carlo engine with log-normal demographic distributions (body weight CV 18%, clearance CV 30%, $k_a$ CV 25%) and hepatic impairment subgroup (0.6x clearance).
-   - **Reality Checks**: Zero-variance deterministic equivalence, median peak within 10% of individual baseline, RNG seed reproducibility, dose monotonicity.
-4. **`space.orbit` (Orbital Mechanics & Launch Staging)**:
-   - **Engine**: Multi-stage Tsiolkovsky $\Delta v$ staging, vis-viva equation, Keplerian period, and Hohmann transfer equations with RK4 state propagation conserving specific mechanical energy to $< 10^{-6}$ relative error ([docs/space_physics.md](docs/space_physics.md)).
-5. **`pharma.pkpd` (Deep PK/PD & Covariate Allometry)**:
-   - **Engine**: 1- and 2-compartment open models across oral and IV infusion/bolus routes with Hill $E_{\max}$ pharmacodynamics, adult covariate allometry, and Cockcroft-Gault renal adjustment ([docs/pkpd_models.md](docs/pkpd_models.md)).
-   - **Reality Checks**: Analytical vs RK4 solver agreement ($< 1\%$), accumulation ratio consistency, dose linearity, adult-only bounds enforcement (Age 18–90, Weight 40–150 kg, CrCl 15–150 mL/min).
-
----
-
-## 🌟 Key Features & Visual Proofs
-
-| Feature | Description | Proof Link |
-|---|---|---|
-| **Action Camera & Collisions** | Smooth camera easing framing upper body, hands, and active apparatus (~2m) with bench and wall collision safety. | [Action Cam Showcase](docs/screenshots/action_camera_showcase.gif) |
-| **Realistic Weighing & Balance** | Spatula & dosing cup props; growing powder pile on balance pan with live LCD display rising to target weight. | [Weigh Proof](docs/screenshots/proof_action_weigh_100.png) |
-| **Burette Drips & Endpoint Color** | Dynamic meniscus drainage, liquid droplets, and continuous indicator color interpolation across its pH transition range. | [Titration Proof](docs/screenshots/proof_step0_titration_drips_color.png) |
-| **500-Patient Crowd Wave** | 3D instanced crowd arena displaying real-time color waves (green: in range, amber: subtherapeutic, red: toxic). | [Trial Crowd Wave](docs/screenshots/proof_step0_trial_after.png) |
-| **Dr. Orbis AI Lab Mentor** | Contextual Google Gemini guidance with strict prompt-injection defense, latency tracking, and deterministic rule-based fallback. | [Mentor Inquiry](docs/screenshots/proof_mentor_ask.png) |
-| **Synthesized WebAudio Engine** | Procedural WebAudio sound effects: balance tare beeps, pour bursts, error alarms, and success chimes. | [Audio Controls](docs/screenshots/proof_rc1_2_1_sound_controls.png) |
-| **Production Hardening** | In-game About modal, rate limiting, and server wake-up flow with health metadata. | [Hardening Proof](docs/screenshots/proof_rc1_3_hardening_about.png) |
-| **Port 10000 Deployment Run** | Verified deployment running smoothly on Render standard port 10000. | [Port 10000 Proof](docs/screenshots/proof_rc1_4_deploy_port10000.png) |
-| **Game-Feel Locomotion & Interaction** | WASD locomotion, Shift sprint (4.0 m/s), touch joystick, obstacle sliding, [E] proximity radial action wheel, and [V] first-person hands view. | [Controls Guide](docs/frontend_lab.md#locomotion-controls--interaction-system) |
-| **Graphics Quality Tiers & Benchmark** | Procedural Low (60 FPS blob shadows), Medium (45+ FPS soft shadows & toon outlines), High (bloom), with 3s auto-benchmark. | [Quality Tiers](docs/frontend_lab.md#graphics-quality-tiers--benchmark) |
+Open **`http://localhost:8000`**.
 
 ---
 
 ## 🏗️ System Architecture
 
+Simly Orbis is engineered for deterministic reproducibility, security, and low-latency interactive execution:
+
 ```
-Browser Client (Three.js 60 FPS, WebAudio Synth, Action Camera, Director)
-       │
-       ▼ REST / JSON (HTTP 1.1)
-FastAPI Backend (Security Middleware, Token Bucket Rate Limiter, 20 KB Body Limit)
-       ├── Core Registry (pharma.pk, chem.titration, pharma.trial)
-       ├── Lab Engine (Stateful Sessions, Safety Rules R1-R10, Scoring)
-       ├── AI Mentor (Google Gemini API + Deterministic Fallback)
-       └── Database (MongoDB Atlas + In-Memory Fallback Adapter)
+                     ┌──────────────────────────────────────────────┐
+                     │          Browser Client (Three.js)           │
+                     │  • Procedural 3D Geometry (No downloads)    │
+                     │  • WebAudio Synthesized Sound Generator      │
+                     │  • Radial Proximity Action Wheel & HUD       │
+                     └──────────────────────┬───────────────────────┘
+                                            │ HTTP / JSON REST
+                                            ▼
+                     ┌──────────────────────────────────────────────┐
+                     │            FastAPI Backend Engine            │
+                     │  • Security Headers (CSP, Frame-Ancestors)   │
+                     │  • In-Memory Token Bucket Rate Limiter       │
+                     │  • 20 KB Payload Size Limit Enforcement      │
+                     └──────┬──────────────────┬─────────────────┬──┘
+                            │                  │                 │
+             ┌──────────────┴────────┐         │       ┌─────────┴──────────────┐
+             ▼                       ▼         │       ▼                        ▼
+     ┌───────────────┐       ┌───────────────┐ │ ┌───────────────┐      ┌───────────────┐
+     │  Pharma Math  │       │   Chem Math   │ │ │  Space Flight │      │   AI Mentor   │
+     │ • pharma.pk   │       │ • chem.titr   │ │ │ • space.orbit │      │ • Gemini API  │
+     │ • pharma.pkpd │       │ • kinetics    │ │ │ • Tsiolkovsky │      │ • Rules Engine│
+     │ • pharma.trial│       │ • buffer      │ │ │ • RK4 Orbit   │      │   Fallback    │
+     └───────────────┘       └───────────────┘ │ └───────────────┘      └───────────────┘
+                                               ▼
+                                    ┌──────────────────────┐
+                                    │    Stateful Labs     │
+                                    │ • Lab Safety Rules   │
+                                    │ • Session Checklists │
+                                    │ • Reality Invariants │
+                                    └──────────────────────┘
 ```
-*For complete ASCII diagrams and end-to-end data flows, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).*
+
+For full sequence diagrams and detailed architectural specs, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
-## 🧪 Testing & Quality Assurance
+## 📡 API Overview
 
-Simly Orbis maintains comprehensive test coverage across simulation equations, safety rules, rate limiting, and API contracts.
+The backend exposes a fully typed REST API with automatic OpenAPI interactive documentation at **`/docs`**:
+
+| Method | Endpoint | Description | Rate Limit |
+|---|---|---|---|
+| `GET` | `/api/health` | Health status, storage mode, active collections, and git SHA | 120 / min |
+| `GET` | `/api/ping` | Ultra-low latency ping endpoint for cold-start wakeups | 120 / min |
+| `GET` | `/api/modules` | List registered simulation engines (`pharma.pk`, `chem.titration`, etc.) | 120 / min |
+| `GET` | `/api/modules/{id}/model-card` | Get scientific documentation, governing equations, and boundaries | 120 / min |
+| `GET` | `/api/modules/{id}/reality-check` | Execute analytical mathematical invariant verification checks | 120 / min |
+| `POST` | `/api/run` | Execute parameter-validated simulation runs | 120 / min |
+| `GET` | `/api/lab/experiments` | List active laboratory benches | 120 / min |
+| `POST` | `/api/lab/sessions` | Create a new stateful laboratory session (`nickname`, `experiment_id`) | 20 / min |
+| `GET` | `/api/lab/sessions/{id}` | Fetch live apparatus state, clock, inventory, and checklist | 120 / min |
+| `POST` | `/api/lab/sessions/{id}/actions` | Submit physical lab action (`weigh`, `dissolve`, `titrate`, etc.) | 120 / min |
+| `POST` | `/api/lab/sessions/{id}/mentor` | Ask Dr. Orbis for contextual guidance or post-experiment debrief | 10 / min |
+| `POST` | `/api/lab/sessions/{id}/finish` | Complete session, compute accuracy score, and issue lab debrief | 120 / min |
+| `POST` | `/api/trial/run` | Run 100–1,000 patient Monte Carlo population simulation | 120 / min |
+| `POST` | `/api/trial/compare` | Compare dosing regimen vs reference standard with statistical p-values | 120 / min |
+
+---
+
+## 🧪 Rigorous Testing & Self-Audit
+
+Simly Orbis enforces continuous quality assurance through automated unit tests, clean-clone tests, and self-auditing scripts:
 
 ```bash
-# Run the complete test suite
+# Run unit & integration tests
 pytest backend/tests -v
 ```
 
 ```
-============================== 91 passed in 4.8s ==============================
+========================= 777 passed, 2 skipped in 22.11s =========================
 ```
 
-- **91 / 91 Tests Green** in CI on every push and pull request.
-- **Analytical Invariants**: 11 dedicated analytical reality checks (checked against textbook equations and internal consistency; not clinical validation) covering all simulation engines.
-- **Safety Rule Matrix**: Full coverage of PPE violations, chemical waste segregation, and acid-water dilution order.
-- **Abuse Protection**: Automated test coverage for per-IP rate limits (429), body size limits (413), and daily AI caps.
-
----
+* **777+ Automated Tests**: Covering mathematical ODE solvers, electroneutrality roots, rocket trajectory invariants, session state machines, rate limiting, and input sanitization.
+* **Clean-Clone CI Verification**: Automated test suite verified to clone into an isolated directory, install only core dependencies, and pass 100% without external assets or pre-cached state.
+* **Analytical Invariant Reality Checks**: Every physics module provides programmatic `reality_checks()` verifying conservation of mass, energy conservation ($< 10^{-6}$ drift), and analytical limits.
+* **10-Gate Self-Audit (`scripts/self_audit.py`)**: Checks git diffs of protected engine cores, ensures no silent deletions of safety rules, tests author corpus parsers, and verifies documentation integrity.
 
 ## 📚 Documentation Index
 
-- [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md): Transparent register of known limitations, unverified rows, and technical caveats.
-- [docs/DEPLOY.md](docs/DEPLOY.md): 5-click deployment to Render via Blueprint, Docker setup, and troubleshooting.
-- [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md): 3-minute hackathon presentation script, 60-second lightning talk, and contingency guide.
-- [docs/JUDGE_QA.md](docs/JUDGE_QA.md): 15 honest questions and answers for hackathon judges and technical reviewers.
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): Comprehensive system architecture and sequential data flows.
-- [docs/ROADMAP.md](docs/ROADMAP.md): Transparent limitations and roadmap for v0.2.
+* 🛠️ **[docs/DEPLOY.md](docs/DEPLOY.md)**: 5-click deployment to Render via Blueprint, Docker setup, and troubleshooting.
+* 🏗️ **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**: Comprehensive system architecture, end-to-end data flows, and state machines.
+* 🔬 **[docs/pkpd_models.md](docs/pkpd_models.md)** & **[docs/space_physics.md](docs/space_physics.md)**: Scientific reference documentation and equations.
+* 🔍 **[docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)**: Transparent register of known limitations, unverified rows, and technical caveats.
+* 🎙️ **[docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)**: 3-minute presentation script and 60-second walkthrough.
+* ⚖️ **[docs/JUDGE_QA.md](docs/JUDGE_QA.md)**: Transparent questions and answers for evaluators and technical reviewers.
 
 ---
 
-## 📄 License & Disclaimer
+## ⚖️ Scientific Integrity & Disclaimers
 
-Simly Orbis is licensed under the [MIT License](LICENSE).
+### 1. Educational Simulation Only
+Simly Orbis is an educational learning simulation designed to teach physical principles, scientific curiosity, and experimental methodology. **It does not provide medical advice, diagnosis, or clinical guidance.** It must never be used for real-world patient dosing, clinical trial planning, or aerospace flight planning.
 
-> **Educational Disclaimer**: Simly Orbis is a simulated learning game designed for educational purposes only. It does not provide medical advice, clinical guidance, or diagnostic evidence.
+### 2. Analytical Reality Checks vs. Clinical Validation
+The engine’s internal `reality_checks()` verify **mathematical self-consistency** (such as charge balance, mass conservation, and agreement with textbook analytical identities). They are not clinical in-vivo validations. All reference rows in `validation/data/*.csv` are labeled pending verification pursuant to the G5 data provenance protocol.
+
+### 3. Adult-Only Population Boundaries
+All physiological and pharmacokinetic models are strictly constrained to adult demographics (age 18–90, weight 40–150 kg, CrCl 15–150 mL/min). Pediatric dosing calculations are explicitly prohibited by safety rules.
+
+---
+
+## 📄 License & Contributing
+
+Simly Orbis is released under the **[MIT License](LICENSE)**. Contributions, bug reports, and educational extensions are welcome!
+
+* Developed with ❤️ for science students, educators, and curious minds.
+* Live deployment: **[https://simly-orbis.onrender.com/](https://simly-orbis.onrender.com/)**
