@@ -117,8 +117,27 @@ def test_audit_check_ci_workflow():
     assert "bare `pytest backend/tests`" in res.evidence
 
 
-def test_audit_check_qa_artifacts():
-    res = check_qa_artifacts(REPO_ROOT)
+@pytest.fixture
+def qa_fixture_repo(tmp_path):
+    """Temporary fixture folder for qa/out tests per Task F10."""
+    run_dir = tmp_path / "qa" / "out" / "20261120_120000"
+    run_dir.mkdir(parents=True)
+    report = run_dir / "report.md"
+    report.write_text(
+        "# QA Report\n"
+        "- pk_ward: passed\n"
+        "- titration_bench: passed\n"
+        "- launch_bench: passed\n"
+        "- dose_lab: passed\n",
+        encoding="utf-8",
+    )
+    for i in range(20):
+        (run_dir / f"screen_{i:02d}.png").write_bytes(f"unique_png_{i}".encode("utf-8"))
+    return tmp_path
+
+
+def test_audit_check_qa_artifacts(qa_fixture_repo):
+    res = check_qa_artifacts(qa_fixture_repo)
     assert res.gate_id == 8
     assert res.passed is True
     assert "MD5 collisions: 0" in res.evidence

@@ -176,47 +176,126 @@ def check_version(repo_root: Path) -> GateResult:
 
 
 def check_pytest_run(repo_root: Path, skip_venv: bool = False) -> GateResult:
-    """Gate 3: pytest backend/tests execution and final summary line."""
-    pytest_bin = "pytest"
-    python_bin = sys.executable
-
-    # Check if a dedicated 'fresh' venv or active venv is present
-    fresh_pytest = repo_root / "fresh" / "Scripts" / "pytest.exe"
-    if not fresh_pytest.exists():
-        fresh_pytest = repo_root / "fresh" / "bin" / "pytest"
-
-    if fresh_pytest.exists():
-        cmd = [str(fresh_pytest), "backend/tests"]
-        mode_desc = "fresh venv"
-    elif skip_venv:
-        cmd = [pytest_bin, "backend/tests"]
-        mode_desc = "active environment (--skip-venv)"
-    else:
-        # Check current python environment
-        cmd = [python_bin, "-m", "pytest", "backend/tests"]
-        mode_desc = "current python environment"
+    """
+    Gate 3: Clean-clone test run reproducing what CI does (Task F10).
+    Procedures:
+    1. git clone repo into a temp dir (depth 1)
+    2. create a NEW venv in the temp dir
+    3. pip install -r backend/requirements.txt -r backend/requirements-dev.txt only (no playwright, no qa/out)
+    4. run bare `pytest backend/tests` using the new venv's pytest executable
+    5. verify returncode == 0 and summary line ends with passed / PASSED.
+    """
+    if skip_venv:
+        # Fast path for developer invocation with --skip-venv
+        cmd = [sys.executable, "-m", "pytest", "backend/tests"]
+        try:
+            proc = subprocess.run(
+                cmd,
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=360,
+            )
+            stdout = proc.stdout.strip()
+            lines = [line.strip() for line in stdout.splitlines() if line.strip()]
+            final_line = lines[-1] if lines else "No output"
+            passed = (proc.returncode == 0) and ("passed" in final_line or "PASSED" in final_line)
+            return GateResult(
+                gate_id=3,
+                name="Pytest Test Suite (Clean-Clone)",
+                passed=passed,
+                evidence=f"[skip-venv active env] `{final_line}`",
+                details=f"Exit code: {proc.returncode}\n\nCommand: `{' '.join(cmd)}`\n\nFinal line: `{final_line}`",
+            )
+        except Exception as e:
+            return GateResult(
+                gate_id=3,
+                name="Pytest Test Suite (Clean-Clone)",
+                passed=False,
+                evidence=f"Error executing pytest: {e}",
+            )
 
     try:
-        proc = subprocess.run(
-            cmd,
-            cwd=repo_root,
-            capture_output=True,
-            text=True,
-            timeout=360,
-        )
-        stdout = proc.stdout.strip()
-        lines = [line.strip() for line in stdout.splitlines() if line.strip()]
-        final_line = lines[-1] if lines else "No output"
-        passed = (proc.returncode == 0) and ("passed" in final_line or "PASSED" in final_line)
+        with tempfile.TemporaryDirectory() as td:
+            tpath = Path(td)
+            repo_copy = tpath / "repo"
+            venv_dir = tpath / "venv"
+
+            # 1. git clone into temp dir
+            repo_url = "file:///" + str(repo_root.resolve()).replace("\\", "/")
+            clone_res = subprocess.run(
+                ["git", "clone", "--depth=1", repo_url, str(repo_copy)],
+                capture_output=True,
+                text=True,
+            )
+            if clone_res.returncode != 0:
+                return GateResult(
+                    gate_id=3,
+                    name="Pytest Test Suite (Clean-Clone)",
+                    passed=False,
+                    evidence=f"FAILED: git clone to temp dir failed: {clone_res.stderr.strip()}",
+                )
+
+            # 2. create NEW venv
+            venv_res = subprocess.run(
+                [sys.executable, "-m", "venv", str(venv_dir)],
+                capture_output=True,
+                text=True,
+            )
+            if venv_res.returncode != 0:
+                return GateResult(
+                    gate_id=3,
+                    name="Pytest Test Suite (Clean-Clone)",
+                    passed=False,
+                    evidence=f"FAILED: venv creation failed: {venv_res.stderr.strip()}",
+                )
+
+            pip_bin = str(venv_dir / "Scripts" / "pip.exe" if os.name == "nt" else venv_dir / "bin" / "pip")
+            pytest_bin = str(venv_dir / "Scripts" / "pytest.exe" if os.name == "nt" else venv_dir / "bin" / "pytest")
+
+            # 3. pip install requirements and dev requirements only (no playwright, no qa/out)
+            req_file = repo_copy / "backend" / "requirements.txt"
+            dev_req_file = repo_copy / "backend" / "requirements-dev.txt"
+            pip_res = subprocess.run(
+                [pip_bin, "install", "-r", str(req_file), "-r", str(dev_req_file)],
+                capture_output=True,
+                text=True,
+            )
+            if pip_res.returncode != 0:
+                return GateResult(
+                    gate_id=3,
+                    name="Pytest Test Suite (Clean-Clone)",
+                    passed=False,
+                    evidence=f"FAILED: pip install requirements failed: {pip_res.stderr.strip()}",
+                )
+
+            # 4. run bare `pytest backend/tests`
+            pytest_res = subprocess.run(
+                [pytest_bin, "backend/tests"],
+                cwd=repo_copy,
+                capture_output=True,
+                text=True,
+                timeout=600,
+            )
+            stdout = pytest_res.stdout.strip()
+            lines = [line.strip() for line in stdout.splitlines() if line.strip()]
+            final_line = lines[-1] if lines else "No output"
+            passed = (pytest_res.returncode == 0) and ("passed" in final_line or "PASSED" in final_line)
+
+            return GateResult(
+                gate_id=3,
+                name="Pytest Test Suite (Clean-Clone)",
+                passed=passed,
+                evidence=f"[clean-clone venv] `{final_line}`",
+                details=f"Exit code: {pytest_res.returncode}\n\nCommand: `pytest backend/tests`\n\nFinal line: `{final_line}`",
+            )
+    except Exception as e:
         return GateResult(
             gate_id=3,
-            name="Pytest Test Suite",
-            passed=passed,
-            evidence=f"[{mode_desc}] `{final_line}`",
-            details=f"Exit code: {proc.returncode}\n\nCommand: `{' '.join(cmd)}`\n\nFinal line: `{final_line}`",
+            name="Pytest Test Suite (Clean-Clone)",
+            passed=False,
+            evidence=f"Error during clean-clone test run: {e}",
         )
-    except Exception as e:
-        return GateResult(gate_id=3, name="Pytest Test Suite", passed=False, evidence=f"Error executing pytest: {e}")
 
 
 def check_validation_rows(repo_root: Path) -> GateResult:

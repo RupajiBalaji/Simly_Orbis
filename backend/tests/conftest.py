@@ -21,10 +21,35 @@ for p in (REPO_ROOT, BACKEND_DIR):
 # Force memory mode before any app module is imported.
 os.environ.setdefault("MONGODB_URI", "")
 os.environ.setdefault("DB_NAME", "simly_orbis_test")
+os.environ["ENVIRONMENT"] = "test"
 
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--browser",
+        action="store_true",
+        default=False,
+        help="Run browser-dependent end-to-end tests requiring Playwright",
+    )
+
+
+def pytest_configure(config):
+    config.addinivalue_line(
+        "markers", "browser: mark test as requiring a real browser or Playwright"
+    )
+
+
+def pytest_collection_modifyitems(config, items):
+    run_browser = config.getoption("--browser") or os.environ.get("RUN_BROWSER_TESTS", "").lower() in ("1", "true")
+    if not run_browser:
+        skip_browser = pytest.mark.skip(reason="requires --browser flag or RUN_BROWSER_TESTS=1")
+        for item in items:
+            if "browser" in item.keywords:
+                item.add_marker(skip_browser)
 
 from app.main import app
 import app.db as _db

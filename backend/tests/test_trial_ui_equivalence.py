@@ -15,7 +15,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 import pytest
-from playwright.sync_api import sync_playwright
 import uvicorn
 import threading
 import time
@@ -65,8 +64,11 @@ def live_server():
     thread.join(timeout=2.0)
 
 
+@pytest.mark.browser
 def test_trial_ui_dom_equals_api(live_server):
     """ACCEPT: DOM values strictly equal API values in Virtual Trial UI."""
+    pw = pytest.importorskip("playwright.sync_api")
+    sync_playwright = pw.sync_playwright
     launch_kwargs = get_browser_launch_kwargs()
     with sync_playwright() as p:
         browser = p.chromium.launch(**launch_kwargs)

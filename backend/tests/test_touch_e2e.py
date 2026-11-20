@@ -8,8 +8,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
+@pytest.mark.browser
 def test_touch_e2e_script_passes():
     """Verify qa/test_touch_e2e.py runs to completion and exits with code 0."""
+    pytest.importorskip("playwright")
     script_path = REPO_ROOT / "qa" / "test_touch_e2e.py"
     assert script_path.exists(), "qa/test_touch_e2e.py missing"
 
