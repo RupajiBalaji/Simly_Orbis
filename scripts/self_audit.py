@@ -45,10 +45,14 @@ FROZEN_TOLERANCES: dict[str, str] = {
 }
 
 PROTECTED_ENGINE_FILES: list[str] = [
-    "backend/app/pharma/pk.py",
-    "backend/app/pharma/trial.py",
-    "backend/app/chem/titration.py",
+    "backend/app/modules/pharma_pk.py",
+    "backend/app/modules/pharma_trial.py",
+    "backend/app/modules/chem_titration.py",
+    "backend/app/modules/space_orbit.py",
     "backend/app/space/orbit.py",
+    "backend/app/pharma/pkpd/engine.py",
+    "backend/app/chem/kinetics.py",
+    "backend/app/chem/buffer.py",
 ]
 
 RISKY_TERMS: list[str] = [
@@ -298,7 +302,18 @@ def check_frozen_tolerance_hashes(repo_root: Path) -> GateResult:
 
 def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> GateResult:
     """Gate 6: Protected engine files unchanged since base commit."""
-    # Check if base commit is reachable in repository (robust against shallow clones)
+    # 1. Existence check: Fail if any listed path does not exist on disk
+    missing_paths = [p for p in PROTECTED_ENGINE_FILES if not (repo_root / p).is_file()]
+    if missing_paths:
+        return GateResult(
+            gate_id=6,
+            name="Engine Immutability (Rule R1/R7)",
+            passed=False,
+            evidence=f"FAILED: Protected file(s) missing on disk: {missing_paths}",
+            details="\n".join(f"- Missing path: `{p}`" for p in missing_paths),
+        )
+
+    # 2. Check if base commit is reachable in repository (robust against shallow clones)
     rev_check = subprocess.run(
         ["git", "cat-file", "-e", f"{base_commit}^{{commit}}"],
         cwd=repo_root,
@@ -318,22 +333,50 @@ def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> Gate
     failed_files: list[str] = []
 
     for p in PROTECTED_ENGINE_FILES:
+        # Check if file was present at base_commit; if not, compare vs introduction commit
+        cat_check = subprocess.run(
+            ["git", "cat-file", "-e", f"{base_commit}:{p}"],
+            cwd=repo_root,
+            capture_output=True,
+        )
+        if cat_check.returncode == 0:
+            cmp_commit = base_commit
+        else:
+            intro_proc = subprocess.run(
+                ["git", "log", "--diff-filter=A", "--format=%H", "-n", "1", "--", p],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+            )
+            cmp_commit = intro_proc.stdout.strip()
+            if not cmp_commit:
+                cmp_commit = base_commit
+
         res = subprocess.run(
-            ["git", "diff", base_commit, "HEAD", "--", p],
+            ["git", "diff", cmp_commit, "HEAD", "--", p],
             cwd=repo_root,
             capture_output=True,
             text=True,
         )
         diff_text = res.stdout.strip()
         if len(diff_text) > 0:
-            diff_results.append(f"UNAUTHORIZED MODIFICATION in `{p}` ({len(diff_text)} bytes diff)")
+            diff_results.append(f"UNAUTHORIZED MODIFICATION in `{p}` ({len(diff_text)} bytes diff vs `{cmp_commit[:7]}`)")
             failed_files.append(p)
         else:
-            diff_results.append(f"`{p}`: 0 diff vs `{base_commit}` (PASS)")
+            diff_results.append(f"`{p}`: 0 diff vs `{cmp_commit[:7]}` (PASS)")
 
-    # Also verify that Safety Rules R1-R10 and S1-S8 were not altered
-    # In rules.py, compare lines 1 to 513 with base commit
+    # 3. Verify that Safety Rules R1-R10, S1-S8, and D1-D8 were not deleted
     rules_path = "backend/app/lab/rules.py"
+    rules_file = repo_root / rules_path
+    if not rules_file.exists():
+        return GateResult(
+            gate_id=6,
+            name="Engine Immutability (Rule R1/R7)",
+            passed=False,
+            evidence="FAILED: rules.py does not exist on disk",
+            details="- Missing: backend/app/lab/rules.py",
+        )
+
     res_rules = subprocess.run(
         ["git", "diff", base_commit, "HEAD", "--", rules_path],
         cwd=repo_root,
@@ -341,20 +384,33 @@ def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> Gate
         text=True,
     )
     rules_diff = res_rules.stdout
-    # Check if any deletions (-) or replacements touched lines with R1_ or S1_
-    altered_rules = False
+
+    # Parse rule IDs from deleted lines: rule_id="<ID>" or id="<ID>"
+    rule_id_pattern = re.compile(r'rule_id\s*=\s*["\']([A-Za-z0-9_-]+)["\']')
+    deleted_rule_ids: list[str] = []
+
+    # Valid rule IDs pattern for R1-R10, S1-S8, D1-D8
+    protected_id_re = re.compile(r'^(R(?:10|[1-9])(?:_[A-Z0-9_]+)?|S[1-8](?:_[A-Z0-9_]+)?|D[1-8](?:_[A-Z0-9_]+)?)$')
+
     for line in rules_diff.splitlines():
         if line.startswith("-") and not line.startswith("---"):
-            if any(term in line for term in ["R1_", "R2_", "R3_", "R4_", "R5_", "R6_", "R7_", "R8_", "R9_", "R10_", "S1_", "S2_", "S3_", "S4_", "S5_", "S6_", "S7_", "S8_"]):
-                altered_rules = True
-                diff_results.append(f"SAFETY RULE ALTERATION DETECTED: {line}")
-                break
+            for m in rule_id_pattern.finditer(line):
+                rid = m.group(1)
+                if protected_id_re.match(rid):
+                    deleted_rule_ids.append(rid)
 
-    if not altered_rules:
-        diff_results.append("Rules R1-R10 and S1-S8: Unmodified (PASS)")
+    altered_rules = len(deleted_rule_ids) > 0
+    if altered_rules:
+        for rid in deleted_rule_ids:
+            diff_results.append(f"SAFETY RULE DELETION DETECTED: Rule ID `{rid}` removed")
+    else:
+        diff_results.append("Rules R1-R10, S1-S8, and D1-D8: Unmodified (PASS)")
 
     passed = (len(failed_files) == 0) and (not altered_rules)
-    evidence = f"Protected files checked: {len(PROTECTED_ENGINE_FILES)} engines + R1-R10/S1-S8 rules. Violations: {len(failed_files)}"
+    evidence = (
+        f"Protected files checked: {len(PROTECTED_ENGINE_FILES)} engines + R1-R10/S1-S8/D1-D8 rules. "
+        f"Violations: {len(failed_files)} files, {len(deleted_rule_ids)} deleted rules."
+    )
     details = "\n".join(f"- {d}" for d in diff_results)
     return GateResult(
         gate_id=6,

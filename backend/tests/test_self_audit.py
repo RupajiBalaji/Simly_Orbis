@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import pytest
+import subprocess
 import sys
 
 # Ensure repo root is on sys.path
@@ -60,6 +61,53 @@ def test_audit_check_protected_files():
     res = check_protected_files(REPO_ROOT, base_commit="cb9b66f")
     assert res.gate_id == 6
     assert res.passed is True
+
+
+def test_audit_check_protected_files_fails_on_missing_path(tmp_path):
+    res = check_protected_files(tmp_path, base_commit="cb9b66f")
+    assert res.gate_id == 6
+    assert res.passed is False
+    assert "missing on disk" in res.evidence
+
+
+def test_audit_check_protected_files_fails_on_planted_change(monkeypatch):
+    orig_run = subprocess.run
+
+    def mock_run(cmd, *args, **kwargs):
+        if len(cmd) >= 5 and cmd[0] == "git" and cmd[1] == "diff" and "backend/app/chem/kinetics.py" in cmd:
+            class MockProc:
+                returncode = 0
+                stdout = "diff --git a/kinetics.py b/kinetics.py\n+ planted unauthorized mutation"
+                stderr = ""
+            return MockProc()
+        return orig_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+    res = check_protected_files(REPO_ROOT, base_commit="cb9b66f")
+    assert res.gate_id == 6
+    assert res.passed is False
+    assert "Violations: 1 files" in res.evidence
+    assert "UNAUTHORIZED MODIFICATION in `backend/app/chem/kinetics.py`" in res.details
+
+
+def test_audit_check_protected_files_fails_on_deleted_rule(monkeypatch):
+    orig_run = subprocess.run
+
+    def mock_run(cmd, *args, **kwargs):
+        if len(cmd) >= 5 and cmd[0] == "git" and cmd[1] == "diff" and "backend/app/lab/rules.py" in cmd:
+            class MockProc:
+                returncode = 0
+                stdout = '--- a/backend/app/lab/rules.py\n+++ b/backend/app/lab/rules.py\n-    rule_id="D1",\n-    title="Dose Exceeds Maximum Safe Single Dose",'
+                stderr = ""
+            return MockProc()
+        return orig_run(cmd, *args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", mock_run)
+    res = check_protected_files(REPO_ROOT, base_commit="cb9b66f")
+    assert res.gate_id == 6
+    assert res.passed is False
+    assert "1 deleted rules" in res.evidence
+    assert "SAFETY RULE DELETION DETECTED: Rule ID `D1` removed" in res.details
 
 
 def test_audit_check_ci_workflow():
