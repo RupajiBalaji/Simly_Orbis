@@ -152,6 +152,7 @@ export class LabScene {
     // 5b. Space Launch Bench 3D Scene
     this.spaceScene = new SpaceScene(this.scene, this.camera, this.controls);
     this.spaceScene.init();
+    this.spaceScene.setQuality(this.quality);
     this.addUpdateCallback((dt) => {
       if (this.spaceScene?.active) this.spaceScene.update(dt);
     });
@@ -246,6 +247,9 @@ export class LabScene {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     if (this.bloomPipeline) {
       this.bloomPipeline.setSize(window.innerWidth, window.innerHeight);
+    }
+    if (this.spaceScene?.setQuality) {
+      this.spaceScene.setQuality(mode);
     }
     state.notify('quality_changed', { quality: mode, isAuto });
   }

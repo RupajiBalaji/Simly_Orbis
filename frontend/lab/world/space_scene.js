@@ -35,6 +35,20 @@ export class SpaceScene {
     this.earthMesh = null;
     this.orbitLineMesh = null;
     this.satelliteMesh = null;
+    this.starfield = null;
+
+    // Performance & Tiered Particle Budgets
+    this.qualityTier = 'medium'; // 'low' | 'medium' | 'high'
+    this.particleBudgets = {
+      low: 0,
+      medium: 120,
+      high: 350,
+    };
+    this.starBudgets = {
+      low: 200,
+      medium: 800,
+      high: 2000,
+    };
 
     // State & telemetry
     this.telemetry = {
@@ -108,11 +122,139 @@ export class SpaceScene {
   }
 
   // ---------------------------------------------------------------------------
+  // Performance & Quality Tier Management (P5-T4)
+  // ---------------------------------------------------------------------------
+
+  setQuality(mode) {
+    this.qualityTier = mode;
+    const isLow = mode === 'low';
+    const isHigh = mode === 'high';
+
+    // Particle budget enforcement
+    const budget = this.particleBudgets[mode] ?? 120;
+    if (isLow) {
+      // Discard active smoke particles in low mode to release memory & GPU fill rate
+      for (const p of this.smokeParticles) {
+        if (p.mesh && p.mesh.parent) {
+          p.mesh.parent.remove(p.mesh);
+          p.mesh.geometry?.dispose?.();
+          p.mesh.material?.dispose?.();
+        }
+      }
+      this.smokeParticles = [];
+    }
+
+    // Toggle shadow casting and detail on pad, rocket and earth
+    this.group.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.castShadow = !isLow;
+        obj.receiveShadow = !isLow;
+        if (obj.material) {
+          obj.material.needsUpdate = true;
+        }
+      }
+    });
+  }
+
+  spawnExhaustParticle() {
+    if (this.qualityTier === 'low') return;
+    const maxParticles = this.particleBudgets[this.qualityTier] || 120;
+    if (this.smokeParticles.length >= maxParticles) {
+      const oldest = this.smokeParticles.shift();
+      if (oldest?.mesh?.parent) {
+        oldest.mesh.parent.remove(oldest.mesh);
+        oldest.mesh.geometry?.dispose?.();
+        oldest.mesh.material?.dispose?.();
+      }
+    }
+
+    const size = 0.2 + Math.random() * 0.2;
+    const geo = new THREE.SphereGeometry(size, 5, 5);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x94a3b8,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+
+    const worldPos = new THREE.Vector3();
+    if (this.flameMesh) {
+      this.flameMesh.getWorldPosition(worldPos);
+    } else {
+      worldPos.set(0, 0, 0);
+    }
+
+    mesh.position.set(
+      worldPos.x + (Math.random() - 0.5) * 0.35,
+      worldPos.y - 0.6 + (Math.random() - 0.5) * 0.2,
+      worldPos.z + (Math.random() - 0.5) * 0.35
+    );
+
+    this.group.add(mesh);
+    this.smokeParticles.push({
+      mesh,
+      life: 0.0,
+      maxLife: 1.0 + Math.random() * 0.5,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: -1.2 - Math.random() * 0.8,
+      vz: (Math.random() - 0.5) * 0.8,
+      growth: 1.6 + Math.random() * 0.8,
+    });
+  }
+
+  updateParticles(dt) {
+    if (this.qualityTier === 'low') {
+      if (this.smokeParticles.length > 0) {
+        for (const p of this.smokeParticles) {
+          if (p.mesh?.parent) {
+            p.mesh.parent.remove(p.mesh);
+            p.mesh.geometry?.dispose?.();
+            p.mesh.material?.dispose?.();
+          }
+        }
+        this.smokeParticles = [];
+      }
+      return;
+    }
+
+    // Spawn smoke particles when engine flame is active
+    if (this.flameMesh && this.flameMesh.material.opacity > 0.1) {
+      const spawnCount = this.qualityTier === 'high' ? 2 : 1;
+      for (let i = 0; i < spawnCount; i++) {
+        this.spawnExhaustParticle();
+      }
+    }
+
+    // Update active smoke particles
+    for (let i = this.smokeParticles.length - 1; i >= 0; i--) {
+      const p = this.smokeParticles[i];
+      p.life += dt;
+      if (p.life >= p.maxLife) {
+        if (p.mesh?.parent) {
+          p.mesh.parent.remove(p.mesh);
+          p.mesh.geometry?.dispose?.();
+          p.mesh.material?.dispose?.();
+        }
+        this.smokeParticles.splice(i, 1);
+        continue;
+      }
+      const progress = p.life / p.maxLife;
+      p.mesh.position.x += p.vx * dt;
+      p.mesh.position.y += p.vy * dt;
+      p.mesh.position.z += p.vz * dt;
+      const s = 1.0 + progress * p.growth;
+      p.mesh.scale.set(s, s, s);
+      p.mesh.material.opacity = (1.0 - progress) * 0.5;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // 1. Procedural Environment & Launch Pad
   // ---------------------------------------------------------------------------
 
   buildStarfield() {
-    const starCount = 800;
+    const starCount = this.starBudgets[this.qualityTier] || 800;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(starCount * 3);
     const colors = new Float32Array(starCount * 3);
@@ -144,8 +286,8 @@ export class SpaceScene {
       opacity: 0.85,
     });
 
-    const starfield = new THREE.Points(geometry, starMaterial);
-    this.group.add(starfield);
+    this.starfield = new THREE.Points(geometry, starMaterial);
+    this.group.add(this.starfield);
   }
 
   buildLaunchPad() {
@@ -954,6 +1096,7 @@ export class SpaceScene {
   update(dt) {
     if (!this.active) return;
     this.flightTime += dt;
+    this.updateParticles(dt);
 
     // Red obstruction beacon blink
     if (this.beaconMesh) {
