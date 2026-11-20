@@ -6,7 +6,7 @@
 [![CI](https://github.com/RupajiBalaji/Simly_Orbis/actions/workflows/ci.yml/badge.svg)](https://github.com/RupajiBalaji/Simly_Orbis/actions/workflows/ci.yml)
 [![Tests](https://img.shields.io/badge/tests-777%2B%20passed-success.svg)](https://github.com/RupajiBalaji/Simly_Orbis)
 [![Python](https://img.shields.io/badge/python-3.12%20%7C%203.14-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-0.7.0--dev-orange.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.8.0--dev-orange.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **[🎮 Launch Live Simulation in Browser](https://simly-orbis.onrender.com/)** &nbsp;|&nbsp; **[📖 System Architecture](docs/ARCHITECTURE.md)** &nbsp;|&nbsp; **[🧪 Scientific Model Cards](#-scientific-simulation-engines--model-cards)** &nbsp;|&nbsp; **[🚀 Quickstart](#-quickstart)**

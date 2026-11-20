@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.8.0-dev] - 2026-11-20
+
+### Added
+- **Phase P4 Pharma Depth & Security Hardening**:
+  - Virtual Trial v2 (`pharma.trial_v2`) multi-compartment population simulation with adult covariate distributions (age, weight, CrCl), log-normal clearance variance, and percentile curves.
+  - Interactive Trial Sidecar UI (`trial_panel.js`) with 1,000-subject instanced crowd arena, percentile visualization, and CSV export.
+  - Frozen 12-compound pharmacology library (`pharma_drugs.yaml`) with G5 parameter-level literature citations and blank `retrieved_on`.
+  - Dose Response Lab interactive polish with debounced recalculation, multi-regimen overlay, and renal function adjustments.
+  - Nelder-Mead parameter calibration harness (`calibrate.py`, `routes/calibrate.py`) with hold-out validation and strict honest labeling ("fit to your data, not validation").
+  - Adversarial clinical red-team suite (26 cases) verifying 100% refusal rate for personal symptoms, pediatric dosing, and prescribing queries.
+  - Pre-launch security audit mitigations: pinned updated dependencies (`fastapi==0.115.14`, `python-dotenv==1.2.4`, `Pillow==13.0.0`), rate-limit bypass protection against client Host headers, Gate 6 per-rule SHA-256 snapshots (`rule_snapshots.json`), and CI clean-clone test procedures.
+
 ## [0.7.0-dev] - 2026-11-19
 
 ### Added
