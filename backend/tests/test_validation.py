@@ -355,3 +355,75 @@ def test_frozen_hashes_byte_identical_to_git_baseline():
         )
 
 
+def test_space_orbit_references_and_radius_sensitivity():
+    """P5-T3: Recheck space reference rows, verify analytical formulas,
+    and document the exact sensitivity to engine Earth radius (R = 6371 km)
+    versus WGS-84 equatorial radius (a = 6378.137 km).
+    """
+    import math
+    from app.space.orbit import EARTH_MU, EARTH_RADIUS_M, circular_velocity, orbital_period, hohmann_transfer
+
+    runner = ValidationRunner()
+    space_refs = [r for r in runner.references if r["id"].startswith("space_")]
+    assert len(space_refs) == 5, f"Expected 5 space reference rows, got {len(space_refs)}"
+
+    res = runner.evaluate_all()
+    space_evals = {it["id"]: it for it in res["space_results"]}
+
+    # Verify G5 data provenance: unverified and blank retrieved_on
+    for ref in space_refs:
+        assert ref["retrieved_on"] == "", f"retrieved_on must be blank for {ref['id']}"
+        assert ref["verified_by"] == "unverified", f"verified_by must be unverified for {ref['id']}"
+
+    # 1. Earth standard gravitational parameter
+    eval_mu = space_evals["space_earth_mu"]
+    assert eval_mu["passed"] is True
+    assert eval_mu["observed"] == 3.986004418e14
+    assert eval_mu["predicted"] == 3.986004418e14
+    assert eval_mu["pct_error"] == 0.0
+
+    # 2. LEO Circular Velocity at 200 km
+    eval_leo = space_evals["space_leo_circ_vel_200km"]
+    assert eval_leo["passed"] is True
+    # Reference assumes WGS-84 equatorial radius r = 6378.137 km + 200 km = 6578.137 km
+    wgs_r_leo = 6378137.0 + 200000.0
+    v_wgs = math.sqrt(EARTH_MU / wgs_r_leo)
+    assert abs(v_wgs - eval_leo["observed"]) < 0.1
+    # Engine uses mean spherical radius R = 6371.0 km -> r = 6571.0 km
+    v_sph = circular_velocity(EARTH_RADIUS_M + 200000.0)
+    assert abs(v_sph - eval_leo["predicted"]) < 0.1
+    # Sensitivity: difference is 4.19 m/s (0.054%), comfortably inside 2.0% tolerance
+    delta_v_leo = v_sph - v_wgs
+    assert 4.1 < delta_v_leo < 4.3
+    assert eval_leo["pct_error"] < 0.1
+
+    # 3. ISS orbital period at 400 km
+    eval_iss = space_evals["space_iss_period_400km"]
+    assert eval_iss["passed"] is True
+    # Reference assumes WGS-84 equatorial radius r = 6378.137 km + 400 km = 6778.137 km
+    wgs_r_iss = 6378137.0 + 400000.0
+    t_wgs = 2.0 * math.pi * math.sqrt(wgs_r_iss**3 / EARTH_MU)
+    assert abs(t_wgs - eval_iss["observed"]) < 1.0
+    # Engine uses spherical radius R = 6371.0 km -> r = 6771.0 km
+    t_sph = orbital_period(EARTH_RADIUS_M + 400000.0)
+    assert abs(t_sph - eval_iss["predicted"]) < 0.1
+    # Sensitivity: difference is -8.77 s (-0.165%), comfortably inside 2.0% tolerance
+    delta_t_iss = t_sph - t_wgs
+    assert -9.0 < delta_t_iss < -8.5
+    assert eval_iss["pct_error"] < 0.2
+
+    # 4. GEO orbital radius
+    eval_geo = space_evals["space_geo_radius"]
+    assert eval_geo["passed"] is True
+    t_sidereal = 86164.0905
+    r_geo_expected = ((EARTH_MU * (t_sidereal / (2.0 * math.pi)) ** 2) ** (1.0 / 3.0)) / 1000.0
+    assert abs(r_geo_expected - eval_geo["predicted"]) < 0.1
+    assert eval_geo["pct_error"] < 0.01
+
+    # 5. Hohmann Transfer delta-v (LEO to GEO)
+    eval_hoh = space_evals["space_hohmann_leo_geo_dv"]
+    assert eval_hoh["passed"] is True
+    assert eval_hoh["pct_error"] < 0.05
+
+
+
