@@ -11,14 +11,14 @@
 
 | Gate | Requirement | Status | Evidence / Metrics |
 | :---: | :--- | :---: | :--- |
-| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 117, HEAD: 8ed92bfe |
+| 1 | Git Repository State | **PASS** | Clean/Expected: True, Ahead: 119, HEAD: b3352fe5 |
 | 2 | App Version | **PASS** | Version `0.8.0-dev` declared in `backend/app/config.py` |
-| 3 | Pytest Test Suite (Clean-Clone) | **PASS** | [skip-venv active env] `=============== 800 passed, 2 skipped, 32555 warnings in 57.31s ===============` |
+| 3 | Pytest Test Suite (Clean-Clone) | **PASS** | [skip-venv active env] `=============== 801 passed, 2 skipped, 32614 warnings in 38.54s ===============` |
 | 4 | Validation Row Governance | **PASS** | Evaluated 32 rows across 5 files: 32 unverified (with blank retrieved_on), 0 verified. Violations: 0 |
 | 5 | Frozen Tolerances Guard | **PASS** | 4/4 frozen tolerance files verified. |
 | 6 | Engine Immutability (Rule R1/R7) | **PASS** | Protected files checked: 8 engines + 26 rules. Violations: 0 files, 0 rule mismatches. |
 | 7 | CI Workflow Configuration | **PASS** | `.github/workflows/ci.yml` invokes bare `pytest backend/tests`. |
-| 8 | QA Playthrough Proof | **PASS** | Folder: `20261120_221900` (fresh (post-frontend commit)) | Media count: 74 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
+| 8 | QA Playthrough Proof | **PASS** | Folder: `20261122_111200` (fresh (post-frontend commit)) | Media count: 74 | report.md: True | MD5 collisions: 0 | Districts: 4/4 verified |
 | 9 | First-Run Parser Baselines & Held-Out Status | **PASS** | All 6 corpora first-run baseline rates verified in PHASE_5_REPORT.md; seed & founder status confirmed |
 | 10 | Claims & Compliance Audit (Rule R4/R6) | **PASS** | Total occurrences: 19 (all explicitly hedged/disclaimed). Unhedged violations: 0 |
 | 11 | Gitignore Coverage | **PASS** | Coverage confirmed: qa/out (True), __pycache__ (True) |
@@ -29,10 +29,12 @@
 
 ### Gate 1: Git Repository State
 
-HEAD: `8ed92bfe` | Clean: False (expected audit files: True) | Ahead: 117
+HEAD: `b3352fe5` | Clean: False (expected audit files: True) | Ahead: 119
 
 **Last 15 Commits:**
 ```
+b3352fe fix(space): map space apparatuses and register 3D facility models in space scene
+f6fc65e docs(audit): update SELF_AUDIT_LATEST.md with Phase 5 all-pass results
 8ed92bf fix(engine): restore legacy engine.py byte-identical to commit 3d60be7
 2c5fef8 docs(p5): author Phase 5 space completion report
 4df28e5 test(qa): add space bench e2e playthroughs and verify space parser corpora (P5-T5)
@@ -46,8 +48,6 @@ cc6b802 feat(space): add parameter sliders, delta-v budget bar, orbit controls, 
 62f4101 test(validation): verify frozen tolerances and sha256 files byte-identical to git baseline (H1)
 d11e247 docs: update README with live demo link and comprehensive walkthrough for new viewers
 101c3cd docs(p4): record Addendum F10-F12 recheck and verification with real command outputs
-d041c64 test(audit): use pharma_pk for planted change and cat-file commit filter in test_self_audit (F11)
-19892ee fix(tests): cross-platform line ending normalization in tolerance checks and mock cat-file (F10)
 ```
 
 ### Gate 3: Pytest Test Suite (Clean-Clone)
@@ -56,7 +56,7 @@ Exit code: 0
 
 Command: `C:\Python314\python.exe -m pytest backend/tests`
 
-Final line: `=============== 800 passed, 2 skipped, 32555 warnings in 57.31s ===============`
+Final line: `=============== 801 passed, 2 skipped, 32614 warnings in 38.54s ===============`
 
 ### Gate 4: Validation Row Governance
 
