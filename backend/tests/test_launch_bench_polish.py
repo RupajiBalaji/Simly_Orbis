@@ -98,3 +98,24 @@ def test_frontend_launch_bench_polish_components_present():
     assert "getFailureExplanation" in content
     assert "getFailureRemedy" in content
     assert "MISSION ANOMALY INVESTIGATION" in content
+
+
+def test_space_apparatus_mapping_and_scene_registration():
+    """Verify apparatus.js recognizes space apparatuses without warnings,
+    and space_scene.js registers all 6 space apparatuses into lookup."""
+    app_file = REPO_ROOT / "frontend" / "lab" / "world" / "apparatus.js"
+    assert app_file.exists()
+    app_content = app_file.read_text(encoding="utf-8")
+
+    # apparatus.js handles space district apparatuses without 'Unmapped apparatus' warnings
+    assert "spaceApparatusIds" in app_content
+    for app_id in ["launch_pad", "rocket", "propellant_tanks", "range_control", "flight_computer", "tracking_station"]:
+        assert f"'{app_id}'" in app_content
+
+    # space_scene.js registers 3D apparatuses in lookup
+    space_file = REPO_ROOT / "frontend" / "lab" / "world" / "space_scene.js"
+    assert space_file.exists()
+    space_content = space_file.read_text(encoding="utf-8")
+
+    for app_id in ["launch_pad", "rocket", "propellant_tanks", "range_control", "flight_computer", "tracking_station"]:
+        assert f"this.lookup['{app_id}']" in space_content

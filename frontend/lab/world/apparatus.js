@@ -165,10 +165,26 @@ export function buildApparatus(rawApparatus, scene) {
   const lookup = {};
   const apparatusList = normalizeApparatus(rawApparatus);
 
+  // Space district apparatuses are managed and rendered directly by SpaceScene in 3D
+  const spaceApparatusIds = new Set([
+    'launch_pad',
+    'pad_39a',
+    'rocket',
+    'propellant_tanks',
+    'range_control',
+    'flight_computer',
+    'tracking_station',
+  ]);
+
   for (const item of apparatusList) {
     const id = item.id;
     const type = item.type;
     let group = null;
+
+    if (spaceApparatusIds.has(id) || spaceApparatusIds.has(type)) {
+      // Space apparatuses are visually rendered by SpaceScene
+      continue;
+    }
 
     if (id === 'digital_balance' || type === 'balance' || type === 'digital_balance') {
       group = buildDigitalBalance(id);
@@ -305,8 +321,9 @@ export function buildApparatus(rawApparatus, scene) {
     }
   }
 
-  // Add ward clock on back wall
-  if (!lookup['ward_clock']) {
+  // Add ward clock on back wall (indoor labs only, not space district)
+  const isSpaceOnly = apparatusList.length > 0 && apparatusList.every((item) => spaceApparatusIds.has(item.id) || spaceApparatusIds.has(item.type));
+  if (!isSpaceOnly && !lookup['ward_clock']) {
     const clock = buildWardClock('ward_clock');
     clock.position.set(0, 4.0, -6.9);
     container.add(clock);

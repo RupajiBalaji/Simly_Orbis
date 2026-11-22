@@ -391,8 +391,167 @@ export class SpaceScene {
       this.padGroup.add(clamp);
     }
 
+    // --- Space District Facility Apparatuses ---
+
+    // 1. Cryogenic Propellant Tanks Farm (propellant_tanks / nominal_fuel)
+    const tanksGroup = new THREE.Group();
+    tanksGroup.name = 'propellant_tanks_group';
+    tanksGroup.position.set(7.8, 0, -3.5);
+
+    const bermGeo = new THREE.BoxGeometry(5.0, 0.4, 4.2);
+    const bermMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9 });
+    const bermMesh = new THREE.Mesh(bermGeo, bermMat);
+    bermMesh.position.y = 0.2;
+    tanksGroup.add(bermMesh);
+
+    const loxGeo = new THREE.SphereGeometry(1.4, 16, 16);
+    const loxMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3, metalness: 0.2 });
+    const loxMesh = new THREE.Mesh(loxGeo, loxMat);
+    loxMesh.position.set(-1.0, 1.6, 0);
+    tanksGroup.add(loxMesh);
+
+    const fuelGeo = new THREE.CylinderGeometry(0.85, 0.85, 3.0, 16);
+    const fuelMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4, metalness: 0.3 });
+    const fuelMesh = new THREE.Mesh(fuelGeo, fuelMat);
+    fuelMesh.rotation.z = Math.PI / 2;
+    fuelMesh.position.set(1.1, 1.1, 0);
+    tanksGroup.add(fuelMesh);
+
+    const bandGeo = new THREE.CylinderGeometry(0.87, 0.87, 0.35, 16);
+    const bandMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 });
+    const bandMesh = new THREE.Mesh(bandGeo, bandMat);
+    bandMesh.rotation.z = Math.PI / 2;
+    bandMesh.position.set(1.1, 1.1, 0);
+    tanksGroup.add(bandMesh);
+
+    const pipeGeo = new THREE.CylinderGeometry(0.08, 0.08, 4.0, 8);
+    const pipeMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
+    const pipeMesh = new THREE.Mesh(pipeGeo, pipeMat);
+    pipeMesh.rotation.z = Math.PI / 2;
+    pipeMesh.position.set(-2.8, 0.6, 0);
+    tanksGroup.add(pipeMesh);
+
+    tanksGroup.userData.targetId = 'propellant_tanks';
+    tanksGroup.userData.title = 'Cryogenic Propellant Tanks';
+    tanksGroup.userData.interactive = true;
+    tanksGroup.userData.stationPos = new THREE.Vector3(5.5, 0.6, -2.5);
+    this.padGroup.add(tanksGroup);
+    this.lookup['propellant_tanks'] = tanksGroup;
+    this.lookup['nominal_fuel'] = tanksGroup;
+
+    // 2. Flight Computer & Avionics Checkout Terminal (flight_computer)
+    const fcGroup = new THREE.Group();
+    fcGroup.name = 'flight_computer_group';
+    fcGroup.position.set(-4.6, 1.2, 2.2);
+
+    const rackGeo = new THREE.BoxGeometry(0.7, 1.3, 0.5);
+    const rackMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.7 });
+    const rackMesh = new THREE.Mesh(rackGeo, rackMat);
+    rackMesh.position.y = 0.65;
+    fcGroup.add(rackMesh);
+
+    const screenGeo = new THREE.PlaneGeometry(0.5, 0.4);
+    const screenMat = new THREE.MeshBasicMaterial({ color: 0x0284c7 });
+    const screenMesh = new THREE.Mesh(screenGeo, screenMat);
+    screenMesh.position.set(0, 0.9, 0.26);
+    fcGroup.add(screenMesh);
+
+    const ledGeo = new THREE.SphereGeometry(0.05, 8, 8);
+    const ledMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+    const ledMesh = new THREE.Mesh(ledGeo, ledMat);
+    ledMesh.position.set(0.2, 1.15, 0.26);
+    fcGroup.add(ledMesh);
+
+    fcGroup.userData.targetId = 'flight_computer';
+    fcGroup.userData.title = 'Flight Computer';
+    fcGroup.userData.interactive = true;
+    fcGroup.userData.stationPos = new THREE.Vector3(-3.6, 0.6, 2.4);
+    this.padGroup.add(fcGroup);
+    this.lookup['flight_computer'] = fcGroup;
+
+    // 3. Range Safety Control Station (range_control)
+    const rangeGroup = new THREE.Group();
+    rangeGroup.name = 'range_control_group';
+    rangeGroup.position.set(-9.2, 0, 5.2);
+
+    const bldgGeo = new THREE.BoxGeometry(3.0, 1.8, 2.4);
+    const bldgMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7, metalness: 0.2 });
+    const bldgMesh = new THREE.Mesh(bldgGeo, bldgMat);
+    bldgMesh.position.y = 0.9;
+    rangeGroup.add(bldgMesh);
+
+    const winGeo = new THREE.BoxGeometry(2.0, 0.45, 0.1);
+    const winMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const winMesh = new THREE.Mesh(winGeo, winMat);
+    winMesh.position.set(0, 1.2, 1.21);
+    rangeGroup.add(winMesh);
+
+    const radarMastGeo = new THREE.CylinderGeometry(0.06, 0.06, 0.9, 8);
+    const radarMastMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8 });
+    const radarMast = new THREE.Mesh(radarMastGeo, radarMastMat);
+    radarMast.position.set(0, 2.25, 0);
+    rangeGroup.add(radarMast);
+
+    const radarBarGeo = new THREE.BoxGeometry(1.2, 0.15, 0.08);
+    const radarBarMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0 });
+    const radarBar = new THREE.Mesh(radarBarGeo, radarBarMat);
+    radarBar.position.set(0, 2.7, 0);
+    rangeGroup.add(radarBar);
+
+    const rangeLightGeo = new THREE.SphereGeometry(0.12, 8, 8);
+    const rangeLightMat = new THREE.MeshBasicMaterial({ color: 0x22c55e });
+    const rangeLight = new THREE.Mesh(rangeLightGeo, rangeLightMat);
+    rangeLight.position.set(0.8, 2.0, 0.8);
+    rangeGroup.add(rangeLight);
+
+    rangeGroup.userData.targetId = 'range_control';
+    rangeGroup.userData.title = 'Range Safety Control';
+    rangeGroup.userData.interactive = true;
+    rangeGroup.userData.stationPos = new THREE.Vector3(-7.2, 0.6, 4.5);
+    this.padGroup.add(rangeGroup);
+    this.lookup['range_control'] = rangeGroup;
+
+    // 4. Tracking Station & Telemetry Dish (tracking_station)
+    const trackingGroup = new THREE.Group();
+    trackingGroup.name = 'tracking_station_group';
+    trackingGroup.position.set(10.2, 0, 4.8);
+
+    const pedGeo = new THREE.CylinderGeometry(0.5, 0.8, 1.4, 12);
+    const pedMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.6 });
+    const pedMesh = new THREE.Mesh(pedGeo, pedMat);
+    pedMesh.position.y = 0.7;
+    trackingGroup.add(pedMesh);
+
+    const dishGeo = new THREE.CylinderGeometry(1.6, 0.15, 0.6, 16, 1, true);
+    const dishMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      roughness: 0.25,
+      metalness: 0.4,
+      side: THREE.DoubleSide,
+    });
+    const dishMesh = new THREE.Mesh(dishGeo, dishMat);
+    dishMesh.rotation.x = -Math.PI / 3;
+    dishMesh.position.set(0, 1.8, 0);
+    trackingGroup.add(dishMesh);
+
+    const hornGeo = new THREE.CylinderGeometry(0.04, 0.08, 0.7, 8);
+    const hornMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.8 });
+    const hornMesh = new THREE.Mesh(hornGeo, hornMat);
+    hornMesh.rotation.x = -Math.PI / 3;
+    hornMesh.position.set(0, 2.05, 0.4);
+    trackingGroup.add(hornMesh);
+
+    trackingGroup.userData.targetId = 'tracking_station';
+    trackingGroup.userData.title = 'Tracking Station';
+    trackingGroup.userData.interactive = true;
+    trackingGroup.userData.stationPos = new THREE.Vector3(8.5, 0.6, 3.8);
+    this.padGroup.add(trackingGroup);
+    this.lookup['tracking_station'] = trackingGroup;
+
     // Registration for raycasting & directives
     this.padGroup.userData.targetId = 'launch_pad';
+    this.padGroup.userData.title = 'Launch Pad';
+    this.padGroup.userData.stationPos = new THREE.Vector3(0, 0, 4.0);
     this.lookup['launch_pad'] = this.padGroup;
     this.lookup['pad_39a'] = this.padGroup;
     this.group.add(this.padGroup);
@@ -547,6 +706,9 @@ export class SpaceScene {
 
     // Register lookup
     this.rocketGroup.userData.targetId = 'rocket';
+    this.rocketGroup.userData.title = 'Orbital Launch Vehicle';
+    this.rocketGroup.userData.interactive = true;
+    this.rocketGroup.userData.stationPos = new THREE.Vector3(0, 0, 3.5);
     this.lookup['rocket'] = this.rocketGroup;
     this.group.add(this.rocketGroup);
   }
