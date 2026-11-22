@@ -389,7 +389,10 @@ export class LabScene {
 
     if (experimentDef?.id === 'launch_bench') {
       if (this.roomGroup) this.roomGroup.visible = false;
-      if (this.spaceScene) this.spaceScene.activate();
+      if (this.spaceScene) {
+        this.spaceScene.activate();
+        Object.assign(this.apparatusLookup, this.spaceScene.lookup);
+      }
       if (this.characterController?.rig?.root) {
         this.characterController.rig.root.position.set(-3.5, 0.6, 5.0);
       }

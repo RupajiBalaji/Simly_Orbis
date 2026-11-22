@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     allowed_origins: str = "http://localhost:8000,http://127.0.0.1:8000"
     trust_proxy: bool = False
     git_sha: str = ""
-    app_version: str = "0.8.0-dev"
+    app_version: str = "0.9.0-dev"
     environment: str = "development"
     spec_runtime: bool = False
 

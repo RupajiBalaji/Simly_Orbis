@@ -171,6 +171,7 @@ export function buildApparatus(rawApparatus, scene) {
     'pad_39a',
     'rocket',
     'propellant_tanks',
+    'nominal_fuel',
     'range_control',
     'flight_computer',
     'tracking_station',

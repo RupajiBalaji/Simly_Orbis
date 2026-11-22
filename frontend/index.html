@@ -489,201 +489,254 @@
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════════════
-       SCREEN 3: 3D LAB IN-GAME HUD OVERLAY
+       SCREEN 3: 3D LAB IN-GAME HUD OVERLAY (5 PERSISTENT ELEMENTS)
        ═════════════════════════════════════════════════════════════════════ -->
   <div id="lab-hud" class="hidden">
-    <!-- Top Bar -->
-    <header class="hud-top-bar">
-      <div class="hud-left">
-        <span class="hud-brand">⬡ ORBIS LAB</span>
-        <span class="hud-exp-badge" id="hud-exp-badge">PK WARD</span>
-        <div class="hud-clock-chip" id="hud-clock">t=0.0 h</div>
-      </div>
-
-      <div class="hud-center-stats">
-        <div class="hud-stat-pill">
-          <span>Safety Score:</span>
-          <span class="stat-val" id="hud-safety-score">40 pts</span>
-        </div>
-        <div class="ppe-indicators">
-          <span class="ppe-badge" id="ppe-badge-goggles">Goggles</span>
-          <span class="ppe-badge" id="ppe-badge-gloves">Gloves</span>
-          <span class="ppe-badge" id="ppe-badge-coat">Coat</span>
-        </div>
-      </div>
-
-      <div class="hud-right-controls">
-        <!-- Audio Cluster -->
-        <div class="hud-btn-group hud-audio-group">
-          <button type="button" class="hud-btn hud-icon-btn" id="btn-toggle-sound" title="Toggle Sound FX (Mute / Unmute)">🔊</button>
-          <div class="hud-volume-wrap" id="hud-volume-wrap" title="Audio Volume">
-            <input type="range" id="hud-volume-slider" min="0" max="100" value="40" aria-label="Volume">
+    <!-- PERSISTENT 1: Top-Left Title, Step Progress & Menu Button -->
+    <header class="hud-top-left" id="hud-top-left" data-hud-persistent="top-left">
+      <button type="button" class="btn-hud-menu" id="btn-open-menu" aria-label="Open Simulation Menu" title="Simulation Menu">☰ Menu</button>
+      <div class="hud-title-col">
+        <div class="hud-exp-name" id="hud-exp-name">Pharmacokinetics Ward</div>
+        <div class="hud-progress-row">
+          <span class="hud-step-counter" id="hud-step-counter">Step 1 of 12</span>
+          <div class="hud-step-track" aria-hidden="true">
+            <div class="hud-step-fill" id="hud-step-progress-fill" style="width: 8%;"></div>
           </div>
         </div>
+      </div>
+      <span class="hud-exp-badge" id="hud-exp-badge" style="display:none;">PK WARD</span>
+    </header>
 
-        <!-- Camera Cluster (Segmented) -->
-        <div class="hud-btn-group hud-cam-group">
-          <button type="button" class="hud-btn" id="btn-toggle-camera-mode" title="Toggle Camera Follow/Free mode (Key: C)">🎥 Cam: Follow</button>
-          <button type="button" class="hud-btn" id="btn-toggle-first-person" title="Toggle First-Person View (Key: V)">👁️ 1st Person</button>
-          <button type="button" class="hud-btn" id="btn-recenter-camera" title="Re-center camera behind avatar (Key: R)">🎯 Re-center</button>
-          <button type="button" class="hud-btn" id="btn-reset-view" title="Reset camera viewpoint">↺ Reset</button>
-        </div>
-
-        <!-- Display & Settings Cluster -->
-        <div class="hud-btn-group hud-settings-group">
-          <button type="button" class="hud-btn" id="btn-toggle-quality" title="Toggle Graphics Quality (High / Med / Low)">⚙️ High</button>
-          <button type="button" class="hud-btn" id="btn-toggle-nametags" title="Toggle 3D labels above apparatus (Key: N)">🏷️ Tags: ON</button>
-          <button type="button" class="hud-btn hud-icon-btn" id="btn-hud-open-about" title="About Simly Orbis">ℹ️</button>
-        </div>
-
-        <!-- Demo Tools Cluster -->
-        <div class="hud-btn-group hud-tools-group">
-          <button type="button" class="hud-btn hud-tool-btn" id="btn-toggle-skip-anim" title="Toggle animation speed">⚡ Skip</button>
-          <button type="button" class="hud-btn hud-tool-btn" id="btn-director-mode" title="Press Shift+D for hands-free autoplay">🎬 Director</button>
-          <button type="button" class="hud-btn hud-tool-btn hud-btn-warn" id="btn-mistake-demo" title="Intentionally skip goggles to see safety breach">⚠️ Mistake</button>
-          <button type="button" class="hud-btn hud-tool-btn" id="btn-open-controls" title="Keyboard & mouse controls guide (Key: H)">🎮 Controls</button>
-        </div>
-
-        <!-- Primary Action -->
-        <button type="button" class="hud-btn btn-finish" id="btn-finish-experiment">✓ Finish Report</button>
+    <!-- PERSISTENT 2: Top-Right Metrics (Time, Score, Safety) & Settings -->
+    <header class="hud-top-right" id="hud-top-right" data-hud-persistent="top-right">
+      <div class="hud-metrics-row">
+        <span class="hud-metric-chip" id="hud-clock" title="Elapsed Time">Time: 0.0 h</span>
+        <span class="hud-metric-chip" id="hud-safety-score" title="Experiment Score">Score: 100</span>
+        <span class="hud-metric-chip hud-safety-chip" id="hud-safety-status" title="Safety Compliance Score">Safety 100/100</span>
+        <button type="button" class="btn-hud-gear" id="btn-open-settings" aria-label="Simulation Settings" title="Settings">⚙️</button>
+      </div>
+      <!-- Hidden legacy PPE badges preserved for DOM listeners -->
+      <div class="ppe-indicators hidden" style="display:none;" aria-hidden="true">
+        <span class="ppe-badge" id="ppe-badge-goggles">Goggles</span>
+        <span class="ppe-badge" id="ppe-badge-gloves">Gloves</span>
+        <span class="ppe-badge" id="ppe-badge-coat">Coat</span>
       </div>
     </header>
 
-    <!-- Highlighted Next Step Banner -->
-    <div class="hud-next-step-banner" id="hud-next-step-banner">
-      <div class="next-step-badge">🎯 NEXT PROTOCOL STEP</div>
-      <div class="next-step-text" id="next-step-instruction">Step 1: Wear Personal Protective Equipment (PPE)</div>
-      <div class="next-step-hint" id="next-step-hint">Hint: Don goggles, gloves, and lab coat before touching apparatus.</div>
+    <!-- PERSISTENT 3: Bottom-Center Current Task Card -->
+    <section class="hud-current-task-card" id="hud-current-task-card" data-hud-persistent="task-card" role="region" aria-label="Current Task">
+      <div class="task-card-header">
+        <span class="task-card-kicker">CURRENT TASK</span>
+        <h3 class="task-card-title" id="task-card-title">Step 1: Don Personal Protective Equipment</h3>
+      </div>
+      <p class="task-card-hint" id="task-card-hint">Put on goggles, gloves, and lab coat before handling chemicals or apparatus.</p>
+      <div class="task-card-ppe-alert hidden" id="task-card-ppe-alert" role="alert">⚠️ Missing PPE: Goggles, Gloves</div>
+      <div class="task-card-actions-row">
+        <div class="task-primary-btns" id="task-card-actions">
+          <!-- Primary action button populated dynamically; receives tabindex=1 -->
+        </div>
+        <button type="button" class="btn-task-station" id="btn-task-go-station" title="Walk character to active station">Go to Prep Station</button>
+        <button type="button" class="btn-task-more" id="btn-toggle-more-actions" title="Show all station actions">➕ More actions</button>
+      </div>
+      <!-- Expandable More Actions Drawer -->
+      <div class="more-actions-drawer hidden" id="more-actions-drawer">
+        <div class="more-actions-header">
+          <span>All Apparatus Operations</span>
+          <span class="selected-target-indicator" id="selected-target-name">STATION: GENERAL LAB</span>
+        </div>
+        <div class="action-groups-container" id="action-groups-container">
+          <div id="action-quick-buttons" class="action-quick-buttons"></div>
+        </div>
+        <div class="station-actions-list hidden" id="station-actions-list" style="display:none;"></div>
+      </div>
+    </section>
+
+    <!-- PERSISTENT 4: Bottom-Left Ask Orbis Chat Bubble Button -->
+    <div class="hud-ask-orbis-trigger" id="hud-ask-orbis-trigger" data-hud-persistent="ask-orbis">
+      <button type="button" class="btn-bubble-ask-orbis" id="btn-toggle-ask-orbis" aria-label="Ask Orbis AI Assistant" title="Ask Orbis (Press /)">
+        <span class="bubble-icon">💬</span>
+        <span class="bubble-title">Ask Orbis</span>
+        <kbd class="bubble-hint">/</kbd>
+      </button>
     </div>
 
-    <!-- Left Panel: Protocol Checklist (Collapsible, open by default) -->
-    <aside class="hud-protocol-panel" id="hud-protocol-panel">
-      <div class="protocol-header">
-        <h3>Protocol Checklist</h3>
-        <button type="button" class="panel-toggle-btn" id="btn-toggle-checklist" title="Collapse / Expand Checklist">◀</button>
+    <!-- Docked Ask Orbis Input Panel (Opens on click or / key) -->
+    <div class="hud-ask-orbis-dock hidden" id="hud-ask-orbis-dock">
+      <div class="ask-orbis-dock-header">
+        <span class="ask-orbis-dock-title">💬 Ask Orbis Lab Assistant</span>
+        <button type="button" class="btn-close-dock" id="btn-close-ask-orbis" aria-label="Close Ask Orbis">✕</button>
       </div>
-      <div class="protocol-steps-list" id="protocol-steps-list"></div>
+      <div class="ask-orbis-input-wrap">
+        <input
+          type="text"
+          id="ask-orbis-input"
+          placeholder="Tell the character what to do, e.g. put on goggles"
+          maxlength="200"
+          autocomplete="off"
+        />
+        <button type="button" class="btn-ask-mic" id="btn-ask-mic" title="Voice Input">🎤</button>
+        <button type="button" class="btn-ask-submit" id="btn-ask-submit">Show plan ➔</button>
+      </div>
+      <div class="ask-orbis-examples-row" id="ask-orbis-examples-row">
+        <span class="examples-label">Try:</span>
+        <div class="example-chips" id="ask-orbis-chips"></div>
+      </div>
+    </div>
 
-      <!-- Docked Rules Panel (Spec 8.4) -->
-      <div class="hud-rules-panel" id="hud-rules-panel" style="border-top:1px solid rgba(255,255,255,0.1); margin-top:12px; padding-top:10px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <h4 style="font-size:var(--text-xs); text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin:0;">Active Safety Rules</h4>
-          <span class="badge badge-ok" id="hud-rules-status-badge" style="font-size:10px;">Compliant</span>
+    <!-- PERSISTENT 5: Bottom-Right Dr. Orbis Round Button -->
+    <div class="hud-dr-orbis-trigger" id="hud-dr-orbis-trigger" data-hud-persistent="dr-orbis">
+      <button type="button" class="btn-dr-orbis-round" id="btn-toggle-dr-orbis" aria-label="Dr. Orbis Mentor & Event Log" title="Dr. Orbis Mentor & Event Log">
+        <span class="dr-orbis-avatar-circle">👨‍🔬</span>
+        <span class="unread-dot hidden" id="dr-orbis-unread-dot"></span>
+      </button>
+    </div>
+
+    <!-- Docked Side Panel: Dr. Orbis Mentor & Laboratory Event Log (Tabs) -->
+    <aside class="dr-orbis-side-panel hidden" id="dr-orbis-side-panel" aria-label="Mentor and Event Log">
+      <div class="dr-orbis-side-header">
+        <div class="dr-orbis-tabs-nav">
+          <button type="button" class="side-tab-btn active" id="tab-btn-mentor" data-tab="mentor">👨‍🔬 Dr. Orbis</button>
+          <button type="button" class="side-tab-btn" id="tab-btn-log" data-tab="log">📋 Event Log</button>
         </div>
-        <div id="hud-rules-content" style="font-size:var(--text-xs); line-height:1.4; color:var(--text-muted);">
-          <div class="rule-card" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); padding:8px; border-radius:var(--radius-sm); margin-bottom:6px;">
-            <div style="font-weight:600; color:var(--text); margin-bottom:2px;" id="rule-title">R1: Personal Protective Equipment</div>
-            <div style="font-size:11px; color:var(--accent);" id="rule-status">Requirement: Goggles + Gloves + Coat</div>
-            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;" id="rule-reason">Protects student researcher from chemical splashes and contact dermatitis.</div>
+        <button type="button" class="btn-close-side-panel" id="btn-close-dr-orbis" aria-label="Close Panel">✕</button>
+      </div>
+      <div class="dr-orbis-tab-content active" id="tab-panel-mentor">
+        <div class="mentor-messages-list" id="mentor-messages-list"></div>
+        <div class="mentor-typing-indicator hidden" id="mentor-typing-indicator" style="display:none;">
+          <span>Dr. Orbis is thinking</span>
+          <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+        </div>
+        <div class="mentor-input-controls">
+          <div class="mentor-quick-bar">
+            <button type="button" class="btn-mentor-hint" id="btn-mentor-hint">💡 Step Hint</button>
+            <button type="button" class="btn-mentor-explain" id="btn-mentor-explain">🔍 Explain Status</button>
           </div>
+          <form class="mentor-ask-form" id="mentor-ask-form">
+            <input type="text" id="mentor-question-input" placeholder="Ask Dr. Orbis a question..." maxlength="200" autocomplete="off" />
+            <button type="submit" class="btn-mentor-send" id="btn-mentor-send">Ask</button>
+          </form>
         </div>
+      </div>
+      <div class="dr-orbis-tab-content hidden" id="tab-panel-log">
+        <div class="event-log-list" id="event-log-list" role="log" aria-live="polite"></div>
       </div>
     </aside>
 
-    <!-- Right Panel: Telemetry Readouts & Real-Time Event Log (Collapsible) -->
-    <aside class="hud-right-panel collapsed" id="hud-right-panel">
-      <!-- Telemetry Readouts Strip (Spec 8.4 & 14.1) -->
-      <div class="hud-telemetry-section" id="hud-telemetry-section" style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.1);">
-        <div style="font-size:var(--text-xs); font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;">Live Telemetry &amp; Readouts</div>
-        <div class="telemetry-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-          <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
-            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-              <span>Concentration</span>
-              <button type="button" class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/pharma_pk.md" aria-label="Source: Engine. Click for provenance details.">[Engine]</button>
+    <!-- Slide-over Menu & Settings Drawer (Modal sheet on mobile) -->
+    <div class="hud-menu-drawer hidden" id="hud-menu-drawer" role="dialog" aria-modal="true" aria-label="Simulation Settings and Controls">
+      <div class="menu-drawer-backdrop" id="menu-drawer-backdrop"></div>
+      <div class="menu-drawer-panel">
+        <div class="menu-drawer-header">
+          <h2>Simulation Settings &amp; Tools</h2>
+          <button type="button" class="btn-close-menu" id="btn-close-menu" aria-label="Close Menu">✕</button>
+        </div>
+        <div class="menu-drawer-body">
+          <!-- Camera Controls -->
+          <div class="menu-section">
+            <h4>🎥 Camera Mode</h4>
+            <div class="menu-btn-row">
+              <button type="button" class="menu-action-btn" id="btn-menu-cam-follow">Follow</button>
+              <button type="button" class="menu-action-btn" id="btn-menu-cam-first">1st Person</button>
+              <button type="button" class="menu-action-btn" id="btn-menu-cam-recenter">🎯 Re-center</button>
+              <button type="button" class="menu-action-btn" id="btn-menu-cam-reset">↺ Reset</button>
             </div>
-            <div id="readout-concentration" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">0.00 mg/L</div>
+            <label class="menu-toggle-label" style="margin-top:8px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="chk-auto-align-behind" />
+              <span>Auto-align camera behind me while walking (Default: OFF)</span>
+            </label>
           </div>
-          <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
-            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-              <span>Sample / Mass</span>
-              <button type="button" class="source-chip chip-game" data-source-type="game" aria-label="Source: Game apparatus. Click for provenance details.">[Game]</button>
+
+          <!-- Display & Graphics -->
+          <div class="menu-section">
+            <h4>⚙️ Display &amp; Graphics</h4>
+            <div class="menu-btn-row">
+              <button type="button" class="menu-action-btn" id="btn-toggle-quality">Quality: High</button>
+              <button type="button" class="menu-action-btn" id="btn-toggle-nametags">🏷️ Name Tags: ON</button>
             </div>
-            <div id="readout-mass" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--text); margin-top:2px;">0.000 g</div>
           </div>
-          <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
-            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-              <span>Lit Target</span>
-              <button type="button" class="source-chip chip-lit" data-source-type="lit" data-model-card="/docs/model_cards/pharma_pk.md" aria-label="Source: Literature. Click for provenance details.">[Lit]</button>
+
+          <!-- Audio & Sound -->
+          <div class="menu-section">
+            <h4>🔊 Audio</h4>
+            <div class="menu-audio-row" style="display:flex; align-items:center; gap:12px;">
+              <button type="button" class="menu-action-btn" id="btn-toggle-sound">🔊 Mute / Unmute</button>
+              <input type="range" id="hud-volume-slider" min="0" max="100" value="40" aria-label="Sound Volume" style="flex:1;" />
             </div>
-            <div id="readout-target" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--accent); margin-top:2px;">12.5 mg/L</div>
           </div>
-          <div class="readout-box" style="background:rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;">
-            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-              <span>AI Mentor</span>
-              <button type="button" class="source-chip chip-ai" data-source-type="ai" aria-label="Source: AI Mentor. Click for provenance details.">[AI]</button>
+
+          <!-- All Stations -->
+          <div class="menu-section">
+            <h4>📍 All Laboratory Stations</h4>
+            <div class="menu-stations-grid" id="menu-stations-list" style="display:grid; grid-template-columns:1fr 1fr; gap:6px;"></div>
+            <div class="station-strip-buttons hidden" id="station-strip-buttons" style="display:none;"></div>
+          </div>
+
+          <!-- Demo & Developer Tools -->
+          <div class="menu-section">
+            <h4>⚡ Tools &amp; Testing</h4>
+            <div class="menu-btn-row">
+              <button type="button" class="menu-action-btn" id="btn-toggle-skip-anim">⚡ Skip Anim</button>
+              <button type="button" class="menu-action-btn" id="btn-director-mode">🎬 Director Mode</button>
+              <button type="button" class="menu-action-btn btn-warn" id="btn-mistake-demo">⚠️ Mistake Demo</button>
+              <button type="button" class="menu-action-btn" id="btn-open-controls">🎮 Controls Guide</button>
+              <button type="button" class="menu-action-btn" id="btn-finish-experiment">✓ Finish Report</button>
             </div>
-            <div id="readout-ai-status" style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:var(--info); margin-top:2px;">Active</div>
           </div>
+        </div>
+        <div class="menu-drawer-footer">
+          <div class="disclaimer-text">Educational simulation. Simplified models. Not medical advice.</div>
+          <div class="version-text">Simly Orbis v0.9.0-dev</div>
         </div>
       </div>
-
-      <!-- Titration Live Curve Strip (Spec 9.2 & P3-T3) -->
-      <div class="hud-titration-curve-section" id="hud-titration-curve-section" style="padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.15); display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <div style="font-size:var(--text-xs); font-weight:700; color:var(--accent); text-transform:uppercase; letter-spacing:0.05em;">Titration Live Curve</div>
-          <span class="source-chip chip-engine" data-source-type="engine" data-model-card="/docs/model_cards/chem_titration.md">[Engine]</span>
-        </div>
-        <div id="titration-curve-container" style="position:relative; width:100%; height:130px; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:6px; overflow:hidden;">
-          <svg id="titration-curve-svg" viewBox="0 0 260 130" style="width:100%; height:100%; display:block;"></svg>
-        </div>
-        <div id="titration-curve-summary" style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-top:6px; line-height:1.3;">
-          pH: 1.00 | V: 0.00 mL | Equivalence: 25.00 mL | Band: 8.2-10.0
-        </div>
-      </div>
-
-      <div class="log-header">
-        <span>Laboratory Event Log</span>
-        <button type="button" class="panel-toggle-btn" id="btn-toggle-log" title="Expand / Collapse Event Log">▲</button>
-      </div>
-      <div class="event-log-list" id="event-log-list" role="log" aria-live="polite" aria-atomic="false"></div>
-    </aside>
-
-    <!-- Bottom Station Navigation Strip & Compact Action Bar -->
-    <div class="hud-bottom-dock" id="hud-bottom-dock">
-      <!-- Mobile Bottom Sheet Drag Handle (Spec 8.17) -->
-      <div class="bottom-sheet-handle" id="bottom-sheet-drag-handle" aria-label="Expand or collapse action sheet" role="button" tabindex="0"></div>
-
-      <!-- Go to Station Strip -->
-      <div class="hud-station-strip" id="hud-station-strip">
-        <span class="station-strip-label">GO TO STATION:</span>
-        <div class="station-strip-buttons" id="station-strip-buttons"></div>
-        <button type="button" class="btn-collapse-dock" id="btn-collapse-bottom-dock" title="Collapse / Expand Action Bar">▼ Minimize</button>
-      </div>
-
-      <!-- Compact Action Bar (Station-focused with expandable More drawer) -->
-      <section class="hud-action-bar-container" id="hud-action-bar-container">
-        <div class="action-bar-header">
-          <div class="action-bar-title-wrap">
-            <span class="action-bar-title">What would you like to do?</span>
-            <span class="selected-target-indicator" id="selected-target-name">STATION: GENERAL LAB</span>
-          </div>
-          <div class="action-bar-helper">Selected station actions ready · Click 'More Actions' for all allowed operations</div>
-        </div>
-
-        <!-- Primary Compact Row for Selected Station -->
-        <div class="compact-actions-row">
-          <div class="station-actions-list" id="station-actions-list"></div>
-          <button type="button" class="btn-more-actions" id="btn-toggle-more-actions" title="Show or hide general & extra actions">
-            <span>➕ More Actions</span> <span id="more-actions-indicator">▾</span>
-          </button>
-        </div>
-
-        <!-- Expandable Drawer for Full Action Categories -->
-        <div class="more-actions-drawer hidden" id="more-actions-drawer">
-          <div class="action-groups-container" id="action-groups-container">
-            <div id="action-quick-buttons" class="action-quick-buttons"></div>
-          </div>
-        </div>
-      </section>
     </div>
 
-    <!-- Footer -->
-    <footer class="hud-footer">
-      <div class="disclaimer-pill">Educational simulation. Simplified models. Not medical advice.</div>
-      <div style="font-size:0.75rem; color:#64748b; background:rgba(0,0,0,0.4); padding:4px 8px; border-radius:6px; pointer-events:auto;">
-        Shortcuts: <kbd>[WASD]</kbd> Move · <kbd>[E]</kbd> Use · <kbd>[V]</kbd> 1st Person · <kbd>[Shift+D]</kbd> Director · <kbd>[H]</kbd> Controls · <kbd>[F3]</kbd> Debug
+    <!-- Slim Educational Disclaimer at bottom on all pharma screens -->
+    <div class="educational-disclaimer-strip" id="hud-disclaimer-strip" aria-hidden="true">
+      Educational simulation. Simplified models. Not medical advice.
+    </div>
+
+    <!-- 4-Step Coach Marks (First-Run Guidance) -->
+    <div class="hud-coachmarks-overlay hidden" id="hud-coachmarks-overlay" role="dialog" aria-modal="true" aria-label="Getting Started Tutorial">
+      <div class="coachmark-card" id="coachmark-card">
+        <div class="coachmark-step-badge" id="coachmark-step-badge">Step 1 of 4</div>
+        <h4 class="coachmark-title" id="coachmark-title">Walk around the Laboratory</h4>
+        <p class="coachmark-desc" id="coachmark-desc">Use the WASD or Arrow keys (or the on-screen joystick on mobile) to move your scientist character across stations.</p>
+        <div class="coachmark-footer">
+          <button type="button" class="btn-coachmark-skip" id="btn-coachmark-skip">Skip Tour</button>
+          <button type="button" class="btn-coachmark-next" id="btn-coachmark-next">Next ➔</button>
+        </div>
       </div>
-    </footer>
+    </div>
+
+    <!-- Hidden compatibility elements preserved for backward compatibility -->
+    <div id="hud-next-step-banner" style="display:none;" aria-hidden="true">
+      <span id="next-step-instruction"></span>
+      <span id="next-step-hint"></span>
+    </div>
+    <div id="protocol-steps-list" style="display:none;" aria-hidden="true"></div>
+    <div id="hud-protocol-panel" style="display:none;" aria-hidden="true"></div>
+    <div id="hud-rules-panel" style="display:none;" aria-hidden="true">
+      <span id="hud-rules-status-badge">Compliant</span>
+      <span id="rule-title">Rules R1-R10</span>
+      <span id="rule-status">Active</span>
+      <span id="rule-reason">Operating normally</span>
+    </div>
+    <div id="hud-right-panel" style="display:none;" aria-hidden="true">
+      <div id="hud-telemetry-section">
+        <span id="readout-concentration">0.00 mg/L</span>
+        <span id="readout-mass">0.000 g</span>
+        <span>[Engine]</span>
+        <span>[Game]</span>
+      </div>
+    </div>
+    <div id="hud-bottom-dock" style="display:none;" aria-hidden="true">
+      <div id="bottom-sheet-drag-handle" class="bottom-sheet-handle"></div>
+      <div id="hud-station-strip"></div>
+      <span data-source-type="engine">[Engine]</span>
+      <span data-source-type="game">[Game]</span>
+      <span data-source-type="lit">[Lit]</span>
+      <span data-source-type="ai">[AI]</span>
+    </div>
   </div>
 
   <!-- ═════════════════════════════════════════════════════════════════════
@@ -1142,7 +1195,7 @@
             Built by <strong style="color:#f8fafc;">Rupaji Balaji</strong> &bull; <a href="https://github.com/RupajiBalaji/Simly_Orbis" target="_blank" rel="noopener noreferrer" style="color:#38bdf8; text-decoration:underline;">GitHub Repository</a> &bull; <a href="#/terms-privacy" id="link-terms-privacy" style="color:#38bdf8; text-decoration:underline;" onclick="alert('Simly Orbis Privacy & Terms Notice:\n\n1. Purpose: Educational scientific laboratory simulation.\n2. Privacy: We collect zero personal data, use no tracking cookies or third-party ad networks, and store no user passwords.\n3. Clinical Disclaimer: Educational simulation only. Not medical advice. Not clinical evidence. Bounded strictly to adult scenarios (18-90).\n4. AI Usage: AI queries are ephemeral and used solely to explain educational scientific principles.'); return false;">Privacy Policy &amp; Terms</a>
           </div>
           <div style="color:#94a3b8; font-family:monospace;" id="about-build-meta">
-            Version: <span id="about-version" style="color:#38bdf8;">0.8.0-dev</span> (<span id="about-git-sha">RC1</span>)
+            Version: <span id="about-version" style="color:#38bdf8;">0.9.0-dev</span> (<span id="about-git-sha">RC1</span>)
           </div>
         </div>
 

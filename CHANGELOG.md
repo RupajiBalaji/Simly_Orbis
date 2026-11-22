@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.0-dev] - 2026-11-22
+
+### Added
+- **Problem A: Clean HUD & Progressive Disclosure Architecture**:
+  - Reduced persistent HUD elements to at most 5 (`data-hud-persistent`): Top-Left (Title + Progress + Menu), Top-Right (Time, Score, Safety, Settings), Bottom-Center (Current Task Card), Bottom-Left (Ask Orbis chat bubble button), Bottom-Right (Dr. Orbis round button with unread dot).
+  - Current Task card displays step title, one-line hint, missing PPE warning, 1-3 primary actions, and "Go to <Station>" button.
+  - Slide-over Simulation Menu drawer organizing secondary controls (camera view, display & graphics, audio, controls help, demo cheats, full station list).
+  - 4-step coach marks onboarding sequence on first run, skippable and persisted.
+  - Responsive layout verified across 1920x1080, 1366x768, 1280x720, 768x1024, and 390x844 (bottom sheet on mobile).
+  - Objective acceptance tests in Playwright test suite for non-overlapping HUD boxes and <30% HUD area at 1366x768.
+
+### Fixed
+- **Problem B: Locomotion & Camera Rig Stability**:
+  - Resolved right-vector mirroring bug in `controller.js` and `camera_rig.js` with pure math module `movement_math.js` (`rightX = -fwdZ; rightZ = fwdX;`).
+  - Gated camera yaw chase behind optional `autoAlignBehind` setting (persisted in localStorage, default OFF).
+  - Enforced camera yaw changes only through explicit user input (mouse/touch drag, Q/E, Re-center).
+  - Implemented critically damped exponential easing (`exp(-k*dt)`) for avatar following with constant distance, clamped pitch, and zero overshoot.
+  - Verified avatar model local +Z facing matches travel velocity heading (<0.01° error).
+
+---
+
 ## [0.8.0-dev] - 2026-11-20
 
 ### Added

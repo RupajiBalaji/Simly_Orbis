@@ -156,31 +156,216 @@ export class ActionMenu {
     const protocol = state.experiment?.protocol || [];
     const completed = new Set(state.session?.protocol_progress || []);
 
+    const counterEl = document.getElementById('hud-step-counter');
+    const fillEl = document.getElementById('hud-step-progress-fill');
+    const taskTitleEl = document.getElementById('task-card-title');
+    const taskHintEl = document.getElementById('task-card-hint');
+    const ppeAlertEl = document.getElementById('task-card-ppe-alert');
+    const taskActionsEl = document.getElementById('task-card-actions');
+    const btnGoStation = document.getElementById('btn-task-go-station');
+
     const nextStep = protocol.find((s) => !completed.has(s.id));
     if (!nextStep) {
       if (this.nextStepInstruction) this.nextStepInstruction.textContent = '🎉 All protocol steps completed! Review findings and Submit Report.';
-      if (this.nextStepHint) this.nextStepHint.textContent = 'Click [Finish Report] in the top right to view grading breakdown.';
+      if (this.nextStepHint) this.nextStepHint.textContent = 'Click [Finish Report] to view grading breakdown.';
+      if (counterEl) counterEl.textContent = 'All steps complete';
+      if (fillEl) fillEl.style.width = '100%';
+      if (taskTitleEl) taskTitleEl.textContent = '🎉 All protocol steps completed!';
+      if (taskHintEl) taskHintEl.textContent = 'Click Finish Report to view grading breakdown and clinical debrief.';
+      if (ppeAlertEl) ppeAlertEl.classList.add('hidden');
+      if (taskActionsEl) {
+        taskActionsEl.innerHTML = '';
+        const finishBtn = document.createElement('button');
+        finishBtn.type = 'button';
+        finishBtn.className = 'task-btn-primary';
+        finishBtn.textContent = '✓ Finish Report';
+        finishBtn.setAttribute('tabindex', '1');
+        finishBtn.onclick = () => {
+          document.getElementById('btn-finish-experiment')?.click();
+        };
+        taskActionsEl.appendChild(finishBtn);
+      }
+      if (btnGoStation) btnGoStation.style.display = 'none';
       return;
     }
 
     const stepIdx = protocol.indexOf(nextStep) + 1;
+    const totalSteps = protocol.length || 1;
     const title = nextStep.title || this.formatProtocolTitle(nextStep.id);
     const hint = nextStep.hint_text || nextStep.hint || 'Complete protocol actions following safety standards.';
+
     if (this.nextStepInstruction) {
       this.nextStepInstruction.textContent = `Step ${stepIdx}: ${title}`;
     }
     if (this.nextStepHint) {
       this.nextStepHint.textContent = hint.startsWith('Hint:') ? hint : `Hint: ${hint}`;
     }
+    if (counterEl) {
+      counterEl.textContent = `Step ${stepIdx} of ${totalSteps}`;
+    }
+    if (fillEl) {
+      fillEl.style.width = `${Math.round(((stepIdx - 1) / totalSteps) * 100)}%`;
+    }
+    if (taskTitleEl) {
+      taskTitleEl.textContent = `Step ${stepIdx}: ${title}`;
+    }
+    if (taskHintEl) {
+      taskHintEl.textContent = hint;
+    }
+
+    // Contextual missing PPE alert
+    const ppe = state.session?.ppe || [];
+    const required = state.experiment?.required_ppe || ['goggles', 'gloves', 'coat'];
+    const missing = required.filter((p) => !ppe.includes(p));
+    if (missing.length > 0 && nextStep.id !== 'wash_hands' && nextStep.id !== 'dispose_waste') {
+      if (ppeAlertEl) {
+        ppeAlertEl.textContent = `⚠️ Missing PPE: ${missing.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')}`;
+        ppeAlertEl.classList.remove('hidden');
+      }
+    } else if (ppeAlertEl) {
+      ppeAlertEl.classList.add('hidden');
+    }
+
+    const targetApparatusId = this.mapStepToApparatus(nextStep.id);
+
+    // Populate Current Task Card Actions (1 to 3 actions for THIS step only)
+    if (taskActionsEl) {
+      taskActionsEl.innerHTML = '';
+      const primaryActions = this.getPrimaryActionsForStep(nextStep.id, targetApparatusId);
+      primaryActions.forEach((item, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `task-btn-primary ${item.enabled ? 'enabled' : 'disabled'}`;
+        btn.textContent = this.formatActionLabel(item.action);
+        if (idx === 0) {
+          btn.setAttribute('tabindex', '1'); // Focusable via Tab within 3 presses
+        } else {
+          btn.setAttribute('tabindex', '0');
+        }
+        if (!item.enabled) {
+          btn.disabled = true;
+          btn.title = item.disabled_reason || 'Action locked by protocol prerequisite.';
+        } else {
+          btn.onclick = () => {
+            const target = targetApparatusId || this.resolveDefaultTargetForAction(item.action);
+            this.handleActionClick(item.action, target);
+          };
+        }
+        taskActionsEl.appendChild(btn);
+      });
+    }
+
+    // Go to Station button
+    if (btnGoStation) {
+      if (targetApparatusId) {
+        btnGoStation.style.display = 'inline-block';
+        btnGoStation.textContent = `Go to ${this.formatStationName(targetApparatusId)} ➔`;
+        btnGoStation.onclick = () => {
+          const appObj = this.directiveQueue?.scene?.getApparatus(targetApparatusId);
+          if (appObj) {
+            const pos = appObj.userData?.stationPos || appObj.position;
+            this.characterController?.moveTo(pos);
+            this.directiveQueue?.scene?.focusOnStation(targetApparatusId);
+            state.setSelectedTarget(targetApparatusId);
+          }
+        };
+      } else {
+        btnGoStation.style.display = 'none';
+      }
+    }
 
     // Update pulsing beacon / glow over next step apparatus
-    if (this.directiveQueue?.scene && this.directiveQueue?.effectManager) {
-      const targetApparatusId = this.mapStepToApparatus(nextStep.id);
+    if (this.directiveQueue?.scene && this.directiveQueue?.effectManager && targetApparatusId) {
       const targetMesh = this.directiveQueue.scene.getApparatus(targetApparatusId);
       if (targetMesh) {
         this.directiveQueue.effectManager.playEffect(targetMesh, { name: 'glow', duration_ms: 2500 });
       }
     }
+  }
+
+  getPrimaryActionsForStep(stepId, stationId) {
+    let allActions = state.availableActions || [];
+    const expAllowed = state.experiment?.allowed_actions;
+    if (expAllowed && Array.isArray(expAllowed)) {
+      allActions = allActions.filter((item) => expAllowed.includes(item.action));
+    }
+
+    const stepActionMap = {
+      wear_ppe: ['wear_ppe'],
+      tare_balance: ['tare_balance', 'weigh'],
+      weigh_dose: ['weigh', 'tare_balance'],
+      dissolve_dose: ['dissolve'],
+      label_cup: ['label'],
+      administer_oral: ['administer_oral'],
+      advance_time: ['advance_time'],
+      label_tube: ['label'],
+      label_tubes: ['label'],
+      draw_blood: ['draw_blood'],
+      run_assay: ['run_assay'],
+      rinse_burette: ['rinse_burette', 'fill_burette'],
+      fill_burette: ['fill_burette', 'rinse_burette'],
+      pipette_analyte: ['pipette_analyte'],
+      add_indicator: ['add_indicator'],
+      titrate: ['titrate', 'swirl'],
+      swirl: ['swirl', 'titrate'],
+      record_endpoint: ['record_endpoint', 'read_ph_meter'],
+      dispose_waste: ['dispose_waste'],
+      wash_hands: ['wash_hands'],
+      submit_report: ['submit_report'],
+      inspect_pad: ['inspect_pad'],
+      fuel_vehicle: ['fuel_vehicle'],
+      run_preflight: ['run_preflight'],
+      clear_range: ['clear_range'],
+      launch: ['launch'],
+      coast: ['coast'],
+      transfer: ['transfer'],
+      circularize: ['circularize'],
+      debrief: ['debrief'],
+    };
+
+    const targetActionNames = stepActionMap[stepId];
+    let matched = [];
+    if (targetActionNames) {
+      matched = allActions.filter((a) => targetActionNames.includes(a.action));
+    }
+    if (matched.length === 0 && stationId) {
+      matched = this.getActionsForStation(stationId);
+    }
+    if (matched.length === 0) {
+      matched = allActions.filter((a) => a.enabled);
+    }
+    matched.sort((a, b) => (b.enabled ? 1 : 0) - (a.enabled ? 1 : 0));
+    return matched.slice(0, 3);
+  }
+
+  formatStationName(targetId) {
+    const names = {
+      digital_balance: 'Analytical Balance',
+      dosing_cup: 'Dosing Cup',
+      patient_bed: 'Patient Alex',
+      ward_clock: 'Ward Clock',
+      tube_rack: 'Sample Tubes',
+      assay_analyzer: 'Plasma Analyzer',
+      burette: 'Burette Stand',
+      conical_flask: 'Conical Flask',
+      sink: 'Utility Sink',
+      chemical_waste_bin: 'Waste Bin',
+      biohazard_bin: 'Biohazard Bin',
+      virtual_trial_screen: 'Clinical Trial Screen',
+      reality_check_board: 'Reality Check Board',
+      launch_pad: 'Launch Pad',
+      propellant_tanks: 'Propellant Farm',
+      flight_computer: 'Flight Computer',
+      range_control: 'Range Control',
+      tracking_station: 'Tracking Station',
+      infusion_pump: 'Infusion Pump',
+      patient_monitor: 'Patient Monitor',
+      pkpd_chart_display: 'PK/PD Hologram',
+      prediction_slate: 'Prediction Slate',
+      sampling_schedule: 'Sampling Schedule',
+      debrief_station: 'Debrief Station',
+    };
+    return names[targetId] || (targetId ? targetId.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Station');
   }
 
   mapStepToApparatus(stepId) {
@@ -193,6 +378,13 @@ export class ActionMenu {
     if (stepId.includes('flask') || stepId.includes('pipette') || stepId.includes('indicator') || stepId.includes('titrate')) return 'conical_flask';
     if (stepId.includes('waste')) return 'chemical_waste_bin';
     if (stepId.includes('wash') || stepId.includes('hand')) return 'sink';
+    if (stepId.includes('pump') || stepId.includes('infusion')) return 'infusion_pump';
+    if (stepId.includes('monitor') || stepId.includes('vitals')) return 'patient_monitor';
+    if (stepId.includes('pad') || stepId.includes('launch')) return 'launch_pad';
+    if (stepId.includes('fuel') || stepId.includes('tank')) return 'propellant_tanks';
+    if (stepId.includes('preflight') || stepId.includes('flight_computer') || stepId.includes('coast') || stepId.includes('circularize')) return 'flight_computer';
+    if (stepId.includes('range') || stepId.includes('clear')) return 'range_control';
+    if (stepId.includes('tracking') || stepId.includes('telemetry') || stepId.includes('debrief')) return 'tracking_station';
     return null;
   }
 

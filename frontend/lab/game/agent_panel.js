@@ -41,7 +41,13 @@ export class AskOrbisAgentPanel {
   }
 
   initDOM() {
-    // 1. Inject Ask Orbis Bar into lab HUD if not already present
+    // 1. If persistent dock already exists in DOM, populate suggestion chips and don't re-inject
+    if (document.getElementById('hud-ask-orbis-dock')) {
+      this.updateChips('pk_ward');
+      this.initPlanModal();
+      return;
+    }
+
     const hud = document.getElementById('lab-hud');
     if (!hud || document.getElementById('hud-ask-orbis-bar')) return;
 
@@ -56,12 +62,12 @@ export class AskOrbisAgentPanel {
         <input
           type="text"
           id="ask-orbis-input"
-          placeholder="Ask Orbis: type or speak a lab instruction... (Press / to focus)"
+          placeholder="Tell the character what to do, e.g. put on goggles"
           maxlength="200"
           autocomplete="off"
         />
         <button type="button" class="btn-ask-mic" id="btn-ask-mic" title="Voice Input (Speech-to-Text)">🎤</button>
-        <button type="button" class="btn-ask-submit" id="btn-ask-submit" title="Propose Action Plan">Propose Plan ➔</button>
+        <button type="button" class="btn-ask-submit" id="btn-ask-submit" title="Show Action Plan">Show plan ➔</button>
       </div>
       <div class="ask-orbis-examples-row" id="ask-orbis-examples-row">
         <span class="examples-label">Try:</span>
@@ -75,6 +81,10 @@ export class AskOrbisAgentPanel {
       hud.appendChild(barEl);
     }
 
+    this.initPlanModal();
+  }
+
+  initPlanModal() {
     // 2. Inject Proposed Plan Modal into document body if not present
     if (!document.getElementById('ask-orbis-plan-modal')) {
       const modalEl = document.createElement('div');
@@ -97,7 +107,7 @@ export class AskOrbisAgentPanel {
             <div class="plan-progress-label" id="plan-progress-label">Executing step 1...</div>
           </div>
           <div class="plan-card-actions" id="plan-card-actions">
-            <button type="button" class="btn-plan-run" id="btn-plan-run">▶ Run Plan</button>
+            <button type="button" class="btn-plan-run" id="btn-plan-run">▶ Run</button>
             <button type="button" class="btn-plan-step" id="btn-plan-step">⏯ Step by Step</button>
             <button type="button" class="btn-plan-cancel" id="btn-plan-cancel">Cancel</button>
             <button type="button" class="btn-plan-stop hidden" id="btn-plan-stop">⏹ Stop</button>
@@ -167,7 +177,25 @@ export class AskOrbisAgentPanel {
     const stepBtn = document.getElementById('btn-plan-step');
     const stopBtn = document.getElementById('btn-plan-stop');
 
-    // Shortcut [/] to focus input
+    const toggleBubble = document.getElementById('btn-toggle-ask-orbis');
+    const dock = document.getElementById('hud-ask-orbis-dock');
+    const closeDock = document.getElementById('btn-close-ask-orbis');
+
+    if (toggleBubble && dock) {
+      toggleBubble.onclick = () => {
+        dock.classList.toggle('hidden');
+        if (!dock.classList.contains('hidden')) {
+          input?.focus();
+        }
+      };
+    }
+    if (closeDock && dock) {
+      closeDock.onclick = () => {
+        dock.classList.add('hidden');
+      };
+    }
+
+    // Shortcut [/] to focus input and open dock
     window.addEventListener('keydown', (e) => {
       const tag = e.target?.tagName?.toUpperCase();
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target?.isContentEditable) {
@@ -176,6 +204,7 @@ export class AskOrbisAgentPanel {
       if (e.key === '/' && document.activeElement !== input) {
         // Prevent typing '/' into input immediately
         e.preventDefault();
+        if (dock) dock.classList.remove('hidden');
         if (input) {
           input.focus();
           input.select();

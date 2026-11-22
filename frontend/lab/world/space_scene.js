@@ -1103,7 +1103,6 @@ export class SpaceScene {
       slFuel.oninput = () => { lblFuel.textContent = `${slFuel.value}%`; };
     }
   }
-  }
 
   // ---------------------------------------------------------------------------
   // 6. Visual Directives Execution

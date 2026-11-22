@@ -98,6 +98,8 @@ export class LabHUD {
     this.initControlsModal();
     this.initCollapsibleDock();
     this.initTouchJoystick();
+    this.initMenuDrawer();
+    this.initCoachmarks();
   }
 
   setChecklistCollapsed(collapsed) {
@@ -118,6 +120,11 @@ export class LabHUD {
     if (this.container) this.container.classList.remove('hidden');
     document.getElementById('dr-orbis-container')?.classList.remove('hidden');
     soundFX.startAmbientHum();
+
+    // First-run coachmarks guidance
+    if (!localStorage.getItem('orbis_coachmarks_seen')) {
+      this.showCoachmarks();
+    }
   }
 
   hide() {
@@ -156,24 +163,42 @@ export class LabHUD {
 
   updateExperiment(exp) {
     if (!exp) return;
-    if (this.expBadgeEl) {
-      this.expBadgeEl.textContent = exp.title || exp.id;
+    const expTitle = exp.title || exp.name || exp.id || 'Laboratory Simulation';
+    const expNameEl = document.getElementById('hud-exp-name');
+    if (expNameEl) {
+      expNameEl.textContent = expTitle;
     }
+    if (this.expBadgeEl) {
+      this.expBadgeEl.textContent = expTitle;
+    }
+    this.renderMenuStations(exp);
     this.renderProtocol(exp.protocol || [], []);
   }
 
   updateSession(session) {
     if (!session) return;
 
-    // Clock
+    // Clock: Human-readable "Time: 0.0 h"
     if (this.clockEl) {
-      this.clockEl.textContent = `t=${(session.clock_h || 0).toFixed(1)} h`;
+      this.clockEl.textContent = `Time: ${(session.clock_h || 0).toFixed(1)} h`;
     }
 
-    // Safety Score
-    if (this.scoreEl && session.score_parts) {
-      const safetyScore = session.score_parts.safety ?? 40;
-      this.scoreEl.textContent = `${safetyScore} pts`;
+    // Total Score & Safety Compliance ("Score: 100", "Safety 100/100")
+    const safetyScore = session.score_parts?.safety ?? session.safety_score ?? 100;
+    const totalScore = session.score ?? session.total_score ?? safetyScore;
+    if (this.scoreEl) {
+      this.scoreEl.textContent = `Score: ${totalScore}`;
+    }
+
+    const safetyStatusEl = document.getElementById('hud-safety-status');
+    if (safetyStatusEl) {
+      safetyStatusEl.textContent = `Safety ${safetyScore}/100`;
+      safetyStatusEl.classList.remove('warn', 'danger');
+      if (safetyScore < 50) {
+        safetyStatusEl.classList.add('danger');
+      } else if (safetyScore < 80) {
+        safetyStatusEl.classList.add('warn');
+      }
     }
 
     // PPE indicators
@@ -642,6 +667,266 @@ export class LabHUD {
     } else {
       this.controlsModal.classList.add('hidden');
     }
+    soundFX.playClick();
+  }
+
+  /* -------------------------------------------------------------------------
+   * Slide-Over Menu Drawer & Progressive Disclosure Settings
+   * ------------------------------------------------------------------------- */
+  initMenuDrawer() {
+    this.menuDrawer = document.getElementById('hud-menu-drawer');
+    const btnOpen = document.getElementById('btn-open-menu');
+    const btnSettings = document.getElementById('btn-open-settings');
+    const btnClose = document.getElementById('btn-close-menu');
+    const backdrop = document.getElementById('menu-drawer-backdrop');
+
+    if (btnOpen) btnOpen.onclick = () => this.openMenuDrawer();
+    if (btnSettings) btnSettings.onclick = () => this.openMenuDrawer();
+    if (btnClose) btnClose.onclick = () => this.closeMenuDrawer();
+    if (backdrop) backdrop.onclick = () => this.closeMenuDrawer();
+
+    // Camera mode buttons
+    document.getElementById('btn-menu-cam-follow')?.addEventListener('click', () => {
+      window.sceneManager?.cameraRig?.setMode('follow');
+      this.closeMenuDrawer();
+      toast.showInfo('Camera: Follow Mode');
+    });
+    document.getElementById('btn-menu-cam-first')?.addEventListener('click', () => {
+      window.sceneManager?.cameraRig?.setMode('first_person');
+      this.closeMenuDrawer();
+      toast.showInfo('Camera: First-Person Mode');
+    });
+    document.getElementById('btn-menu-cam-recenter')?.addEventListener('click', () => {
+      window.sceneManager?.cameraRig?.recenter();
+      this.closeMenuDrawer();
+    });
+    document.getElementById('btn-menu-cam-reset')?.addEventListener('click', () => {
+      window.sceneManager?.resetCamera();
+      this.closeMenuDrawer();
+    });
+
+    // Auto-align behind me toggle
+    const chkAutoAlign = document.getElementById('chk-auto-align-behind');
+    if (chkAutoAlign) {
+      const isAuto = localStorage.getItem('orbis_auto_align_behind') === 'true';
+      chkAutoAlign.checked = isAuto;
+      chkAutoAlign.onchange = (e) => {
+        window.sceneManager?.cameraRig?.setAutoAlignBehind(e.target.checked);
+        soundFX.playClick();
+      };
+    }
+
+    // Quality toggle
+    const btnQuality = document.getElementById('btn-toggle-quality');
+    if (btnQuality) {
+      btnQuality.onclick = () => {
+        const current = window.sceneManager?.quality || 'high';
+        const next = current === 'high' ? 'medium' : current === 'medium' ? 'low' : 'high';
+        window.sceneManager?.setQuality(next);
+        btnQuality.textContent = `Quality: ${next.toUpperCase()}`;
+        soundFX.playClick();
+      };
+    }
+
+    // Name tags toggle
+    const btnTags = document.getElementById('btn-toggle-nametags');
+    if (btnTags) {
+      btnTags.onclick = () => {
+        const isVisible = window.sceneManager?.toggleApparatusTags();
+        btnTags.textContent = isVisible ? '🏷️ Name Tags: ON' : '🏷️ Name Tags: OFF';
+        soundFX.playClick();
+      };
+    }
+
+    // Tools & Developer buttons
+    document.getElementById('btn-toggle-skip-anim')?.addEventListener('click', () => {
+      state.skipAnimation = !state.skipAnimation;
+      toast.showInfo(state.skipAnimation ? 'Animations Skipped' : 'Animations Normal');
+      soundFX.playClick();
+    });
+
+    document.getElementById('btn-director-mode')?.addEventListener('click', () => {
+      window.sceneManager?.toggleDirectorMode?.();
+      this.closeMenuDrawer();
+    });
+
+    document.getElementById('btn-mistake-demo')?.addEventListener('click', () => {
+      this.closeMenuDrawer();
+      window.actionMenu?.triggerMistakeDemo?.();
+    });
+
+    document.getElementById('btn-open-controls')?.addEventListener('click', () => {
+      this.closeMenuDrawer();
+      this.toggleControlsModal(true);
+    });
+
+    document.getElementById('btn-finish-experiment')?.addEventListener('click', () => {
+      this.closeMenuDrawer();
+      window.actionMenu?.handleFinishExperiment?.();
+    });
+  }
+
+  openMenuDrawer() {
+    if (this.menuDrawer) {
+      this.menuDrawer.classList.remove('hidden');
+      soundFX.playClick();
+    }
+  }
+
+  closeMenuDrawer() {
+    if (this.menuDrawer) {
+      this.menuDrawer.classList.add('hidden');
+      soundFX.playClick();
+    }
+  }
+
+  renderMenuStations(exp) {
+    const listEl = document.getElementById('menu-stations-list');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+
+    const expId = exp?.id || state.experiment?.id || 'pk_ward';
+    let stations = [];
+    if (expId === 'pk_ward') {
+      stations = [
+        { id: 'digital_balance', label: '⚖️ Balance & Prep', pos: [-3.8, 0, -3.2] },
+        { id: 'patient_bed', label: '🛏️ Patient Alex', pos: [3.2, 0, -3.5] },
+        { id: 'tube_rack', label: '🧪 Blood Samples', pos: [-3.2, 0, -3.2] },
+        { id: 'assay_analyzer', label: '🔬 Centrifuge Assay', pos: [-5.2, 0, -2.6] },
+        { id: 'virtual_trial_screen', label: '👥 Virtual Trial', pos: [3.6, 0, -5.2], isTrial: true },
+        { id: 'reality_check_board', label: '⚖️ Reality Check', pos: [-4.5, 0, -5.2], isRealityCheck: true },
+        { id: 'sink', label: '🚰 Utility Sink', pos: [-6.2, 0, -1.0] },
+        { id: 'chemical_waste_bin', label: '🗑️ Waste Disposal', pos: [2.0, 0, -4.2] },
+      ];
+    } else if (expId === 'dose_lab') {
+      stations = [
+        { id: 'infusion_pump', label: '💉 Infusion Pump', pos: [-3.5, 0, -2.2] },
+        { id: 'patient_monitor', label: '🩺 Patient Telemetry', pos: [2.5, 0, -2.8] },
+        { id: 'pkpd_chart_display', label: '📈 PK/PD Hologram', pos: [0.0, 0, -3.0] },
+        { id: 'prediction_slate', label: '📝 Prediction Slate', pos: [-1.8, 0, -2.8] },
+        { id: 'sampling_schedule', label: '🧪 Sampling Schedule', pos: [-4.5, 0, -2.8] },
+        { id: 'debrief_station', label: '📋 Debrief Station', pos: [4.2, 0, -2.8] },
+        { id: 'reality_check_board', label: '⚖️ Reality Check', pos: [-4.5, 0, -5.2], isRealityCheck: true },
+        { id: 'sink', label: '🚰 Utility Sink', pos: [-6.2, 0, -1.0] },
+      ];
+    } else if (expId === 'launch_bench') {
+      stations = [
+        { id: 'launch_pad', label: '🚀 Launch Pad', pos: [0, 0, 4.0] },
+        { id: 'flight_computer', label: '💻 Flight Computer', pos: [-3.0, 0.6, 3.8] },
+        { id: 'propellant_tanks', label: '⛽ Propellant Farm', pos: [4.5, 0.6, 3.8] },
+        { id: 'range_control', label: '📡 Range Control', pos: [-6.5, 0.6, 3.8] },
+        { id: 'tracking_station', label: '🌐 Tracking Station', pos: [8.5, 0.6, 3.8] },
+      ];
+    } else {
+      stations = [
+        { id: 'burette', label: '🧪 Burette Stand', pos: [0, 0, -1.0] },
+        { id: 'conical_flask', label: '⚗️ Conical Flask', pos: [0, 0, -1.0] },
+        { id: 'pipette', label: '🧴 Reagents & Pipette', pos: [-0.8, 0, -1.0] },
+        { id: 'indicator_bottles', label: '💧 pH Indicators', pos: [0.8, 0, -1.2] },
+        { id: 'ph_meter', label: '⚡ Digital pH Meter', pos: [-0.5, 0, -1.2] },
+        { id: 'reality_check_board', label: '⚖️ Reality Check', pos: [-4.5, 0, -5.2], isRealityCheck: true },
+        { id: 'sink', label: '🚰 Utility Sink', pos: [-6.2, 0, -1.0] },
+        { id: 'chemical_waste_bin', label: '🗑️ Waste Disposal', pos: [2.0, 0, -4.2] },
+      ];
+    }
+
+    stations.forEach((st) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'menu-action-btn';
+      btn.textContent = st.label;
+      btn.onclick = () => {
+        this.closeMenuDrawer();
+        if (window.characterController) {
+          const vPos = { x: st.pos[0], y: st.pos[1], z: st.pos[2] };
+          window.characterController.moveTo(vPos);
+        }
+        window.sceneManager?.focusOnStation(st.id);
+        if (st.isTrial) state.emit('open_trial_panel');
+        if (st.isRealityCheck) state.emit('open_reality_check_panel');
+        state.setSelectedTarget(st.id);
+      };
+      listEl.appendChild(btn);
+    });
+  }
+
+  /* -------------------------------------------------------------------------
+   * 4-Step Coachmarks Tutorial
+   * ------------------------------------------------------------------------- */
+  initCoachmarks() {
+    this.coachmarksOverlay = document.getElementById('hud-coachmarks-overlay');
+    this.coachmarkStep = 1;
+    this.coachmarkSteps = [
+      {
+        badge: 'Step 1 of 4',
+        title: 'Walk around the Laboratory',
+        desc: 'Use WASD or Arrow keys (or the on-screen joystick on mobile) to move your scientist character across stations.',
+      },
+      {
+        badge: 'Step 2 of 4',
+        title: 'Track Performance Metrics',
+        desc: 'Look at the top-right chips for elapsed time, score, and real-time safety compliance (Safety 100/100).',
+      },
+      {
+        badge: 'Step 3 of 4',
+        title: 'Current Task Card',
+        desc: 'The bottom card guides your current protocol action. Click the primary button or press Tab to perform the step directly.',
+      },
+      {
+        badge: 'Step 4 of 4',
+        title: 'Ask Orbis & Dr. Orbis',
+        desc: 'Use Ask Orbis (bottom-left, [/]) for autonomous planning, and Dr. Orbis (bottom-right) for expert mentor advice.',
+      },
+    ];
+
+    const btnNext = document.getElementById('btn-coachmark-next');
+    const btnSkip = document.getElementById('btn-coachmark-skip');
+
+    if (btnNext) {
+      btnNext.onclick = () => {
+        this.coachmarkStep++;
+        if (this.coachmarkStep > this.coachmarkSteps.length) {
+          this.dismissCoachmarks();
+        } else {
+          this.renderCoachmarkStep();
+        }
+      };
+    }
+
+    if (btnSkip) {
+      btnSkip.onclick = () => this.dismissCoachmarks();
+    }
+  }
+
+  showCoachmarks() {
+    if (!this.coachmarksOverlay) return;
+    this.coachmarkStep = 1;
+    this.renderCoachmarkStep();
+    this.coachmarksOverlay.classList.remove('hidden');
+  }
+
+  renderCoachmarkStep() {
+    const stepData = this.coachmarkSteps[this.coachmarkStep - 1];
+    if (!stepData) return;
+
+    const badgeEl = document.getElementById('coachmark-step-badge');
+    const titleEl = document.getElementById('coachmark-title');
+    const descEl = document.getElementById('coachmark-desc');
+    const nextBtn = document.getElementById('btn-coachmark-next');
+
+    if (badgeEl) badgeEl.textContent = stepData.badge;
+    if (titleEl) titleEl.textContent = stepData.title;
+    if (descEl) descEl.textContent = stepData.desc;
+    if (nextBtn) {
+      nextBtn.textContent = this.coachmarkStep === this.coachmarkSteps.length ? 'Get Started ➔' : 'Next ➔';
+    }
+  }
+
+  dismissCoachmarks() {
+    if (this.coachmarksOverlay) {
+      this.coachmarksOverlay.classList.add('hidden');
+    }
+    localStorage.setItem('orbis_coachmarks_seen', 'true');
     soundFX.playClick();
   }
 }

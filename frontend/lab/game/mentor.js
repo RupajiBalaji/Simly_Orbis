@@ -24,6 +24,64 @@ export class DrOrbisMentor {
   }
 
   initDOM() {
+    window.drOrbisMentor = this;
+
+    const sidePanel = document.getElementById('dr-orbis-side-panel');
+    const toggleBtn = document.getElementById('btn-toggle-dr-orbis');
+    const closeBtn = document.getElementById('btn-close-dr-orbis');
+    const tabMentor = document.getElementById('tab-btn-mentor');
+    const tabLog = document.getElementById('tab-btn-log');
+    const panelMentor = document.getElementById('tab-panel-mentor');
+    const panelLog = document.getElementById('tab-panel-log');
+    const unreadDot = document.getElementById('dr-orbis-unread-dot');
+
+    if (sidePanel) {
+      // 5-Persistent HUD Side Panel Architecture
+      if (toggleBtn) {
+        toggleBtn.onclick = () => {
+          sidePanel.classList.toggle('hidden');
+          if (!sidePanel.classList.contains('hidden') && unreadDot) {
+            unreadDot.classList.add('hidden');
+          }
+        };
+      }
+      if (closeBtn) {
+        closeBtn.onclick = () => {
+          sidePanel.classList.add('hidden');
+        };
+      }
+      if (tabMentor && tabLog && panelMentor && panelLog) {
+        tabMentor.onclick = () => {
+          tabMentor.classList.add('active');
+          tabLog.classList.remove('active');
+          panelMentor.classList.remove('hidden');
+          panelLog.classList.add('hidden');
+        };
+        tabLog.onclick = () => {
+          tabLog.classList.add('active');
+          tabMentor.classList.remove('active');
+          panelLog.classList.remove('hidden');
+          panelMentor.classList.add('hidden');
+        };
+      }
+
+      // Quick buttons
+      document.getElementById('btn-mentor-hint')?.addEventListener('click', () => this.query('hint'));
+      document.getElementById('btn-mentor-explain')?.addEventListener('click', () => this.query('explain'));
+
+      // Question form
+      const input = document.getElementById('mentor-question-input');
+      const form = document.getElementById('mentor-ask-form');
+      form?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = input?.value?.trim();
+        if (!q) return;
+        if (input) input.value = '';
+        this.query('ask', q);
+      });
+      return;
+    }
+
     if (!this.containerEl) return;
 
     this.containerEl.innerHTML = `
@@ -95,7 +153,7 @@ export class DrOrbisMentor {
     `;
 
     // Header toggle
-    const toggleBtn = document.getElementById('btn-toggle-mentor');
+    const legacyToggleBtn = document.getElementById('btn-toggle-mentor');
     const header = document.getElementById('mentor-header');
     const body = document.getElementById('mentor-body');
 
@@ -252,6 +310,12 @@ export class DrOrbisMentor {
 
     const bubble = document.createElement('div');
     bubble.className = `mentor-msg-bubble mentor-response ${source === 'ai' ? 'msg-ai' : 'msg-rule'}`;
+
+    const sidePanel = document.getElementById('dr-orbis-side-panel');
+    const unreadDot = document.getElementById('dr-orbis-unread-dot');
+    if (sidePanel?.classList.contains('hidden') && unreadDot) {
+      unreadDot.classList.remove('hidden');
+    }
 
     const tagLabel = source === 'ai'
       ? (providerTag || (provider === 'gemini' ? 'AI - Gemini' : 'AI'))

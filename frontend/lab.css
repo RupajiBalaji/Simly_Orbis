@@ -457,18 +457,15 @@ body.orbis-lab-body {
    HUD INTERFACE (In-Game 3D Overlay)
    ═══════════════════════════════════════════════════════════════════════ */
 #lab-hud {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
   z-index: 5;
-  pointer-events: none; /* children enable pointer events */
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
-  grid-template-columns: 320px 1fr 340px;
-  padding: 16px 20px 24px;
-  gap: 12px;
+  pointer-events: none; /* individual persistent HUD elements enable pointer-events */
+  display: block;
+  padding: 0;
+  margin: 0;
 }
 
 #lab-hud.hidden {
@@ -4084,6 +4081,859 @@ body.orbis-lab-body {
   .score-cell-val,
   .score-cell-label {
     color: #000000 !important;
+  }
+}
+
+/* ==========================================================================
+   PROBLEM A: PROGRESSIVE DISCLOSURE HUD INTERFACE (MAX 5 PERSISTENT ELEMENTS)
+   ========================================================================== */
+
+/* 1. Top-Left: Title, Step Progress & Menu Button */
+.hud-top-left {
+  position: fixed;
+  top: 14px;
+  left: 16px;
+  z-index: 50;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 6px 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.btn-hud-menu {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-hud-menu:hover,
+.btn-hud-menu:focus-visible {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: #818cf8;
+  outline: none;
+}
+
+.hud-title-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hud-exp-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #f8fafc;
+  letter-spacing: -0.01em;
+}
+
+.hud-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hud-step-counter {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.hud-step-track {
+  width: 80px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hud-step-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* 2. Top-Right: Metrics (Time, Score, Safety) & Settings */
+.hud-top-right {
+  position: fixed;
+  top: 14px;
+  right: 16px;
+  z-index: 50;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 6px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.hud-metrics-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hud-metric-chip {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  padding: 3px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hud-safety-chip {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.hud-safety-chip.warn {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.hud-safety-chip.danger {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.btn-hud-gear {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 6px;
+  transition: transform 0.2s;
+}
+
+.btn-hud-gear:hover,
+.btn-hud-gear:focus-visible {
+  transform: rotate(45deg);
+  outline: none;
+}
+
+/* 3. Bottom-Center: ONE Current Task Card */
+.hud-current-task-card {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(540px, calc(100vw - 220px));
+  z-index: 50;
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(99, 102, 241, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.task-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.task-card-kicker {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #818cf8;
+  text-transform: uppercase;
+}
+
+.task-card-title {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.25;
+}
+
+.task-card-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  line-height: 1.35;
+}
+
+.task-card-ppe-alert {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fef08a;
+  background: rgba(234, 179, 8, 0.18);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+
+.task-card-ppe-alert.hidden {
+  display: none !important;
+}
+
+.task-card-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.task-primary-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.task-btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #0284c7);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+}
+
+.task-btn-primary:hover,
+.task-btn-primary:focus-visible {
+  background: linear-gradient(135deg, #6366f1, #0ea5e9);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+  outline: 2px solid #38bdf8;
+}
+
+.task-btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
+
+.btn-task-station {
+  background: rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-task-station:hover,
+.btn-task-station:focus-visible {
+  background: rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+  outline: none;
+}
+
+.btn-task-more {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-task-more:hover,
+.btn-task-more:focus-visible {
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  outline: none;
+}
+
+.more-actions-drawer {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+  max-height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 60;
+}
+
+.more-actions-drawer.hidden {
+  display: none !important;
+}
+
+.more-actions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 4px;
+}
+
+/* 4. Bottom-Left: Ask Orbis Chat Bubble Button & Docked Panel */
+.hud-ask-orbis-trigger {
+  position: fixed;
+  bottom: 18px;
+  left: 16px;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.btn-bubble-ask-orbis {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #f8fafc;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 10px rgba(56, 189, 248, 0.15);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-bubble-ask-orbis:hover,
+.btn-bubble-ask-orbis:focus-visible {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: #38bdf8;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+  outline: none;
+}
+
+.bubble-hint {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.hud-ask-orbis-dock {
+  position: fixed;
+  bottom: 68px;
+  left: 16px;
+  width: min(400px, calc(100vw - 32px));
+  z-index: 55;
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud-ask-orbis-dock.hidden {
+  display: none !important;
+}
+
+.ask-orbis-dock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+/* 5. Bottom-Right: Dr. Orbis Round Button & Docked Side Panel */
+.hud-dr-orbis-trigger {
+  position: fixed;
+  bottom: 18px;
+  right: 16px;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.btn-dr-orbis-round {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.9), rgba(15, 23, 42, 0.95));
+  border: 2px solid rgba(168, 85, 247, 0.4);
+  color: #ffffff;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 12px rgba(168, 85, 247, 0.25);
+  transition: all 0.2s;
+}
+
+.btn-dr-orbis-round:hover,
+.btn-dr-orbis-round:focus-visible {
+  transform: scale(1.08);
+  border-color: #c084fc;
+  box-shadow: 0 0 18px rgba(168, 85, 247, 0.5);
+  outline: none;
+}
+
+.unread-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid #0f172a;
+  box-shadow: 0 0 6px #ef4444;
+}
+
+.unread-dot.hidden {
+  display: none !important;
+}
+
+.dr-orbis-side-panel {
+  position: fixed;
+  top: 60px;
+  right: 16px;
+  bottom: 74px;
+  width: min(380px, calc(100vw - 32px));
+  z-index: 55;
+  pointer-events: auto;
+  background: rgba(15, 23, 42, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+}
+
+.dr-orbis-side-panel.hidden {
+  display: none !important;
+}
+
+.dr-orbis-side-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.dr-orbis-tabs-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.side-tab-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.side-tab-btn.active {
+  background: rgba(168, 85, 247, 0.25);
+  border-color: #c084fc;
+  color: #f8fafc;
+}
+
+.btn-close-side-panel,
+.btn-close-dock {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.btn-close-side-panel:hover,
+.btn-close-dock:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dr-orbis-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.dr-orbis-tab-content.hidden {
+  display: none !important;
+}
+
+/* 6. Slide-Over Menu Drawer */
+.hud-menu-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: auto;
+  display: flex;
+  transition: opacity 0.25s ease;
+}
+
+.hud-menu-drawer.hidden {
+  display: none !important;
+}
+
+.menu-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.menu-drawer-panel {
+  position: relative;
+  width: min(340px, 85vw);
+  height: 100%;
+  background: rgba(10, 15, 30, 0.98);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px;
+  overflow-y: auto;
+  z-index: 2;
+}
+
+.menu-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-drawer-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.btn-close-menu {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.btn-close-menu:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-drawer-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.menu-section h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #818cf8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.menu-btn-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.menu-action-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.menu-action-btn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #818cf8;
+  color: #f8fafc;
+}
+
+.menu-action-btn.active {
+  background: rgba(99, 102, 241, 0.35);
+  border-color: #818cf8;
+  color: #ffffff;
+}
+
+.menu-action-btn.btn-warn {
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fef08a;
+}
+
+.menu-action-btn.btn-warn:hover {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.menu-drawer-footer {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.72rem;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 7. Disclaimer & Coachmarks */
+.educational-disclaimer-strip {
+  position: fixed;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  color: rgba(148, 163, 184, 0.6);
+  pointer-events: none;
+  z-index: 45;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+}
+
+.hud-coachmarks-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.hud-coachmarks-overlay.hidden {
+  display: none !important;
+}
+
+.coachmark-card {
+  background: rgba(15, 23, 42, 0.98);
+  border: 1px solid rgba(99, 102, 241, 0.5);
+  border-radius: 16px;
+  padding: 20px 24px;
+  max-width: 440px;
+  width: 90%;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 24px rgba(99, 102, 241, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coachmark-step-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #818cf8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.coachmark-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.coachmark-desc {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.coachmark-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.btn-coachmark-skip {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btn-coachmark-skip:hover {
+  color: #cbd5e1;
+}
+
+.btn-coachmark-next {
+  background: #4f46e5;
+  color: #ffffff;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-coachmark-next:hover {
+  background: #6366f1;
+}
+
+/* Responsive Viewport Rules (1920x1080, 1366x768, 1280x720, 768x1024, 390x844) */
+@media (max-width: 1366px) {
+  .hud-current-task-card {
+    width: min(500px, calc(100vw - 200px));
+  }
+}
+
+@media (max-width: 1024px) {
+  .hud-current-task-card {
+    width: min(420px, calc(100vw - 320px));
+  }
+}
+
+@media (max-width: 600px) {
+  .hud-top-left {
+    top: 8px;
+    left: 8px;
+    padding: 4px 10px;
+    gap: 8px;
+  }
+  .hud-exp-name {
+    font-size: 0.82rem;
+  }
+  .hud-top-right {
+    top: 8px;
+    right: 8px;
+    padding: 4px 8px;
+    gap: 6px;
+  }
+  .hud-metric-chip {
+    font-size: 0.72rem;
+    padding: 2px 5px;
+  }
+  .hud-current-task-card {
+    bottom: 68px;
+    width: calc(100vw - 16px);
+    padding: 10px 12px;
+    border-radius: 10px;
+  }
+  .hud-ask-orbis-trigger {
+    bottom: 12px;
+    left: 8px;
+  }
+  .btn-bubble-ask-orbis {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+  .bubble-hint {
+    display: none;
+  }
+  .hud-dr-orbis-trigger {
+    bottom: 12px;
+    right: 8px;
+  }
+  .btn-dr-orbis-round {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+  .dr-orbis-side-panel {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    border-radius: 0;
+  }
+  .hud-ask-orbis-dock {
+    left: 8px;
+    right: 8px;
+    bottom: 64px;
+    width: calc(100vw - 16px);
+  }
+  .menu-drawer-panel {
+    width: 100vw;
+  }
+  .educational-disclaimer-strip {
+    display: none;
   }
 }
 
