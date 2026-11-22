@@ -55,7 +55,7 @@ These exact commands have been executed and verified in a clean environment on W
 INFO:     Started server process [11972]
 INFO:     Waiting for application startup.
 2026-11-22 12:52:59,648  INFO      app.security – === ORBIS LAB CONFIGURATION VALIDATION ===
-2026-11-22 12:52:59,648  INFO      app.security – App Version:       0.8.0-dev
+2026-11-22 12:52:59,648  INFO      app.security – App Version:       0.9.0-dev
 2026-11-22 12:52:59,649  INFO      app.security – Git SHA:           [NOT SET]
 2026-11-22 12:52:59,649  INFO      app.security – Database:          In-Memory Fallback
 2026-11-22 12:52:59,649  INFO      app.security – Gemini Key:        [NOT SET]
@@ -132,8 +132,8 @@ Visiting `https://simly-orbis-staging.onrender.com/api/health` should return:
     "pharma.trial",
     "pharma.trial_v2"
   ],
-  "app_version": "0.8.0-dev",
-  "version": "0.8.0-dev",
+  "app_version": "0.9.0-dev",
+  "version": "0.9.0-dev",
   "git_sha": "4737630623b97779f1ea01e6db85915e3f79a916",
   "ai_status": {
     "enabled": true,
@@ -182,8 +182,8 @@ If any discrepancy, unexpected behavior, or regression is observed:
 
 | Task | Status | Commit Hash | Notes / Acceptance Tests |
 |---|---|---|---|
-| **Space Apparatus Mapping Fix** | **DONE** | `b3352fe` | Space apparatuses mapped to 3D models; 0 unmapped warnings; verified by `test_space_apparatus_mapping_and_no_unmapped_warnings`. |
-| **Clean-Clone Pytest Suite** | **DONE** | `4737630` | 801 passed, 2 skipped, 0 failed in clean-clone venv reproducing CI. |
-| **Problem B: Controls & Camera Rig** | **IN PROGRESS (Diagnosed)** | *Pending commit* | Causes diagnosed (`controller.js:400` basis inversion, `controller.js:398` forward vector, `camera_rig.js:686` chase assist). |
-| **Problem A: Clean HUD Overhaul** | **IN PROGRESS** | *Pending commit* | Progressive disclosure, 5 persistent elements, and coach-mark sequence being authored. |
-| **Founder Review Sign-off** | **BLOCKED-HUMAN** | *Pending founder* | Awaiting founder visual inspection and approval on staging. |
+| **Space Apparatus Mapping Fix** | **DONE** | `b3352fe` / `cce7f17` | Space apparatuses mapped to 3D facility models; 0 console warnings; verified by `test_space_apparatus_mapping_and_no_unmapped_warnings`. |
+| **Problem B: Locomotion & Camera Rig** | **DONE** | `011b8cf` | Correct right-vector basis ($f \times \text{up}$), `movement_math.js`, user-only yaw follow camera, critically damped translation, $< 0.01^\circ$ model alignment. Tests `test_locomotion_acceptance.py` (4 passed, 1 skipped) and `movement_math.test.mjs` (6/6 passed). |
+| **Problem A: Clean HUD Overhaul** | **DONE** | `cce7f17` | Exactly 5 persistent elements (`data-hud-persistent`), >86% 3D scene area at 1366x768, 1-click primary action task card, slide-over menu drawer, coachmarks. Tests `test_hud_acceptance.py` (9 passed, 1 skipped). |
+| **Clean-Clone Pytest Suite** | **DONE** | `cce7f17` | 815 passed, 4 skipped, 0 failed in clean-clone venv reproducing CI. |
+| **Founder Review Sign-off** | **BLOCKED-HUMAN** | *Pending founder* | Awaiting founder physical review and gameplay verification on local or staging environment. |
