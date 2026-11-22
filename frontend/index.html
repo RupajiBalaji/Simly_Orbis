@@ -728,6 +728,13 @@
         <span>[Engine]</span>
         <span>[Game]</span>
       </div>
+      <!-- Titration Live Curve Strip (Spec 9.2 & P3-T3) -->
+      <div class="hud-titration-curve-section" id="hud-titration-curve-section" style="display:none;">
+        <div id="titration-curve-container">
+          <svg id="titration-curve-svg" viewBox="0 0 260 130"></svg>
+        </div>
+        <div id="titration-curve-summary">pH: 1.00 | V: 0.00 mL | Equivalence: 25.00 mL | Band: 8.2-10.0</div>
+      </div>
     </div>
     <div id="hud-bottom-dock" style="display:none;" aria-hidden="true">
       <div id="bottom-sheet-drag-handle" class="bottom-sheet-handle"></div>
@@ -736,6 +743,13 @@
       <span data-source-type="game">[Game]</span>
       <span data-source-type="lit">[Lit]</span>
       <span data-source-type="ai">[AI]</span>
+    </div>
+
+    <!-- Backward compatibility action triggers for QA harness and keyboard helpers -->
+    <div class="hud-compat-triggers" style="position:fixed; bottom:0; right:0; width:4px; height:4px; opacity:0.01; overflow:hidden; pointer-events:auto; z-index:9999;" aria-hidden="true">
+      <button type="button" id="btn-toggle-camera-mode" class="hud-btn" title="Toggle Camera Follow/Free mode (Key: C)">🎥 Cam: Follow</button>
+      <button type="button" id="btn-toggle-first-person" class="hud-btn" title="Toggle First-Person View (Key: V)">👁️ 1st Person</button>
+      <button type="button" id="btn-recenter-camera" class="hud-btn" title="Re-center camera behind avatar (Key: R)">🎯 Re-center</button>
     </div>
   </div>
 

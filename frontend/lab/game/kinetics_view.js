@@ -21,7 +21,8 @@ export function renderKineticsPanel(session) {
 
   // Ensure right panel is visible
   const rightPanel = document.getElementById('hud-right-panel');
-  if (rightPanel && rightPanel.classList.contains('collapsed')) {
+  if (rightPanel) {
+    rightPanel.style.display = 'block';
     rightPanel.classList.remove('collapsed');
   }
 
