@@ -71,6 +71,7 @@ export class DebugOverlay {
     const drawCalls = stats.drawCalls || window.sceneManager?.lastDrawCalls || window.sceneManager?.renderer?.info?.render?.calls || 79;
     const fps = stats.fps || 60;
     const gpuShort = (rendererStr || 'WebGL').split(' ')[0];
+    const loco = window.__debugLocomotion || {};
 
     this.container.innerHTML = `
       <div style="font-weight:700; color:#c084fc; border-bottom:1px solid rgba(255,255,255,0.18); margin-bottom:3px; padding-bottom:1px; display:flex; justify-content:space-between; align-items:center;">
@@ -83,6 +84,14 @@ export class DebugOverlay {
       <div>Camera: <span style="color:#f43f5e; font-weight:700;">${window.sceneManager?.cameraRig?.mode || 'FOLLOW'}</span></div>
       <div>Clock: <span style="color:#f59e0b;">t=${(session?.clock_h || 0).toFixed(1)}h</span></div>
       <div>Directives: <span style="color:#ec4899;">${directives.length} active</span></div>
+      <div style="border-top:1px solid rgba(255,255,255,0.15); margin-top:4px; padding-top:3px; font-size:11px;">
+        <div style="font-weight:700; color:#38bdf8;">Locomotion (Problem B):</div>
+        <div>Cam Yaw: <span style="color:#fbbf24;">${(loco.camYawDeg || 0).toFixed(1)}°</span></div>
+        <div>Cam Fwd (XZ): <span style="color:#34d399;">[${(loco.camFwdXZ?.x || 0).toFixed(2)}, ${(loco.camFwdXZ?.z || 0).toFixed(2)}]</span></div>
+        <div>Input (F/R): <span style="color:#e2e8f0;">[${loco.inputVector?.fwd ?? 0}, ${loco.inputVector?.right ?? 0}]</span></div>
+        <div>Velocity: <span style="color:#60a5fa;">[${(loco.worldVelocity?.x || 0).toFixed(2)}, ${(loco.worldVelocity?.z || 0).toFixed(2)}]</span></div>
+        <div>Facing: <span style="color:#f472b6;">${(loco.facingAngleDeg || 0).toFixed(1)}°</span> (err: ${(loco.angleErrorDeg || 0).toFixed(1)}°)</div>
+      </div>
     `;
   }
 }

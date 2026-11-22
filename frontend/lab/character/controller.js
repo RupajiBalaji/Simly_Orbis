@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { createHumanoidAvatar } from './avatar.js';
 import { AvatarAnimator } from './animation.js';
 import { soundFX } from '../audio/sound_fx.js';
+import { computeMovementVector } from './movement_math.js';
 
 export class CharacterController {
   constructor(scene) {
@@ -72,6 +73,14 @@ export class CharacterController {
 
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
+
+    this.clearInputState = () => {
+      for (const k of Object.keys(this.keysDown)) {
+        this.keysDown[k] = false;
+      }
+      this.joystickInput.set(0, 0);
+    };
+    window.addEventListener('blur', this.clearInputState);
 
     // Carried mesh
     this.heldItem = null;
@@ -393,22 +402,24 @@ export class CharacterController {
       // User manual control overrides any automated moveTo navigation
       this.onArrival = null;
 
-      // Determine camera horizontal orientation
+      // Determine camera horizontal orientation and mode
       const cam = window.sceneManager?.camera;
-      let camAngle = 0;
-      if (cam) {
-        camAngle = Math.atan2(cam.position.x - this.rig.root.position.x, cam.position.z - this.rig.root.position.z) + Math.PI;
-      }
-      const fwdX = Math.sin(camAngle);
-      const fwdZ = Math.cos(camAngle);
-      const rightX = Math.cos(camAngle);
-      const rightZ = -Math.sin(camAngle);
+      const camRig = window.sceneManager?.cameraRig;
+      const isFirstPerson = camRig?.mode === 'first';
+      const camFwd = new THREE.Vector3();
+      if (cam) cam.getWorldDirection(camFwd);
 
-      const moveDirX = fwdX * rawFwd + rightX * rawRight;
-      const moveDirZ = fwdZ * rawFwd + rightZ * rawRight;
-      const len = Math.hypot(moveDirX, moveDirZ);
-      const normX = moveDirX / len;
-      const normZ = moveDirZ / len;
+      const move = computeMovementVector({
+        cameraPos: cam ? cam.position : null,
+        characterPos: this.rig.root.position,
+        rawFwd,
+        rawRight,
+        isFirstPerson,
+        cameraForward: camFwd,
+      });
+
+      const normX = move.x;
+      const normZ = move.z;
 
       const speed = isSprinting ? 4.0 : 2.4;
       const stepX = normX * speed * dt;
@@ -437,6 +448,22 @@ export class CharacterController {
           }
         }
       }
+
+      // Populate locomotion debug hook for F3 overlay and automated tests
+      const modelFront = this.getModelFrontVector();
+      const velDir = new THREE.Vector3(normX, 0, normZ);
+      const angleErr = (normX !== 0 || normZ !== 0) ? (modelFront.angleTo(velDir) * (180 / Math.PI)) : 0;
+
+      window.__debugLocomotion = {
+        camYawDeg: camRig?.controls ? (camRig.controls.getAzimuthalAngle() * (180 / Math.PI)) : (move.camAngle * (180 / Math.PI)),
+        camFwdXZ: { x: move.fwdX, z: move.fwdZ },
+        camRightXZ: { x: move.rightX, z: move.rightZ },
+        inputVector: { fwd: rawFwd, right: rawRight },
+        worldVelocity: { x: stepX / (dt || 0.016), z: stepZ / (dt || 0.016) },
+        facingAngleDeg: this.rig.root.rotation.y * (180 / Math.PI),
+        modelFront: { x: modelFront.x, z: modelFront.z },
+        angleErrorDeg: angleErr,
+      };
 
       this.isManualWalking = true;
       this.isWalking = true;
@@ -495,5 +522,15 @@ export class CharacterController {
 
     // 3. Animator update
     this.animator.update(dt);
+  }
+
+  /**
+   * Returns the model's world forward vector (local +Z).
+   * @returns {THREE.Vector3}
+   */
+  getModelFrontVector() {
+    const v = new THREE.Vector3(0, 0, 1);
+    v.applyEuler(this.rig.root.rotation);
+    return v;
   }
 }

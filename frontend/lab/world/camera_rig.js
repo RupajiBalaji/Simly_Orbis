@@ -83,9 +83,21 @@ export class CameraRig {
 
     // Preferences
     this.prefersReducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+    let savedAutoAlign = false;
+    try {
+      savedAutoAlign = localStorage.getItem('orbis_auto_align_behind') === 'true';
+    } catch (_) {}
+    this.autoAlignBehind = savedAutoAlign;
 
     this.initControlsListeners();
     this.updateHUDFrustum();
+  }
+
+  setAutoAlignBehind(enabled) {
+    this.autoAlignBehind = Boolean(enabled);
+    try {
+      localStorage.setItem('orbis_auto_align_behind', this.autoAlignBehind ? 'true' : 'false');
+    } catch (_) {}
   }
 
   initControlsListeners() {
@@ -387,11 +399,11 @@ export class CameraRig {
 
     const avPos = avatar.position;
     const heading = avatar.rotation.y;
-    // Forward and Right vectors from heading
+    // Forward and Right vectors from heading (f x up = (-fwdZ, fwdX))
     const fwdX = Math.sin(heading);
     const fwdZ = Math.cos(heading);
-    const rightX = Math.cos(heading);
-    const rightZ = -Math.sin(heading);
+    const rightX = -fwdZ;
+    const rightZ = fwdX;
 
     // Place camera behind and slightly to side of avatar (distance 4.2m, height 2.1m)
     const targetPos = new THREE.Vector3(avPos.x, avPos.y + 1.15, avPos.z);
@@ -461,8 +473,8 @@ export class CameraRig {
     const heading = avatar ? avatar.rotation.y : 0;
     const fwdX = Math.sin(heading);
     const fwdZ = Math.cos(heading);
-    const rightX = Math.cos(heading);
-    const rightZ = -Math.sin(heading);
+    const rightX = -fwdZ;
+    const rightZ = fwdX;
 
     const off = clipState.offsets;
     outTarget.set(appPos.x, appPos.y + off.targetY, appPos.z);
@@ -683,14 +695,14 @@ export class CameraRig {
       this.camera.position.add(this._vDelta);
     }
 
-    // Chase assist: while walking, gently ease camera yaw behind avatar unless user orbited in last 2s
+    // Chase assist: Only if user explicitly enabled 'Auto-align behind me' in Settings (OFF by default)
     const userOrbitedRecently = (now - this.lastUserOrbitTime) < 2000;
-    if (isWalking && !userOrbitedRecently && !this.prefersReducedMotion) {
+    if (this.autoAlignBehind && isWalking && !userOrbitedRecently && !this.prefersReducedMotion) {
       const heading = avatar.rotation.y;
       const fwdX = Math.sin(heading);
       const fwdZ = Math.cos(heading);
-      const rightX = Math.cos(heading);
-      const rightZ = -Math.sin(heading);
+      const rightX = -fwdZ;
+      const rightZ = fwdX;
 
       // Spot behind and slightly to the side of heading (distance 4.2m, height 2.1m)
       this._vChasePos.set(
