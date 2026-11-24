@@ -48,6 +48,7 @@ These exact commands have been executed and verified in a clean environment on W
    - **Interactive Web Application:** [http://localhost:8000/](http://localhost:8000/)
    - **Service Health Check:** [http://localhost:8000/api/health](http://localhost:8000/api/health)
    - **Interactive API Documentation:** [http://localhost:8000/docs](http://localhost:8000/docs)
+   - *(Note: When testing in Chrome/Edge, open DevTools (`F12`), check **Disable cache** on the Network tab, or use `Ctrl + Shift + R` to ensure the latest ES modules and styles are loaded fresh).*
 
 ### Verified Local Execution Output
 
@@ -185,5 +186,7 @@ If any discrepancy, unexpected behavior, or regression is observed:
 | **Space Apparatus Mapping Fix** | **DONE** | `b3352fe` / `cce7f17` | Space apparatuses mapped to 3D facility models; 0 console warnings; verified by `test_space_apparatus_mapping_and_no_unmapped_warnings`. |
 | **Problem B: Locomotion & Camera Rig** | **DONE** | `011b8cf` | Correct right-vector basis ($f \times \text{up}$), `movement_math.js`, user-only yaw follow camera, critically damped translation, $< 0.01^\circ$ model alignment. Tests `test_locomotion_acceptance.py` (4 passed, 1 skipped) and `movement_math.test.mjs` (6/6 passed). |
 | **Problem A: Clean HUD Overhaul** | **DONE** | `cce7f17` | Exactly 5 persistent elements (`data-hud-persistent`), >86% 3D scene area at 1366x768, 1-click primary action task card, slide-over menu drawer, coachmarks. Tests `test_hud_acceptance.py` (9 passed, 1 skipped). |
-| **Clean-Clone Pytest Suite** | **DONE** | `cce7f17` | 815 passed, 4 skipped, 0 failed in clean-clone venv reproducing CI. |
-| **Founder Review Sign-off** | **BLOCKED-HUMAN** | *Pending founder* | Awaiting founder physical review and gameplay verification on local or staging environment. |
+| **Lobby Banners, Modal & Counts (P2)** | **DONE** | `1e476d3` | Non-overlapping offline banner (`--offline-banner-height`), 2s threshold for waking modal, and synced district card counts (Chemistry: 3 Experiments). All 8 tests in `test_lobby.py` passing. |
+| **UX Proof & Movement Strip (P1)** | **DONE** | `620cae5` | Recaptured real running experiment HUD viewports (Oral PK Ward and Launch Bench) with strict pre-save assertions; 4-yaw movement proof strip; verified 0 MD5 hash collisions. |
+| **Clean-Clone Pytest Suite** | **DONE** | Current HEAD | Full backend test suite passing with 0 failures in clean-clone venv reproducing CI. |
+| **Founder Review Sign-off (P4)** | **BLOCKED-HUMAN** | *Pending founder* | Awaiting founder physical feel test of movement, camera, and HUD on local or staging environment. |
