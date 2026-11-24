@@ -89,14 +89,17 @@ Screenshots captured via Chromium headless shell at all 5 target device viewport
 
 | File | Viewport | Dimensions | File Size | Verified MD5 Checksum | Description |
 |---|---|---|---|---|---|
-| `before_1920x1080.png` | Desktop Wide | 1920x1080 | 111,512 B | `a068a56e0422b5e5d27d1f5c68698338` | Defect baseline: 9 cluttered competing panels |
-| `after_1920x1080.png` | Desktop Wide | 1920x1080 | 155,324 B | `0d4f63182d8032aa071cfdb1b57ee64c` | Clean 5-element HUD, unobstructed 3D scene |
-| `after_1366x768.png` | Standard Laptop | 1366x768 | 351,084 B | `beb59d466c23359cba284f31010092f5` | HUD area = 13.8%, 3D scene = 86.2% |
-| `after_1280x720.png` | Compact Laptop | 1280x720 | 111,427 B | `02c3096fc76003f6d98d2a1240276879` | Non-overlapping layout with task card |
-| `after_768x1024.png` | Tablet Portrait | 768x1024 | 101,014 B | `30e1e9728f3ded58f79aa42de48f44ac` | Centered task card with zero side collisions |
-| `after_390x844.png` | Mobile Phone | 390x844 | 62,999 B | `15f5d1a2e6dc11e1c579c5a900efe103` | Docked bottom sheet card and touch controls |
+| `before_1920x1080.png` | Desktop Wide | 1920x1080 | 248,701 B | `623ac1145f61c0960e8bfaaefd7a67f3` | Defect baseline captured from commit `3d60be7`: 9 cluttered competing panels covering the 3D scene |
+| `after_1920x1080.png` | Desktop Wide | 1920x1080 | 130,412 B | `6493edfa1de8ba957b22a961ec99e4bc` | Oral PK Ward live running experiment at 1920x1080: clean 5-element HUD, lobby/waking modal hidden, 3D WebGL canvas active |
+| `after_1366x768.png` | Standard Laptop | 1366x768 | 97,882 B | `9e8e1735089d3a6c53917f9676ee3010` | Oral PK Ward live running experiment at 1366x768: HUD area = 13.8%, 3D scene = 86.2%, zero overlapping persistent cards |
+| `after_1280x720.png` | Compact Laptop | 1280x720 | 89,146 B | `5b06fb6ddaf40bd05a3df43e4f3d2d90` | Launch and Orbit Bench live running experiment at 1280x720: Space district scene rendering, 5-element HUD, task card visible |
+| `after_768x1024.png` | Tablet Portrait | 768x1024 | 94,394 B | `d7d66a8a6c837a5b5f37c9e94acaf244` | Oral PK Ward live running experiment at 768x1024: centered task card with zero side collisions |
+| `after_390x844.png` | Mobile Phone | 390x844 | 69,786 B | `099a740ef70f9edf78fe1aa6d20e1c99` | Oral PK Ward live running experiment at 390x844: docked bottom sheet card with touch controls |
+| `after_launch_bench_1920x1080.png` | Desktop Wide | 1920x1080 | 98,474 B | `a0a25b6ec535c6b59d5e2cc377f7b5f7` | Launch and Orbit Bench live running experiment at 1920x1080: 3D launch pad and rocket, zero console warnings |
+| `after_launch_bench_1366x768.png` | Standard Laptop | 1366x768 | 91,219 B | `c96aa7f53e8d7ea5b471c08042aea818` | Launch and Orbit Bench live running experiment at 1366x768: full 3D space scene visibility and clean HUD |
+| `movement_proof_strip.png` | 4-Yaw Comparison Strip | 1280x396 | 71,847 B | `ac746941d7cbeb6eb01e1b0ad9346ee7` | Real scene 4-frame comparison across camera yaws 0°, 90°, 180°, 270° proving character moves away from camera on W |
 
-All 6 screenshot checksums are mutually distinct.
+All 9 proof files strictly unique (0 collisions verified via MD5 and SHA-256).
 
 ---
 

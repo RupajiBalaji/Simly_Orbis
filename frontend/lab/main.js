@@ -1563,8 +1563,5 @@ async function checkServerWakeup() {
   poll();
 }
 
-  poll();
-}
-
 // Boot application when DOM is ready
 window.addEventListener('DOMContentLoaded', initOrbisLab);

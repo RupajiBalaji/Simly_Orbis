@@ -114,3 +114,24 @@ Tested across all 5 mandatory device profiles:
 - **First Action Execution:** First protocol action executable in **1 click** ($\le 2$ clicks requirement).
 - **WCAG 2.1 AA Contrast:** All HUD text pairs achieve $\ge 4.5:1$ contrast against their backgrounds via `scripts/check_contrast.py` (Tokens: `--text: #E8EEF9` on `--surface: #121B2E` yields **14.75:1**).
 - **Axe Core Accessibility:** Zero critical or serious accessibility violations.
+
+---
+
+## 7. Screenshot Proof & Locomotion Strip Validation
+
+All screenshots captured inside real running experiments (`Oral PK Ward` and `Launch and Orbit Bench`) with pre-save assertions validating that the lobby and waking modal are hidden, all 5 `data-hud-persistent` elements are visible, and the 3D WebGL canvas is rendering:
+
+| Proof File | Dimensions | Target Experiment | Verified MD5 | Description |
+|---|---|---|---|---|
+| `docs/screenshots/ux-fix/before_1920x1080.png` | 1920x1080 | Baseline (Commit `3d60be7`) | `623ac1145f61c0960e8bfaaefd7a67f3` | Legacy 9-panel cluttered UI covering 3D scene |
+| `docs/screenshots/ux-fix/after_1920x1080.png` | 1920x1080 | Oral PK Ward | `6493edfa1de8ba957b22a961ec99e4bc` | Clean 5-element HUD, full scene visibility |
+| `docs/screenshots/ux-fix/after_1366x768.png` | 1366x768 | Oral PK Ward | `9e8e1735089d3a6c53917f9676ee3010` | 86.2% 3D scene area, zero overlapping persistent cards |
+| `docs/screenshots/ux-fix/after_1280x720.png` | 1280x720 | Launch & Orbit Bench | `5b06fb6ddaf40bd05a3df43e4f3d2d90` | Space district scene rendering, 5-element HUD |
+| `docs/screenshots/ux-fix/after_768x1024.png` | 768x1024 | Oral PK Ward | `d7d66a8a6c837a5b5f37c9e94acaf244` | Tablet portrait: centered task card, no clipping |
+| `docs/screenshots/ux-fix/after_390x844.png` | 390x844 | Oral PK Ward | `099a740ef70f9edf78fe1aa6d20e1c99` | Mobile phone: docked bottom sheet card with touch controls |
+| `docs/screenshots/ux-fix/after_launch_bench_1920x1080.png` | 1920x1080 | Launch & Orbit Bench | `a0a25b6ec535c6b59d5e2cc377f7b5f7` | Desktop wide Launch Bench with rocket & pad, zero console warnings |
+| `docs/screenshots/ux-fix/after_launch_bench_1366x768.png` | 1366x768 | Launch & Orbit Bench | `c96aa7f53e8d7ea5b471c08042aea818` | Standard laptop Launch Bench with full 3D visibility |
+| `docs/screenshots/ux-fix/movement_proof_strip.png` | 1280x396 | Oral PK Ward | `ac746941d7cbeb6eb01e1b0ad9346ee7` | 4 camera yaw angles (0°, 90°, 180°, 270°) before & after pressing W |
+
+Uniqueness verified: 0 MD5 hash collisions across all 9 proof files.
+Founder physical feel test status: `BLOCKED-HUMAN`.
