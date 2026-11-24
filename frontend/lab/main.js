@@ -273,6 +273,19 @@ function setupLobby() {
   const lobbyScreen = document.getElementById('screen-lobby');
   const briefScreen = document.getElementById('screen-brief');
 
+  // Synchronize district card experiment counts with listed experiment tiles
+  document.querySelectorAll('.district-card').forEach((card) => {
+    const tiles = card.querySelectorAll('.exp-tile');
+    if (tiles.length > 0) {
+      const count = tiles.length;
+      const countEl = card.querySelector('[data-i18n^="lobby.exp_count"]');
+      if (countEl) {
+        countEl.textContent = `${count} Experiment${count > 1 ? 's' : ''}`;
+        countEl.setAttribute('data-i18n', `lobby.exp_count_${count}`);
+      }
+    }
+  });
+
   // Top Bar User Profile & Mute Toggle
   const btnTopMute = document.getElementById('btn-top-mute');
   if (btnTopMute) {
@@ -892,18 +905,31 @@ function showSessionError(title, message, whatHappened = null, whatToDo = null) 
   if (overlay) overlay.classList.remove('hidden');
 }
 
-function setupOfflineDetection() {
+let isBrowserOffline = typeof navigator !== 'undefined' && navigator.onLine === false;
+let healthCheckFailedAfterRetries = false;
+
+function updateOfflineBannerState() {
   const banner = document.getElementById('offline-state-banner');
-  const updateStatus = () => {
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      banner?.classList.remove('hidden');
-    } else {
-      banner?.classList.add('hidden');
-    }
-  };
-  window.addEventListener('online', updateStatus);
-  window.addEventListener('offline', updateStatus);
-  updateStatus();
+  const shouldShow = isBrowserOffline || healthCheckFailedAfterRetries;
+  if (shouldShow) {
+    banner?.classList.remove('hidden');
+    document.body.classList.add('has-offline-banner');
+  } else {
+    banner?.classList.add('hidden');
+    document.body.classList.remove('has-offline-banner');
+  }
+}
+
+function setupOfflineDetection() {
+  window.addEventListener('online', () => {
+    isBrowserOffline = false;
+    updateOfflineBannerState();
+  });
+  window.addEventListener('offline', () => {
+    isBrowserOffline = true;
+    updateOfflineBannerState();
+  });
+  updateOfflineBannerState();
 }
 
 async function openExperimentBrief(experimentId) {
@@ -1446,22 +1472,48 @@ async function checkServerWakeup() {
   const simulateWakeup = urlParams.get('simulate_wakeup') === '1';
 
   let isAwake = false;
-  if (!simulateWakeup) {
-    try {
-      const res = await fetch('/api/ping', { signal: AbortSignal.timeout(1200) });
-      if (res.ok) isAwake = true;
-    } catch (_) {}
+
+  // The waking modal must appear ONLY IF the health check has not answered within 2 seconds
+  const wakeupTimer = setTimeout(() => {
+    if (!isAwake && wakeupScreen) {
+      wakeupScreen.classList.remove('hidden');
+    }
+  }, 2000);
+
+  if (simulateWakeup) {
+    if (wakeupScreen) wakeupScreen.classList.remove('hidden');
+    return;
   }
 
-  if (isAwake) {
+  // Health check with 2 retries (initial attempt + 2 retries = 3 attempts total)
+  let initialCheckSucceeded = false;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch('/api/ping', { signal: AbortSignal.timeout(1800) });
+      if (res.ok) {
+        initialCheckSucceeded = true;
+        isAwake = true;
+        break;
+      }
+    } catch (_) {}
+    if (attempt < 2) {
+      await new Promise((r) => setTimeout(r, 200));
+    }
+  }
+
+  if (initialCheckSucceeded) {
+    clearTimeout(wakeupTimer);
     clearInterval(tipInterval);
     clearInterval(dotInterval);
+    healthCheckFailedAfterRetries = false;
+    updateOfflineBannerState();
     if (wakeupScreen) wakeupScreen.classList.add('hidden');
     return;
   }
 
-  // Cold start detected – display waking up overlay with backoff
-  if (wakeupScreen) wakeupScreen.classList.remove('hidden');
+  // Health check has failed after 2 retries: trigger offline banner
+  healthCheckFailedAfterRetries = true;
+  updateOfflineBannerState();
 
   const startTime = Date.now();
   const maxWaitMs = 90000;
@@ -1474,16 +1526,15 @@ async function checkServerWakeup() {
     if (progressBar) progressBar.style.width = `${Math.max(15, progressPct)}%`;
     if (statusText) statusText.textContent = `Pinging simulation engine (attempt ${attempt}, ${Math.round(elapsed / 1000)}s)...`;
 
-    if (simulateWakeup && elapsed >= 2000) {
-      // Freeze simulation so screenshots/tests can inspect
-      return;
-    }
-
     try {
       const res = await fetch('/api/ping', { signal: AbortSignal.timeout(3000) });
       if (res.ok) {
+        clearTimeout(wakeupTimer);
         clearInterval(tipInterval);
         clearInterval(dotInterval);
+        isAwake = true;
+        healthCheckFailedAfterRetries = false;
+        updateOfflineBannerState();
         if (progressBar) progressBar.style.width = '100%';
         if (statusText) statusText.textContent = 'Connected! Laboratory ready.';
         setTimeout(() => {
@@ -1508,6 +1559,9 @@ async function checkServerWakeup() {
     const delay = Math.min(4000, 1000 + attempt * 500);
     setTimeout(poll, delay);
   }
+
+  poll();
+}
 
   poll();
 }

@@ -39,6 +39,7 @@
     "breadcrumb_lobby": "[TEST] Lobby",
     "storage_mode_demo": "[TEST] ⚠️ Demo storage: scores are not saved",
     "mode_instruction": "[TEST] Choose a district below, then select Start (Exam) or Practice (Sandbox) in the briefing.",
+    "exp_count_3": "[TEST] 3 Experiments",
     "exp_count_2": "[TEST] 2 Experiments",
     "exp_count_1": "[TEST] 1 Experiment",
     "time_5min": "[TEST] ⏱️ 5 min",

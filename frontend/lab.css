@@ -60,20 +60,62 @@ body.orbis-lab-body {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   OFFLINE STATE BANNER & LAYOUT OFFSET
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --offline-banner-height: 0px;
+}
+
+body.has-offline-banner {
+  --offline-banner-height: 38px;
+}
+
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 38px;
+  box-sizing: border-box;
+  z-index: 99999;
+  background: var(--warn, #F5A524);
+  color: #000;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  font-size: var(--text-xs);
+  box-shadow: var(--elevation-2);
+}
+
+.offline-banner.hidden {
+  display: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    LOBBY / WORLD HUB SCREEN (District Doors)
    ═══════════════════════════════════════════════════════════════════════ */
 .view-screen {
   position: absolute;
-  top: 0;
+  top: var(--offline-banner-height, 0px);
   left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% - var(--offline-banner-height, 0px));
   z-index: 10;
   display: flex;
   flex-direction: column;
   background: radial-gradient(circle at 50% 25%, #24144d 0%, #0c071d 75%);
   overflow-y: auto;
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+body.has-offline-banner .hud-top-left {
+  top: calc(12px + var(--offline-banner-height, 38px)) !important;
+}
+
+body.has-offline-banner .hud-top-right {
+  top: calc(12px + var(--offline-banner-height, 38px)) !important;
 }
 
 .view-screen.hidden {
