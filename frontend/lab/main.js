@@ -1236,6 +1236,9 @@ function setupOnboarding() {
   function closeTutorial() {
     modal?.classList.add('hidden');
     localStorage.setItem('orbis_tutorial_completed', 'true');
+    if (typeof window.triggerPrimaryButtonPulse === 'function') {
+      window.triggerPrimaryButtonPulse(5000);
+    }
   }
 
   if (btnNext) {

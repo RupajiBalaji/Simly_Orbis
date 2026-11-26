@@ -37,6 +37,25 @@ export class ActionMenu {
       };
     }
 
+    // "What do I do?" Help explanation popover (U5)
+    const btnWhatDoIDo = document.getElementById('btn-task-what-do-i-do');
+    const helpPopover = document.getElementById('task-card-help-popover');
+    const btnCloseHelp = document.getElementById('btn-close-task-help');
+
+    if (btnWhatDoIDo && helpPopover) {
+      btnWhatDoIDo.onclick = () => {
+        helpPopover.classList.toggle('hidden');
+        if (!helpPopover.classList.contains('hidden')) {
+          this.updateHelpExplanation();
+        }
+      };
+    }
+    if (btnCloseHelp && helpPopover) {
+      btnCloseHelp.onclick = () => {
+        helpPopover.classList.add('hidden');
+      };
+    }
+
     // Subscribe to state updates
     state.subscribe((event, payload) => {
       if (event === 'actions_updated' || event === 'target_selected') {
@@ -152,6 +171,35 @@ export class ActionMenu {
     });
   }
 
+  updateHelpExplanation() {
+    const helpTextEl = document.getElementById('task-card-help-text');
+    if (!helpTextEl) return;
+
+    const protocol = state.experiment?.protocol || [];
+    const completed = new Set(state.session?.protocol_progress || []);
+    const nextStep = protocol.find((s) => !completed.has(s.id));
+
+    if (!nextStep) {
+      helpTextEl.textContent = 'All experiment steps completed! Click "Finish Report" to review your findings and debrief.';
+      return;
+    }
+
+    const stepIdx = protocol.indexOf(nextStep) + 1;
+    const title = nextStep.title || this.formatProtocolTitle(nextStep.id);
+    const hint = nextStep.hint_text || nextStep.hint || 'Complete protocol action following safety standards.';
+    const targetApparatusId = this.mapStepToApparatus(nextStep.id);
+    const isAtStation = this.isAvatarAtStation(targetApparatusId);
+    const stationName = targetApparatusId ? this.formatStationShortName(targetApparatusId) : 'active station';
+
+    let guidance = `Step ${stepIdx}: ${title}. ${hint} `;
+    if (!isAtStation && targetApparatusId) {
+      guidance += `Walk character over to the ${stationName} (or click "Go to ${stationName} and do this") to proceed.`;
+    } else {
+      guidance += `Click the highlighted primary button below to execute this action.`;
+    }
+    helpTextEl.textContent = guidance;
+  }
+
   updateNextStepBanner() {
     const protocol = state.experiment?.protocol || [];
     const completed = new Set(state.session?.protocol_progress || []);
@@ -211,6 +259,11 @@ export class ActionMenu {
     }
     if (taskHintEl) {
       taskHintEl.textContent = hint;
+    }
+
+    const helpPopover = document.getElementById('task-card-help-popover');
+    if (helpPopover && !helpPopover.classList.contains('hidden')) {
+      this.updateHelpExplanation();
     }
 
     // Contextual missing PPE alert

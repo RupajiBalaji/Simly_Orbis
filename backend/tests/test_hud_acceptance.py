@@ -312,6 +312,38 @@ def test_educational_disclaimer_spec_and_non_overlap():
         )
 
 
+def test_first_run_flow_pulse_and_help_explanation():
+    """
+    Verify U5 requirements:
+    1. Primary button gentle pulse animation for 5 seconds after walkthrough completion.
+    2. Single 'What do I do?' help button inside Current Task card with plain explanation.
+    3. Persistent HUD element budget remains exactly 5.
+    """
+    index_content = INDEX_HTML.read_text(encoding="utf-8")
+    css_content = LAB_CSS.read_text(encoding="utf-8")
+    hud_js = (REPO_ROOT / "frontend" / "lab" / "game" / "hud.js").read_text(encoding="utf-8")
+    action_menu_js = (REPO_ROOT / "frontend" / "lab" / "game" / "action_menu.js").read_text(encoding="utf-8")
+    main_js = (REPO_ROOT / "frontend" / "lab" / "main.js").read_text(encoding="utf-8")
+
+    # 1. 'What do I do?' button and explanation popover inside task card
+    assert 'id="btn-task-what-do-i-do"' in index_content
+    assert 'id="task-card-help-popover"' in index_content
+    assert 'id="task-card-help-text"' in index_content
+    assert ".btn-task-help" in css_content
+    assert ".task-card-help-popover" in css_content
+    assert "updateHelpExplanation" in action_menu_js
+
+    # 2. Primary button guide pulse
+    assert "@keyframes buttonPulseGuide" in css_content
+    assert ".task-btn-primary.pulse-guide" in css_content
+    assert "triggerPrimaryButtonPulse" in hud_js
+    assert "triggerPrimaryButtonPulse" in main_js
+
+    # 3. Persistent count remains exactly 5
+    matches = re.findall(r'data-hud-persistent="([^"]+)"', index_content)
+    assert len(matches) == 5
+
+
 @pytest.mark.browser
 def test_browser_hud_clean_and_interactive():
     """Playwright E2E verification of clean HUD (skipped unless --browser or RUN_BROWSER_TESTS=1)."""

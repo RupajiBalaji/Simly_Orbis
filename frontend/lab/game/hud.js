@@ -956,5 +956,19 @@ export class LabHUD {
     }
     localStorage.setItem('orbis_coachmarks_seen', 'true');
     soundFX.playClick();
+    triggerPrimaryButtonPulse(5000);
   }
+}
+
+export function triggerPrimaryButtonPulse(durationMs = 5000) {
+  const btn = document.getElementById('task-btn-primary') || document.querySelector('.task-btn-primary');
+  if (btn) {
+    btn.classList.add('pulse-guide');
+    setTimeout(() => {
+      btn.classList.remove('pulse-guide');
+    }, durationMs);
+  }
+}
+if (typeof window !== 'undefined') {
+  window.triggerPrimaryButtonPulse = triggerPrimaryButtonPulse;
 }

@@ -528,10 +528,18 @@
     <!-- PERSISTENT 3: Bottom-Center Current Task Card -->
     <section class="hud-current-task-card" id="hud-current-task-card" data-hud-persistent="task-card" role="region" aria-label="Current Task">
       <div class="task-card-header">
-        <span class="task-card-kicker">CURRENT TASK</span>
-        <h3 class="task-card-title" id="task-card-title">Step 1: Don Personal Protective Equipment</h3>
+        <div class="task-card-header-main">
+          <span class="task-card-kicker">CURRENT TASK</span>
+          <h3 class="task-card-title" id="task-card-title">Step 1: Don Personal Protective Equipment</h3>
+        </div>
+        <button type="button" class="btn-task-help" id="btn-task-what-do-i-do" aria-label="What do I do?" title="What do I do?">❓ What do I do?</button>
       </div>
       <p class="task-card-hint" id="task-card-hint">Put on goggles, gloves, and lab coat before handling chemicals or apparatus.</p>
+      <!-- Short Plain Explanation of Current Step (U5) -->
+      <div class="task-card-help-popover hidden" id="task-card-help-popover" role="note" aria-live="polite">
+        <div class="task-card-help-text" id="task-card-help-text">Click the primary button below to proceed with the current step.</div>
+        <button type="button" class="btn-close-task-help" id="btn-close-task-help" aria-label="Close help">✕</button>
+      </div>
       <div class="task-card-ppe-alert hidden" id="task-card-ppe-alert" role="alert">⚠️ Missing PPE: Goggles, Gloves</div>
       <div class="task-card-actions-row">
         <div class="task-primary-btns" id="task-card-actions">
