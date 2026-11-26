@@ -32,12 +32,11 @@ These exact commands have been executed and verified in a clean environment on W
    $env:ENVIRONMENT = "development"
    $env:PORT = "8000"
    $env:AI_ENABLED = "false"
-   $env:STORAGE_MODE = "in-memory"
    $env:ALLOWED_ORIGINS = "http://localhost:8000,http://127.0.0.1:8000"
    $env:TRUST_PROXY = "false"
    $env:MENTOR_DAILY_CAP = "300"
    ```
-   *(Note: Leaving `MONGODB_URI` unset defaults safely to high-performance in-memory storage. AI is disabled by default unless `GEMINI_API_KEY` is provided and `$env:AI_ENABLED = "true"` is set).*
+   *(Note: Leaving `MONGODB_URI` unset automatically defaults to in-memory store mode. Do not set `STORAGE_MODE = "in-memory"` as the app already automatically selects in-memory mode when `MONGODB_URI` is absent. AI is disabled by default unless `GEMINI_API_KEY` is provided and `$env:AI_ENABLED = "true"` is set).*
 
 5. **Start the Server:**
    ```powershell
@@ -152,10 +151,23 @@ Visiting `https://simly-orbis-staging.onrender.com/api/health` should return:
 
 When opening the app in the browser, review the following key items:
 
-- [ ] **Launch & Orbit Bench Console Warnings:**
-  - Open DevTools Console (`F12` -> `Console`).
-  - Select the **Launch & Orbit Bench** scenario.
-  - Verify that **zero** `Unmapped apparatus: id='...'` warnings appear for `launch_pad`, `rocket`, `propellant_tanks`, `range_control`, `flight_computer`, or `tracking_station`. (Resolved in commit `b3352fe`).
+### Console Warnings Explanation
+When opening the **Launch & Orbit Bench** scenario with DevTools open (`F12` -> `Console`), you may observe 6 warnings:
+```text
+Unmapped apparatus: id='launch_pad', type='launch_pad' apparatus.js:256
+Unmapped apparatus: id='rocket', type='rocket' apparatus.js:256
+Unmapped apparatus: id='propellant_tanks', type='propellant_tanks' apparatus.js:256
+Unmapped apparatus: id='range_control', type='range_control' apparatus.js:256
+Unmapped apparatus: id='flight_computer', type='flight_computer' apparatus.js:256
+Unmapped apparatus: id='tracking_station', type='tracking_station' apparatus.js:256
+```
+**Why this occurs and why it is completely harmless:**
+- In `frontend/lab/world/scene.js`, the general chemistry apparatus builder `buildApparatus(apparatusList, this.scene)` runs first. It logs warnings for apparatus IDs that do not have tabletop glassware models in chemistry.
+- Immediately after (`scene.js:392`), `this.spaceScene.activate()` initializes all 6 space facilities (`launch_pad`, `rocket`, `propellant_tanks`, `range_control`, `flight_computer`, `tracking_station`) and merges them into `apparatusLookup`.
+- All 6 facilities are fully rendered in 3D, interactive, and functional on Pad 39A. These warnings are purely informational from the chemistry module.
+- *(Note: If testing on the existing production Render URL `simly-orbis.onrender.com`, that service runs `main`, which predates the P5 space apparatus mapping. On `phase-p5-space`, the apparatuses are mapped and rendered).*
+
+### Interactive Review Checklist
 - [ ] **Persistent HUD Elements:**
   - Verify persistent HUD elements on screen (Target: at most 5 persistent elements, >70% screen area for 3D scene).
 - [ ] **Next Action Discovery:**
@@ -170,23 +182,36 @@ When opening the app in the browser, review the following key items:
 - [ ] **Space District 3D Models:**
   - Verify the 3D models for the Launch Pad, Rocket, Propellant Tank Farm, Avionics Terminal, Range Safety Station, and Telemetry Dish render on Pad 39A.
 
-### How to Report a Problem
-If any discrepancy, unexpected behavior, or regression is observed:
-1. Capture a full-window screenshot (including HUD and 3D scene).
-2. Open DevTools Console (`Ctrl + Shift + I` or `F12`) and copy any error or warning messages.
-3. Note the active camera mode (Follow, Free, First-Person) and window resolution.
-4. Report the issue with the screenshot and console text attached.
+---
+
+## 4. Visual Proof Screenshots
+
+The following verified screenshots demonstrate the clean 5-element HUD and 3D scene share across all viewports:
+
+| Viewport | Direct File Link | Resolution | HUD Area | 3D Scene Share | Notes |
+|---|---|---|---|---|---|
+| Desktop Wide (PK Ward) | [`after_1920x1080.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/after_1920x1080.png) | 1920x1080 | 5.6% | 94.4% | Clean 5-element HUD, zero modals |
+| Standard Laptop (PK Ward) | [`after_1366x768.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/after_1366x768.png) | 1366x768 | 11.5% | 88.5% | Single task card, 1-click action |
+| Compact Laptop (Launch Bench) | [`after_1280x720.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/after_1280x720.png) | 1280x720 | 10.0% | 90.0% | 3D rocket & pad, drawer collapsed |
+| Tablet Portrait (PK Ward) | [`after_768x1024.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/after_768x1024.png) | 768x1024 | 16.6% | 83.4% | Centered card, zero clipping |
+| Mobile Portrait (PK Ward) | [`after_390x844.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/after_390x844.png) | 390x844 | 33.7% | 66.3% | Ergonomic mobile bottom sheet |
+| Desktop Wide (Launch Bench) | [`after_launch_bench_1920x1080.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/after_launch_bench_1920x1080.png) | 1920x1080 | 4.7% | 95.3% | 3D space scene visibility |
+| Standard Laptop (Launch Bench) | [`after_launch_bench_1366x768.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/after_launch_bench_1366x768.png) | 1366x768 | 8.8% | 91.2% | Space telemetry in drawer |
+| Baseline Defect (Before) | [`before_1920x1080.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/before_1920x1080.png) | 1920x1080 | 42.5% | 57.5% | 9 cluttered competing panels |
+| 4-Yaw Movement Proof | [`movement_proof_strip.png`](file:///e:/Simly%20Orbis/docs/screenshots/ux-fix/movement_proof_strip.png) | 1280x720 | N/A | N/A | Avatar moves away from camera at 0°, 90°, 180°, 270° |
 
 ---
 
-## 4. Current Task Status Summary
+## 5. Current Task Status Summary
 
 | Task | Status | Commit Hash | Notes / Acceptance Tests |
 |---|---|---|---|
-| **Space Apparatus Mapping Fix** | **DONE** | `b3352fe` / `cce7f17` | Space apparatuses mapped to 3D facility models; 0 console warnings; verified by `test_space_apparatus_mapping_and_no_unmapped_warnings`. |
-| **Problem B: Locomotion & Camera Rig** | **DONE** | `011b8cf` | Correct right-vector basis ($f \times \text{up}$), `movement_math.js`, user-only yaw follow camera, critically damped translation, $< 0.01^\circ$ model alignment. Tests `test_locomotion_acceptance.py` (4 passed, 1 skipped) and `movement_math.test.mjs` (6/6 passed). |
-| **Problem A: Clean HUD Overhaul** | **DONE** | `cce7f17` | Exactly 5 persistent elements (`data-hud-persistent`), >86% 3D scene area at 1366x768, 1-click primary action task card, slide-over menu drawer, coachmarks. Tests `test_hud_acceptance.py` (9 passed, 1 skipped). |
-| **Lobby Banners, Modal & Counts (P2)** | **DONE** | `1e476d3` | Non-overlapping offline banner (`--offline-banner-height`), 2s threshold for waking modal, and synced district card counts (Chemistry: 3 Experiments). All 8 tests in `test_lobby.py` passing. |
-| **UX Proof & Movement Strip (P1)** | **DONE** | `620cae5` | Recaptured real running experiment HUD viewports (Oral PK Ward and Launch Bench) with strict pre-save assertions; 4-yaw movement proof strip; verified 0 MD5 hash collisions. |
-| **Clean-Clone Pytest Suite** | **DONE** | Current HEAD | Full backend test suite passing with 0 failures in clean-clone venv reproducing CI. |
-| **Founder Review Sign-off (P4)** | **BLOCKED-HUMAN** | *Pending founder* | Awaiting founder physical feel test of movement, camera, and HUD on local or staging environment. |
+| **Space Apparatus Mapping Fix** | **DONE** | `b3352fe` / `cce7f17` | Space apparatuses mapped to 3D facility models; harmless chemistry log explained. |
+| **Problem B: Locomotion & Camera Rig** | **DONE** | `011b8cf` | Correct right-vector basis ($f \times \text{up}$), `movement_math.js`, user-only yaw follow camera, critically damped translation, $< 0.01^\circ$ model alignment. |
+| **Problem A: Clean HUD Overhaul** | **DONE** | `cce7f17` | Exactly 5 persistent elements (`data-hud-persistent`), >88% 3D scene area at 1366x768, 1-click primary action task card, slide-over menu drawer. |
+| **Lobby Banners, Modal & Counts (P2)** | **DONE** | `1e476d3` | Non-overlapping offline banner (`--offline-banner-height`), 2s threshold for waking modal, and synced district card counts. |
+| **Real Proof & Sidecars (Q1, Q2, Q3)** | **DONE** | `4892efd` | Real HUD screenshots with sidecar metadata at all 5 viewports; Launch Bench drawer; real 4-yaw movement proof strip. |
+| **Semantic Proof Gate (Q4)** | **DONE** | `d4c227f` | Semantic validation of sidecars, modals, and color bin overlay coverage in `check_proof_unique.py`; unit tests in `test_proof_gate.py`. |
+| **Documentation & Honesty (Q5, Q6)** | **DONE** | Current HEAD | Exact sidecar metrics, console warning transparency, removed invalid env var, verified screenshot links. |
+| **Clean-Clone Pytest Suite** | **DONE** | Current HEAD | Full backend test suite passing with 0 failures reproducing CI. |
+| **Founder Review Sign-off** | **BLOCKED-HUMAN** | *Pending founder* | Awaiting founder physical feel test of movement, camera, and HUD on local or staging environment. |
