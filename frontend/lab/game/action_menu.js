@@ -228,50 +228,73 @@ export class ActionMenu {
 
     const targetApparatusId = this.mapStepToApparatus(nextStep.id);
 
-    // Populate Current Task Card Actions (1 to 3 actions for THIS step only)
+    // Populate Current Task Card Actions (U1: exactly one primary button, plus secondary ONLY if real choice)
     if (taskActionsEl) {
       taskActionsEl.innerHTML = '';
       const primaryActions = this.getPrimaryActionsForStep(nextStep.id, targetApparatusId);
-      primaryActions.forEach((item, idx) => {
-        const btn = document.createElement('button');
+      if (primaryActions.length > 0) {
+        const primaryItem = primaryActions[0];
+        const isAtStation = this.isAvatarAtStation(targetApparatusId);
+        const primaryBtn = document.createElement('button');
+        const btn = primaryBtn;
         btn.type = 'button';
-        btn.className = `task-btn-primary ${item.enabled ? 'enabled' : 'disabled'}`;
-        btn.textContent = this.formatActionLabel(item.action);
-        if (idx === 0) {
-          btn.setAttribute('tabindex', '1'); // Focusable via Tab within 3 presses
+        btn.className = `task-btn-primary ${primaryItem.enabled ? 'enabled' : 'disabled'}`;
+        btn.id = 'task-btn-primary';
+        btn.setAttribute('tabindex', '1'); // Focusable via Tab within 3 presses
+
+        const baseLabel = this.formatActionLabel(primaryItem.action, nextStep);
+        if (!isAtStation && targetApparatusId) {
+          primaryBtn.textContent = `Go to ${this.formatStationShortName(targetApparatusId)} and do this`;
+          primaryBtn.title = `Walk character to ${this.formatStationShortName(targetApparatusId)} and execute ${baseLabel}`;
         } else {
-          btn.setAttribute('tabindex', '0');
+          primaryBtn.textContent = baseLabel;
         }
-        if (!item.enabled) {
-          btn.disabled = true;
-          btn.title = item.disabled_reason || 'Action locked by protocol prerequisite.';
+
+        if (!primaryItem.enabled) {
+          primaryBtn.disabled = true;
+          primaryBtn.title = primaryItem.disabled_reason || 'Action locked by protocol prerequisite.';
         } else {
-          btn.onclick = () => {
-            const target = targetApparatusId || this.resolveDefaultTargetForAction(item.action);
-            this.handleActionClick(item.action, target);
+          primaryBtn.onclick = () => {
+            const currentIsAtStation = this.isAvatarAtStation(targetApparatusId);
+            if (!currentIsAtStation && targetApparatusId && this.characterController) {
+              primaryBtn.disabled = true;
+              primaryBtn.classList.add('walking');
+              primaryBtn.textContent = `Walking to ${this.formatStationShortName(targetApparatusId)}...`;
+              this.directiveQueue?.scene?.focusOnStation(targetApparatusId);
+              state.setSelectedTarget(targetApparatusId);
+              this.characterController.walkToStation(targetApparatusId, () => {
+                primaryBtn.disabled = false;
+                primaryBtn.classList.remove('walking');
+                primaryBtn.textContent = baseLabel;
+                this.executeStepAction(primaryItem.action, targetApparatusId);
+              });
+            } else {
+              this.executeStepAction(primaryItem.action, targetApparatusId);
+            }
           };
         }
-        taskActionsEl.appendChild(btn);
-      });
+        taskActionsEl.appendChild(primaryBtn);
+
+        // Secondary choice button: only when step offers a real choice (e.g. titrate vs record endpoint)
+        if (primaryActions.length > 1 && this.isRealStepChoice(nextStep.id, primaryActions)) {
+          const secondaryItem = primaryActions[1];
+          const secBtn = document.createElement('button');
+          secBtn.type = 'button';
+          secBtn.className = 'task-btn-secondary';
+          secBtn.id = 'task-btn-secondary';
+          secBtn.setAttribute('tabindex', '0');
+          secBtn.textContent = this.formatActionLabel(secondaryItem.action, nextStep);
+          secBtn.onclick = () => {
+            this.executeStepAction(secondaryItem.action, targetApparatusId);
+          };
+          taskActionsEl.appendChild(secBtn);
+        }
+      }
     }
 
-    // Go to Station button
+    // Go to Station button is subsumed into the primary walk-and-act button
     if (btnGoStation) {
-      if (targetApparatusId) {
-        btnGoStation.style.display = 'inline-block';
-        btnGoStation.textContent = `Go to ${this.formatStationName(targetApparatusId)} ➔`;
-        btnGoStation.onclick = () => {
-          const appObj = this.directiveQueue?.scene?.getApparatus(targetApparatusId);
-          if (appObj) {
-            const pos = appObj.userData?.stationPos || appObj.position;
-            this.characterController?.moveTo(pos);
-            this.directiveQueue?.scene?.focusOnStation(targetApparatusId);
-            state.setSelectedTarget(targetApparatusId);
-          }
-        };
-      } else {
-        btnGoStation.style.display = 'none';
-      }
+      btnGoStation.style.display = 'none';
     }
 
     // Update pulsing beacon / glow over next step apparatus
@@ -280,6 +303,62 @@ export class ActionMenu {
       if (targetMesh) {
         this.directiveQueue.effectManager.playEffect(targetMesh, { name: 'glow', duration_ms: 2500 });
       }
+    }
+  }
+
+  isAvatarAtStation(stationId) {
+    if (!stationId) return true;
+    const charPos = this.characterController?.rig?.root?.position || state.avatarPosition;
+    const appObj = this.directiveQueue?.scene?.getApparatus(stationId);
+    const stationPos = appObj?.userData?.stationPos || appObj?.position;
+    if (!charPos || !stationPos) return true;
+    const dist = Math.hypot(charPos.x - stationPos.x, charPos.z - stationPos.z);
+    return dist <= 1.8;
+  }
+
+  formatStationShortName(targetId) {
+    const shortNames = {
+      digital_balance: 'Balance',
+      dosing_cup: 'Dosing Cup',
+      patient_bed: 'Patient',
+      ward_clock: 'Clock',
+      tube_rack: 'Sample Tubes',
+      assay_analyzer: 'Analyzer',
+      burette: 'Burette',
+      conical_flask: 'Flask',
+      sink: 'Sink',
+      chemical_waste_bin: 'Waste Bin',
+      biohazard_bin: 'Biohazard Bin',
+      launch_pad: 'Launch Pad',
+      propellant_tanks: 'Propellant Farm',
+      flight_computer: 'Flight Computer',
+      range_control: 'Range Control',
+      tracking_station: 'Tracking Station',
+      infusion_pump: 'Infusion Pump',
+      patient_monitor: 'Patient Monitor',
+      pkpd_chart_display: 'Hologram',
+      prediction_slate: 'Prediction Slate',
+      sampling_schedule: 'Sampling Schedule',
+      debrief_station: 'Debrief Station',
+    };
+    return shortNames[targetId] || this.formatStationName(targetId);
+  }
+
+  isRealStepChoice(stepId, primaryActions) {
+    // Only steps that offer a genuine alternative choice show a secondary button
+    if (stepId === 'titrate' && primaryActions.some((a) => a.action === 'record_endpoint')) {
+      return true;
+    }
+    return false;
+  }
+
+  executeStepAction(action, targetApparatusId) {
+    if (action === 'wear_ppe') {
+      // Puts on goggles, gloves, and coat in one atomic call
+      this.handleActionClick('wear_ppe', 'avatar', { item: 'all' });
+    } else {
+      const target = targetApparatusId || this.resolveDefaultTargetForAction(action);
+      this.handleActionClick(action, target);
     }
   }
 
@@ -292,8 +371,9 @@ export class ActionMenu {
 
     const stepActionMap = {
       wear_ppe: ['wear_ppe'],
-      tare_balance: ['tare_balance', 'weigh'],
-      weigh_dose: ['weigh', 'tare_balance'],
+      tare_balance: ['tare_balance'],
+      weigh_dose: ['weigh'],
+      weigh_powder: ['weigh'],
       dissolve_dose: ['dissolve'],
       label_cup: ['label'],
       administer_oral: ['administer_oral'],
@@ -302,40 +382,65 @@ export class ActionMenu {
       label_tubes: ['label'],
       draw_blood: ['draw_blood'],
       run_assay: ['run_assay'],
-      rinse_burette: ['rinse_burette', 'fill_burette'],
-      fill_burette: ['fill_burette', 'rinse_burette'],
+      rinse_burette: ['rinse_burette'],
+      fill_burette: ['fill_burette'],
       pipette_analyte: ['pipette_analyte'],
       add_indicator: ['add_indicator'],
-      titrate: ['titrate', 'swirl'],
-      swirl: ['swirl', 'titrate'],
-      record_endpoint: ['record_endpoint', 'read_ph_meter'],
+      titrate: ['titrate', 'record_endpoint'],
+      swirl: ['swirl'],
+      record_endpoint: ['record_endpoint'],
       dispose_waste: ['dispose_waste'],
       wash_hands: ['wash_hands'],
       submit_report: ['submit_report'],
-      inspect_pad: ['inspect_pad'],
-      fuel_vehicle: ['fuel_vehicle'],
-      run_preflight: ['run_preflight'],
+      choose_rocket: ['choose_rocket'],
+      select_vehicle: ['choose_rocket'],
+      declare_payload: ['declare_payload'],
+      fuel_rocket: ['fuel_rocket'],
+      fuel_vehicle: ['fuel_rocket'],
+      run_checklist: ['run_checklist'],
+      run_preflight: ['run_checklist'],
       clear_range: ['clear_range'],
       launch: ['launch'],
       coast: ['coast'],
-      transfer: ['transfer'],
+      burn_transfer: ['burn_transfer'],
+      transfer: ['burn_transfer'],
       circularize: ['circularize'],
       debrief: ['debrief'],
+      inspect_pad: ['inspect_pad'],
+      select_patient: ['select_patient'],
+      select_drug: ['select_drug'],
+      set_dose: ['set_dose'],
+      check_renal: ['check_renal'],
+      set_sampling: ['set_sampling'],
+      predict_window: ['predict_window'],
+      run_simulation: ['run_simulation'],
+      debrief_pkpd: ['debrief_pkpd'],
+      set_temperature: ['set_temperature'],
+      prepare_reactant: ['prepare_reactant'],
+      calibrate_spectrophotometer: ['calibrate_spectrophotometer'],
+      start_reaction: ['start_reaction'],
+      record_sampling: ['record_sampling'],
+      analyze_linear_plots: ['analyze_linear_plots'],
+      submit_order_estimate: ['submit_order_estimate'],
+      select_buffer_system: ['select_buffer_system'],
+      prepare_buffer: ['prepare_buffer'],
+      test_capacity: ['test_capacity'],
+      stress_buffer: ['stress_buffer'],
+      submit_buffer_design: ['submit_buffer_design'],
     };
 
-    const targetActionNames = stepActionMap[stepId];
-    let matched = [];
-    if (targetActionNames) {
-      matched = allActions.filter((a) => targetActionNames.includes(a.action));
-    }
+    const targetActionNames = stepActionMap[stepId] || [stepId];
+    let matched = allActions.filter((a) => targetActionNames.includes(a.action));
+
     if (matched.length === 0 && stationId) {
       matched = this.getActionsForStation(stationId);
     }
     if (matched.length === 0) {
-      matched = allActions.filter((a) => a.enabled);
+      // If action not yet loaded in state.availableActions, create synthesized active action
+      matched = targetActionNames.map((act) => ({ action: act, enabled: true }));
     }
     matched.sort((a, b) => (b.enabled ? 1 : 0) - (a.enabled ? 1 : 0));
-    return matched.slice(0, 3);
+    return matched;
   }
 
   formatStationName(targetId) {
@@ -657,30 +762,64 @@ export class ActionMenu {
     return btn;
   }
 
-  formatActionLabel(actionName) {
+  formatActionLabel(actionName, nextStep = null) {
     const map = {
-      wear_ppe: '🛡️ Wear PPE',
-      remove_ppe: '🧤 Remove PPE',
-      tare_balance: '⚖️ Tare Balance',
-      weigh: '⚖️ Weigh Dose',
-      dissolve: '💧 Dissolve Powder',
-      label: '🏷️ Label Item',
-      administer_oral: '💊 Administer Oral',
-      advance_time: '⏱️ Advance Time',
-      draw_blood: '🩸 Draw Blood',
-      run_assay: '🔬 Run Assay',
-      rinse_burette: '🧪 Rinse Burette',
-      fill_burette: '🧪 Fill Burette',
-      pipette_analyte: '🧪 Pipette Analyte',
-      add_indicator: '💧 Add Indicator',
-      titrate: '🧪 Titrate',
-      swirl: '🔄 Swirl Flask',
-      read_ph_meter: '⚡ Read pH Meter',
-      record_endpoint: '📝 Record Endpoint',
-      dispose_waste: '🗑️ Dispose Waste',
-      wash_hands: '🧼 Wash Hands',
-      pour: '🫗 Pour Liquid',
-      submit_report: '✓ Submit Report',
+      wear_ppe: 'Wear PPE',
+      remove_ppe: 'Remove PPE',
+      tare_balance: 'Tare balance',
+      weigh: 'Weigh dose',
+      dissolve: 'Dissolve powder',
+      label: 'Label item',
+      administer_oral: 'Administer oral',
+      advance_time: 'Advance time',
+      draw_blood: 'Draw blood',
+      run_assay: 'Run assay',
+      rinse_burette: 'Rinse burette',
+      fill_burette: 'Fill burette',
+      pipette_analyte: 'Pipette analyte',
+      add_indicator: 'Add indicator',
+      titrate: 'Titrate',
+      swirl: 'Swirl flask',
+      read_ph_meter: 'Read pH meter',
+      record_endpoint: 'Record endpoint',
+      dispose_waste: 'Dispose waste',
+      wash_hands: 'Wash hands',
+      pour: 'Pour liquid',
+      submit_report: 'Submit report',
+      choose_rocket: 'Select Orbis 1',
+      select_vehicle: 'Select Orbis 1',
+      declare_payload: 'Declare payload',
+      fuel_rocket: 'Fuel rocket',
+      fuel_vehicle: 'Fuel rocket',
+      run_checklist: 'Run preflight',
+      run_preflight: 'Run preflight',
+      clear_range: 'Clear range',
+      launch: 'Launch rocket',
+      coast: 'Coast to apoapsis',
+      burn_transfer: 'Burn transfer',
+      transfer: 'Burn transfer',
+      circularize: 'Circularize orbit',
+      debrief: 'Debrief mission',
+      select_patient: 'Select patient',
+      select_drug: 'Select drug',
+      set_dose: 'Set dose',
+      check_renal: 'Check renal function',
+      set_sampling: 'Set sampling',
+      predict_window: 'Predict window',
+      run_simulation: 'Run simulation',
+      debrief_pkpd: 'Debrief PK/PD',
+      set_temperature: 'Set temperature',
+      prepare_reactant: 'Prepare reactant',
+      calibrate_spectrophotometer: 'Calibrate spectrophotometer',
+      start_reaction: 'Start reaction',
+      record_sampling: 'Record sampling',
+      analyze_linear_plots: 'Analyze linear plots',
+      submit_order_estimate: 'Submit order estimate',
+      select_buffer_system: 'Select buffer system',
+      prepare_buffer: 'Prepare buffer',
+      test_capacity: 'Test capacity',
+      stress_buffer: 'Stress buffer',
+      submit_buffer_design: 'Submit buffer design',
     };
     return map[actionName] || actionName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
   }

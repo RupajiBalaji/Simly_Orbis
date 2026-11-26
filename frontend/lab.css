@@ -4356,68 +4356,90 @@ body.has-offline-banner .hud-top-right {
 }
 
 .task-btn-primary {
-  background: linear-gradient(135deg, #4f46e5, #0284c7);
+  background: linear-gradient(135deg, #1d4ed8, #0284c7);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  font-size: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  font-size: 0.95rem;
   font-weight: 700;
-  padding: 7px 14px;
+  padding: 8px 18px;
+  min-height: 42px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.01em;
 }
 
 .task-btn-primary:hover,
 .task-btn-primary:focus-visible {
-  background: linear-gradient(135deg, #6366f1, #0ea5e9);
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.6);
+  background: linear-gradient(135deg, #2563eb, #0369a1);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7);
   outline: 2px solid #38bdf8;
+  transform: translateY(-1px);
 }
 
 .task-btn-primary:disabled {
-  opacity: 0.45;
+  opacity: 0.5;
   cursor: not-allowed;
-  filter: grayscale(0.5);
+  filter: grayscale(0.4);
 }
 
-.btn-task-station {
+.task-btn-primary.walking {
+  background: linear-gradient(135deg, #0369a1, #0f766e);
+  cursor: wait;
+}
+
+.task-btn-secondary {
   background: rgba(255, 255, 255, 0.08);
-  color: #cbd5e1;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 0.8rem;
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.85rem;
   font-weight: 600;
-  padding: 7px 12px;
+  padding: 7px 14px;
+  min-height: 40px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-task-station:hover,
-.btn-task-station:focus-visible {
-  background: rgba(255, 255, 255, 0.15);
-  color: #f8fafc;
+.task-btn-secondary:hover,
+.task-btn-secondary:focus-visible {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
   outline: none;
+}
+
+.btn-task-station {
+  display: none !important; /* Subsumed into primary walk-and-act button */
 }
 
 .btn-task-more {
   background: transparent;
   color: #94a3b8;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: none;
   font-size: 0.78rem;
   font-weight: 500;
-  padding: 7px 10px;
-  border-radius: 8px;
+  text-decoration: underline;
   cursor: pointer;
-  transition: all 0.2s;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: color 0.2s;
   white-space: nowrap;
 }
 
 .btn-task-more:hover,
 .btn-task-more:focus-visible {
-  color: #f8fafc;
-  border-color: rgba(255, 255, 255, 0.4);
+  color: #38bdf8;
+  outline: none;
+}
   background: rgba(255, 255, 255, 0.05);
   outline: none;
 }
