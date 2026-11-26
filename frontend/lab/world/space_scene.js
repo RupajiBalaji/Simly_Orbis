@@ -963,6 +963,12 @@ export class SpaceScene {
       };
     }
 
+    // Drawer view preset buttons
+    document.getElementById('btn-view-pad-drawer')?.addEventListener('click', () => this.setViewMode('pad', false));
+    document.getElementById('btn-view-orbit-drawer')?.addEventListener('click', () => this.setViewMode('orbit', false));
+    document.getElementById('btn-view-polar-drawer')?.addEventListener('click', () => this.setViewMode('polar', false));
+    document.getElementById('btn-view-equatorial-drawer')?.addEventListener('click', () => this.setViewMode('equatorial', false));
+
     const btnToggleMenu = document.getElementById('btn-toggle-space-telemetry-menu');
     if (btnToggleMenu) {
       btnToggleMenu.onclick = () => {
@@ -1074,6 +1080,19 @@ export class SpaceScene {
             <span style="color: #64748b; font-size: 0.68rem; display: block;">APOAPSIS</span>
             <span style="font-family: monospace; font-weight: 600; color: #f8fafc;">${t.apoapsis_km.toFixed(0)} km</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Orbit View Controls (Available in Drawer & Menu) -->
+      <div id="space-view-controls" style="background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 8px 12px;">
+        <div style="font-size: 0.72rem; font-weight: 700; color: #cbd5e1; margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 2px;">
+          🛰️ CAMERA VIEW PRESETS
+        </div>
+        <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+          <button id="btn-view-pad-drawer" type="button" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 3px 6px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;">Pad</button>
+          <button id="btn-view-orbit-drawer" type="button" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 3px 6px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;">Orbit</button>
+          <button id="btn-view-polar-drawer" type="button" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 3px 6px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;">Polar</button>
+          <button id="btn-view-equatorial-drawer" type="button" style="background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3); color: #38bdf8; padding: 3px 6px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;">Equator</button>
         </div>
       </div>
 

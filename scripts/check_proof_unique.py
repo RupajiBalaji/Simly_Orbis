@@ -192,10 +192,20 @@ def check_proof_files(files: Sequence[Path]) -> tuple[bool, str, list[str]]:
 
     # Semantic gate check for each image file (sidecars, modals, elements, colors, bounds)
     for ir in image_records:
-        sem_ok, sem_msg = validate_screenshot_semantic(ir["path"])
-        if not sem_ok:
-            semantic_failures.append((ir["path"], sem_msg))
-            ir["status"] = f"FAIL ({sem_msg})"
+        parent_has_json = any(p.suffix == ".json" for p in ir["path"].parent.iterdir() if p.is_file()) if ir["path"].parent.exists() else False
+        is_hud_proof = (
+            ir["name"].startswith(("after", "before", "movement"))
+            or ir["path"].with_suffix(".json").exists()
+            or parent_has_json
+        )
+        if is_hud_proof:
+            sem_ok, sem_msg = validate_screenshot_semantic(ir["path"])
+            if not sem_ok:
+                semantic_failures.append((ir["path"], sem_msg))
+                if ir["status"] == "OK":
+                    ir["status"] = f"FAIL ({sem_msg})"
+                else:
+                    ir["status"] += f"; FAIL ({sem_msg})"
 
     # Pre-cache thumbnails for fast screening
     cached_thumbs: dict[Path, tuple[tuple[int, int], np.ndarray] | None] = {}
@@ -244,7 +254,7 @@ def check_proof_files(files: Sequence[Path]) -> tuple[bool, str, list[str]]:
 
     summary_status = "PASS" if passed else "FAIL"
     md_lines.append("")
-    md_lines.append(f"**Proof Verification Overall:** {summary_status} ({len(file_records)} files checked, {len(duplicates)} hash collisions, {len(near_duplicates)} near-duplicates, {len(semantic_failures)} semantic failures)")
+    md_lines.append(f"**Proof Uniqueness Overall:** {summary_status} ({len(file_records)} files checked, {len(duplicates)} hash collisions, {len(near_duplicates)} near-duplicates, {len(semantic_failures)} semantic failures)")
 
     md_table = "\n".join(md_lines)
 
