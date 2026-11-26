@@ -4180,6 +4180,29 @@ body.has-offline-banner .hud-top-right {
   outline: none;
 }
 
+.btn-rocket-drawer-toggle {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  font-size: 0.95rem;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.btn-rocket-drawer-toggle:hover,
+.btn-rocket-drawer-toggle:focus-visible {
+  background: rgba(56, 189, 248, 0.3);
+  border-color: #38bdf8;
+  outline: none;
+}
+
+.btn-rocket-drawer-toggle.hidden {
+  display: none !important;
+}
+
 .hud-title-col {
   display: flex;
   flex-direction: column;

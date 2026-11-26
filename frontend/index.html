@@ -495,6 +495,7 @@
     <!-- PERSISTENT 1: Top-Left Title, Step Progress & Menu Button -->
     <header class="hud-top-left" id="hud-top-left" data-hud-persistent="top-left">
       <button type="button" class="btn-hud-menu" id="btn-open-menu" aria-label="Open Simulation Menu" title="Simulation Menu">☰ Menu</button>
+      <button type="button" class="btn-rocket-drawer-toggle hidden" id="btn-toggle-rocket-drawer" aria-label="Launch Telemetry &amp; Sliders" title="Launch Telemetry &amp; Sliders">🚀</button>
       <div class="hud-title-col">
         <div class="hud-exp-name" id="hud-exp-name">Pharmacokinetics Ward</div>
         <div class="hud-progress-row">
@@ -649,14 +650,17 @@
           <!-- Space District Views & Telemetry (Launch Bench) -->
           <div class="menu-section hidden" id="menu-section-space-views">
             <h4>🚀 Space Views &amp; Telemetry</h4>
+            <div class="menu-btn-row" style="margin-bottom:6px;">
+              <button type="button" class="menu-action-btn" id="space-view-toggle-btn" style="flex:1;">🛰️ Switch to Orbit View</button>
+            </div>
             <div class="menu-btn-row">
-              <button type="button" class="menu-action-btn" id="btn-view-pad">🚀 Pad View</button>
-              <button type="button" class="menu-action-btn" id="btn-view-orbit">🛰️ Orbit View</button>
-              <button type="button" class="menu-action-btn" id="btn-view-polar">🌐 Polar View</button>
-              <button type="button" class="menu-action-btn" id="btn-view-equatorial">🌍 Equatorial</button>
+              <button type="button" class="menu-action-btn" id="btn-view-pad">Pad</button>
+              <button type="button" class="menu-action-btn" id="btn-view-orbit">Orbit</button>
+              <button type="button" class="menu-action-btn" id="btn-view-polar">Polar</button>
+              <button type="button" class="menu-action-btn" id="btn-view-equatorial">Equator</button>
             </div>
             <div class="menu-btn-row" style="margin-top:8px;">
-              <button type="button" class="menu-action-btn" id="btn-toggle-space-telemetry-menu" style="flex:1;">📊 Open Telemetry &amp; Sliders Drawer</button>
+              <button type="button" class="menu-action-btn" id="btn-toggle-space-telemetry-menu" style="flex:1;">📊 Toggle Telemetry &amp; Sliders Drawer</button>
             </div>
           </div>
 

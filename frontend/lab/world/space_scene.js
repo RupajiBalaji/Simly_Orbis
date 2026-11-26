@@ -107,18 +107,40 @@ export class SpaceScene {
   activate() {
     this.active = true;
     this.group.visible = true;
-    // Keep telemetry drawer collapsed by default to preserve 5-element persistent HUD budget
+    // Show rocket button in HUD top-left
+    const rocketBtn = document.getElementById('btn-toggle-rocket-drawer');
+    if (rocketBtn) {
+      rocketBtn.classList.remove('hidden');
+      rocketBtn.onclick = () => this.toggleTelemetryDrawer();
+    }
+    // Show space views in menu drawer
+    const spaceMenuSec = document.getElementById('menu-section-space-views');
+    if (spaceMenuSec) spaceMenuSec.classList.remove('hidden');
+
+    // Keep telemetry drawer collapsed by default, but restore persisted state if set
+    let savedState = false;
+    try {
+      savedState = localStorage.getItem('simly_rocket_drawer_open') === 'true';
+    } catch (e) {}
+
     if (this.hudElement) {
-      this.hudElement.style.display = 'none';
-      this.hudElement.classList.add('hidden');
+      this.toggleTelemetryDrawer(savedState);
     }
     this.setViewMode('pad', true);
     this.wireMenuAndTaskCardControls();
+    this.updateViewButtonLabel();
   }
 
   deactivate() {
     this.active = false;
     this.group.visible = false;
+    const rocketBtn = document.getElementById('btn-toggle-rocket-drawer');
+    if (rocketBtn) {
+      rocketBtn.classList.add('hidden');
+    }
+    const spaceMenuSec = document.getElementById('menu-section-space-views');
+    if (spaceMenuSec) spaceMenuSec.classList.add('hidden');
+
     if (this.hudElement) {
       this.hudElement.style.display = 'none';
       this.hudElement.classList.add('hidden');
@@ -930,6 +952,9 @@ export class SpaceScene {
     } else {
       this.hudElement.classList.add('hidden');
     }
+    try {
+      localStorage.setItem('simly_rocket_drawer_open', shouldOpen ? 'true' : 'false');
+    } catch (e) {}
   }
 
   wireMenuAndTaskCardControls() {
