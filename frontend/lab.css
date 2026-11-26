@@ -5120,32 +5120,69 @@ body.has-offline-banner .hud-top-right {
 
 @media (max-width: 600px) {
   .hud-top-left {
-    top: 8px;
-    left: 8px;
-    padding: 4px 10px;
-    gap: 8px;
+    top: 6px;
+    left: 6px;
+    padding: 4px 8px;
+    gap: 5px;
+    max-width: calc(52vw - 8px);
+  }
+  .btn-hud-menu {
+    padding: 4px 7px;
+    font-size: 0.72rem;
+  }
+  .btn-hud-info {
+    padding: 3px 5px;
+    font-size: 0.75rem;
   }
   .hud-exp-name {
-    font-size: 0.82rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .hud-top-right {
-    top: 8px;
-    right: 8px;
-    padding: 4px 8px;
-    gap: 6px;
+    top: 6px;
+    right: 6px;
+    padding: 4px 6px;
+    gap: 4px;
+    max-width: calc(45vw - 8px);
+  }
+  .hud-metrics-row {
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: flex-end;
   }
   .hud-metric-chip {
-    font-size: 0.72rem;
-    padding: 2px 5px;
+    font-size: 0.66rem;
+    padding: 1px 4px;
   }
   .hud-current-task-card {
-    bottom: 68px;
-    width: calc(100vw - 16px);
-    padding: 10px 12px;
+    bottom: 58px;
+    width: calc(100vw - 12px);
+    padding: 8px 10px;
+    gap: 4px;
     border-radius: 10px;
   }
+  .task-card-title {
+    font-size: 0.86rem;
+  }
+  .task-card-hint {
+    font-size: 0.72rem;
+    line-height: 1.25;
+  }
+  .task-btn-primary {
+    min-height: 36px;
+    padding: 6px 12px;
+    font-size: 0.84rem;
+  }
   .hud-proximity-prompt {
-    bottom: 195px;
+    bottom: 222px;
+  }
+  .touch-joystick-zone {
+    bottom: 215px;
+    left: 12px;
+    width: 84px;
+    height: 84px;
   }
   .hud-ask-orbis-trigger {
     bottom: 12px;

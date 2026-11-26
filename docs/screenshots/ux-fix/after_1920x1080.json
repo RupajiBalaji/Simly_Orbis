@@ -15,12 +15,12 @@
   "modal_count": 0,
   "visible_modals": [],
   "large_overlays": [],
-  "canvas_frame_count": 36,
+  "canvas_frame_count": 91,
   "canvas_dimensions": {
     "w": 1920,
     "h": 1080
   },
-  "hud_area_percent": 5.6,
+  "hud_area_percent": 6.5,
   "scene_camera_yaw": 32.8,
   "camera_distance": 4.545,
   "character_world_position": {

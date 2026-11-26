@@ -1026,7 +1026,14 @@ async function startExperimentSession(experimentId, nickname = 'Researcher') {
     state.setExperiment(exp);
     sceneManager.loadExperiment(exp);
     characterController.spawnForExperiment(experimentId);
-    if (sceneManager.cameraRig) {
+    if (experimentId === 'launch_bench') {
+      if (sceneManager.cameraRig) {
+        sceneManager.cameraRig.setMode('STATION');
+      }
+      if (sceneManager.spaceScene) {
+        sceneManager.spaceScene.setViewMode('pad', true);
+      }
+    } else if (sceneManager.cameraRig) {
       sceneManager.cameraRig.recenter(true);
     }
 

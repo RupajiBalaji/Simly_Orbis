@@ -447,7 +447,14 @@ export class LabScene {
 
     this.syncApparatusState(experimentDef?.apparatus);
     this.updateNameTagVisibility();
-    if (this.cameraRig) {
+    if (experimentDef?.id === 'launch_bench') {
+      if (this.cameraRig) {
+        this.cameraRig.setMode(CameraMode.STATION);
+      }
+      if (this.spaceScene) {
+        this.spaceScene.setViewMode('pad', true);
+      }
+    } else if (this.cameraRig) {
       this.cameraRig.buildCollisionData();
       this.cameraRig.setMode(CameraMode.FOLLOW);
       this.cameraRig.recenter(true);

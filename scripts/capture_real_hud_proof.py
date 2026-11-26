@@ -346,6 +346,7 @@ def capture_after_screenshots(port: int = 8018):
         ("after_390x844.png", 390, 844, "pk_ward", "Oral PK Ward (390x844 iPhone Mobile)"),
         ("after_launch_bench_1920x1080.png", 1920, 1080, "launch_bench", "Launch & Orbit Bench (1920x1080 Space District)"),
         ("after_launch_bench_1366x768.png", 1366, 768, "launch_bench", "Launch & Orbit Bench (1366x768 Space District)"),
+        ("after_launch_bench_390x844.png", 390, 844, "launch_bench", "Launch & Orbit Bench (390x844 Space District Mobile)"),
     ]
 
     with sync_playwright() as p:
@@ -360,15 +361,6 @@ def capture_after_screenshots(port: int = 8018):
         for filename, w, h, exp_id, desc in targets:
             out_path = OUTPUT_DIR / filename
             json_path = OUTPUT_DIR / filename.replace(".png", ".json")
-            if out_path.exists() and json_path.exists():
-                try:
-                    with open(json_path, "r", encoding="utf-8") as jf:
-                        sc = json.load(jf)
-                    if sc.get("modal_count") == 0 and sc.get("visible_persistent_elements_count") == 5:
-                        print(f"  -> Existing {filename} verified clean (modal_count=0, persistent=5), keeping.")
-                        continue
-                except Exception:
-                    pass
 
             context = browser.new_context(viewport={"width": w, "height": h})
             # Q1: Set onboarding completed in localStorage BEFORE page load
@@ -435,6 +427,7 @@ def capture_movement_proof_strip(port: int = 8018):
     movement_sidecar = {
         "scenario": "pk_ward_movement_proof",
         "viewport": {"width": 1280, "height": 720},
+        "visible_persistent_elements_count": 5,
         "modal_count": 0,
         "yaws": {}
     }

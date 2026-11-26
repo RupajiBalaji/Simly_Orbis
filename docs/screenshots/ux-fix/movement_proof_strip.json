@@ -25,12 +25,12 @@
         "modal_count": 0,
         "visible_modals": [],
         "large_overlays": [],
-        "canvas_frame_count": 126,
+        "canvas_frame_count": 125,
         "canvas_dimensions": {
           "w": 1280,
           "h": 720
         },
-        "hud_area_percent": 13.1,
+        "hud_area_percent": 13.8,
         "scene_camera_yaw": 0,
         "camera_distance": 2.298,
         "character_world_position": {
@@ -60,12 +60,12 @@
         "modal_count": 0,
         "visible_modals": [],
         "large_overlays": [],
-        "canvas_frame_count": 164,
+        "canvas_frame_count": 163,
         "canvas_dimensions": {
           "w": 1280,
           "h": 720
         },
-        "hud_area_percent": 13.1,
+        "hud_area_percent": 13.8,
         "scene_camera_yaw": 0,
         "camera_distance": 3.318,
         "character_world_position": {
@@ -80,7 +80,7 @@
       },
       "camera_distance_delta": 1.02,
       "screen_y_delta": 100,
-      "character_region_pixel_mae": 0.2026,
+      "character_region_pixel_mae": 0.1872,
       "passed": true
     },
     "90": {
@@ -101,12 +101,12 @@
         "modal_count": 0,
         "visible_modals": [],
         "large_overlays": [],
-        "canvas_frame_count": 205,
+        "canvas_frame_count": 204,
         "canvas_dimensions": {
           "w": 1280,
           "h": 720
         },
-        "hud_area_percent": 13.1,
+        "hud_area_percent": 13.8,
         "scene_camera_yaw": 90,
         "camera_distance": 2.884,
         "character_world_position": {
@@ -136,12 +136,12 @@
         "modal_count": 0,
         "visible_modals": [],
         "large_overlays": [],
-        "canvas_frame_count": 243,
+        "canvas_frame_count": 242,
         "canvas_dimensions": {
           "w": 1280,
           "h": 720
         },
-        "hud_area_percent": 13.1,
+        "hud_area_percent": 13.8,
         "scene_camera_yaw": 90,
         "camera_distance": 3.831,
         "character_world_position": {
@@ -156,7 +156,7 @@
       },
       "camera_distance_delta": 0.947,
       "screen_y_delta": 59,
-      "character_region_pixel_mae": 0.1721,
+      "character_region_pixel_mae": 0.256,
       "passed": true
     },
     "180": {
@@ -177,12 +177,12 @@
         "modal_count": 0,
         "visible_modals": [],
         "large_overlays": [],
-        "canvas_frame_count": 284,
+        "canvas_frame_count": 283,
         "canvas_dimensions": {
           "w": 1280,
           "h": 720
         },
-        "hud_area_percent": 13.1,
+        "hud_area_percent": 13.8,
         "scene_camera_yaw": 180,
         "camera_distance": 2.884,
         "character_world_position": {
@@ -212,12 +212,12 @@
         "modal_count": 0,
         "visible_modals": [],
         "large_overlays": [],
-        "canvas_frame_count": 322,
+        "canvas_frame_count": 321,
         "canvas_dimensions": {
           "w": 1280,
           "h": 720
         },
-        "hud_area_percent": 13.1,
+        "hud_area_percent": 13.8,
         "scene_camera_yaw": 180,
         "camera_distance": 3.702,
         "character_world_position": {
@@ -232,7 +232,7 @@
       },
       "camera_distance_delta": 0.818,
       "screen_y_delta": 43,
-      "character_region_pixel_mae": 0.1445,
+      "character_region_pixel_mae": 0.1422,
       "passed": true
     },
     "270": {
@@ -253,12 +253,12 @@
         "modal_count": 0,
         "visible_modals": [],
         "large_overlays": [],
-        "canvas_frame_count": 363,
+        "canvas_frame_count": 362,
         "canvas_dimensions": {
           "w": 1280,
           "h": 720
         },
-        "hud_area_percent": 13.1,
+        "hud_area_percent": 13.8,
         "scene_camera_yaw": 270,
         "camera_distance": 2.884,
         "character_world_position": {
@@ -288,12 +288,12 @@
         "modal_count": 0,
         "visible_modals": [],
         "large_overlays": [],
-        "canvas_frame_count": 401,
+        "canvas_frame_count": 400,
         "canvas_dimensions": {
           "w": 1280,
           "h": 720
         },
-        "hud_area_percent": 13.1,
+        "hud_area_percent": 13.8,
         "scene_camera_yaw": 270,
         "camera_distance": 3.831,
         "character_world_position": {
@@ -308,7 +308,7 @@
       },
       "camera_distance_delta": 0.947,
       "screen_y_delta": 59,
-      "character_region_pixel_mae": 0.1587,
+      "character_region_pixel_mae": 0.1521,
       "passed": true
     }
   }

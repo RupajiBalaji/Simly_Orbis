@@ -15,21 +15,21 @@
   "modal_count": 0,
   "visible_modals": [],
   "large_overlays": [],
-  "canvas_frame_count": 36,
+  "canvas_frame_count": 90,
   "canvas_dimensions": {
     "w": 1366,
     "h": 768
   },
-  "hud_area_percent": 8.8,
-  "scene_camera_yaw": 347.4,
-  "camera_distance": 3.514,
+  "hud_area_percent": 9.8,
+  "scene_camera_yaw": 59.4,
+  "camera_distance": 16.424,
   "character_world_position": {
-    "x": -0.25,
-    "y": 0,
-    "z": -0.9
+    "x": -3.5,
+    "y": 0.6,
+    "z": 5
   },
   "character_screen_position": {
-    "x": 683,
-    "y": 653
+    "x": 357,
+    "y": 642
   }
 }

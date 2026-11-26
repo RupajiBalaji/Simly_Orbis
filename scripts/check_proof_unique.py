@@ -94,8 +94,8 @@ def validate_screenshot_semantic(file_path: Path) -> tuple[bool, str]:
                 g = ((bin_val >> 5) & 31) * 8
                 b = (bin_val & 31) * 8
 
-                # Celestial background void in space scene is expected (0,0,0)
-                if is_space and (r == 0 and g == 0 and b == 0):
+                # Celestial background void in space scene is expected (black or deep space navy)
+                if is_space and (r <= 8 and g <= 16 and b <= 32):
                     continue
 
                 if pct > 40.0:

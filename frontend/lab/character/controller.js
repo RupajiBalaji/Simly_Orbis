@@ -122,6 +122,10 @@ export class CharacterController {
       // Spawn standing at the balance station framing avatar, balance & ward in clear walkway
       this.rig.root.position.set(-3.85, 0, -2.85);
       this.faceTarget(new THREE.Vector3(-4.5, 0.94, -4.2));
+    } else if (experimentId === 'launch_bench') {
+      // Spawn on the Launch Pad apron safely clear of the rocket and flame trench
+      this.rig.root.position.set(-3.5, 0.6, 5.0);
+      this.faceTarget(new THREE.Vector3(0.0, 5.0, 0.0));
     } else {
       // Spawn to the side of the Burette Stand in clear walkway
       this.rig.root.position.set(-0.25, 0, -0.90);
