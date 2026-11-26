@@ -26,11 +26,86 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(line_buffering=True)
 
 try:
+    import json
     import numpy as np
     from PIL import Image
     HAS_PILLOW = True
 except ImportError:
     HAS_PILLOW = False
+
+
+def validate_screenshot_semantic(file_path: Path) -> tuple[bool, str]:
+    """
+    Validate semantic properties of a proof screenshot:
+    - Sidecar JSON exists and parses.
+    - Sidecar records modal_count == 0.
+    - Visible persistent elements count is 9 for 'before*', 5 for others.
+    - File size is within expected bounds for resolution (min 15KB, max 10MB).
+    - Quantized color bins (8-unit bins): no bin covers > 40% (catches blank, whiteout, or modal overlays).
+      Exception: In space scenes (launch_bench), the celestial black sky (0,0,0) is permitted, but no
+      other bin may exceed 40%.
+    """
+    if not HAS_PILLOW:
+        return True, "Pillow not available; skipped semantic checks"
+
+    sidecar_path = file_path.with_suffix(".json")
+    if not sidecar_path.exists():
+        return False, f"Missing sidecar JSON ({sidecar_path.name})"
+
+    try:
+        sidecar_data = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    except Exception as err:
+        return False, f"Sidecar JSON failed to parse: {err}"
+
+    modal_count = sidecar_data.get("modal_count", 0)
+    if modal_count > 0:
+        return False, f"Sidecar records modal_count={modal_count} (> 0)"
+
+    is_before = file_path.name.lower().startswith("before")
+    expected_persistent = 9 if is_before else 5
+    persistent_count = sidecar_data.get("visible_persistent_elements_count")
+    if persistent_count != expected_persistent:
+        return False, f"Sidecar records persistent_elements={persistent_count} (expected {expected_persistent})"
+
+    file_size = file_path.stat().st_size
+    try:
+        with Image.open(file_path) as img:
+            w, h = img.size
+            pixel_count = w * h
+
+            # File size bounds for resolution: blank or dummy images compress to < 15KB
+            min_size = 15_000 if pixel_count >= 200_000 else 5_000
+            max_size = 10_000_000
+            if file_size < min_size or file_size > max_size:
+                return False, f"File size {file_size:,} bytes outside bounds [{min_size:,}, {max_size:,}] for resolution {w}x{h}"
+
+            # Quantize color bins to 8-unit bins: (r // 8, g // 8, b // 8)
+            arr = np.array(img.convert("RGB"), dtype=np.uint8)
+            bins = arr // 8
+            packed = (bins[:, :, 0].astype(np.int32) << 10) | (bins[:, :, 1].astype(np.int32) << 5) | bins[:, :, 2].astype(np.int32)
+            unique, counts = np.unique(packed, return_counts=True)
+            sort_idx = np.argsort(counts)[::-1]
+
+            is_space = sidecar_data.get("scenario") in ("launch_bench", "space") or "launch_bench" in file_path.name
+            for idx in sort_idx:
+                bin_val = unique[idx]
+                pct = (counts[idx] / packed.size) * 100.0
+                r = (bin_val >> 10) * 8
+                g = ((bin_val >> 5) & 31) * 8
+                b = (bin_val & 31) * 8
+
+                # Celestial background void in space scene is expected (0,0,0)
+                if is_space and (r == 0 and g == 0 and b == 0):
+                    continue
+
+                if pct > 40.0:
+                    return False, f"Color bin ({r},{g},{b}) covers {pct:.1f}% (> 40.0%) of image (blank, whiteout, or modal overlay detected)"
+                break
+
+    except Exception as err:
+        return False, f"Failed image inspection: {err}"
+
+    return True, "OK"
 
 
 def compute_hashes(file_path: Path) -> tuple[str, str]:
@@ -111,8 +186,16 @@ def check_proof_files(files: Sequence[Path]) -> tuple[bool, str, list[str]]:
 
     # Perceptual near-duplicate check for images (MAE < 0.1% -> 0.001)
     near_duplicates: list[tuple[Path, Path, float]] = []
+    semantic_failures: list[tuple[Path, str]] = []
     image_exts = {".png", ".jpg", ".jpeg", ".webp"}
     image_records = [r for r in file_records if r["path"].suffix.lower() in image_exts and r["size"] > 0]
+
+    # Semantic gate check for each image file (sidecars, modals, elements, colors, bounds)
+    for ir in image_records:
+        sem_ok, sem_msg = validate_screenshot_semantic(ir["path"])
+        if not sem_ok:
+            semantic_failures.append((ir["path"], sem_msg))
+            ir["status"] = f"FAIL ({sem_msg})"
 
     # Pre-cache thumbnails for fast screening
     cached_thumbs: dict[Path, tuple[tuple[int, int], np.ndarray] | None] = {}
@@ -147,7 +230,7 @@ def check_proof_files(files: Sequence[Path]) -> tuple[bool, str, list[str]]:
                     r1["status"] = f"FAIL (NEAR-DUPLICATE of {r2['name']}, MAE={full_mae:.4f})"
                     r2["status"] = f"FAIL (NEAR-DUPLICATE of {r1['name']}, MAE={full_mae:.4f})"
 
-    passed = (len(empty_files) == 0 and len(duplicates) == 0 and len(near_duplicates) == 0)
+    passed = (len(empty_files) == 0 and len(duplicates) == 0 and len(near_duplicates) == 0 and len(semantic_failures) == 0)
 
     # Build Markdown table
     md_lines: list[str] = [
@@ -161,7 +244,7 @@ def check_proof_files(files: Sequence[Path]) -> tuple[bool, str, list[str]]:
 
     summary_status = "PASS" if passed else "FAIL"
     md_lines.append("")
-    md_lines.append(f"**Proof Uniqueness Overall:** {summary_status} ({len(file_records)} files checked, {len(duplicates)} hash collisions, {len(near_duplicates)} near-duplicates)")
+    md_lines.append(f"**Proof Verification Overall:** {summary_status} ({len(file_records)} files checked, {len(duplicates)} hash collisions, {len(near_duplicates)} near-duplicates, {len(semantic_failures)} semantic failures)")
 
     md_table = "\n".join(md_lines)
 
@@ -178,8 +261,12 @@ def check_proof_files(files: Sequence[Path]) -> tuple[bool, str, list[str]]:
         messages.append(f"FAILED: Found {len(near_duplicates)} suspiciously identical frame pairs (MAE < 0.1%):")
         for f1, f2, diff in near_duplicates:
             messages.append(f"  - {f1.name} ~ {f2.name} (MAE: {diff:.6f})")
+    if semantic_failures:
+        messages.append(f"FAILED: Found {len(semantic_failures)} semantic gate failures:")
+        for f, reason in semantic_failures:
+            messages.append(f"  - {f.name}: {reason}")
     if passed:
-        messages.append(f"PASSED: All {len(file_records)} files are strictly non-empty, unique, and perceptually distinct.")
+        messages.append(f"PASSED: All {len(file_records)} files are strictly non-empty, unique, perceptually distinct, and semantically verified.")
 
     return passed, md_table, messages
 
