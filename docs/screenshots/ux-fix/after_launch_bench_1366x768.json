@@ -1,0 +1,35 @@
+{
+  "scenario": "launch_bench",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "visible_persistent_elements_count": 5,
+  "visible_persistent_keys": [
+    "top-left",
+    "top-right",
+    "task-card",
+    "ask-orbis",
+    "dr-orbis"
+  ],
+  "modal_count": 0,
+  "visible_modals": [],
+  "large_overlays": [],
+  "canvas_frame_count": 36,
+  "canvas_dimensions": {
+    "w": 1366,
+    "h": 768
+  },
+  "hud_area_percent": 8.8,
+  "scene_camera_yaw": 347.4,
+  "camera_distance": 3.514,
+  "character_world_position": {
+    "x": -0.25,
+    "y": 0,
+    "z": -0.9
+  },
+  "character_screen_position": {
+    "x": 683,
+    "y": 653
+  }
+}

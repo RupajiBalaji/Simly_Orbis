@@ -1,0 +1,35 @@
+{
+  "scenario": "pk_ward",
+  "viewport": {
+    "width": 768,
+    "height": 1024
+  },
+  "visible_persistent_elements_count": 5,
+  "visible_persistent_keys": [
+    "top-left",
+    "top-right",
+    "task-card",
+    "ask-orbis",
+    "dr-orbis"
+  ],
+  "modal_count": 0,
+  "visible_modals": [],
+  "large_overlays": [],
+  "canvas_frame_count": 36,
+  "canvas_dimensions": {
+    "w": 768,
+    "h": 1024
+  },
+  "hud_area_percent": 16.6,
+  "scene_camera_yaw": 32.8,
+  "camera_distance": 4.545,
+  "character_world_position": {
+    "x": -3.85,
+    "y": 0,
+    "z": -2.85
+  },
+  "character_screen_position": {
+    "x": 384,
+    "y": 662
+  }
+}

@@ -1,0 +1,314 @@
+{
+  "scenario": "pk_ward_movement_proof",
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "modal_count": 0,
+  "yaws": {
+    "0": {
+      "before": {
+        "scenario": "pk_ward",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "visible_persistent_elements_count": 5,
+        "visible_persistent_keys": [
+          "top-left",
+          "top-right",
+          "task-card",
+          "ask-orbis",
+          "dr-orbis"
+        ],
+        "modal_count": 0,
+        "visible_modals": [],
+        "large_overlays": [],
+        "canvas_frame_count": 126,
+        "canvas_dimensions": {
+          "w": 1280,
+          "h": 720
+        },
+        "hud_area_percent": 13.1,
+        "scene_camera_yaw": 0,
+        "camera_distance": 2.298,
+        "character_world_position": {
+          "x": -4,
+          "y": 0,
+          "z": 0.2
+        },
+        "character_screen_position": {
+          "x": 640,
+          "y": 546
+        }
+      },
+      "after": {
+        "scenario": "pk_ward",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "visible_persistent_elements_count": 5,
+        "visible_persistent_keys": [
+          "top-left",
+          "top-right",
+          "task-card",
+          "ask-orbis",
+          "dr-orbis"
+        ],
+        "modal_count": 0,
+        "visible_modals": [],
+        "large_overlays": [],
+        "canvas_frame_count": 164,
+        "canvas_dimensions": {
+          "w": 1280,
+          "h": 720
+        },
+        "hud_area_percent": 13.1,
+        "scene_camera_yaw": 0,
+        "camera_distance": 3.318,
+        "character_world_position": {
+          "x": -4,
+          "y": 0,
+          "z": -1.6
+        },
+        "character_screen_position": {
+          "x": 640,
+          "y": 446
+        }
+      },
+      "camera_distance_delta": 1.02,
+      "screen_y_delta": 100,
+      "character_region_pixel_mae": 0.2026,
+      "passed": true
+    },
+    "90": {
+      "before": {
+        "scenario": "pk_ward",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "visible_persistent_elements_count": 5,
+        "visible_persistent_keys": [
+          "top-left",
+          "top-right",
+          "task-card",
+          "ask-orbis",
+          "dr-orbis"
+        ],
+        "modal_count": 0,
+        "visible_modals": [],
+        "large_overlays": [],
+        "canvas_frame_count": 205,
+        "canvas_dimensions": {
+          "w": 1280,
+          "h": 720
+        },
+        "hud_area_percent": 13.1,
+        "scene_camera_yaw": 90,
+        "camera_distance": 2.884,
+        "character_world_position": {
+          "x": -4,
+          "y": 0,
+          "z": 0.2
+        },
+        "character_screen_position": {
+          "x": 640,
+          "y": 508
+        }
+      },
+      "after": {
+        "scenario": "pk_ward",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "visible_persistent_elements_count": 5,
+        "visible_persistent_keys": [
+          "top-left",
+          "top-right",
+          "task-card",
+          "ask-orbis",
+          "dr-orbis"
+        ],
+        "modal_count": 0,
+        "visible_modals": [],
+        "large_overlays": [],
+        "canvas_frame_count": 243,
+        "canvas_dimensions": {
+          "w": 1280,
+          "h": 720
+        },
+        "hud_area_percent": 13.1,
+        "scene_camera_yaw": 90,
+        "camera_distance": 3.831,
+        "character_world_position": {
+          "x": -5.8,
+          "y": 0,
+          "z": 0.2
+        },
+        "character_screen_position": {
+          "x": 640,
+          "y": 449
+        }
+      },
+      "camera_distance_delta": 0.947,
+      "screen_y_delta": 59,
+      "character_region_pixel_mae": 0.1721,
+      "passed": true
+    },
+    "180": {
+      "before": {
+        "scenario": "pk_ward",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "visible_persistent_elements_count": 5,
+        "visible_persistent_keys": [
+          "top-left",
+          "top-right",
+          "task-card",
+          "ask-orbis",
+          "dr-orbis"
+        ],
+        "modal_count": 0,
+        "visible_modals": [],
+        "large_overlays": [],
+        "canvas_frame_count": 284,
+        "canvas_dimensions": {
+          "w": 1280,
+          "h": 720
+        },
+        "hud_area_percent": 13.1,
+        "scene_camera_yaw": 180,
+        "camera_distance": 2.884,
+        "character_world_position": {
+          "x": -4,
+          "y": 0,
+          "z": 0.2
+        },
+        "character_screen_position": {
+          "x": 640,
+          "y": 508
+        }
+      },
+      "after": {
+        "scenario": "pk_ward",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "visible_persistent_elements_count": 5,
+        "visible_persistent_keys": [
+          "top-left",
+          "top-right",
+          "task-card",
+          "ask-orbis",
+          "dr-orbis"
+        ],
+        "modal_count": 0,
+        "visible_modals": [],
+        "large_overlays": [],
+        "canvas_frame_count": 322,
+        "canvas_dimensions": {
+          "w": 1280,
+          "h": 720
+        },
+        "hud_area_percent": 13.1,
+        "scene_camera_yaw": 180,
+        "camera_distance": 3.702,
+        "character_world_position": {
+          "x": -4,
+          "y": 0,
+          "z": 1.64
+        },
+        "character_screen_position": {
+          "x": 640,
+          "y": 465
+        }
+      },
+      "camera_distance_delta": 0.818,
+      "screen_y_delta": 43,
+      "character_region_pixel_mae": 0.1445,
+      "passed": true
+    },
+    "270": {
+      "before": {
+        "scenario": "pk_ward",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "visible_persistent_elements_count": 5,
+        "visible_persistent_keys": [
+          "top-left",
+          "top-right",
+          "task-card",
+          "ask-orbis",
+          "dr-orbis"
+        ],
+        "modal_count": 0,
+        "visible_modals": [],
+        "large_overlays": [],
+        "canvas_frame_count": 363,
+        "canvas_dimensions": {
+          "w": 1280,
+          "h": 720
+        },
+        "hud_area_percent": 13.1,
+        "scene_camera_yaw": 270,
+        "camera_distance": 2.884,
+        "character_world_position": {
+          "x": -4,
+          "y": 0,
+          "z": 0.2
+        },
+        "character_screen_position": {
+          "x": 640,
+          "y": 508
+        }
+      },
+      "after": {
+        "scenario": "pk_ward",
+        "viewport": {
+          "width": 1280,
+          "height": 720
+        },
+        "visible_persistent_elements_count": 5,
+        "visible_persistent_keys": [
+          "top-left",
+          "top-right",
+          "task-card",
+          "ask-orbis",
+          "dr-orbis"
+        ],
+        "modal_count": 0,
+        "visible_modals": [],
+        "large_overlays": [],
+        "canvas_frame_count": 401,
+        "canvas_dimensions": {
+          "w": 1280,
+          "h": 720
+        },
+        "hud_area_percent": 13.1,
+        "scene_camera_yaw": 270,
+        "camera_distance": 3.831,
+        "character_world_position": {
+          "x": -2.2,
+          "y": 0,
+          "z": 0.2
+        },
+        "character_screen_position": {
+          "x": 640,
+          "y": 449
+        }
+      },
+      "camera_distance_delta": 0.947,
+      "screen_y_delta": 59,
+      "character_region_pixel_mae": 0.1587,
+      "passed": true
+    }
+  }
+}

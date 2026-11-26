@@ -1,0 +1,13 @@
+{
+  "scenario": "pk_ward_baseline_defect",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "visible_persistent_elements_count": 9,
+  "modal_count": 0,
+  "canvas_frame_count": 35,
+  "hud_area_percent": 42.5,
+  "scene_camera_yaw": 0.0,
+  "description": "Baseline commit 3d60be7 with legacy 9 competing persistent HUD panels covering 3D scene"
+}
