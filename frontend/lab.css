@@ -4982,6 +4982,43 @@ body.has-offline-banner .hud-top-right {
   white-space: nowrap;
 }
 
+.space-scene-loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 10px;
+  padding: 10px 18px;
+  color: #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.space-scene-loading.hidden {
+  display: none !important;
+}
+
+.space-loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(56, 189, 248, 0.25);
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  animation: spaceSpin 0.8s linear infinite;
+}
+
+@keyframes spaceSpin {
+  to { transform: rotate(360deg); }
+}
+
 .hud-coachmarks-overlay {
   position: fixed;
   inset: 0;

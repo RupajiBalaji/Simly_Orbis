@@ -96,6 +96,7 @@ export class SpaceScene {
   }
 
   init() {
+    this.buildLighting();
     this.buildStarfield();
     this.buildLaunchPad();
     this.buildRocketModel();
@@ -104,9 +105,46 @@ export class SpaceScene {
     this.group.visible = false;
   }
 
+  buildLighting() {
+    // Space Scene Sun & Diffuse Lighting (PBR lighting required when roomGroup is hidden)
+    const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    sunLight.position.set(30, 50, 40);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 1024;
+    sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.camera.near = 1.0;
+    sunLight.shadow.camera.far = 200;
+    sunLight.shadow.camera.left = -30;
+    sunLight.shadow.camera.right = 30;
+    sunLight.shadow.camera.top = 30;
+    sunLight.shadow.camera.bottom = -30;
+    this.group.add(sunLight);
+
+    const hemiLight = new THREE.HemisphereLight(0x93c5fd, 0x0f172a, 1.4);
+    hemiLight.position.set(0, 50, 0);
+    this.group.add(hemiLight);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    this.group.add(ambientLight);
+  }
+
   activate() {
     this.active = true;
     this.group.visible = true;
+    this.renderedFrames = 0;
+
+    // Deep space background and disable indoor lab fog so pad/rocket/orbit are crisp
+    if (this.parentScene) {
+      this._prevBackground = this.parentScene.background;
+      this._prevFog = this.parentScene.fog;
+      this.parentScene.background = new THREE.Color(0x050b1a);
+      this.parentScene.fog = null;
+    }
+
+    // Show loading indicator until initial 3D frames render
+    const loadingEl = document.getElementById('space-scene-loading');
+    if (loadingEl) loadingEl.classList.remove('hidden');
+
     // Show rocket button in HUD top-left
     const rocketBtn = document.getElementById('btn-toggle-rocket-drawer');
     if (rocketBtn) {
@@ -134,6 +172,12 @@ export class SpaceScene {
   deactivate() {
     this.active = false;
     this.group.visible = false;
+    if (this.parentScene) {
+      if (this._prevBackground !== undefined) this.parentScene.background = this._prevBackground;
+      if (this._prevFog !== undefined) this.parentScene.fog = this._prevFog;
+    }
+    const loadingEl = document.getElementById('space-scene-loading');
+    if (loadingEl) loadingEl.classList.add('hidden');
     const rocketBtn = document.getElementById('btn-toggle-rocket-drawer');
     if (rocketBtn) {
       rocketBtn.classList.add('hidden');
@@ -1365,6 +1409,13 @@ export class SpaceScene {
 
   update(dt) {
     if (!this.active) return;
+    this.renderedFrames = (this.renderedFrames || 0) + 1;
+    if (this.renderedFrames >= 3) {
+      const loadingEl = document.getElementById('space-scene-loading');
+      if (loadingEl && !loadingEl.classList.contains('hidden')) {
+        loadingEl.classList.add('hidden');
+      }
+    }
     this.flightTime += dt;
     this.updateParticles(dt);
 

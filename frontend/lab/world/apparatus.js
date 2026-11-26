@@ -302,6 +302,12 @@ export function buildApparatus(rawApparatus, scene) {
       group = buildDebriefStation(id);
       group.position.set(4.8, 0.94, -3.8);
       group.userData.stationPos = new THREE.Vector3(4.2, 0, -2.8);
+    } else if (
+      ['launch_pad', 'rocket', 'propellant_tanks', 'range_control', 'flight_computer', 'tracking_station'].includes(id) ||
+      ['launch_pad', 'rocket', 'propellant_tanks', 'range_control', 'flight_computer', 'tracking_station'].includes(type)
+    ) {
+      // Built and registered by SpaceScene.init() / activate()
+      return;
     } else {
       console.warn(`Unmapped apparatus: id='${id}', type='${type}'`);
     }

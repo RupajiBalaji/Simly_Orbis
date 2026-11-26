@@ -492,6 +492,11 @@
        SCREEN 3: 3D LAB IN-GAME HUD OVERLAY (5 PERSISTENT ELEMENTS)
        ═════════════════════════════════════════════════════════════════════ -->
   <div id="lab-hud" class="hidden">
+    <!-- Space Scene Loading Indicator (U6) -->
+    <div class="space-scene-loading hidden" id="space-scene-loading" role="status" aria-live="polite">
+      <div class="space-loading-spinner" aria-hidden="true"></div>
+      <span class="space-loading-text">Loading Launch &amp; Orbit Bench 3D...</span>
+    </div>
     <!-- PERSISTENT 1: Top-Left Title, Step Progress & Menu Button -->
     <header class="hud-top-left" id="hud-top-left" data-hud-persistent="top-left">
       <button type="button" class="btn-hud-menu" id="btn-open-menu" aria-label="Open Simulation Menu" title="Simulation Menu">☰ Menu</button>

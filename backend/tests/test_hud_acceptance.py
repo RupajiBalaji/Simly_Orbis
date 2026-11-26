@@ -344,6 +344,32 @@ def test_first_run_flow_pulse_and_help_explanation():
     assert len(matches) == 5
 
 
+def test_launch_bench_3d_lighting_apparatus_and_loader():
+    """
+    Verify U6 requirements:
+    1. SpaceScene builds its own PBR lighting (DirectionalLight, HemisphereLight, AmbientLight)
+       so the 3D scene is not black when roomGroup is hidden.
+    2. apparatus.js handles the 6 space apparatus IDs without unmapped warnings.
+    3. Loading indicator (#space-scene-loading) exists and is dismissed after rendering frames.
+    """
+    index_content = INDEX_HTML.read_text(encoding="utf-8")
+    css_content = LAB_CSS.read_text(encoding="utf-8")
+    space_js = (REPO_ROOT / "frontend" / "lab" / "world" / "space_scene.js").read_text(encoding="utf-8")
+    apparatus_js = (REPO_ROOT / "frontend" / "lab" / "world" / "apparatus.js").read_text(encoding="utf-8")
+
+    assert "buildLighting" in space_js
+    assert "THREE.DirectionalLight" in space_js
+    assert "THREE.HemisphereLight" in space_js
+    assert "THREE.AmbientLight" in space_js
+
+    for app_id in ["launch_pad", "rocket", "propellant_tanks", "range_control", "flight_computer", "tracking_station"]:
+        assert app_id in apparatus_js
+
+    assert 'id="space-scene-loading"' in index_content
+    assert ".space-scene-loading" in css_content
+    assert "space-scene-loading" in space_js
+
+
 @pytest.mark.browser
 def test_browser_hud_clean_and_interactive():
     """Playwright E2E verification of clean HUD (skipped unless --browser or RUN_BROWSER_TESTS=1)."""
