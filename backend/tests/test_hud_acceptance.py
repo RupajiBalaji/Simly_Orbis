@@ -31,10 +31,10 @@ def test_hud_persistent_element_count():
     assert set(matches) == expected_keys, f"Persistent elements mismatch: {set(matches)} vs {expected_keys}"
 
 
-def compute_hud_element_bounds(viewport_w: int, viewport_h: int):
+def compute_hud_element_bounds(viewport_w: int, viewport_h: int, include_context_prompt: bool = True):
     """
     Computes theoretical bounding boxes (left, top, right, bottom) of the 5 persistent HUD elements
-    based on the CSS specification.
+    plus the floating context prompt (U2) based on the CSS specification.
     """
     is_mobile = viewport_w <= 600
 
@@ -47,6 +47,13 @@ def compute_hud_element_bounds(viewport_w: int, viewport_h: int):
         task_card = (task_left, viewport_h - 180, task_left + task_w, viewport_h - 70)
         ask_orbis = (8, viewport_h - 60, 140, viewport_h - 12)
         dr_orbis = (viewport_w - 56, viewport_h - 58, viewport_w - 8, viewport_h - 12)
+
+        prompt_w = 160
+        prompt_h = 36
+        prompt_left = (viewport_w - prompt_w) // 2
+        prompt_bot = viewport_h - 195
+        prompt_top = prompt_bot - prompt_h
+        context_prompt = (prompt_left, prompt_top, prompt_left + prompt_w, prompt_bot)
     else:
         # Desktop / Tablet
         tl_w = min(360, int(viewport_w * 0.3))
@@ -69,13 +76,24 @@ def compute_hud_element_bounds(viewport_w: int, viewport_h: int):
         ask_orbis = (16, viewport_h - 18 - 42, 16 + 130, viewport_h - 18)
         dr_orbis = (viewport_w - 16 - 44, viewport_h - 18 - 44, viewport_w - 16, viewport_h - 18)
 
-    return {
+        prompt_w = 180
+        prompt_h = 36
+        prompt_left = (viewport_w - prompt_w) // 2
+        prompt_bot = viewport_h - 185
+        prompt_top = prompt_bot - prompt_h
+        context_prompt = (prompt_left, prompt_top, prompt_left + prompt_w, prompt_bot)
+
+    bounds = {
         "top-left": top_left,
         "top-right": top_right,
         "task-card": task_card,
         "ask-orbis": ask_orbis,
         "dr-orbis": dr_orbis,
     }
+    if include_context_prompt:
+        bounds["context-prompt"] = context_prompt
+
+    return bounds
 
 
 def boxes_overlap(b1, b2) -> bool:

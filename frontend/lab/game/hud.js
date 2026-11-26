@@ -553,10 +553,27 @@ export class LabHUD {
 
     if (closestStation) {
       this.currentProximityStation = closestStation;
+      const session = state.session;
+      const progress = session?.protocol_progress || [];
+      const protocol = state.experiment?.protocol || [];
+      const nextStep = protocol.find((s) => !progress.includes(s.id));
+      const stepTarget = nextStep ? window.actionMenu?.mapStepToApparatus(nextStep.id) : null;
+      const isStepTarget = !stepTarget || stepTarget === closestStation.id;
+
       if (this.proximityPromptEl) {
         this.proximityPromptEl.classList.remove('hidden');
-        if (this.proximityPromptLabel) {
-          this.proximityPromptLabel.textContent = `Use ${closestStation.name}`;
+        if (isStepTarget) {
+          // Direct step target: show full prompt
+          this.proximityPromptEl.classList.remove('compact-hint');
+          if (this.proximityPromptLabel) {
+            this.proximityPromptLabel.textContent = `Use ${closestStation.name}`;
+          }
+        } else {
+          // Non-conflicting secondary station: show compact key hint
+          this.proximityPromptEl.classList.add('compact-hint');
+          if (this.proximityPromptLabel) {
+            this.proximityPromptLabel.textContent = `[E] ${closestStation.name}`;
+          }
         }
       }
     } else {
