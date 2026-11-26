@@ -107,10 +107,13 @@ export class SpaceScene {
   activate() {
     this.active = true;
     this.group.visible = true;
+    // Keep telemetry drawer collapsed by default to preserve 5-element persistent HUD budget
     if (this.hudElement) {
-      this.hudElement.style.display = 'flex';
+      this.hudElement.style.display = 'none';
+      this.hudElement.classList.add('hidden');
     }
     this.setViewMode('pad', true);
+    this.wireMenuAndTaskCardControls();
   }
 
   deactivate() {
@@ -118,6 +121,7 @@ export class SpaceScene {
     this.group.visible = false;
     if (this.hudElement) {
       this.hudElement.style.display = 'none';
+      this.hudElement.classList.add('hidden');
     }
   }
 
@@ -880,7 +884,7 @@ export class SpaceScene {
   }
 
   // ---------------------------------------------------------------------------
-  // 5. Space HUD Overlay
+  // 5. Space HUD Overlay (Collapsible Telemetry Drawer)
   // ---------------------------------------------------------------------------
 
   buildHUD() {
@@ -888,22 +892,99 @@ export class SpaceScene {
     if (!container) {
       container = document.createElement('div');
       container.id = 'space-hud-container';
+      container.className = 'space-telemetry-drawer hidden';
+      container.setAttribute('role', 'region');
+      container.setAttribute('aria-label', 'Launch Bench Telemetry and Sliders Drawer');
       container.style.cssText = `
         position: absolute;
-        top: 60px;
-        left: 20px;
-        right: 20px;
+        top: 70px;
+        left: 16px;
+        width: 320px;
+        max-height: calc(100vh - 140px);
+        overflow-y: auto;
         display: none;
-        justify-content: space-between;
-        align-items: flex-start;
-        pointer-events: none;
-        z-index: 50;
+        flex-direction: column;
+        gap: 8px;
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        border-radius: 8px;
+        padding: 12px 14px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+        z-index: 60;
+        pointer-events: auto;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
       `;
       document.body.appendChild(container);
     }
     this.hudElement = container;
     this.renderHUDContent();
+  }
+
+  toggleTelemetryDrawer(forceState = null) {
+    if (!this.hudElement) return;
+    const isCurrentlyOpen = this.hudElement.style.display === 'flex';
+    const shouldOpen = forceState !== null ? forceState : !isCurrentlyOpen;
+    this.hudElement.style.display = shouldOpen ? 'flex' : 'none';
+    if (shouldOpen) {
+      this.hudElement.classList.remove('hidden');
+    } else {
+      this.hudElement.classList.add('hidden');
+    }
+  }
+
+  wireMenuAndTaskCardControls() {
+    // Space View Presets inside Menu Drawer
+    const btnPad = document.getElementById('btn-view-pad');
+    if (btnPad) {
+      btnPad.onclick = () => {
+        this.setViewMode('pad', false);
+        window.hud?.closeMenuDrawer?.();
+      };
+    }
+    const btnOrbit = document.getElementById('btn-view-orbit');
+    if (btnOrbit) {
+      btnOrbit.onclick = () => {
+        this.setViewMode('orbit', false);
+        window.hud?.closeMenuDrawer?.();
+      };
+    }
+    const btnPolar = document.getElementById('btn-view-polar');
+    if (btnPolar) {
+      btnPolar.onclick = () => {
+        this.setViewMode('polar', false);
+        window.hud?.closeMenuDrawer?.();
+      };
+    }
+    const btnEquat = document.getElementById('btn-view-equatorial');
+    if (btnEquat) {
+      btnEquat.onclick = () => {
+        this.setViewMode('equatorial', false);
+        window.hud?.closeMenuDrawer?.();
+      };
+    }
+
+    const btnToggleMenu = document.getElementById('btn-toggle-space-telemetry-menu');
+    if (btnToggleMenu) {
+      btnToggleMenu.onclick = () => {
+        window.hud?.closeMenuDrawer?.();
+        this.toggleTelemetryDrawer();
+      };
+    }
+
+    // Also inject toggle button into Current Task Card actions or more actions list if available
+    const moreActionsList = document.getElementById('hud-more-actions-list');
+    if (moreActionsList && !document.getElementById('btn-more-space-telemetry')) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = 'btn-more-space-telemetry';
+      btn.className = 'menu-action-btn';
+      btn.textContent = '📊 Launch Telemetry & Sliders';
+      btn.onclick = () => {
+        document.getElementById('hud-more-actions-drawer')?.classList.add('hidden');
+        this.toggleTelemetryDrawer();
+      };
+      moreActionsList.prepend(btn);
+    }
   }
 
   getFailureExplanation(failureType) {
@@ -946,126 +1027,110 @@ export class SpaceScene {
     const isFailed = Boolean(this.activeFailureMode || this.flightState === 'failed');
 
     this.hudElement.innerHTML = `
-      <!-- Left Column: Telemetry & Parameter Sliders -->
-      <div style="display: flex; flex-direction: column; gap: 8px; max-width: 320px; pointer-events: auto;">
-        <!-- Telemetry Card -->
-        <div style="background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 12px 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
-            <span style="font-weight: 700; color: #38bdf8; font-size: 0.85rem; letter-spacing: 0.05em;">🚀 LAUNCH BENCH TELEMETRY</span>
-            <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: ${marginClass}22; color: ${marginClass}; font-weight: 600;">
-              STAGE ${t.current_stage}
-            </span>
-          </div>
-          
-          <!-- Delta-V Budget Bar -->
-          <div id="space-deltav-bar-container" style="margin-bottom: 8px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 2px;">
-              <span>Delta-V Budget</span>
-              <span style="font-family: monospace; color: #f8fafc;">${t.available_dv.toFixed(0)} / ${t.required_dv.toFixed(0)} m/s</span>
-            </div>
-            <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
-              <div id="space-deltav-progress" style="background: ${marginClass}; width: ${dvPct}%; height: 100%; transition: width 0.3s ease;"></div>
-            </div>
-            <div style="display: flex; justify-content: flex-end; font-size: 0.7rem; color: ${marginClass}; margin-top: 2px; font-weight: 600;">
-              Reserve Margin: ${t.margin_pct >= 0 ? '+' : ''}${t.margin_pct.toFixed(1)}%
-            </div>
-          </div>
+      <!-- Drawer Header with Title and Close Button -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; margin-bottom: 4px;">
+        <span style="font-weight: 700; color: #38bdf8; font-size: 0.85rem; letter-spacing: 0.05em;">🚀 LAUNCH TELEMETRY &amp; SLIDERS</span>
+        <button id="btn-close-space-drawer" type="button" aria-label="Close Telemetry Drawer" style="background: transparent; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer; padding: 2px 6px;">✕</button>
+      </div>
 
-          <!-- Readouts Grid -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.75rem;">
-            <div style="background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
-              <span style="color: #64748b; font-size: 0.68rem; display: block;">LIFTOFF TWR</span>
-              <span style="font-family: monospace; font-weight: 600; color: ${t.twr >= 1.0 ? '#38bdf8' : '#ef4444'};">${t.twr.toFixed(2)}</span>
-            </div>
-            <div style="background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
-              <span style="color: #64748b; font-size: 0.68rem; display: block;">SPEED</span>
-              <span style="font-family: monospace; font-weight: 600; color: #f8fafc;">${t.velocity_kms.toFixed(2)} km/s</span>
-            </div>
-            <div style="background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
-              <span style="color: #64748b; font-size: 0.68rem; display: block;">PERIAPSIS</span>
-              <span style="font-family: monospace; font-weight: 600; color: #f8fafc;">${t.periapsis_km.toFixed(0)} km</span>
-            </div>
-            <div style="background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
-              <span style="color: #64748b; font-size: 0.68rem; display: block;">APOAPSIS</span>
-              <span style="font-family: monospace; font-weight: 600; color: #f8fafc;">${t.apoapsis_km.toFixed(0)} km</span>
-            </div>
+      <!-- Telemetry Card -->
+      <div style="background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 8px; padding: 12px 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
+          <span style="font-weight: 700; color: #38bdf8; font-size: 0.82rem; letter-spacing: 0.05em;">FLIGHT TELEMETRY</span>
+          <span style="font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; background: ${marginClass}22; color: ${marginClass}; font-weight: 600;">
+            STAGE ${t.current_stage}
+          </span>
+        </div>
+        
+        <!-- Delta-V Budget Bar -->
+        <div id="space-deltav-bar-container" style="margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 2px;">
+            <span>Delta-V Budget</span>
+            <span style="font-family: monospace; color: #f8fafc;">${t.available_dv.toFixed(0)} / ${t.required_dv.toFixed(0)} m/s</span>
+          </div>
+          <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+            <div id="space-deltav-progress" style="background: ${marginClass}; width: ${dvPct}%; height: 100%; transition: width 0.3s ease;"></div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; font-size: 0.7rem; color: ${marginClass}; margin-top: 2px; font-weight: 600;">
+            Reserve Margin: ${t.margin_pct >= 0 ? '+' : ''}${t.margin_pct.toFixed(1)}%
           </div>
         </div>
 
-        <!-- Parameter Sliders Card -->
-        <div id="space-sliders-panel" style="background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 10px 14px;">
-          <div style="font-size: 0.75rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 3px;">
-            ⚙️ PARAMETER BOUNDS & SLIDERS
+        <!-- Readouts Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.75rem;">
+          <div style="background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
+            <span style="color: #64748b; font-size: 0.68rem; display: block;">LIFTOFF TWR</span>
+            <span style="font-family: monospace; font-weight: 600; color: ${t.twr >= 1.0 ? '#38bdf8' : '#ef4444'};">${t.twr.toFixed(2)}</span>
           </div>
-          
-          <!-- Altitude Slider -->
-          <div style="margin-bottom: 6px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8;">
-              <span>Target Altitude</span>
-              <span id="label-target-alt" style="color: #38bdf8; font-family: monospace;">200 km</span>
-            </div>
-            <input type="range" id="slider-target-alt" min="150" max="36000" step="50" value="200" style="width: 100%; accent-color: #38bdf8; height: 4px; cursor: pointer;">
+          <div style="background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
+            <span style="color: #64748b; font-size: 0.68rem; display: block;">SPEED</span>
+            <span style="font-family: monospace; font-weight: 600; color: #f8fafc;">${t.velocity_kms.toFixed(2)} km/s</span>
           </div>
-
-          <!-- Payload Mass Slider -->
-          <div style="margin-bottom: 6px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8;">
-              <span>Payload Mass</span>
-              <span id="label-payload-mass" style="color: #38bdf8; font-family: monospace;">500 kg</span>
-            </div>
-            <input type="range" id="slider-payload-mass" min="50" max="2000" step="10" value="500" style="width: 100%; accent-color: #38bdf8; height: 4px; cursor: pointer;">
+          <div style="background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
+            <span style="color: #64748b; font-size: 0.68rem; display: block;">PERIAPSIS</span>
+            <span style="font-family: monospace; font-weight: 600; color: #f8fafc;">${t.periapsis_km.toFixed(0)} km</span>
           </div>
-
-          <!-- Propellant Load Slider -->
-          <div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8;">
-              <span>Propellant Load</span>
-              <span id="label-fuel-ratio" style="color: #38bdf8; font-family: monospace;">100%</span>
-            </div>
-            <input type="range" id="slider-fuel-ratio" min="50" max="100" step="1" value="100" style="width: 100%; accent-color: #38bdf8; height: 4px; cursor: pointer;">
-          </div>
-        </div>
-
-        <!-- 'Why It Failed' Panel (Written from Engine Values) -->
-        <div id="space-failure-panel" style="display: ${isFailed ? 'block' : 'none'}; background: rgba(239, 68, 68, 0.12); border: 1px solid #ef4444; border-radius: 8px; padding: 10px 14px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);">
-          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-            <span style="font-size: 0.9rem;">⚠️</span>
-            <span style="color: #ef4444; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.04em;">MISSION ANOMALY INVESTIGATION</span>
-          </div>
-          <div id="space-failure-explanation" style="font-size: 0.72rem; color: #f8fafc; line-height: 1.35; margin-bottom: 6px;">
-            ${this.getFailureExplanation(this.activeFailureMode)}
-          </div>
-          <div id="space-failure-remedy" style="font-size: 0.7rem; color: #cbd5e1; border-top: 1px solid rgba(239, 68, 68, 0.3); padding-top: 4px;">
-            ${this.getFailureRemedy(this.activeFailureMode)}
+          <div style="background: rgba(255,255,255,0.03); padding: 4px 6px; border-radius: 4px;">
+            <span style="color: #64748b; font-size: 0.68rem; display: block;">APOAPSIS</span>
+            <span style="font-family: monospace; font-weight: 600; color: #f8fafc;">${t.apoapsis_km.toFixed(0)} km</span>
           </div>
         </div>
       </div>
 
-      <!-- Right Column: Orbit View Controls -->
-      <div id="space-view-controls" style="display: flex; flex-direction: column; gap: 6px; pointer-events: auto; align-items: flex-end;">
-        <button id="space-view-toggle-btn" type="button" style="
-          background: rgba(15, 23, 42, 0.92);
-          border: 1px solid rgba(56, 189, 248, 0.4);
-          color: #38bdf8;
-          padding: 8px 14px;
-          border-radius: 6px;
-          font-weight: 600;
-          font-size: 0.8rem;
-          cursor: pointer;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          transition: all 0.2s ease;
-        ">
-          🛰️ Switch to Orbit View
-        </button>
+      <!-- Parameter Sliders Card -->
+      <div id="space-sliders-panel" style="background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 10px 14px;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: #cbd5e1; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 3px;">
+          ⚙️ PARAMETER BOUNDS &amp; SLIDERS
+        </div>
+        
+        <!-- Altitude Slider -->
+        <div style="margin-bottom: 6px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8;">
+            <span>Target Altitude</span>
+            <span id="label-target-alt" style="color: #38bdf8; font-family: monospace;">200 km</span>
+          </div>
+          <input type="range" id="slider-target-alt" min="150" max="36000" step="50" value="200" style="width: 100%; accent-color: #38bdf8; height: 4px; cursor: pointer;">
+        </div>
 
-        <div style="display: flex; gap: 4px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 3px;">
-          <button id="btn-view-pad" type="button" style="background: transparent; border: none; color: #94a3b8; padding: 4px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;">Pad</button>
-          <button id="btn-view-orbit" type="button" style="background: transparent; border: none; color: #94a3b8; padding: 4px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;">Orbit</button>
-          <button id="btn-view-polar" type="button" style="background: transparent; border: none; color: #94a3b8; padding: 4px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;">Polar</button>
-          <button id="btn-view-equatorial" type="button" style="background: transparent; border: none; color: #94a3b8; padding: 4px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px;">Equator</button>
+        <!-- Payload Mass Slider -->
+        <div style="margin-bottom: 6px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8;">
+            <span>Payload Mass</span>
+            <span id="label-payload-mass" style="color: #38bdf8; font-family: monospace;">500 kg</span>
+          </div>
+          <input type="range" id="slider-payload-mass" min="50" max="2000" step="10" value="500" style="width: 100%; accent-color: #38bdf8; height: 4px; cursor: pointer;">
+        </div>
+
+        <!-- Propellant Load Slider -->
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #94a3b8;">
+            <span>Propellant Load</span>
+            <span id="label-fuel-ratio" style="color: #38bdf8; font-family: monospace;">100%</span>
+          </div>
+          <input type="range" id="slider-fuel-ratio" min="50" max="100" step="1" value="100" style="width: 100%; accent-color: #38bdf8; height: 4px; cursor: pointer;">
+        </div>
+      </div>
+
+      <!-- 'Why It Failed' Panel (Written from Engine Values) -->
+      <div id="space-failure-panel" style="display: ${isFailed ? 'block' : 'none'}; background: rgba(239, 68, 68, 0.12); border: 1px solid #ef4444; border-radius: 8px; padding: 10px 14px; box-shadow: 0 4px 16px rgba(239, 68, 68, 0.2);">
+        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+          <span style="font-size: 0.9rem;">⚠️</span>
+          <span style="color: #ef4444; font-weight: 700; font-size: 0.78rem; letter-spacing: 0.04em;">MISSION ANOMALY INVESTIGATION</span>
+        </div>
+        <div id="space-failure-explanation" style="font-size: 0.72rem; color: #f8fafc; line-height: 1.35; margin-bottom: 6px;">
+          ${this.getFailureExplanation(this.activeFailureMode)}
+        </div>
+        <div id="space-failure-remedy" style="font-size: 0.7rem; color: #cbd5e1; border-top: 1px solid rgba(239, 68, 68, 0.3); padding-top: 4px;">
+          ${this.getFailureRemedy(this.activeFailureMode)}
         </div>
       </div>
     `;
+
+    // Bind Close Button
+    const btnClose = document.getElementById('btn-close-space-drawer');
+    if (btnClose) {
+      btnClose.onclick = () => this.toggleTelemetryDrawer(false);
+    }
 
     // Bind Toggle Button
     const btnToggle = document.getElementById('space-view-toggle-btn');

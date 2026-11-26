@@ -768,6 +768,15 @@ export class LabHUD {
 
   openMenuDrawer() {
     if (this.menuDrawer) {
+      const spaceViewsSection = document.getElementById('menu-section-space-views');
+      if (spaceViewsSection) {
+        const isSpace = (state.experiment?.id === 'launch_bench');
+        if (isSpace) {
+          spaceViewsSection.classList.remove('hidden');
+        } else {
+          spaceViewsSection.classList.add('hidden');
+        }
+      }
       this.menuDrawer.classList.remove('hidden');
       soundFX.playClick();
     }

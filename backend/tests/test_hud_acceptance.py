@@ -158,6 +158,94 @@ def test_first_valid_action_in_two_clicks():
     assert 'id="btn-task-go-station"' in content
 
 
+# -----------------------------------------------------------------------------
+# Launch & Orbit Bench HUD Acceptance Tests (Q2 Requirement)
+# -----------------------------------------------------------------------------
+
+def test_launch_bench_hud_encapsulation_and_persistent_element_budget():
+    """
+    Verify Launch & Orbit Bench brings telemetry, sliders and orbit view controls
+    inside the 5-persistent-element budget:
+    - Exactly 5 persistent elements on screen (top-left, top-right, task-card, ask-orbis, dr-orbis).
+    - Orbit view controls (Pad, Orbit, Polar, Equatorial) are encapsulated inside the Menu Drawer.
+    - Telemetry and parameter sliders are encapsulated in a collapsible side drawer (hidden by default).
+    """
+    index_content = INDEX_HTML.read_text(encoding="utf-8")
+    space_scene_js = (REPO_ROOT / "frontend" / "lab" / "world" / "space_scene.js").read_text(encoding="utf-8")
+
+    # 1. Menu drawer contains space views
+    assert 'id="menu-section-space-views"' in index_content
+    assert 'id="btn-view-pad"' in index_content
+    assert 'id="btn-view-orbit"' in index_content
+    assert 'id="btn-view-polar"' in index_content
+    assert 'id="btn-view-equatorial"' in index_content
+
+    # 2. Telemetry and sliders are encapsulated inside a collapsible drawer, not persistent overlay
+    assert "space-telemetry-drawer hidden" in space_scene_js
+    assert "btn-close-space-drawer" in space_scene_js
+    assert "toggleTelemetryDrawer" in space_scene_js
+
+    # 3. On activation, telemetry drawer starts collapsed (hidden) to satisfy the 5-element persistent budget
+    assert "this.hudElement.style.display = 'none'" in space_scene_js
+
+
+@pytest.mark.parametrize(
+    "viewport_w, viewport_h",
+    [
+        (1920, 1080),  # Full HD Desktop
+        (1366, 768),   # Standard Laptop
+        (1280, 720),   # Compact HD Laptop
+        (768, 1024),   # Tablet Portrait
+        (390, 844),    # Mobile
+    ],
+)
+def test_launch_bench_hud_viewport_geometry_and_non_overlapping(viewport_w: int, viewport_h: int):
+    """
+    Verify that Launch Bench HUD satisfies the non-overlapping bounding box contract
+    across all five target viewports.
+    """
+    bounds = compute_hud_element_bounds(viewport_w, viewport_h)
+
+    # 1. Bounds remain inside viewport
+    for name, (l, t, r, b) in bounds.items():
+        assert l >= 0 and t >= 0 and r <= viewport_w and b <= viewport_h
+
+    # 2. No pairwise collisions
+    keys = list(bounds.keys())
+    for i in range(len(keys)):
+        for j in range(i + 1, len(keys)):
+            k1, k2 = keys[i], keys[j]
+            assert not boxes_overlap(bounds[k1], bounds[k2]), (
+                f"Collision detected on Launch Bench between {k1} and {k2} at {viewport_w}x{viewport_h}"
+            )
+
+
+@pytest.mark.parametrize(
+    "viewport_w, viewport_h",
+    [
+        (1920, 1080),
+        (1366, 768),
+        (1280, 720),
+        (768, 1024),
+        (390, 844),
+    ],
+)
+def test_launch_bench_hud_area_coverage_budget(viewport_w: int, viewport_h: int):
+    """
+    Verify Launch Bench persistent HUD area coverage is <= 30% across all viewports
+    (>= 70% 3D space scene visibility).
+    """
+    total_screen_area = viewport_w * viewport_h
+    bounds = compute_hud_element_bounds(viewport_w, viewport_h)
+
+    hud_area = sum((r - l) * (b - t) for l, t, r, b in bounds.values())
+    hud_pct = (hud_area / total_screen_area) * 100.0
+    scene_pct = 100.0 - hud_pct
+
+    assert hud_pct <= 30.0, f"Launch Bench HUD area {hud_pct:.2f}% exceeds 30% limit at {viewport_w}x{viewport_h}"
+    assert scene_pct >= 70.0, f"Launch Bench scene area {scene_pct:.2f}% below 70% at {viewport_w}x{viewport_h}"
+
+
 @pytest.mark.browser
 def test_browser_hud_clean_and_interactive():
     """Playwright E2E verification of clean HUD (skipped unless --browser or RUN_BROWSER_TESTS=1)."""
