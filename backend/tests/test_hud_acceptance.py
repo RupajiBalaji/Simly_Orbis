@@ -264,6 +264,54 @@ def test_launch_bench_hud_area_coverage_budget(viewport_w: int, viewport_h: int)
     assert scene_pct >= 70.0, f"Launch Bench scene area {scene_pct:.2f}% below 70% at {viewport_w}x{viewport_h}"
 
 
+def test_educational_disclaimer_spec_and_non_overlap():
+    """
+    Verify U4 requirements:
+    1. Educational disclaimer is styled at >= 12px with contrast >= 4.5:1.
+    2. Available in the Menu footer with info icon and top-left 'i' button.
+    3. Never overlaps the Current Task card across viewports.
+    """
+    index_content = INDEX_HTML.read_text(encoding="utf-8")
+    css_content = LAB_CSS.read_text(encoding="utf-8")
+
+    # 1. Menu footer and top-left 'i' button
+    assert 'id="btn-hud-info"' in index_content
+    assert "disclaimer-text" in index_content
+    assert "ℹ️" in index_content
+
+    # 2. Font size >= 12px in lab.css
+    match_size = re.search(r'\.educational-disclaimer-strip\s*\{[^}]*font-size:\s*(\d+)px', css_content)
+    assert match_size is not None, "Missing pixel font size on .educational-disclaimer-strip"
+    font_size_px = int(match_size.group(1))
+    assert font_size_px >= 12, f"Disclaimer font-size {font_size_px}px is less than 12px requirement"
+
+    # 3. Contrast calculation for #cbd5e1 on dark container #0f172a
+    def calc_luminance(r, g, b):
+        def chan(c):
+            c_norm = c / 255.0
+            return c_norm / 12.92 if c_norm <= 0.03928 else ((c_norm + 0.055) / 1.055) ** 2.4
+        return 0.2126 * chan(r) + 0.7152 * chan(g) + 0.0722 * chan(b)
+
+    lum_text = calc_luminance(203, 213, 225)   # #cbd5e1
+    lum_bg = calc_luminance(15, 23, 42)       # #0f172a
+    contrast = (lum_text + 0.05) / (lum_bg + 0.05)
+    assert contrast >= 4.5, f"Contrast ratio {contrast:.2f}:1 is below 4.5:1"
+
+    # 4. Geometrical non-overlap with task-card across all 5 viewports
+    for vw, vh in [(1920, 1080), (1366, 768), (1280, 720), (768, 1024), (390, 844)]:
+        bounds = compute_hud_element_bounds(vw, vh)
+        task_box = bounds["task-card"]
+        # Disclaimer box: centered horizontally, 2px off bottom, 16px high
+        disclaimer_w = min(400, vw - 32)
+        disclaimer_l = (vw - disclaimer_w) // 2
+        disclaimer_b = vh - 2
+        disclaimer_t = disclaimer_b - 16
+        disclaimer_box = (disclaimer_l, disclaimer_t, disclaimer_l + disclaimer_w, disclaimer_b)
+        assert not boxes_overlap(task_box, disclaimer_box), (
+            f"Disclaimer overlaps task card at {vw}x{vh}: task={task_box}, disclaimer={disclaimer_box}"
+        )
+
+
 @pytest.mark.browser
 def test_browser_hud_clean_and_interactive():
     """Playwright E2E verification of clean HUD (skipped unless --browser or RUN_BROWSER_TESTS=1)."""

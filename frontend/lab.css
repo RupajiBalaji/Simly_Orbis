@@ -4203,6 +4203,26 @@ body.has-offline-banner .hud-top-right {
   display: none !important;
 }
 
+.btn-hud-info {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  font-size: 0.9rem;
+  padding: 4px 7px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.btn-hud-info:hover,
+.btn-hud-info:focus-visible {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  outline: none;
+}
+
 .hud-title-col {
   display: flex;
   flex-direction: column;
@@ -4861,11 +4881,17 @@ body.has-offline-banner .hud-top-right {
   bottom: 2px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.68rem;
-  color: rgba(148, 163, 184, 0.6);
+  font-size: 12px;
+  line-height: 14px;
+  font-weight: 500;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1px 8px;
+  border-radius: 4px;
   pointer-events: none;
   z-index: 45;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   white-space: nowrap;
 }
 

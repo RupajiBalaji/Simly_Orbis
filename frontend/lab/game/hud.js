@@ -694,11 +694,13 @@ export class LabHUD {
     this.menuDrawer = document.getElementById('hud-menu-drawer');
     const btnOpen = document.getElementById('btn-open-menu');
     const btnSettings = document.getElementById('btn-open-settings');
+    const btnInfo = document.getElementById('btn-hud-info');
     const btnClose = document.getElementById('btn-close-menu');
     const backdrop = document.getElementById('menu-drawer-backdrop');
 
     if (btnOpen) btnOpen.onclick = () => this.openMenuDrawer();
     if (btnSettings) btnSettings.onclick = () => this.openMenuDrawer();
+    if (btnInfo) btnInfo.onclick = () => toast.showInfo('Educational simulation. Simplified models. Not medical advice.');
     if (btnClose) btnClose.onclick = () => this.closeMenuDrawer();
     if (backdrop) backdrop.onclick = () => this.closeMenuDrawer();
 
