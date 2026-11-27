@@ -21,6 +21,10 @@
     "h": 1080
   },
   "hud_area_percent": 6.5,
+  "starting_score": "Score: 100",
+  "starting_safety": "Safety 100/100",
+  "safety_is_red": false,
+  "clipped_hud_elements": [],
   "scene_camera_yaw": 32.8,
   "camera_distance": 4.545,
   "character_world_position": {

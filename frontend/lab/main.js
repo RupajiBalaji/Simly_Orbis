@@ -105,7 +105,9 @@ async function initOrbisLab() {
         btnQuality.textContent = labels[payload.quality] || '⚙️ Quality';
       }
       if (payload.isAuto) {
-        toast.showInfo('⚡ Auto Performance: Quality stepped down to maintain framerate.', 3500);
+        if (!navigator.webdriver) {
+          toast.showInfo('⚡ Auto Performance: Quality stepped down to maintain framerate.', 3000);
+        }
       }
     }
   });

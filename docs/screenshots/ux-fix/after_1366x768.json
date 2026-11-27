@@ -15,12 +15,16 @@
   "modal_count": 0,
   "visible_modals": [],
   "large_overlays": [],
-  "canvas_frame_count": 90,
+  "canvas_frame_count": 91,
   "canvas_dimensions": {
     "w": 1366,
     "h": 768
   },
-  "hud_area_percent": 12.1,
+  "hud_area_percent": 12.2,
+  "starting_score": "Score: 100",
+  "starting_safety": "Safety 100/100",
+  "safety_is_red": false,
+  "clipped_hud_elements": [],
   "scene_camera_yaw": 32.8,
   "camera_distance": 4.545,
   "character_world_position": {

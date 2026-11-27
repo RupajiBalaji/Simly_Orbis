@@ -21,15 +21,19 @@
     "h": 1080
   },
   "hud_area_percent": 5.2,
-  "scene_camera_yaw": 59.4,
-  "camera_distance": 16.424,
+  "starting_score": "Score: 100",
+  "starting_safety": "Safety 100/100",
+  "safety_is_red": false,
+  "clipped_hud_elements": [],
+  "scene_camera_yaw": 46.3,
+  "camera_distance": 32.143,
   "character_world_position": {
     "x": -3.5,
     "y": 0.6,
     "z": 5
   },
   "character_screen_position": {
-    "x": 502,
-    "y": 903
+    "x": 781,
+    "y": 729
   }
 }

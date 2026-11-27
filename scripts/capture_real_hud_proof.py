@@ -175,6 +175,22 @@ def get_sidecar_metrics(page, scenario: str, viewport_w: int, viewport_h: int) -
             camYaw = Math.round(yawDeg * 10) / 10;
         }
 
+        const expNameEl = document.getElementById('hud-exp-name');
+        const scoreEl = document.getElementById('hud-safety-score');
+        const safetyEl = document.getElementById('hud-safety-status');
+        const startingScore = scoreEl ? scoreEl.textContent.trim() : '';
+        const startingSafety = safetyEl ? safetyEl.textContent.trim() : '';
+        const safetyIsRed = safetyEl ? safetyEl.classList.contains('danger') : false;
+
+        // Check for clipped HUD text (scrollWidth > clientWidth)
+        const clippedElements = [];
+        ['hud-exp-name', 'hud-step-counter', 'hud-clock', 'hud-safety-score', 'hud-safety-status', 'task-card-title'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.clientWidth > 0 && el.scrollWidth > el.clientWidth + 1) {
+                clippedElements.push({ id, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth, text: el.textContent.trim() });
+            }
+        });
+
         return {
             scenario: "",
             viewport: { width: vpW, height: vpH },
@@ -186,6 +202,10 @@ def get_sidecar_metrics(page, scenario: str, viewport_w: int, viewport_h: int) -
             canvas_frame_count: frameCount,
             canvas_dimensions: canvasInfo,
             hud_area_percent: hudAreaPercent,
+            starting_score: startingScore,
+            starting_safety: startingSafety,
+            safety_is_red: safetyIsRed,
+            clipped_hud_elements: clippedElements,
             scene_camera_yaw: camYaw,
             camera_distance: camDist,
             character_world_position: charWorldPos,
@@ -217,6 +237,15 @@ def assert_pre_save_contract(metrics: dict, filename: str):
     max_hud_pct = 35.0 if metrics["viewport"]["width"] <= 600 else 30.0
     assert metrics["hud_area_percent"] <= max_hud_pct, (
         f"PRE-SAVE ASSERTION FAILED on {filename}: HUD area {metrics['hud_area_percent']}% exceeds {max_hud_pct}% limit"
+    )
+    assert metrics.get("starting_score") == "Score: 100", (
+        f"PRE-SAVE ASSERTION FAILED on {filename}: starting_score={metrics.get('starting_score')!r} (expected 'Score: 100')"
+    )
+    assert metrics.get("starting_safety") == "Safety 100/100" and not metrics.get("safety_is_red"), (
+        f"PRE-SAVE ASSERTION FAILED on {filename}: starting_safety={metrics.get('starting_safety')!r}, safety_is_red={metrics.get('safety_is_red')}"
+    )
+    assert len(metrics.get("clipped_hud_elements", [])) == 0, (
+        f"PRE-SAVE ASSERTION FAILED on {filename}: Clipped HUD text detected: {metrics.get('clipped_hud_elements')}"
     )
 
 

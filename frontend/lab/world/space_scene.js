@@ -141,6 +141,11 @@ export class SpaceScene {
       this.parentScene.fog = null;
     }
 
+    if (this.controls) {
+      this._prevMaxDistance = this.controls.maxDistance;
+      this.controls.maxDistance = 220.0;
+    }
+
     // Show loading indicator until initial 3D frames render
     const loadingEl = document.getElementById('space-scene-loading');
     if (loadingEl) loadingEl.classList.remove('hidden');
@@ -172,6 +177,9 @@ export class SpaceScene {
   deactivate() {
     this.active = false;
     this.group.visible = false;
+    if (this.controls && this._prevMaxDistance !== undefined) {
+      this.controls.maxDistance = this._prevMaxDistance;
+    }
     if (this.parentScene) {
       if (this._prevBackground !== undefined) this.parentScene.background = this._prevBackground;
       if (this._prevFog !== undefined) this.parentScene.fog = this._prevFog;
@@ -900,6 +908,9 @@ export class SpaceScene {
     this.currentViewMode = mode;
     const targetPreset = this.viewPresets[mode];
     if (!targetPreset) return;
+    if (this.controls) {
+      this.controls.maxDistance = 220.0;
+    }
 
     if (instant) {
       this.camera.position.copy(targetPreset.pos);
