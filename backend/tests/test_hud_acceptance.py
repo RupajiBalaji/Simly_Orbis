@@ -54,6 +54,10 @@ def compute_hud_element_bounds(viewport_w: int, viewport_h: int, include_context
         prompt_bot = viewport_h - 195
         prompt_top = prompt_bot - prompt_h
         context_prompt = (prompt_left, prompt_top, prompt_left + prompt_w, prompt_bot)
+
+        toast_w = min(360, viewport_w - 24)
+        toast_left = (viewport_w - toast_w) // 2
+        toast_box = (toast_left, 72, toast_left + toast_w, 108)
     else:
         # Desktop / Tablet
         tl_w = min(360, int(viewport_w * 0.3))
@@ -83,6 +87,10 @@ def compute_hud_element_bounds(viewport_w: int, viewport_h: int, include_context
         prompt_top = prompt_bot - prompt_h
         context_prompt = (prompt_left, prompt_top, prompt_left + prompt_w, prompt_bot)
 
+        toast_w = min(380, viewport_w - 24)
+        toast_left = (viewport_w - toast_w) // 2
+        toast_box = (toast_left, 66, toast_left + toast_w, 102)
+
     bounds = {
         "top-left": top_left,
         "top-right": top_right,
@@ -92,6 +100,7 @@ def compute_hud_element_bounds(viewport_w: int, viewport_h: int, include_context
     }
     if include_context_prompt:
         bounds["context-prompt"] = context_prompt
+        bounds["toast"] = toast_box
 
     return bounds
 
@@ -395,6 +404,22 @@ def test_fresh_session_score_and_safety_values_and_hud_reset():
     assert "hasViolations" in hud_js
     assert "scoring_weights?.safety" in hud_js
     assert "this.scoreEl.textContent = 'Score: --'" in hud_js
+
+
+def test_graphics_benchmark_toast_placement_and_suppression():
+    """
+    Verify V2 requirements:
+    1. #toast-container is positioned at top-centre below the HUD (top: 66px), not over 3D scene center.
+    2. Benchmark toast only fires if tier changed (selectedTier !== prevTier), auto-dismisses at 3000ms,
+       and is suppressed in headless/software-render (navigator.webdriver).
+    """
+    css_content = LAB_CSS.read_text(encoding="utf-8")
+    main_js = (REPO_ROOT / "frontend" / "lab" / "main.js").read_text(encoding="utf-8")
+
+    assert "top: 66px;" in css_content
+    assert "navigator.webdriver" in main_js
+    assert "selectedTier !== prevTier" in main_js
+    assert "3000)" in main_js
 
 
 @pytest.mark.browser

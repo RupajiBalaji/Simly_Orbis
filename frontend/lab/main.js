@@ -1395,7 +1395,9 @@ function setupHUDControls() {
       btnQuality.textContent = labels[savedTier] || '⚙️ Quality';
     }
   } else {
-    // Run 3-second initial benchmark on first load
+    // Run 3-second initial benchmark on first load (skip toast in headless/software-render)
+    const prevTier = sceneManager.quality || 'medium';
+    const isHeadlessOrSoftware = Boolean(navigator.webdriver);
     const benchmarkSamples = [];
     const benchmarkStart = performance.now();
     const benchmarkInterval = setInterval(() => {
@@ -1416,7 +1418,9 @@ function setupHUDControls() {
           const labels = { low: '⚡ Quality: Low', medium: '✨ Quality: Med', high: '💎 Quality: High' };
           btnQuality.textContent = labels[selectedTier] || '⚙️ Quality';
         }
-        toast.showInfo(`Graphics Benchmark: Selected ${selectedTier.toUpperCase()} quality (${Math.round(avg)} FPS avg).`, 3500);
+        if (!isHeadlessOrSoftware && selectedTier !== prevTier) {
+          toast.showInfo(`Graphics Benchmark: Selected ${selectedTier.toUpperCase()} quality (${Math.round(avg)} FPS avg).`, 3000);
+        }
       }
     }, 500);
   }

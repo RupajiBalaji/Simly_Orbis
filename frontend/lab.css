@@ -1225,29 +1225,32 @@ body.has-offline-banner .hud-top-right {
    TOASTS & SAFETY VIOLATION MODAL
    ═══════════════════════════════════════════════════════════════════════ */
 #toast-container {
-  position: absolute;
-  top: 130px;
+  position: fixed;
+  top: 66px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 100;
+  z-index: 55;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  pointer-events: auto;
-  max-width: 540px;
-  width: 90%;
+  gap: 8px;
+  pointer-events: none;
+  max-width: min(380px, calc(100vw - 24px));
+  width: auto;
 }
 
 .toast {
-  padding: 12px 18px;
-  border-radius: 12px;
-  background: rgba(18, 14, 38, 0.96);
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.94);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-  font-size: 0.88rem;
-  line-height: 1.4;
-  animation: toastSlide 0.3s ease forwards;
-  width: 100%;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  animation: toastSlide 0.25s ease forwards;
+  width: auto;
+  max-width: 100%;
+  text-align: center;
+  pointer-events: auto;
 }
 
 @keyframes toastSlide {
