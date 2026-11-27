@@ -4451,9 +4451,9 @@ body.has-offline-banner .hud-top-right {
 .task-card-ppe-alert {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #fef08a;
-  background: rgba(234, 179, 8, 0.18);
-  border: 1px solid rgba(234, 179, 8, 0.35);
+  color: #bae6fd;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 6px;
   padding: 3px 8px;
 }

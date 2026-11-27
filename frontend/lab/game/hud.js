@@ -171,6 +171,17 @@ export class LabHUD {
     if (this.expBadgeEl) {
       this.expBadgeEl.textContent = expTitle;
     }
+
+    // Reset HUD metrics on experiment switch until backend session arrives
+    this.lastProgressCount = 0;
+    if (this.clockEl) this.clockEl.textContent = 'Time: 0.0 h';
+    if (this.scoreEl) this.scoreEl.textContent = 'Score: --';
+    const safetyStatusEl = document.getElementById('hud-safety-status');
+    if (safetyStatusEl) {
+      safetyStatusEl.textContent = 'Safety --/100';
+      safetyStatusEl.classList.remove('warn', 'danger');
+    }
+
     this.renderMenuStations(exp);
     this.renderProtocol(exp.protocol || [], []);
   }
@@ -183,9 +194,20 @@ export class LabHUD {
       this.clockEl.textContent = `Time: ${(session.clock_h || 0).toFixed(1)} h`;
     }
 
-    // Total Score & Safety Compliance ("Score: 100", "Safety 100/100")
-    const safetyScore = session.score_parts?.safety ?? session.safety_score ?? 100;
-    const totalScore = session.score ?? session.total_score ?? safetyScore;
+    // Total Score (sum of score_parts rubric) & Safety Compliance (normalized 0-100)
+    const scoreParts = session.score_parts || {};
+    const hasScoreParts = Object.keys(scoreParts).length > 0;
+    const summedParts = hasScoreParts
+      ? Math.max(0, Math.min(100, Object.values(scoreParts).reduce((sum, v) => sum + Number(v || 0), 0)))
+      : 100;
+    const totalScore = session.score ?? session.total_score ?? summedParts;
+
+    const maxSafety = state.experiment?.scoring_weights?.safety ?? 40;
+    const rawSafety = scoreParts.safety ?? maxSafety;
+    const safetyScore = session.safety_score ?? (
+      maxSafety > 0 ? Math.max(0, Math.min(100, Math.round((rawSafety / maxSafety) * 100))) : 100
+    );
+
     if (this.scoreEl) {
       this.scoreEl.textContent = `Score: ${totalScore}`;
     }
@@ -194,9 +216,10 @@ export class LabHUD {
     if (safetyStatusEl) {
       safetyStatusEl.textContent = `Safety ${safetyScore}/100`;
       safetyStatusEl.classList.remove('warn', 'danger');
-      if (safetyScore < 50) {
+      const hasViolations = Array.isArray(session.violations) && session.violations.length > 0;
+      if (hasViolations && safetyScore < 50) {
         safetyStatusEl.classList.add('danger');
-      } else if (safetyScore < 80) {
+      } else if (hasViolations && safetyScore < 80) {
         safetyStatusEl.classList.add('warn');
       }
     }

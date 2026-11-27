@@ -518,8 +518,8 @@
     <header class="hud-top-right" id="hud-top-right" data-hud-persistent="top-right">
       <div class="hud-metrics-row">
         <span class="hud-metric-chip" id="hud-clock" title="Elapsed Time">Time: 0.0 h</span>
-        <span class="hud-metric-chip" id="hud-safety-score" title="Experiment Score">Score: 100</span>
-        <span class="hud-metric-chip hud-safety-chip" id="hud-safety-status" title="Safety Compliance Score">Safety 100/100</span>
+        <span class="hud-metric-chip" id="hud-safety-score" title="Experiment Score">Score: --</span>
+        <span class="hud-metric-chip hud-safety-chip" id="hud-safety-status" title="Safety Compliance Score">Safety --/100</span>
         <button type="button" class="btn-hud-gear" id="btn-open-settings" aria-label="Simulation Settings" title="Settings">⚙️</button>
       </div>
       <!-- Hidden legacy PPE badges preserved for DOM listeners -->
@@ -545,7 +545,7 @@
         <div class="task-card-help-text" id="task-card-help-text">Click the primary button below to proceed with the current step.</div>
         <button type="button" class="btn-close-task-help" id="btn-close-task-help" aria-label="Close help">✕</button>
       </div>
-      <div class="task-card-ppe-alert hidden" id="task-card-ppe-alert" role="alert">⚠️ Missing PPE: Goggles, Gloves</div>
+      <div class="task-card-ppe-alert hidden" id="task-card-ppe-alert" role="status">📋 To-Do: Put on Goggles, Gloves</div>
       <div class="task-card-actions-row">
         <div class="task-primary-btns" id="task-card-actions">
           <!-- Primary action button populated dynamically; receives tabindex=1 -->

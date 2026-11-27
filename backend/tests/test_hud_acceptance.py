@@ -370,6 +370,33 @@ def test_launch_bench_3d_lighting_apparatus_and_loader():
     assert "space-scene-loading" in space_js
 
 
+def test_fresh_session_score_and_safety_values_and_hud_reset():
+    """
+    Verify V1 requirements:
+    1. Backend create_session initializes score_parts totaling 100 and safety == scoring_weights['safety']
+       with 0 violations for every registered experiment.
+    2. hud.js sums score_parts for totalScore and normalizes safety against maxSafety, keeping Safety
+       neutral/green when no violation has occurred, and resets HUD metrics on experiment switch.
+    3. index.html uses '--' instead of hardcoded 100 placeholders.
+    """
+    from app.lab.engine import create_session
+    from app.lab.experiments import _EXPERIMENTS
+
+    for exp_id, exp in _EXPERIMENTS.items():
+        session = create_session(exp_id, "TestUser")
+        assert sum(session.score_parts.values()) == 100, f"{exp_id} initial score_parts must sum to 100"
+        assert session.score_parts["safety"] == exp.scoring_weights["safety"]
+        assert session.violations == []
+
+    index_content = INDEX_HTML.read_text(encoding="utf-8")
+    hud_js = (REPO_ROOT / "frontend" / "lab" / "game" / "hud.js").read_text(encoding="utf-8")
+    assert "Score: --" in index_content
+    assert "Safety --/100" in index_content
+    assert "hasViolations" in hud_js
+    assert "scoring_weights?.safety" in hud_js
+    assert "this.scoreEl.textContent = 'Score: --'" in hud_js
+
+
 @pytest.mark.browser
 def test_browser_hud_clean_and_interactive():
     """Playwright E2E verification of clean HUD (skipped unless --browser or RUN_BROWSER_TESTS=1)."""

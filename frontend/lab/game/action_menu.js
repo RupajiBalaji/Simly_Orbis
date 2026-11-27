@@ -266,13 +266,13 @@ export class ActionMenu {
       this.updateHelpExplanation();
     }
 
-    // Contextual missing PPE alert
+    // Contextual PPE to-do chip (shown as a to-do, not a penalty)
     const ppe = state.session?.ppe || [];
     const required = state.experiment?.required_ppe || ['goggles', 'gloves', 'coat'];
     const missing = required.filter((p) => !ppe.includes(p));
     if (missing.length > 0 && nextStep.id !== 'wash_hands' && nextStep.id !== 'dispose_waste') {
       if (ppeAlertEl) {
-        ppeAlertEl.textContent = `⚠️ Missing PPE: ${missing.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')}`;
+        ppeAlertEl.textContent = `📋 To-Do: Put on ${missing.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(', ')}`;
         ppeAlertEl.classList.remove('hidden');
       }
     } else if (ppeAlertEl) {
