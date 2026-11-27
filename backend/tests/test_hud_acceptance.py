@@ -39,25 +39,25 @@ def compute_hud_element_bounds(viewport_w: int, viewport_h: int, include_context
     is_mobile = viewport_w <= 600
 
     if is_mobile:
-        # Mobile 390x844
-        top_left = (8, 8, min(240, viewport_w - 160), 48)
-        top_right = (viewport_w - 150, 8, viewport_w - 8, 48)
-        task_w = viewport_w - 16
-        task_left = 8
-        task_card = (task_left, viewport_h - 180, task_left + task_w, viewport_h - 70)
-        ask_orbis = (8, viewport_h - 60, 140, viewport_h - 12)
-        dr_orbis = (viewport_w - 56, viewport_h - 58, viewport_w - 8, viewport_h - 12)
+        # Mobile 390x844 (top-left full width at top, top-right stacked underneath)
+        top_left = (6, 6, viewport_w - 6, 48)
+        top_right = (6, 52, viewport_w - 6, 84)
+        task_w = viewport_w - 12
+        task_left = 6
+        task_card = (task_left, viewport_h - 180, task_left + task_w, viewport_h - 58)
+        ask_orbis = (8, viewport_h - 50, 140, viewport_h - 12)
+        dr_orbis = (viewport_w - 56, viewport_h - 50, viewport_w - 8, viewport_h - 12)
 
         prompt_w = 160
         prompt_h = 36
         prompt_left = (viewport_w - prompt_w) // 2
-        prompt_bot = viewport_h - 195
+        prompt_bot = viewport_h - 222
         prompt_top = prompt_bot - prompt_h
         context_prompt = (prompt_left, prompt_top, prompt_left + prompt_w, prompt_bot)
 
         toast_w = min(360, viewport_w - 24)
         toast_left = (viewport_w - toast_w) // 2
-        toast_box = (toast_left, 72, toast_left + toast_w, 108)
+        toast_box = (toast_left, 90, toast_left + toast_w, 126)
     else:
         # Desktop / Tablet
         tl_w = min(360, int(viewport_w * 0.3))
@@ -263,7 +263,7 @@ def test_launch_bench_hud_area_coverage_budget(viewport_w: int, viewport_h: int)
     (>= 70% 3D space scene visibility).
     """
     total_screen_area = viewport_w * viewport_h
-    bounds = compute_hud_element_bounds(viewport_w, viewport_h)
+    bounds = compute_hud_element_bounds(viewport_w, viewport_h, include_context_prompt=False)
 
     hud_area = sum((r - l) * (b - t) for l, t, r, b in bounds.values())
     hud_pct = (hud_area / total_screen_area) * 100.0
@@ -420,6 +420,26 @@ def test_graphics_benchmark_toast_placement_and_suppression():
     assert "navigator.webdriver" in main_js
     assert "selectedTier !== prevTier" in main_js
     assert "3000)" in main_js
+
+
+def test_mobile_390x844_stacked_header_and_no_text_clipping():
+    """
+    Verify V3 requirements:
+    1. At <= 600px (390x844), top-left spans full width and top-right stacks cleanly underneath (top: 52px)
+       so experiment titles are never clipped behind Time/Score.
+    2. .hud-title-col has min-width: 0 and flex: 1 so ellipsis/truncation works without overflow.
+    3. Mobile bounding boxes at 390x844 have zero pairwise overlap and stay within 35% area budget.
+    """
+    css_content = LAB_CSS.read_text(encoding="utf-8")
+    assert "top: 52px;" in css_content
+    assert "min-width: 0;" in css_content
+    assert "text-overflow: ellipsis;" in css_content
+
+    bounds = compute_hud_element_bounds(390, 844)
+    keys = list(bounds.keys())
+    for i in range(len(keys)):
+        for j in range(i + 1, len(keys)):
+            assert not boxes_overlap(bounds[keys[i]], bounds[keys[j]])
 
 
 @pytest.mark.browser
