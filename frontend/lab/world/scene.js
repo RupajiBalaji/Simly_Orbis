@@ -396,11 +396,11 @@ export class LabScene {
       if (this.characterController?.rig?.root) {
         this.characterController.rig.root.position.set(-3.5, 0.6, 5.0);
       }
-      this.camera.fov = 50;
+      this.camera.fov = 55;
       this.camera.updateProjectionMatrix();
       this.stationPresets.default = {
-        pos: new THREE.Vector3(12.0, 7.5, 16.0),
-        target: new THREE.Vector3(0.0, 5.0, 0.0),
+        pos: new THREE.Vector3(18.5, 11.0, 26.0),
+        target: new THREE.Vector3(-0.5, 6.0, 0.0),
       };
       this.cameraDefaultPos.copy(this.stationPresets.default.pos);
       this.cameraTarget.copy(this.stationPresets.default.target);

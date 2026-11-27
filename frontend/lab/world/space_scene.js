@@ -73,9 +73,9 @@ export class SpaceScene {
     // View Presets (Pad, Orbit, Polar, Equatorial)
     this.viewPresets = {
       pad: {
-        pos: new THREE.Vector3(12.0, 7.5, 16.0),
-        target: new THREE.Vector3(0.0, 5.0, 0.0),
-        fov: 50,
+        pos: new THREE.Vector3(18.5, 11.0, 26.0),
+        target: new THREE.Vector3(-0.5, 6.0, 0.0),
+        fov: 55,
       },
       orbit: {
         pos: new THREE.Vector3(0.0, 45.0, 110.0),
