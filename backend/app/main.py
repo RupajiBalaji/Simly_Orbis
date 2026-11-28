@@ -33,7 +33,7 @@ from app.modules.pharma_pk import PharmaPKModule
 from app.modules.pharma_trial import PharmaTrialModule
 from app.modules.pharma_trial_v2 import PharmaTrialV2Module
 from app.routes import calibrate, drugs, lab, levels, modules, runs, scores, simulate, specs, trial, tutor, validation
-from app.security import rate_limiter, validate_startup_config
+from app.security import rate_limiter, resolve_client_ip, validate_startup_config
 
 logging.basicConfig(
     level=logging.INFO,
@@ -103,32 +103,7 @@ class SecurityAndRateLimitMiddleware(BaseHTTPMiddleware):
         request.state.request_id = request_id
         t_start = time.perf_counter()
 
-        client_ip = None
-        forwarded_for = request.headers.get("x-forwarded-for")
-        is_production = (
-            os.environ.get("ENVIRONMENT", "").lower() == "production"
-            or os.environ.get("RENDER", "").lower() in ("true", "1")
-        )
-        if is_production:
-            is_test_runner = False
-        else:
-            is_test_runner = (
-                os.environ.get("ENVIRONMENT", "").lower() in ("test", "testing")
-                or os.environ.get("QA_MODE", "").lower() == "true"
-            )
-
-        trust_proxy = (
-            getattr(settings, "trust_proxy", False)
-            or os.environ.get("TRUST_PROXY", "").strip().lower() in ("true", "1", "yes")
-        )
-
-        if trust_proxy and forwarded_for:
-            # Behind trusted proxy (e.g. Render): use the LAST hop added by proxy
-            client_ip = forwarded_for.split(",")[-1].strip()
-        elif not is_test_runner and request.client:
-            client_ip = request.client.host
-        elif not is_test_runner:
-            client_ip = "127.0.0.1"
+        client_ip = resolve_client_ip(request)
 
         path = request.url.path
 

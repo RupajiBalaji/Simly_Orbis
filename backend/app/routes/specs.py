@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 from app.lab.engine import apply_action, create_session
 from app.lab.experiments import _EXPERIMENTS
 from app.lab.models import ActionRequest, ActionType, LabSession
+from app.security import resolve_client_ip
 from app.specs.adapter import spec_to_experiment_definition
 from app.specs.validator import ValidationReport, validate_spec_data
 
@@ -117,8 +118,11 @@ async def validate_spec_endpoint(request: Request) -> ValidateSpecResponse:
     Enforces maximum payload size limit (512KB), sliding-window rate limit,
     strict schema-only parsing (no eval/exec), zero file writes, and optional dry run.
     """
-    forwarded = request.headers.get("x-forwarded-for")
-    client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "127.0.0.1")
+    client_ip = getattr(request.state, "client_ip", None)
+    if not client_ip:
+        client_ip = resolve_client_ip(request) or (
+            request.client.host if request.client and request.client.host else "127.0.0.1"
+        )
     _check_rate_limit(client_ip)
 
     # 1. Enforce payload size limit (512 KB)

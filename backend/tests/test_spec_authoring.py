@@ -178,20 +178,86 @@ async def test_validate_endpoint_hostile_input_rejected_400(client: AsyncClient,
 async def test_validate_endpoint_rate_limit_429(client: AsyncClient, sample_spec_data: dict):
     """Enforce sliding-window rate limit: exceeding 60 requests/minute triggers 429."""
     from app.routes import specs
-    # Artificially fill rate limit bucket for client IP
-    client_ip = "testclient"
+    # Artificially fill rate limit bucket for client socket IP (AsyncClient uses 127.0.0.1)
+    client_ip = "127.0.0.1"
     now = specs.time.time()
     specs._IP_TIMESTAMPS[client_ip] = [now] * 65
 
     res = await client.post(
         "/api/specs/validate",
         json={"spec_data": sample_spec_data},
-        headers={"x-forwarded-for": client_ip},
     )
     assert res.status_code == 429
     assert "Rate limit exceeded" in res.json()["detail"]
     # Clear bucket after test
     specs._IP_TIMESTAMPS.clear()
+
+
+@pytest.mark.asyncio
+async def test_validate_spoofed_xff_with_trust_proxy_off_gets_no_new_bucket(
+    client: AsyncClient, sample_spec_data: dict, monkeypatch: pytest.MonkeyPatch
+):
+    """Spoofed X-Forwarded-For with TRUST_PROXY off must NOT create a new bucket; 61st call returns 429."""
+    from app.routes import specs
+
+    monkeypatch.setenv("TRUST_PROXY", "false")
+    specs._IP_TIMESTAMPS.clear()
+    try:
+        for i in range(60):
+            res = await client.post(
+                "/api/specs/validate",
+                json={"spec_data": sample_spec_data},
+                headers={"x-forwarded-for": f"10.0.0.{i + 1}"},
+            )
+            assert res.status_code == 200, f"Unexpected status at call {i + 1}: {res.status_code}"
+
+        # 61st call with another spoofed XFF still hits the same client bucket and returns 429
+        res61 = await client.post(
+            "/api/specs/validate",
+            json={"spec_data": sample_spec_data},
+            headers={"x-forwarded-for": "203.0.113.99"},
+        )
+        assert res61.status_code == 429
+    finally:
+        specs._IP_TIMESTAMPS.clear()
+
+
+@pytest.mark.asyncio
+async def test_validate_trust_proxy_on_uses_last_hop(
+    client: AsyncClient, sample_spec_data: dict, monkeypatch: pytest.MonkeyPatch
+):
+    """With TRUST_PROXY on, the LAST hop in X-Forwarded-For is used as the rate-limit bucket."""
+    from app.routes import specs
+
+    monkeypatch.setenv("TRUST_PROXY", "true")
+    specs._IP_TIMESTAMPS.clear()
+    try:
+        # Exhaust bucket for last-hop 198.51.100.77 using varying spoofed first hops
+        for i in range(60):
+            res = await client.post(
+                "/api/specs/validate",
+                json={"spec_data": sample_spec_data},
+                headers={"x-forwarded-for": f"10.0.0.{i + 1}, 198.51.100.77"},
+            )
+            assert res.status_code == 200
+
+        # 61st call with same last hop returns 429
+        res61 = await client.post(
+            "/api/specs/validate",
+            json={"spec_data": sample_spec_data},
+            headers={"x-forwarded-for": "172.16.0.5, 198.51.100.77"},
+        )
+        assert res61.status_code == 429
+
+        # Different last hop still has its own fresh bucket
+        res_other = await client.post(
+            "/api/specs/validate",
+            json={"spec_data": sample_spec_data},
+            headers={"x-forwarded-for": "10.0.0.1, 198.51.100.88"},
+        )
+        assert res_other.status_code == 200
+    finally:
+        specs._IP_TIMESTAMPS.clear()
 
 
 @pytest.mark.asyncio

@@ -7,10 +7,13 @@ and startup configuration validation without leaking secrets.
 from __future__ import annotations
 
 import logging
+import os
 import re
 import time
 from datetime import date
 from typing import Dict, Tuple
+
+from starlette.requests import Request
 
 from app.config import settings
 
@@ -182,3 +185,43 @@ def validate_startup_config() -> None:
     log.info("Mentor Daily Cap:  %d calls/day", settings.mentor_daily_cap)
     log.info("Allowed Origins:   %s", settings.allowed_origins)
     log.info("==========================================")
+
+
+# ---------------------------------------------------------------------------
+# 5. Shared Client IP Resolution (TRUST_PROXY & Last-Hop XFF)
+# ---------------------------------------------------------------------------
+
+def resolve_client_ip(request: Request) -> str | None:
+    """
+    Resolve client IP with TRUST_PROXY gating, last-hop X-Forwarded-For extraction,
+    and production/test-runner handling. Stores the resolved value on request.state.client_ip.
+    """
+    forwarded_for = request.headers.get("x-forwarded-for")
+    is_production = (
+        os.environ.get("ENVIRONMENT", "").lower() == "production"
+        or os.environ.get("RENDER", "").lower() in ("true", "1")
+    )
+    if is_production:
+        is_test_runner = False
+    else:
+        is_test_runner = (
+            os.environ.get("ENVIRONMENT", "").lower() in ("test", "testing")
+            or os.environ.get("QA_MODE", "").lower() == "true"
+        )
+
+    trust_proxy = (
+        getattr(settings, "trust_proxy", False)
+        or os.environ.get("TRUST_PROXY", "").strip().lower() in ("true", "1", "yes")
+    )
+
+    client_ip: str | None = None
+    if trust_proxy and forwarded_for:
+        # Behind trusted proxy (e.g. Render): use the LAST hop added by proxy
+        client_ip = forwarded_for.split(",")[-1].strip()
+    elif not is_test_runner and request.client:
+        client_ip = request.client.host
+    elif not is_test_runner:
+        client_ip = "127.0.0.1"
+
+    request.state.client_ip = client_ip
+    return client_ip
