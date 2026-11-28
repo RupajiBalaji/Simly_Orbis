@@ -933,6 +933,7 @@ class QAHarnessRunner:
                 page.evaluate("() => { if (window.drOrbisMentor) window.drOrbisMentor.setCollapsed(true); }")
                 page.click('a[href="#/briefing?exp=dose_lab"]')
                 page.wait_for_selector("#screen-brief:not(.hidden)", timeout=5000)
+                page.wait_for_function("() => (document.getElementById('brief-title')?.textContent || '').toLowerCase().includes('dose')", timeout=8000)
                 page.wait_for_timeout(500)
                 self.capture_checkpoint(page, "dose_lab_brief")
 
