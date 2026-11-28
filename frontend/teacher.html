@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simly Orbis — Teacher Dashboard</title>
+  <link rel="stylesheet" href="./styles/tokens.css">
+  <style>
+    body {
+      font-family: var(--font-sans, 'Inter', -apple-system, sans-serif);
+      background: #0f172a;
+      color: #f8fafc;
+      margin: 0;
+      padding: 24px;
+    }
+    .dash-wrap { max-width: 1120px; margin: 0 auto; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    h1 { font-size: 24px; color: #38bdf8; margin: 0; }
+    .panel { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+    input, select, textarea { width: 100%; box-sizing: border-box; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+    button { background: #0284c7; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+    button.danger { background: #dc2626; }
+    button.secondary { background: #334155; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #334155; }
+    th { color: #94a3b8; }
+    .code-badge { font-family: monospace; font-size: 16px; background: #0f172a; padding: 6px 10px; border-radius: 6px; border: 1px solid #38bdf8; color: #38bdf8; }
+    .muted { color: #94a3b8; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="dash-wrap">
+    <header>
+      <div>
+        <h1>Teacher Dashboard</h1>
+        <div class="muted">Create classes, manage assignments, view analytics, export nickname-only CSVs.</div>
+      </div>
+      <div>
+        <a href="/index.html" style="color:#38bdf8;text-decoration:none;">Back to Lab</a>
+      </div>
+    </header>
+
+    <section class="panel" id="auth-panel">
+      <h2>Teacher Sign-In (Invite Token)</h2>
+      <label for="invite-token">Paste invite token from admin</label>
+      <input id="invite-token" type="password" placeholder="Invite token">
+      <button id="redeem-btn" type="button">Redeem Invite Token</button>
+      <div id="teacher-status" class="muted" style="margin-top:8px;">Not signed in.</div>
+    </section>
+
+    <div id="dashboard-body" style="display:none;">
+      <div class="grid-2">
+        <section class="panel">
+          <h3>Create Class</h3>
+          <label for="class-name">Class Name</label>
+          <input id="class-name" placeholder="e.g. Pharm 201 - Section A">
+          <button id="create-class-btn" type="button">Create Class</button>
+          <div id="new-code-box" style="margin-top:10px;"></div>
+        </section>
+
+        <section class="panel">
+          <h3>Your Classes</h3>
+          <select id="class-select"></select>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="reset-code-btn" type="button" class="secondary">Reset Join Code</button>
+            <button id="export-csv-btn" type="button" class="secondary">Export CSV</button>
+            <button id="delete-class-btn" type="button" class="danger">Delete Class &amp; Data</button>
+          </div>
+          <div id="class-action-msg" class="muted" style="margin-top:8px;"></div>
+        </section>
+      </div>
+
+      <div class="grid-2">
+        <section class="panel">
+          <h3>Assign Experiment</h3>
+          <label for="asg-exp">Experiment ID</label>
+          <input id="asg-exp" value="pk_oral_ward">
+          <label for="asg-title">Title</label>
+          <input id="asg-title" placeholder="Oral PK Practice">
+          <label for="asg-presets">Parameter Presets (JSON)</label>
+          <textarea id="asg-presets" rows="2">{"dose_mg": 500}</textarea>
+          <label for="asg-due">Due Date (ISO, optional)</label>
+          <input id="asg-due" placeholder="2026-12-15T23:59:00Z">
+          <label><input id="asg-graded" type="checkbox" style="width:auto;"> Graded assignment</label>
+          <button id="create-asg-btn" type="button">Create Assignment</button>
+        </section>
+
+        <section class="panel">
+          <h3>Class Analytics</h3>
+          <div id="analytics-box" class="muted">Select a class to load analytics.</div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <h3>Roster (Nicknames Only)</h3>
+        <div id="roster-box" class="muted">No students yet.</div>
+      </section>
+
+      <section class="panel">
+        <h3>Submissions</h3>
+        <table>
+          <thead><tr><th>Nickname</th><th>Assignment</th><th>Grade</th><th>Score</th><th>Violations</th><th>Time (s)</th></tr></thead>
+          <tbody id="submissions-tbody"></tbody>
+        </table>
+      </section>
+    </div>
+  </div>
+  <script>
+    let sessionToken = sessionStorage.getItem('orbis_teacher_token') || '';
+    const authHeaders = () => ({ 'Authorization': 'Bearer ' + sessionToken, 'Content-Type': 'application/json' });
+
+    async function loadClasses() {
+      const r = await fetch('/api/classroom/classes', { headers: authHeaders() });
+      if (!r.ok) return;
+      const data = await r.json();
+      const sel = document.getElementById('class-select');
+      sel.innerHTML = '';
+      for (const c of data.classes) {
+        const opt = document.createElement('option');
+        opt.value = c.class_id;
+        opt.textContent = c.name + ' (' + c.class_id + ')';
+        sel.appendChild(opt);
+      }
+      if (data.classes.length) await loadClassDetails(sel.value);
+    }
+
+    async function loadClassDetails(classId) {
+      if (!classId) return;
+      const [rosterRes, subRes, anaRes] = await Promise.all([
+        fetch('/api/classroom/classes/' + classId + '/roster', { headers: authHeaders() }),
+        fetch('/api/classroom/classes/' + classId + '/submissions', { headers: authHeaders() }),
+        fetch('/api/classroom/classes/' + classId + '/analytics', { headers: authHeaders() }),
+      ]);
+      if (rosterRes.ok) {
+        const r = await rosterRes.json();
+        document.getElementById('roster-box').textContent = r.roster.length
+          ? r.roster.map(s => s.nickname).join(', ')
+          : 'No students joined yet.';
+      }
+      if (subRes.ok) {
+        const s = await subRes.json();
+        const tb = document.getElementById('submissions-tbody');
+        tb.innerHTML = '';
+        for (const row of s.submissions) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td></td><td></td><td></td><td></td><td></td><td></td>';
+          tr.children[0].textContent = row.nickname;
+          tr.children[1].textContent = row.assignment_id;
+          tr.children[2].textContent = row.grade;
+          tr.children[3].textContent = row.score;
+          tr.children[4].textContent = (row.violations || []).join(', ');
+          tr.children[5].textContent = row.time_seconds;
+          tb.appendChild(tr);
+        }
+      }
+      if (anaRes.ok) {
+        const a = await anaRes.json();
+        document.getElementById('analytics-box').textContent =
+          'Students: ' + a.student_count +
+          ' | Submissions: ' + a.submission_count +
+          ' | Avg scores: ' + JSON.stringify(a.average_score_per_experiment) +
+          ' | Top violations: ' + (a.common_mistakes.join('; ') || 'None');
+      }
+    }
+
+    document.getElementById('redeem-btn').onclick = async () => {
+      const tok = document.getElementById('invite-token').value.trim();
+      const r = await fetch('/api/classroom/teacher/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invite_token: tok }),
+      });
+      if (!r.ok) {
+        document.getElementById('teacher-status').textContent = 'Invalid or expired invite token.';
+        return;
+      }
+      const d = await r.json();
+      sessionToken = d.session_token;
+      sessionStorage.setItem('orbis_teacher_token', sessionToken);
+      document.getElementById('teacher-status').textContent = 'Signed in as ' + d.display_name;
+      document.getElementById('dashboard-body').style.display = 'block';
+      await loadClasses();
+    };
+
+    document.getElementById('create-class-btn').onclick = async () => {
+      const name = document.getElementById('class-name').value.trim();
+      const r = await fetch('/api/classroom/classes', {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({ name })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        document.getElementById('new-code-box').innerHTML = 'Join Code: <span class="code-badge"></span>';
+        document.getElementById('new-code-box').querySelector('span').textContent = d.join_code;
+        await loadClasses();
+      }
+    };
+
+    document.getElementById('class-select').onchange = (e) => loadClassDetails(e.target.value);
+
+    document.getElementById('reset-code-btn').onclick = async () => {
+      const id = document.getElementById('class-select').value;
+      if (!id) return;
+      const r = await fetch('/api/classroom/classes/' + id + '/reset-code', { method: 'POST', headers: authHeaders() });
+      if (r.ok) {
+        const d = await r.json();
+        document.getElementById('class-action-msg').textContent = 'New join code: ' + d.join_code;
+      }
+    };
+
+    document.getElementById('export-csv-btn').onclick = async () => {
+      const id = document.getElementById('class-select').value;
+      if (!id) return;
+      const r = await fetch('/api/classroom/classes/' + id + '/export.csv', { headers: authHeaders() });
+      if (r.ok) {
+        const blob = new Blob([await r.text()], { type: 'text/csv' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'class_' + id + '_submissions.csv';
+        a.click();
+      }
+    };
+
+    document.getElementById('delete-class-btn').onclick = async () => {
+      const id = document.getElementById('class-select').value;
+      if (!id) return;
+      const r = await fetch('/api/classroom/classes/' + id, { method: 'DELETE', headers: authHeaders() });
+      if (r.ok) {
+        document.getElementById('class-action-msg').textContent = 'Class and all linked records deleted.';
+        await loadClasses();
+      }
+    };
+
+    document.getElementById('create-asg-btn').onclick = async () => {
+      const id = document.getElementById('class-select').value;
+      if (!id) return;
+      let presets = {};
+      try { presets = JSON.parse(document.getElementById('asg-presets').value || '{}'); } catch (_) {}
+      const r = await fetch('/api/classroom/classes/' + id + '/assignments', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          experiment_id: document.getElementById('asg-exp').value.trim(),
+          title: document.getElementById('asg-title').value.trim(),
+          parameter_presets: presets,
+          due_date: document.getElementById('asg-due').value.trim() || null,
+          graded: document.getElementById('asg-graded').checked,
+        }),
+      });
+      document.getElementById('class-action-msg').textContent = r.ok ? 'Assignment created.' : 'Failed to create assignment.';
+    };
+  </script>
+</body>
+</html>
