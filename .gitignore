@@ -1,5 +1,7 @@
 # Virtual environment
 .venv/
+.venv_space/
+fresh/
 venv/
 ENV/
 env/
@@ -7,6 +9,7 @@ env/
 # Python cache
 __pycache__/
 *.py[cod]
+*.pyc
 *$py.class
 *.so
 .pytest_cache/
