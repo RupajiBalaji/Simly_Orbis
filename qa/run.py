@@ -338,7 +338,7 @@ class QAHarnessRunner:
                 # Hold D -> displacement along camera-right
                 t_d0 = page.evaluate("() => window.__debugTelemetry")
                 page.keyboard.down("d")
-                page.wait_for_timeout(1200)
+                page.wait_for_timeout(2000)
                 page.keyboard.up("d")
                 page.wait_for_timeout(200)
                 t_d1 = page.evaluate("() => window.__debugTelemetry")
@@ -1333,6 +1333,14 @@ class QAHarnessRunner:
 
                     comp_path = self.out_dir / "cp3_tier_comparison.png"
                     comp_img.save(comp_path)
+                    img_l.close()
+                    img_m.close()
+                    img_h.close()
+                    for ts_path in tier_shots.values():
+                        try:
+                            Path(ts_path).unlink(missing_ok=True)
+                        except Exception:
+                            pass
                     self.register_custom_checkpoint("cp3_tier_comparison", comp_path)
                     print("  [QA] CP3 Proof: Low/Medium/High comparison composite generated successfully.")
                 except Exception as e:

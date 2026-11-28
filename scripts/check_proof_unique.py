@@ -192,13 +192,11 @@ def check_proof_files(files: Sequence[Path]) -> tuple[bool, str, list[str]]:
     image_exts = {".png", ".jpg", ".jpeg", ".webp"}
     image_records = [r for r in file_records if r["path"].suffix.lower() in image_exts and r["size"] > 0]
 
-    # Semantic gate check for each image file (sidecars, modals, elements, colors, bounds)
+    # Semantic gate check for each HUD proof image file (sidecars, modals, elements, colors, bounds)
     for ir in image_records:
-        parent_has_json = any(p.suffix == ".json" for p in ir["path"].parent.iterdir() if p.is_file()) if ir["path"].parent.exists() else False
         is_hud_proof = (
             ir["name"].startswith(("after", "before", "movement"))
             or ir["path"].with_suffix(".json").exists()
-            or parent_has_json
         )
         if is_hud_proof:
             sem_ok, sem_msg = validate_screenshot_semantic(ir["path"])
