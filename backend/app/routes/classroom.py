@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from app import db as db_mod
@@ -21,6 +21,7 @@ from app.classroom.security import (
     normalize_join_code,
     validate_nickname,
 )
+from app.classroom.teachers import redeem_teacher_invite, verify_teacher_session
 from app.config import settings
 from app.security import rate_limiter, resolve_client_ip
 
@@ -119,3 +120,59 @@ async def student_join_class(payload: StudentJoinRequest, request: Request) -> S
         leaderboard_opt_in=payload.leaderboard_opt_in,
         expires_at=expires_at,
     )
+
+
+class TeacherRedeemRequest(BaseModel):
+    invite_token: str = Field(..., min_length=8, max_length=256)
+
+
+class TeacherRedeemResponse(BaseModel):
+    teacher_id: str
+    email: str
+    display_name: str
+    session_token: str
+    expires_at: str
+
+
+def _extract_bearer(authorization: str | None) -> str:
+    if not authorization:
+        return ""
+    parts = authorization.strip().split(" ", 1)
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1].strip()
+    return ""
+
+
+async def require_teacher(authorization: str | None = Header(default=None)) -> dict:
+    token = _extract_bearer(authorization)
+    teacher = await verify_teacher_session(db_mod.database, token)
+    if not teacher:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Valid teacher session token required.",
+        )
+    return teacher
+
+
+@router.post("/teacher/redeem", response_model=TeacherRedeemResponse)
+async def redeem_teacher_token(payload: TeacherRedeemRequest, request: Request) -> TeacherRedeemResponse:
+    """Redeem a single-use expiring teacher invite token for a session token."""
+    _enforce_auth_rate_limit(request)
+    res = await redeem_teacher_invite(db_mod.database, payload.invite_token)
+    if not res:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid, expired, or already-used invite token.",
+        )
+    return TeacherRedeemResponse(**res)
+
+
+@router.get("/teacher/me")
+async def get_teacher_profile(authorization: str | None = Header(default=None)) -> dict:
+    """Return the authenticated teacher's profile."""
+    teacher = await require_teacher(authorization)
+    return {
+        "teacher_id": teacher["teacher_id"],
+        "email": teacher["email"],
+        "display_name": teacher["display_name"],
+    }
