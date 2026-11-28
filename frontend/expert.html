@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simly Orbis — Expert Evidence Review (Read-Only)</title>
+  <link rel="stylesheet" href="./styles/tokens.css">
+  <style>
+    body { font-family: var(--font-sans, 'Inter', sans-serif); background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }
+    .wrap { max-width: 880px; margin: 0 auto; }
+    h1 { color: #38bdf8; margin: 0 0 8px 0; }
+    .panel { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 18px; margin-bottom: 16px; }
+    .muted { color: #94a3b8; font-size: 13px; }
+    label { display: block; font-size: 12px; color: #cbd5e1; margin-bottom: 4px; }
+    input, textarea { width: 100%; box-sizing: border-box; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+    .row-grid { display: grid; grid-template-columns: 180px 1fr; gap: 8px 14px; font-size: 14px; }
+    .key { color: #94a3b8; font-weight: 600; }
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    button { background: #0284c7; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+    button.confirm { background: #15803d; }
+    button.disagree { background: #b91c1c; }
+    button.secondary { background: #334155; }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  </style>
+</head>
+<body>
+  <main class="wrap" role="main">
+    <h1>Expert Evidence Review (Read-Only)</h1>
+    <p class="muted">Inspect one literature reference row at a time. Decisions are exported as a downloadable worksheet for <code>scripts/apply_verification.py</code> and never alter stored files directly.</p>
+
+    <section class="panel" aria-label="Reviewer Metadata">
+      <label for="reviewer-name">Reviewer Name (e.g. Dr. A. Sharma)</label>
+      <input id="reviewer-name" placeholder="Your full name">
+      <label for="review-date">Verification Date (YYYY-MM-DD)</label>
+      <input id="review-date" type="date">
+      <div id="progress-status" class="muted">Loading validation rows...</div>
+    </section>
+
+    <section class="panel" id="row-card" aria-label="Validation Row Details">
+      <div id="row-details" class="row-grid"></div>
+      <div style="margin-top: 12px;">
+        <label for="review-comment">Comment (required if disagreeing)</label>
+        <textarea id="review-comment" rows="2" placeholder="Optional note or discrepancy detail"></textarea>
+      </div>
+      <div class="actions">
+        <button type="button" class="secondary" id="prev-btn" aria-label="Previous row">← Previous</button>
+        <button type="button" class="confirm" id="confirm-btn">Confirm</button>
+        <button type="button" class="disagree" id="disagree-btn">Disagree + Comment</button>
+        <button type="button" class="secondary" id="next-btn" aria-label="Next row">Next →</button>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Export Worksheet">
+      <div id="recorded-count" class="muted">0 decisions recorded in this browser session.</div>
+      <div class="actions">
+        <button type="button" id="dl-json-btn">Download JSON Worksheet</button>
+        <button type="button" class="secondary" id="dl-csv-btn">Download CSV Worksheet</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let rows = [];
+    let idx = 0;
+    const decisions = new Map();
+
+    document.getElementById('review-date').value = new Date().toISOString().slice(0, 10);
+
+    function renderRow() {
+      const status = document.getElementById('progress-status');
+      const details = document.getElementById('row-details');
+      details.innerHTML = '';
+      if (!rows.length) {
+        status.textContent = 'No validation rows available.';
+        return;
+      }
+      const r = rows[idx];
+      const existing = decisions.get(r.id);
+      status.textContent = `Row ${idx + 1} of ${rows.length} (${r.file})` + (existing ? ` — Marked: ${existing.decision}` : '');
+      const fields = [
+        ['Row ID', r.id],
+        ['Quantity', r.quantity],
+        ['Reference Value', `${r.value} ${r.unit}`.trim()],
+        ['Condition / Population', r.population_or_condition],
+        ['Dose / Regimen', r.dose_or_regimen],
+        ['Source Citation', r.source_citation],
+        ['DOI / ISBN / URL', r.source_url_or_doi],
+        ['Current verified_by', r.verified_by || 'unverified'],
+        ['Current retrieved_on', r.retrieved_on || '(empty)'],
+        ['Notes', r.notes],
+      ];
+      for (const [k, v] of fields) {
+        const kd = document.createElement('div');
+        kd.className = 'key';
+        kd.textContent = k;
+        const vd = document.createElement('div');
+        vd.textContent = v || '—';
+        details.appendChild(kd);
+        details.appendChild(vd);
+      }
+      document.getElementById('review-comment').value = existing?.comment || '';
+      document.getElementById('recorded-count').textContent = `${decisions.size} decision(s) recorded in this browser session.`;
+    }
+
+    function record(decision) {
+      if (!rows.length) return;
+      const name = document.getElementById('reviewer-name').value.trim();
+      const date = document.getElementById('review-date').value.trim();
+      const comment = document.getElementById('review-comment').value.trim();
+      if (!name || !date) {
+        alert('Please enter your Reviewer Name and Date first.');
+        return;
+      }
+      if (decision === 'disagree' && !comment) {
+        alert('Please enter a comment explaining why you disagree.');
+        return;
+      }
+      const r = rows[idx];
+      decisions.set(r.id, {
+        id: r.id,
+        file: r.file,
+        decision,
+        verified_by: `${name}:${date}`,
+        retrieved_on: date,
+        comment,
+      });
+      if (idx < rows.length - 1) idx += 1;
+      renderRow();
+    }
+
+    function downloadBlob(filename, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('prev-btn').onclick = () => { if (idx > 0) { idx -= 1; renderRow(); } };
+    document.getElementById('next-btn').onclick = () => { if (idx < rows.length - 1) { idx += 1; renderRow(); } };
+    document.getElementById('confirm-btn').onclick = () => record('confirm');
+    document.getElementById('disagree-btn').onclick = () => record('disagree');
+
+    document.getElementById('dl-json-btn').onclick = () => {
+      downloadBlob('verification_worksheet.json', JSON.stringify(Array.from(decisions.values()), null, 2), 'application/json');
+    };
+    document.getElementById('dl-csv-btn').onclick = () => {
+      const esc = (s) => '"' + String(s ?? '').replace(/"/g, '""') + '"';
+      const lines = ['id,file,decision,verified_by,retrieved_on,comment'];
+      for (const d of decisions.values()) {
+        lines.push([d.id, d.file, d.decision, d.verified_by, d.retrieved_on, d.comment].map(esc).join(','));
+      }
+      downloadBlob('verification_worksheet.csv', lines.join('\n'), 'text/csv');
+    };
+
+    fetch('/api/validation/review')
+      .then((r) => r.json())
+      .then((d) => { rows = d.rows || []; renderRow(); })
+      .catch(() => { document.getElementById('progress-status').textContent = 'Could not load /api/validation/review.'; });
+  </script>
+</body>
+</html>
