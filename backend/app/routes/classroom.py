@@ -35,7 +35,7 @@ from app.classroom.security import (
 )
 from app.classroom.teachers import redeem_teacher_invite, verify_student_session, verify_teacher_session
 from app.config import settings
-from app.security import rate_limiter, resolve_client_ip
+from app.security import ai_cap_tracker, rate_limiter, resolve_client_ip
 
 router = APIRouter(prefix="/api/classroom", tags=["classroom"])
 
@@ -577,3 +577,21 @@ async def get_class_leaderboard(authorization: str | None = Header(default=None)
 
     entries = sorted(best_by_student.values(), key=lambda x: float(x["score"]), reverse=True)
     return {"class_id": sess["class_id"], "leaderboard": entries}
+
+
+# ---------------------------------------------------------------------------
+# P7-T6: Admin AI Cost Accounting View (Token-Protected)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/admin/ai-usage")
+async def get_admin_ai_usage(
+    authorization: str | None = Header(default=None),
+    x_admin_token: str | None = Header(default=None),
+) -> dict:
+    """Token-protected admin view for AI token counts, estimated cost, and alert thresholds."""
+    configured = (settings.admin_token or "").strip()
+    supplied = x_admin_token.strip() if x_admin_token else _extract_bearer(authorization)
+    if not configured or not supplied or not constant_time_equals(supplied, configured):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Valid admin token required.")
+    return ai_cap_tracker.get_status()

@@ -102,6 +102,17 @@ class AIDailyCapTracker:
         self._current_date = date.today().isoformat()
         self._call_count = 0
         self._session_counts: Dict[str, int] = {}
+        self._input_tokens = 0
+        self._output_tokens = 0
+
+    def _roll_day_if_needed(self) -> None:
+        today = date.today().isoformat()
+        if today != self._current_date:
+            self._current_date = today
+            self._call_count = 0
+            self._session_counts.clear()
+            self._input_tokens = 0
+            self._output_tokens = 0
 
     def can_call_ai(self, session_id: str | None = None) -> Tuple[bool, str]:
         """
@@ -111,11 +122,7 @@ class AIDailyCapTracker:
         if not settings.ai_enabled:
             return False, "ai_disabled"
 
-        today = date.today().isoformat()
-        if today != self._current_date:
-            self._current_date = today
-            self._call_count = 0
-            self._session_counts.clear()
+        self._roll_day_if_needed()
 
         if self._call_count >= settings.mentor_daily_cap:
             return False, "daily_cap_exceeded"
@@ -125,30 +132,50 @@ class AIDailyCapTracker:
 
         return True, ""
 
-    def record_call(self, session_id: str | None = None) -> None:
+    def record_call(
+        self,
+        session_id: str | None = None,
+        input_tokens: int = 0,
+        output_tokens: int = 0,
+    ) -> None:
+        self._roll_day_if_needed()
         self._call_count += 1
+        self._input_tokens += max(0, int(input_tokens))
+        self._output_tokens += max(0, int(output_tokens))
         if session_id:
             self._session_counts[session_id] = self._session_counts.get(session_id, 0) + 1
 
     def get_status(self) -> dict:
-        today = date.today().isoformat()
-        if today != self._current_date:
-            self._current_date = today
-            self._call_count = 0
-            self._session_counts.clear()
+        self._roll_day_if_needed()
+        # Gemini Flash-Lite reference rates: $0.075 / 1M input, $0.30 / 1M output
+        est_cost = (self._input_tokens / 1_000_000.0) * 0.075 + (self._output_tokens / 1_000_000.0) * 0.30
+        alerts: list[str] = []
+        if settings.mentor_daily_cap > 0 and self._call_count >= max(1, int(settings.mentor_daily_cap * 0.8)):
+            alerts.append("daily_call_threshold_80pct")
+        if est_cost >= settings.ai_cost_alert_usd:
+            alerts.append("daily_cost_threshold_exceeded")
 
         return {
+            "date": self._current_date,
             "ai_enabled": settings.ai_enabled,
             "calls_today": self._call_count,
             "daily_cap": settings.mentor_daily_cap,
             "session_cap": settings.ai_session_cap,
             "remaining": max(0, settings.mentor_daily_cap - self._call_count),
+            "input_tokens_today": self._input_tokens,
+            "output_tokens_today": self._output_tokens,
+            "total_tokens_today": self._input_tokens + self._output_tokens,
+            "estimated_cost_usd": round(est_cost, 6),
+            "cost_alert_threshold_usd": settings.ai_cost_alert_usd,
+            "alerts": alerts,
         }
 
     def reset_for_test(self, count: int = 0) -> None:
         self._current_date = date.today().isoformat()
         self._call_count = count
         self._session_counts.clear()
+        self._input_tokens = 0
+        self._output_tokens = 0
 
 
 ai_cap_tracker = AIDailyCapTracker()

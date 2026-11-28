@@ -161,7 +161,11 @@ async def call_ai_assistant(
         )
         text = (resp.text or "").strip()
         if text:
-            ai_cap_tracker.record_call(session_id=session_id)
+            ai_cap_tracker.record_call(
+                session_id=session_id,
+                input_tokens=resp.input_tokens,
+                output_tokens=resp.output_tokens,
+            )
             return AIResult(
                 text=text,
                 provider=provider.name,
