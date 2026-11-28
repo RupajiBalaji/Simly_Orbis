@@ -41,6 +41,7 @@ class MembershipRecord(BaseModel):
     class_id: str
     student_id: str
     nickname: str
+    nickname_lower: str = ""  # for case-insensitive uniqueness checks
     leaderboard_opt_in: bool = False
     joined_at: str = Field(default_factory=utc_now_iso)
 
@@ -120,10 +121,16 @@ async def ensure_classroom_indexes(db: Any) -> dict[str, list[str]]:
         [("class_id", pymongo.ASCENDING), ("nickname", pymongo.ASCENDING)],
         name="memberships_class_nickname_idx",
     )
+    await memberships.create_index(
+        [("class_id", pymongo.ASCENDING), ("nickname_lower", pymongo.ASCENDING)],
+        unique=True,
+        name="memberships_class_nickname_lower_unique_idx",
+    )
     created["class_memberships"] = [
         "memberships_id_unique_idx",
         "memberships_class_student_unique_idx",
         "memberships_class_nickname_idx",
+        "memberships_class_nickname_lower_unique_idx",
     ]
 
     assignments = db["assignments"]
