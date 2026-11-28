@@ -900,6 +900,15 @@ def build_audit_report(results: list[GateResult], repo_root: Path) -> str:
 5. **G5 (No Fabricated Provenance):** Literature citations are accompanied by unverified flags and blank `retrieved_on` timestamps pending primary source human sign-off.
 6. **G9 (Adult-Only Boundaries):** Dose Response Lab enforces strict adult ranges (Age 18–90, Weight 40–150 kg, CrCl 15–150 mL/min). Pediatric inquiries are rejected.
 7. **G7 (Protected Code / Engine Immutability):** Baseline engines (`pharma.pk`, `pharma.trial`, `chem.titration`, `space.orbit`) and safety rules R1–R10 / S1–S8 maintain 0 diff vs baseline commits.
+
+---
+
+## Human-Dependent Items (`BLOCKED-HUMAN`)
+
+1. **Primary-Literature Verification (`validation/data/*.csv`)**: All 32 reference rows remain `verified_by = "unverified"` with blank `retrieved_on` pending founder/expert sign-off via `docs/validation/VERIFICATION_WORKSHEET.md`.
+2. **Founder Held-Out Parser Evaluation**: `backend/tests/data/founder_heldout_phrases.json` is not yet provided by the founder.
+3. **DPDP / Legal Review**: India DPDP Act compliance and under-18 classroom pilot legal review remain unconfirmed.
+4. **Live Render Staging / Production Deploy & Feel Test**: Hosting deploy, tag `pre-p5-main`, and interactive founder feel test require human action.
 """
     return report
 

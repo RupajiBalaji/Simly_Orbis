@@ -78,15 +78,9 @@ async def call_ai_assistant(
             temperature=0.4,
         )
 
-        # Prioritize configured model, followed by primary standard fallback
-        models_to_try: list[str] = []
-        preferred_model = settings.gemini_model.strip()
-        if preferred_model:
-            models_to_try.append(preferred_model)
-        for fallback_model in ("gemini-2.0-flash", "gemini-flash-lite-latest"):
-            if fallback_model not in models_to_try:
-                models_to_try.append(fallback_model)
-                break  # At most one fallback model to prevent compounding latency
+        # Use only the configured GEMINI_MODEL path (default in settings)
+        preferred_model = settings.gemini_model.strip() or "gemini-flash-lite-latest"
+        models_to_try: list[str] = [preferred_model]
 
         last_error: Exception | None = None
         for model_name in models_to_try:
