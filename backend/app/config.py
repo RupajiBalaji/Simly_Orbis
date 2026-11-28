@@ -19,6 +19,14 @@ class Settings(BaseSettings):
     environment: str = "development"
     spec_runtime: bool = False
 
+    # P6 Classroom, accounts, tokens & retention settings (13.4, 13.6)
+    guest_session_retention_days: int = 90
+    teacher_invite_ttl_minutes: int = 60
+    teacher_session_ttl_hours: int = 24
+    student_session_ttl_hours: int = 24
+    join_code_ttl_days: int = 90
+    admin_token: str = ""
+
     model_config = SettingsConfigDict(
         env_file=("backend/.env", ".env"),
         env_file_encoding="utf-8",

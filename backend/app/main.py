@@ -32,7 +32,7 @@ from app.modules.chem_titration import ChemTitrationModule
 from app.modules.pharma_pk import PharmaPKModule
 from app.modules.pharma_trial import PharmaTrialModule
 from app.modules.pharma_trial_v2 import PharmaTrialV2Module
-from app.routes import calibrate, drugs, lab, levels, modules, runs, scores, simulate, specs, trial, tutor, validation
+from app.routes import calibrate, classroom, drugs, lab, levels, modules, runs, scores, simulate, specs, trial, tutor, validation
 from app.security import rate_limiter, resolve_client_ip, validate_startup_config
 
 logging.basicConfig(
@@ -287,6 +287,7 @@ app.include_router(specs.router)
 app.include_router(trial.router)
 app.include_router(calibrate.router)
 app.include_router(validation.router)
+app.include_router(classroom.router)
 
 
 # ---------------------------------------------------------------------------

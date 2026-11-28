@@ -57,6 +57,7 @@ class RateLimiter:
         "general": (120.0, 120.0 / 60.0),   # (capacity, refill_per_sec)
         "ai": (10.0, 10.0 / 60.0),
         "session_create": (20.0, 20.0 / 60.0),
+        "auth": (15.0, 15.0 / 60.0),
     }
 
     def __init__(self) -> None:
