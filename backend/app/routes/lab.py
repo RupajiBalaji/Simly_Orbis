@@ -334,14 +334,10 @@ def _generate_rule_based_mentor_message(
     elif mode == "explain":
         if session.violations:
             v = session.violations[-1]
-            hint_msg = v.explanation
-            try:
-                from app.routes.tutor import get_spec_mentor_hint
-                rule_h = get_spec_mentor_hint(session.experiment_id, rule_id=v.rule_id)
-                if rule_h:
-                    hint_msg = rule_h
-            except Exception:
-                pass
+            from app.lab.rule_hints import build_rule_based_hint  # noqa: PLC0415
+
+            engine_vals = {**session.apparatus_state, "ppe": list(session.ppe)}
+            hint_msg = build_rule_based_hint(v.rule_id, engine_vals)
             return (
                 f"Dr. Orbis: Regarding safety violation '{v.title}': {hint_msg} "
                 "Follow standard PPE and containment guidelines."
