@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.9.1-dev] - 2026-11-28
+
+### Added
+- **UI Round 2 & 3 (U1–U7, V1–V5) & P5-HARDEN-ALL**:
+  - Unified Current Task primary action button (`Go to <Station> and do this` walk-and-act, single primary button budget, 5-second post-walkthrough pulse) and `❓ What do I do?` plain-English step explanation popover.
+  - Launch Bench collapsible telemetry/sliders drawer toggled via `🚀` in top-left (persisted in `localStorage`), PBR lighting (`buildLighting()`), `#space-scene-loading` indicator, and Pad View camera `(18.5, 11.0, 26.0)` with `maxDistance: 220.0` framing full rocket, pad apron, and character.
+  - Shared `resolve_client_ip(request)` in `app.security` with `TRUST_PROXY` gating and last-hop extraction used by `SecurityAndRateLimitMiddleware` and `routes/specs.py`.
+  - Read-only `?debug=1` / `F3` telemetry hook (`window.__debugTelemetry`) and `qa/run.py` movement/camera assertions.
+
+### Fixed
+- Computed true starting `Score: 100` (sum of `score_parts`) and normalized `Safety 100/100` (neutral/green when `violations` is empty; missing PPE shown as calm `📋 To-Do` chip).
+- Suppressed floating proximity prompt when not matching the active step target (no `Use Label Pen` during Step 1 PPE).
+- Stacked mobile `#hud-top-right` below `#hud-top-left` (`top: 52px`) at `<= 600px` so experiment titles never clip at `390x844`.
+- Repositioned `#toast-container` below the HUD (`top: 66px`) and suppressed benchmark/auto-performance toasts in headless/software-render runs.
+- Filtered third-party `DeprecationWarning` noise in `backend/pytest.ini` and synced `scripts/self_audit.py` governance labels to G-ids.
+
+---
+
 ## [0.9.0-dev] - 2026-11-22
 
 ### Added

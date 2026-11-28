@@ -50,7 +50,7 @@ To achieve the target where a user understands their next action in **under 5 se
 |---|---|---|---|---|
 | **1** | `top-left` | `#hud-top-left` | Top-Left | Experiment name, `Step X of Y` indicator, slim animated progress bar, and primary `☰ Menu` button. |
 | **2** | `top-right` | `#hud-top-right` | Top-Right | Clean, non-jargon metrics: `Time: X.X h`, `Score: XXX`, `Safety XX/100` with tooltips, and `⚙️` Settings gear button. |
-| **3** | `task-card` | `#hud-current-task-card` | Bottom-Center | **Single focal point.** Displays current step title, one-line hint, contextual missing PPE badge (only when relevant to current step), 1–3 primary action buttons, `Go to <Station>` button, and `➕ More actions` drawer toggle. |
+| **3** | `task-card` | `#hud-current-task-card` | Bottom-Center | **Single focal point.** Displays current step title, `❓ What do I do?` plain-English popover toggle, one-line hint, contextual PPE to-do chip (`📋 To-Do: Put on ...`), **one** primary action button (`Go to <Station> and do this` when away, or direct action when at station; 5-second pulse after walkthrough), and `➕ More actions` drawer toggle. |
 | **4** | `ask-orbis` | `#hud-ask-orbis-trigger` | Bottom-Left | Chat bubble icon button (Press `/` to open). Opens docked AI command panel. Renamed actions: "Show plan" -> "Run". Placeholder: `"Tell the character what to do, e.g. put on goggles"`. |
 | **5** | `dr-orbis` | `#hud-dr-orbis-trigger` | Bottom-Right | Round button with mentor avatar and unread notification dot. Closed by default. Opens docked side panel with dedicated tabs for **Mentor Guidance** and **Event Log**. Never overlaps other panels. |
 
@@ -64,8 +64,8 @@ Every element in the old interface has been audited, categorized, and relocated:
 |---|---|---|---|
 | **App Title & Step Counter** | Top Bar & Next Banner | **MERGED** | `#hud-top-left` (Persistent Element 1) |
 | **Clock ('t=0.0 h')** | Top Bar chip | **REFORMATTED** | `#hud-top-right` as plain language `Time: 0.0 h` |
-| **Safety Score ('40 pts')** | Top Bar pill | **REFORMATTED** | `#hud-top-right` as clean `Score: 100` |
-| **3 Always-On PPE Chips** | Top Bar center | **MERGED** | Single `Safety 40/100` badge; contextual missing warning on Task Card only when relevant to step. |
+| **Safety Score ('40 pts')** | Top Bar pill | **REFORMATTED** | `#hud-top-right` as `Score: 100` (sum of backend `score_parts` rubric) |
+| **3 Always-On PPE Chips** | Top Bar center | **MERGED** | Normalized `Safety 100/100` badge (neutral/green with 0 violations, amber/red only on violations); missing PPE shown as `📋 To-Do` chip on Task Card. |
 | **Menu Toggle** | *None* | **NEW** | `☰ Menu` button in `#hud-top-left` opening slide-over drawer. |
 | **Settings Gear** | *None* | **NEW** | `⚙️` button in `#hud-top-right` opening settings drawer. |
 | **Camera Cluster (4 buttons)** | Top Bar | **MOVED** | Inside Menu drawer (`#hud-menu-drawer`). |

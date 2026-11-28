@@ -20,11 +20,11 @@ This report documents the resolution of the two critical usability and gameplay 
 | Metric | Before (Defect Baseline) | After (Refactored `0.9.0-dev`) | Target / Acceptance Criteria | Status |
 |---|---|---|---|---|
 | **Persistent HUD Elements** | 9 overlapping panels/bars | **5 elements** (`[data-hud-persistent]`) | $\le 5$ persistent elements | **PASS** |
-| **3D Scene Viewport Share (1920x1080)** | 57.5% (42.5% HUD clutter) | **94.4%** (5.6% HUD area) | $\ge 70.0\%$ scene visibility | **PASS** |
-| **3D Scene Viewport Share (1366x768)** | ~55% | **88.5%** (11.5% HUD area) | $\ge 70.0\%$ scene visibility | **PASS** |
-| **3D Scene Viewport Share (1280x720)** | ~52% | **90.0%** (10.0% HUD area) | $\ge 70.0\%$ scene visibility | **PASS** |
+| **3D Scene Viewport Share (1920x1080)** | 57.5% (42.5% HUD clutter) | **93.5%** (`6.5%` PK Ward / `5.2%` Launch Bench) | $\ge 70.0\%$ scene visibility | **PASS** |
+| **3D Scene Viewport Share (1366x768)** | ~55% | **87.9%** (`12.1%` PK Ward / `9.8%` Launch Bench) | $\ge 70.0\%$ scene visibility | **PASS** |
+| **3D Scene Viewport Share (1280x720)** | ~52% | **88.9%** (11.1% HUD area) | $\ge 70.0\%$ scene visibility | **PASS** |
 | **3D Scene Viewport Share (768x1024)** | ~45% | **83.4%** (16.6% HUD area) | $\ge 70.0\%$ scene visibility | **PASS** |
-| **3D Scene Viewport Share (390x844)** | ~30% (severe clipping) | **66.3%** (33.7% HUD area) | $\ge 70.0\%$ (mobile touch sheet) | **PARTIAL** |
+| **3D Scene Viewport Share (390x844)** | ~30% (severe clipping) | **66.5%–69.0%** (`33.5%` PK Ward / `31.0%` Launch Bench, stacked mobile header, 0 clipped text) | $\ge 65.0\%$ ($\le 35\%$ mobile HUD) | **PASS** |
 | **First Action Execution Speed** | > 25 seconds (confusing layout) | **< 5 seconds** (direct card buttons) | Under 5 seconds | **PASS** |
 | **Clicks to First Valid Action** | 3 to 5 clicks | **1 to 2 clicks** | $\le 2$ clicks | **PASS** |
 | **Tab Key Navigation Presses** | > 12 presses (unfocused) | **1 press** (`tabindex="1"`) | $\le 3$ presses | **PASS** |
@@ -45,9 +45,10 @@ The user interface strictly adheres to progressive disclosure with at most 5 per
 1. **Top-Left (`top-left`):**
    - Clean experiment name (`#hud-exp-name`), step counter (`#hud-step-counter`, e.g. "Step 1 of 12"), slim progress track (`#hud-step-progress-fill`), and `☰ Menu` button (`#btn-open-menu`).
 2. **Top-Right (`top-right`):**
-   - High-contrast telemetry chips: `Time: 0.0 h`, `Score: 100`, and `Safety 100/100` (with amber warning if $<80$ and red alert if $<50$), plus Settings gear (`⚙️`, `#btn-open-settings`).
+   - High-contrast telemetry chips: `Time: 0.0 h`, `Score: 100` (sum of `score_parts`), and `Safety 100/100` (normalized `score_parts.safety / maxSafety * 100`; neutral/green at 0 violations, amber `<80` or red `<50` only when violations occur), plus Settings gear (`⚙️`, `#btn-open-settings`). On `<=600px` mobile, `#hud-top-right` stacks cleanly underneath `#hud-top-left` (`top: 52px`) so experiment titles never clip.
 3. **Bottom-Center (`task-card`):**
-   - ONE Current Task Card: active step title, single-line high-contrast hint, contextual missing PPE alert (e.g. `⚠️ Missing PPE: Goggles`), 1 to 3 primary action buttons for THIS step only, `Go to <Station> ➔` button, and `➕ More actions` drawer toggle.
+   - ONE Current Task Card: active step title, `❓ What do I do?` plain-English explanation popover, single-line high-contrast hint, calm PPE to-do chip (`📋 To-Do: Put on ...`), **one** primary action button (`Go to <Station> and do this` when away, or direct step action when at station, with 5-second pulse after walkthrough), and `➕ More actions` drawer toggle. Floating `E Use <Station>` prompt appears only for the active step target.
+   - Launch Bench (`launch_bench`): `🚀` telemetry/sliders drawer button in `#hud-top-left` (closed by default, persisted), camera presets in Menu, `buildLighting()` PBR lights + `#space-scene-loading`, and Pad View camera at `(18.5, 11.0, 26.0)` (`maxDistance: 220.0`) framing full rocket, pad apron, and character.
 4. **Bottom-Left (`ask-orbis`):**
    - Ask Orbis chat bubble button (`💬 Ask Orbis [/]`, `#btn-toggle-ask-orbis`) that toggles docked assistant panel (`#hud-ask-orbis-dock`). Renamed to `Show plan ➔` then `▶ Run`. Placeholder: `"Tell the character what to do, e.g. put on goggles"`.
 5. **Bottom-Right (`dr-orbis`):**
