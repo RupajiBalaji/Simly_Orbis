@@ -10,7 +10,7 @@ import csv
 import io
 import uuid
 
-from fastapi import APIRouter, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
@@ -449,10 +449,9 @@ async def require_student(authorization: str | None = Header(default=None)) -> d
 async def create_assignment(
     class_id: str,
     payload: CreateAssignmentRequest,
-    authorization: str | None = Header(default=None),
+    teacher: dict = Depends(require_teacher),
 ) -> dict:
     """Create an assignment for a class owned by the authenticated teacher."""
-    teacher = await require_teacher(authorization)
     await _get_owned_class(class_id, teacher["teacher_id"])
 
     rec = AssignmentRecord(
