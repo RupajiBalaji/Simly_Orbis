@@ -101,8 +101,9 @@ class AIDailyCapTracker:
     def __init__(self) -> None:
         self._current_date = date.today().isoformat()
         self._call_count = 0
+        self._session_counts: Dict[str, int] = {}
 
-    def can_call_ai(self) -> Tuple[bool, str]:
+    def can_call_ai(self, session_id: str | None = None) -> Tuple[bool, str]:
         """
         Check if an AI call is permitted.
         Returns (is_allowed, reason_if_blocked).
@@ -114,31 +115,40 @@ class AIDailyCapTracker:
         if today != self._current_date:
             self._current_date = today
             self._call_count = 0
+            self._session_counts.clear()
 
         if self._call_count >= settings.mentor_daily_cap:
             return False, "daily_cap_exceeded"
 
+        if session_id and self._session_counts.get(session_id, 0) >= settings.ai_session_cap:
+            return False, "session_cap_exceeded"
+
         return True, ""
 
-    def record_call(self) -> None:
+    def record_call(self, session_id: str | None = None) -> None:
         self._call_count += 1
+        if session_id:
+            self._session_counts[session_id] = self._session_counts.get(session_id, 0) + 1
 
     def get_status(self) -> dict:
         today = date.today().isoformat()
         if today != self._current_date:
             self._current_date = today
             self._call_count = 0
+            self._session_counts.clear()
 
         return {
             "ai_enabled": settings.ai_enabled,
             "calls_today": self._call_count,
             "daily_cap": settings.mentor_daily_cap,
+            "session_cap": settings.ai_session_cap,
             "remaining": max(0, settings.mentor_daily_cap - self._call_count),
         }
 
     def reset_for_test(self, count: int = 0) -> None:
         self._current_date = date.today().isoformat()
         self._call_count = count
+        self._session_counts.clear()
 
 
 ai_cap_tracker = AIDailyCapTracker()

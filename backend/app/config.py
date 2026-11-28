@@ -11,7 +11,9 @@ class Settings(BaseSettings):
 
     # RC1 Hardening & Cost Protection
     mentor_daily_cap: int = 300
+    ai_session_cap: int = 20
     ai_enabled: bool = True
+    ai_cost_alert_usd: float = 5.0
     allowed_origins: str = "http://localhost:8000,http://127.0.0.1:8000"
     trust_proxy: bool = False
     git_sha: str = ""
