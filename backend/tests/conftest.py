@@ -53,7 +53,7 @@ def pytest_collection_modifyitems(config, items):
 
 from app.main import app
 import app.db as _db
-from app.core.registry import register
+from app.core.registry import _REGISTRY, register
 from app.modules.pharma_pk import PharmaPKModule
 from app.modules.chem_titration import ChemTitrationModule
 from app.modules.pharma_trial import PharmaTrialModule
@@ -66,6 +66,7 @@ async def client():
     Ensures init_db() populates _db.database before any request arrives.
     """
     await _db.init_db()
+    _REGISTRY.clear()
     register(PharmaPKModule())
     register(ChemTitrationModule())
     register(PharmaTrialModule())
