@@ -279,7 +279,11 @@ class QAHarnessRunner:
                     record_video_size={"width": 1280, "height": 720},
                     viewport={"width": 1280, "height": 720},
                 )
-                context.add_init_script("localStorage.setItem('orbis_tutorial_completed', 'true');")
+                context.add_init_script("""
+                    localStorage.setItem('orbis_coachmarks_seen', 'true');
+                    localStorage.setItem('orbis_tutorial_completed', 'true');
+                    localStorage.setItem('orbis_onboarding_completed', 'true');
+                """)
 
                 page = context.new_page()
                 page.set_default_timeout(self.timeout_ms)

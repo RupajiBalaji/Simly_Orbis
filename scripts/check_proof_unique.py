@@ -60,6 +60,8 @@ def validate_screenshot_semantic(file_path: Path) -> tuple[bool, str]:
     modal_count = sidecar_data.get("modal_count", 0)
     if modal_count > 0:
         return False, f"Sidecar records modal_count={modal_count} (> 0)"
+    if sidecar_data.get("coachmark_visible") or sidecar_data.get("onboarding_visible") or sidecar_data.get("lobby_visible"):
+        return False, "Sidecar records visible coachmark/onboarding/lobby overlay"
 
     is_before = file_path.name.lower().startswith("before")
     expected_persistent = 9 if is_before else 5

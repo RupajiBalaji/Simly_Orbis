@@ -191,12 +191,27 @@ def get_sidecar_metrics(page, scenario: str, viewport_w: int, viewport_h: int) -
             }
         });
 
+        const isElVisible = (el) => {
+            if (!el) return false;
+            if (el.classList.contains('hidden') || el.closest('.hidden')) return false;
+            const st = window.getComputedStyle(el);
+            if (st.display === 'none' || st.visibility === 'hidden' || st.opacity === '0') return false;
+            const r = el.getBoundingClientRect();
+            return r.width > 10 && r.height > 10;
+        };
+        const coachmarkVisible = isElVisible(document.getElementById('hud-coachmarks-overlay'));
+        const onboardingVisible = isElVisible(document.getElementById('modal-onboarding'));
+        const lobbyVisible = isElVisible(document.getElementById('screen-lobby'));
+
         return {
             scenario: "",
             viewport: { width: vpW, height: vpH },
             visible_persistent_elements_count: visiblePersistentCount,
             visible_persistent_keys: visibleKeys,
             modal_count: modalCount,
+            coachmark_visible: coachmarkVisible,
+            onboarding_visible: onboardingVisible,
+            lobby_visible: lobbyVisible,
             visible_modals: visibleModals,
             large_overlays: largeOverlays,
             canvas_frame_count: frameCount,
@@ -219,6 +234,9 @@ def get_sidecar_metrics(page, scenario: str, viewport_w: int, viewport_h: int) -
 
 def assert_pre_save_contract(metrics: dict, filename: str):
     """Assert all pre-save requirements pass before saving a screenshot."""
+    assert not metrics.get("coachmark_visible"), f"PRE-SAVE ASSERTION FAILED on {filename}: coachmark_visible=True"
+    assert not metrics.get("onboarding_visible"), f"PRE-SAVE ASSERTION FAILED on {filename}: onboarding_visible=True"
+    assert not metrics.get("lobby_visible"), f"PRE-SAVE ASSERTION FAILED on {filename}: lobby_visible=True"
     assert metrics["modal_count"] == 0, (
         f"PRE-SAVE ASSERTION FAILED on {filename}: modal_count is {metrics['modal_count']} (expected 0). "
         f"Modals: {metrics['visible_modals']}, Large overlays: {metrics['large_overlays']}"
@@ -394,8 +412,9 @@ def capture_after_screenshots(port: int = 8018):
             context = browser.new_context(viewport={"width": w, "height": h})
             # Q1: Set onboarding completed in localStorage BEFORE page load
             context.add_init_script("""
-                localStorage.setItem('orbis_tutorial_completed', 'true');
                 localStorage.setItem('orbis_coachmarks_seen', 'true');
+                localStorage.setItem('orbis_tutorial_completed', 'true');
+                localStorage.setItem('orbis_onboarding_completed', 'true');
                 localStorage.setItem('orbis_hud_coachmarks_seen', 'true');
                 localStorage.setItem('orbis_walkthrough_completed', 'true');
             """)
@@ -472,8 +491,9 @@ def capture_movement_proof_strip(port: int = 8018):
         )
         context = browser.new_context(viewport={"width": 1280, "height": 720})
         context.add_init_script("""
-            localStorage.setItem('orbis_tutorial_completed', 'true');
             localStorage.setItem('orbis_coachmarks_seen', 'true');
+            localStorage.setItem('orbis_tutorial_completed', 'true');
+            localStorage.setItem('orbis_onboarding_completed', 'true');
             localStorage.setItem('orbis_hud_coachmarks_seen', 'true');
             localStorage.setItem('orbis_walkthrough_completed', 'true');
         """)
