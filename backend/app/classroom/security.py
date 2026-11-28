@@ -89,12 +89,14 @@ def validate_nickname(raw: str) -> tuple[bool, str]:
     if not re.match(r"^[A-Za-z0-9 _.-]+$", cleaned):
         return False, "Nickname may only contain letters, numbers, spaces, '.', '_', and '-'."
 
-    # Check whole-word and substring profanity after collapsing leetspeak/separators
+    # Check whole-token profanity after splitting on separators and normalizing leetspeak per token.
+    # We deliberately do NOT search the full collapsed string to avoid false positives
+    # on names like "Essex" (contains "sex") or "Dickens" (contains "dick").
     lowered = cleaned.lower()
+    leet_map = str.maketrans("013457", "oieast")
     tokens = re.split(r"[\s._-]+", lowered)
-    collapsed = re.sub(r"[^a-z0-9]", "", lowered).translate(str.maketrans("013457", "oieast"))
-    for term in _PROFANITY_TERMS:
-        if term in tokens or term in collapsed:
+    for tok in tokens:
+        if tok in _PROFANITY_TERMS or tok.translate(leet_map) in _PROFANITY_TERMS:
             return False, "Please choose a classroom-appropriate nickname."
 
     return True, cleaned
