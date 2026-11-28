@@ -50,6 +50,10 @@ class CreateSessionRequest(BaseModel):
 
     experiment_id: str = Field(..., description="Target experiment ID ('pk_ward' or 'titration_bench')")
     nickname: str = Field(default="Researcher", description="Player or researcher nickname")
+    # Classroom linkage (optional – only set when starting from an assignment)
+    class_id: str | None = Field(default=None, description="Classroom class ID")
+    student_id: str | None = Field(default=None, description="Student ID from classroom session")
+    assignment_id: str | None = Field(default=None, description="Assignment ID being completed")
 
 
 class FinishSessionRequest(BaseModel):
@@ -124,6 +128,13 @@ async def start_session(body: CreateSessionRequest) -> dict[str, Any]:
 
     clean_nickname = sanitize_text(body.nickname, max_length=24) or "Researcher"
     session = create_session(body.experiment_id, clean_nickname)
+    # Store classroom linkage if provided
+    if body.class_id:
+        session.class_id = body.class_id
+    if body.student_id:
+        session.student_id = body.student_id
+    if body.assignment_id:
+        session.assignment_id = body.assignment_id
     session_dict = session.model_dump()
     await _db.upsert_lab_session(session_dict)
     return session_dict
@@ -601,6 +612,7 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
                 provider_tag="Safety Refusal",
                 fallback_reason=None,
                 calls_left=calls_left,
+                refused=True,
             )
 
         paed_triggers = ["child", "pediatric", "paediatric", "toddler", "infant", "baby", "8 years", "5 years", "10 years"]
@@ -616,6 +628,7 @@ async def query_mentor(session_id: str, body: MentorRequest) -> MentorResponse:
                 provider_tag="Safety Refusal",
                 fallback_reason=None,
                 calls_left=calls_left,
+                refused=True,
             )
 
     # Check 60-second TTL cache on (session state hash + mode + question)
@@ -845,7 +858,7 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
 **Commander**: {session.nickname}  
 **Vehicle**: {r_state.get('name', 'Launch Vehicle')}  
 **Payload**: {float(r_state.get('payload_kg', 0.0)):.0f} kg  
-**Final Outcome**: {outcome.upper()}  
+**Final Outcome**: {(outcome or "incomplete").upper()}  
 **Overall Grade**: {grade} ({total_score}/100)
 
 ---
@@ -962,6 +975,10 @@ async def finish_session(session_id: str, body: FinishSessionRequest | None = No
         "hints_used": getattr(session, "hints_used", 0),
         "reality_checks_summary": "11/11 passed",
         "created_at": now_iso,
+        # Classroom linkage (may be None for free-play sessions)
+        "class_id": session.class_id,
+        "student_id": session.student_id,
+        "assignment_id": session.assignment_id,
     }
 
 

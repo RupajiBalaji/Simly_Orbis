@@ -65,8 +65,58 @@
         if (!a.assignments.length) box.textContent = 'No assignments yet.';
         for (const item of a.assignments) {
           const div = document.createElement('div');
-          div.style.marginBottom = '8px';
-          div.textContent = item.title + ' [' + (item.graded ? 'Graded' : 'Practice') + '] — ' + item.experiment_id + (item.due_date ? ' (Due: ' + item.due_date + ')' : '');
+          div.style.marginBottom = '10px';
+          div.style.display = 'flex';
+          div.style.flexWrap = 'wrap';
+          div.style.gap = '8px';
+          div.style.alignItems = 'center';
+
+          const span = document.createElement('span');
+          span.textContent = item.title + ' [' + (item.graded ? 'Graded' : 'Practice') + '] — ' + item.experiment_id + (item.due_date ? ' (Due: ' + item.due_date + ')' : '');
+          div.appendChild(span);
+
+          const sessInput = document.createElement('input');
+          sessInput.type = 'text';
+          sessInput.placeholder = 'Finished Session ID';
+          sessInput.style.width = '220px';
+          sessInput.style.marginBottom = '0';
+          sessInput.value = sessionStorage.getItem('orbis_last_session_id') || '';
+          sessInput.setAttribute('aria-label', 'Session ID for ' + item.title);
+
+          const submitBtn = document.createElement('button');
+          submitBtn.type = 'button';
+          submitBtn.textContent = 'Submit Assignment';
+          const statusSpan = document.createElement('span');
+          statusSpan.className = 'muted';
+
+          submitBtn.onclick = async () => {
+            const sid = sessInput.value.trim();
+            if (!sid) {
+              statusSpan.textContent = 'Enter a finished Lab Session ID first.';
+              return;
+            }
+            const sr = await fetch('/api/lab/sessions/' + encodeURIComponent(sid));
+            if (!sr.ok) {
+              statusSpan.textContent = 'Session not found.';
+              return;
+            }
+            const subRes = await fetch('/api/classroom/student/assignments/' + encodeURIComponent(item.assignment_id) + '/submit', {
+              method: 'POST',
+              headers: hdrs(),
+              body: JSON.stringify({ session_id: sid }),
+            });
+            if (!subRes.ok) {
+              const err = await subRes.json().catch(() => ({}));
+              statusSpan.textContent = err.detail || 'Submission failed.';
+              return;
+            }
+            statusSpan.textContent = 'Submitted!';
+            await loadStudentData();
+          };
+
+          div.appendChild(sessInput);
+          div.appendChild(submitBtn);
+          div.appendChild(statusSpan);
           box.appendChild(div);
         }
       }

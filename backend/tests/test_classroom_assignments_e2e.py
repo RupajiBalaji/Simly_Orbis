@@ -34,7 +34,7 @@ def test_end_to_end_teacher_assignment_and_student_run(client):
     asg_res = client.post(
         f"/api/classroom/classes/{class_id}/assignments",
         json={
-            "experiment_id": "pk_oral_ward",
+            "experiment_id": "pk_ward",
             "title": "Oral PK Graded Run",
             "parameter_presets": {"dose_mg": 500, "interval_h": 8},
             "due_date": "2026-12-31T23:59:00Z",
@@ -67,15 +67,39 @@ def test_end_to_end_teacher_assignment_and_student_run(client):
     assert len(a_asgs.json()["assignments"]) == 1
     assert a_asgs.json()["assignments"][0]["parameter_presets"]["dose_mg"] == 500
 
-    # 4. Both submit results
+    # 4. Both run and finish real lab sessions, then submit
+    sess_a = client.post(
+        "/api/lab/sessions",
+        json={
+            "experiment_id": "pk_ward",
+            "nickname": "Alice_Rx",
+            "class_id": class_id,
+            "student_id": alice_join.json()["student_id"],
+            "assignment_id": asg_id,
+        },
+    ).json()
+    client.post(f"/api/lab/sessions/{sess_a['session_id']}/finish")
+
+    sess_b = client.post(
+        "/api/lab/sessions",
+        json={
+            "experiment_id": "pk_ward",
+            "nickname": "Bob_Rx",
+            "class_id": class_id,
+            "student_id": bob_join.json()["student_id"],
+            "assignment_id": asg_id,
+        },
+    ).json()
+    client.post(f"/api/lab/sessions/{sess_b['session_id']}/finish")
+
     s_alice = client.post(
         f"/api/classroom/student/assignments/{asg_id}/submit",
-        json={"session_id": "sess-a1", "score": 88.0, "grade": "B+", "violations": ["R2"], "time_seconds": 110.0},
+        json={"session_id": sess_a["session_id"]},
         headers=a_headers,
     )
     s_bob = client.post(
         f"/api/classroom/student/assignments/{asg_id}/submit",
-        json={"session_id": "sess-b1", "score": 96.0, "grade": "A", "violations": [], "time_seconds": 95.0},
+        json={"session_id": sess_b["session_id"]},
         headers=b_headers,
     )
     assert s_alice.status_code == 200

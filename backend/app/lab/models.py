@@ -225,6 +225,7 @@ class MentorResponse(BaseModel):
     provider_tag: str = "Rule-based"
     fallback_reason: str | None = None
     calls_left: int
+    refused: bool = False
 
 
 class LabSession(BaseModel):
@@ -255,6 +256,11 @@ class LabSession(BaseModel):
     agent_calls: int = 0
     mentor_history: list[dict[str, str]] = Field(default_factory=list)
     status: Literal["active", "completed", "failed"] = "active"
+
+    # Classroom linkage (optional – only set when started from an assignment)
+    class_id: str | None = None
+    student_id: str | None = None
+    assignment_id: str | None = None
 
     model_config = {
         "arbitrary_types_allowed": True,

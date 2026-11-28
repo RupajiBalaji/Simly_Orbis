@@ -83,15 +83,9 @@ async def student_join_class(payload: StudentJoinRequest, request: Request) -> S
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid class code.")
 
     code_hash = hash_secret(code_norm)
-    # Constant-time lookup across active classes
+    # Indexed lookup by join_code_hash (O(1)) instead of full-collection scan
     classes_col = db_mod.database["classes"]
-    all_classes = await classes_col.find({})
-    matched_cls = None
-    for cls_doc in all_classes:
-        stored_hash = cls_doc.get("join_code_hash", "")
-        if stored_hash and constant_time_equals(stored_hash, code_hash):
-            matched_cls = cls_doc
-            break
+    matched_cls = await classes_col.find_one({"join_code_hash": code_hash})
 
     if not matched_cls or not matched_cls.get("active", True):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class code not found.")
@@ -100,12 +94,25 @@ async def student_join_class(payload: StudentJoinRequest, request: Request) -> S
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="This class join code has expired. Ask your teacher to reset it.")
 
     class_id = matched_cls["class_id"]
+
+    # A2: Reject duplicate nicknames per class (case-insensitive)
+    nickname_lower = nickname.lower()
+    existing_nick = await db_mod.database["class_memberships"].find_one(
+        {"class_id": class_id, "nickname_lower": nickname_lower}
+    )
+    if existing_nick:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Nickname '{nickname}' is already taken in this class. Try adding numbers, e.g. '{nickname}2'.",
+        )
+
     student_id = f"stu-{uuid.uuid4().hex[:12]}"
     membership = MembershipRecord(
         membership_id=f"mem-{uuid.uuid4().hex[:12]}",
         class_id=class_id,
         student_id=student_id,
         nickname=nickname,
+        nickname_lower=nickname_lower,
         leaderboard_opt_in=payload.leaderboard_opt_in,
         joined_at=utc_now_iso(),
     )
@@ -205,7 +212,7 @@ async def _get_owned_class(class_id: str, teacher_id: str) -> dict:
     if not cls_doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found.")
     if cls_doc.get("teacher_id") != teacher_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not own this class.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found.")
     return cls_doc
 
 
@@ -361,16 +368,24 @@ async def export_class_csv(class_id: str, authorization: str | None = Header(def
     buf = io.StringIO()
     writer = csv.writer(buf)
     writer.writerow(["submission_id", "assignment_id", "nickname", "grade", "score", "violations", "time_seconds", "submitted_at"])
+
+    def _csv_safe(value: str) -> str:
+        """Prefix cells starting with formula characters to prevent CSV injection."""
+        s = str(value)
+        if s and s[0] in ("=", "+", "-", "@"):
+            return "'" + s
+        return s
+
     for s in subs:
         writer.writerow([
-            s.get("submission_id", ""),
-            s.get("assignment_id", ""),
-            s.get("nickname", ""),
-            s.get("grade", ""),
-            s.get("score", 0),
-            ";".join(str(v) for v in s.get("violations", [])),
-            s.get("time_seconds", 0.0),
-            s.get("submitted_at", ""),
+            _csv_safe(s.get("submission_id", "")),
+            _csv_safe(s.get("assignment_id", "")),
+            _csv_safe(s.get("nickname", "")),
+            _csv_safe(s.get("grade", "")),
+            _csv_safe(str(s.get("score", 0))),
+            _csv_safe(";".join(str(v) for v in s.get("violations", []))),
+            _csv_safe(str(s.get("time_seconds", 0.0))),
+            _csv_safe(s.get("submitted_at", "")),
         ])
 
     return Response(
@@ -424,10 +439,6 @@ class CreateAssignmentRequest(BaseModel):
 
 class SubmitAssignmentRequest(BaseModel):
     session_id: str = Field(..., min_length=2, max_length=80)
-    score: float = Field(..., ge=0.0, le=100.0)
-    grade: str = Field(..., min_length=1, max_length=12)
-    violations: list[str] = Field(default_factory=list)
-    time_seconds: float = Field(default=0.0, ge=0.0)
 
 
 class LeaderboardOptInRequest(BaseModel):
@@ -498,7 +509,11 @@ async def submit_student_assignment(
     payload: SubmitAssignmentRequest,
     authorization: str | None = Header(default=None),
 ) -> dict:
-    """Submit a student's experiment result for an assignment in their own class."""
+    """Submit a student's experiment result for an assignment.
+
+    The backend is the single source of truth: score, grade, violations and time
+    come from the stored finished lab report – never from the request body.
+    """
     sess = await require_student(authorization)
     asg = await db_mod.database["assignments"].find_one({"assignment_id": assignment_id})
     if not asg:
@@ -506,6 +521,47 @@ async def submit_student_assignment(
     if asg.get("class_id") != sess["class_id"]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Assignment belongs to another class.")
 
+    # Look up the finished lab report server-side
+    report = await db_mod.database["lab_reports"].find_one({"session_id": payload.session_id})
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Lab session report not found. Finish the experiment first.",
+        )
+
+    # Validate that this report belongs to this student's class
+    report_student_id = report.get("student_id")
+    report_class_id = report.get("class_id")
+    if report_student_id and report_student_id != sess["student_id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This session does not belong to you.",
+        )
+    if report_class_id and report_class_id != sess["class_id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This session belongs to a different class.",
+        )
+
+    # Validate that the experiment matches the assignment
+    if report.get("experiment_id") != asg.get("experiment_id"):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"Session experiment '{report.get('experiment_id')}' does not match "
+                f"assignment experiment '{asg.get('experiment_id')}'."
+            ),
+        )
+
+    # Reject double submissions for the same session
+    existing = await db_mod.database["submissions"].find_one({"session_id": payload.session_id})
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This session has already been submitted.",
+        )
+
+    # Use server-authoritative values from the report – ignore any client-supplied score/grade
     rec = SubmissionRecord(
         submission_id=f"sub-{uuid.uuid4().hex[:10]}",
         assignment_id=assignment_id,
@@ -513,10 +569,10 @@ async def submit_student_assignment(
         student_id=sess["student_id"],
         nickname=sess["nickname"],
         session_id=payload.session_id,
-        score=payload.score,
-        grade=payload.grade,
-        violations=payload.violations,
-        time_seconds=payload.time_seconds,
+        score=float(report.get("score", 0)),
+        grade=str(report.get("grade", "F")),
+        violations=[str(v.get("rule_id", v)) if isinstance(v, dict) else str(v) for v in report.get("violations", [])],
+        time_seconds=float(report.get("time_seconds", 0.0)),
         submitted_at=utc_now_iso(),
     )
     await db_mod.database["submissions"].insert_one(rec.model_dump())

@@ -45,7 +45,7 @@ def test_role_based_classroom_qa_playthrough(client):
     cls = client.post("/api/classroom/classes", json={"name": "QA Class"}, headers=th).json()
     asg = client.post(
         f"/api/classroom/classes/{cls['class_id']}/assignments",
-        json={"experiment_id": "launch_orbit_bench", "title": "Orbit QA", "graded": False},
+        json={"experiment_id": "launch_bench", "title": "Orbit QA", "graded": False},
         headers=th,
     ).json()
 
@@ -53,9 +53,20 @@ def test_role_based_classroom_qa_playthrough(client):
     stu = client.post("/api/classroom/join", json={"join_code": cls["join_code"], "nickname": "QA_Orbit_1"}).json()
     sh = {"Authorization": f"Bearer {stu['student_token']}"}
     assert len(client.get("/api/classroom/student/assignments", headers=sh).json()["assignments"]) == 1
+    lab_sess = client.post(
+        "/api/lab/sessions",
+        json={
+            "experiment_id": "launch_bench",
+            "nickname": "QA_Orbit_1",
+            "class_id": cls["class_id"],
+            "student_id": stu["student_id"],
+            "assignment_id": asg["assignment_id"],
+        },
+    ).json()
+    client.post(f"/api/lab/sessions/{lab_sess['session_id']}/finish")
     sub = client.post(
         f"/api/classroom/student/assignments/{asg['assignment_id']}/submit",
-        json={"session_id": "qa-sess-1", "score": 85.0, "grade": "B", "violations": ["S1"], "time_seconds": 65.0},
+        json={"session_id": lab_sess["session_id"]},
         headers=sh,
     )
     assert sub.status_code == 200
