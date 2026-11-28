@@ -12,14 +12,16 @@
     .panel { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
     label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
     input { width: 100%; box-sizing: border-box; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
-    button { background: #0284c7; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+    button { background: #0369a1; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+    button:focus-visible, input:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td { text-align: left; padding: 8px; border-bottom: 1px solid #334155; }
     .muted { color: #94a3b8; font-size: 13px; }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <main class="wrap" role="main">
     <h1>Student Class View</h1>
     <p class="muted">Join with your class code and a nickname (no email or password required).</p>
 
@@ -47,7 +49,7 @@
         <table><thead><tr><th>Nickname</th><th>Score</th><th>Grade</th></tr></thead><tbody id="lb-body"></tbody></table>
       </section>
     </div>
-  </div>
+  </main>
   <script>
     let studentToken = sessionStorage.getItem('orbis_student_token') || '';
     const hdrs = () => ({ 'Authorization': 'Bearer ' + studentToken, 'Content-Type': 'application/json' });
