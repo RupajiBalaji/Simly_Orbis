@@ -24,27 +24,51 @@ STORAGE_MODE: str = "unknown"  # set to "mongodb" or "memory" during init
 # ---------------------------------------------------------------------------
 # In-memory fallback store
 # ---------------------------------------------------------------------------
+def _matches_filter(doc: dict[str, Any], _filter: dict | None) -> bool:
+    """Evaluate a minimal Mongo-style filter dict against an in-memory document."""
+    if not _filter:
+        return True
+    for k, v in _filter.items():
+        val = doc.get(k)
+        if isinstance(v, dict):
+            for op, target in v.items():
+                if op == "$in" and val not in target:
+                    return False
+                elif op == "$ne" and val == target:
+                    return False
+                elif op == "$lt" and not (val is not None and val < target):
+                    return False
+                elif op == "$lte" and not (val is not None and val <= target):
+                    return False
+                elif op == "$gt" and not (val is not None and val > target):
+                    return False
+                elif op == "$gte" and not (val is not None and val >= target):
+                    return False
+        else:
+            if val != v:
+                return False
+    return True
+
+
 class _InMemoryCollection:
     """Minimal Motor-shaped collection stub backed by a plain Python list."""
 
     def __init__(self, name: str) -> None:
         self._name = name
         self._docs: list[dict[str, Any]] = []
+        self._indexes: list[dict[str, Any]] = []
 
     async def count_documents(self, _filter: dict | None = None) -> int:
         if not _filter:
             return len(self._docs)
-        return sum(
-            1 for doc in self._docs
-            if all(doc.get(k) == v for k, v in _filter.items())
-        )
+        return sum(1 for doc in self._docs if _matches_filter(doc, _filter))
 
     async def insert_one(self, document: dict) -> None:
-        self._docs.append(document)
+        self._docs.append(dict(document))
 
     async def find_one(self, _filter: dict) -> dict | None:
         for doc in self._docs:
-            if all(doc.get(k) == v for k, v in _filter.items()):
+            if _matches_filter(doc, _filter):
                 return doc
         return None
 
@@ -55,17 +79,11 @@ class _InMemoryCollection:
         limit: int = 0,
     ) -> list[dict]:
         """Return matching docs, optionally sorted and limited."""
-        if not _filter:
-            results = list(self._docs)
-        else:
-            results = [
-                doc for doc in self._docs
-                if all(doc.get(k) == v for k, v in _filter.items())
-            ]
+        results = [doc for doc in self._docs if _matches_filter(doc, _filter)]
 
         if sort:
             for field, direction in reversed(sort):
-                results.sort(key=lambda d: d.get(field, 0), reverse=(direction == -1))
+                results.sort(key=lambda d: d.get(field, 0) or 0, reverse=(direction == -1))
 
         if limit and limit > 0:
             results = results[:limit]
@@ -80,19 +98,41 @@ class _InMemoryCollection:
     ) -> None:
         """Minimal $set / $setOnInsert upsert support."""
         for i, doc in enumerate(self._docs):
-            if all(doc.get(k) == v for k, v in _filter.items()):
+            if _matches_filter(doc, _filter):
                 set_data = update.get("$set", {})
                 self._docs[i] = {**doc, **set_data}
                 return
         # No match
         if upsert:
-            new_doc = {**_filter}
+            new_doc = {k: v for k, v in _filter.items() if not isinstance(v, dict)}
             new_doc.update(update.get("$set", {}))
             new_doc.update(update.get("$setOnInsert", {}))
             self._docs.append(new_doc)
 
-    async def create_index(self, keys: list[tuple[str, int]], **_kwargs: Any) -> None:
-        """No-op for in-memory store (indexes not needed for correctness)."""
+    async def delete_one(self, _filter: dict) -> int:
+        """Delete the first matching document and return deleted count."""
+        for i, doc in enumerate(self._docs):
+            if _matches_filter(doc, _filter):
+                self._docs.pop(i)
+                return 1
+        return 0
+
+    async def delete_many(self, _filter: dict) -> int:
+        """Delete all matching documents and return deleted count."""
+        before = len(self._docs)
+        self._docs = [doc for doc in self._docs if not _matches_filter(doc, _filter)]
+        return before - len(self._docs)
+
+    async def create_index(self, keys: list[tuple[str, int]], **kwargs: Any) -> None:
+        """Record index metadata for in-memory store (idempotent by name/keys)."""
+        entry = {"keys": list(keys), **kwargs}
+        name = kwargs.get("name")
+        for existing in self._indexes:
+            if name and existing.get("name") == name:
+                return
+            if existing.get("keys") == entry["keys"]:
+                return
+        self._indexes.append(entry)
 
 
 class _InMemoryDatabase:
@@ -158,7 +198,11 @@ async def create_indexes() -> None:
         [("experiment_id", pymongo.ASCENDING), ("score", pymongo.DESCENDING)],
         name="lab_reports_exp_score_idx",
     )
-    log.info("MongoDB indexes ensured (including 30-day session TTL).")
+
+    from app.classroom.models import ensure_classroom_indexes  # noqa: PLC0415
+
+    await ensure_classroom_indexes(database)
+    log.info("MongoDB indexes ensured (including 30-day session TTL and classroom indexes).")
 
 
 
