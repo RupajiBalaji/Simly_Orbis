@@ -31,7 +31,7 @@ export class DebugOverlay {
     const hasQuery = typeof window !== 'undefined' && (
       window.location.search.includes('debug=1') || window.location.hash.includes('debug=1')
     );
-    return Boolean(hasQuery || state.debugOverlayOpen);
+    return Boolean(hasQuery || state.debugOverlayActive);
   }
 
   _registerReadOnlyHook() {
