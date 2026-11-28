@@ -12,6 +12,7 @@
 import { api } from '../api.js';
 import { state } from '../state.js';
 import { toast } from './toast.js';
+import { configureVoiceFallback } from './voice_input.js';
 
 export class AskOrbisAgentPanel {
   constructor() {
@@ -119,52 +120,36 @@ export class AskOrbisAgentPanel {
   }
 
   initSpeech() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const micBtn = document.getElementById('btn-ask-mic');
-    if (!SpeechRecognition) {
-      if (micBtn) {
-        micBtn.title = 'Speech recognition not supported in this browser';
-        micBtn.style.opacity = '0.4';
-      }
-      return;
-    }
-
-    try {
-      this.speechRecognition = new SpeechRecognition();
-      this.speechRecognition.continuous = false;
-      this.speechRecognition.interimResults = false;
-      this.speechRecognition.lang = 'en-US';
-
-      this.speechRecognition.onstart = () => {
+    const input = document.getElementById('ask-orbis-input');
+    const setup = configureVoiceFallback({
+      win: window,
+      micBtn,
+      inputEl: input,
+      onStart: () => {
         this.isListening = true;
         if (micBtn) micBtn.classList.add('listening');
         toast.showInfo('Listening... Speak your laboratory instruction');
-      };
-
-      this.speechRecognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        const input = document.getElementById('ask-orbis-input');
+      },
+      onResult: (transcript) => {
         if (input) {
           input.value = transcript;
           this.submitRequest(transcript);
         }
-      };
-
-      this.speechRecognition.onerror = (err) => {
+      },
+      onError: (errCode) => {
         this.isListening = false;
         if (micBtn) micBtn.classList.remove('listening');
-        if (err.error !== 'no-speech') {
-          toast.showInfo(`Speech input error: ${err.error}`);
+        if (errCode !== 'no-speech') {
+          toast.showInfo(`Speech input error: ${errCode}`);
         }
-      };
-
-      this.speechRecognition.onend = () => {
+      },
+      onEnd: () => {
         this.isListening = false;
         if (micBtn) micBtn.classList.remove('listening');
-      };
-    } catch (err) {
-      console.warn('SpeechRecognition initialization error:', err);
-    }
+      },
+    });
+    this.speechRecognition = setup.recognition;
   }
 
   initListeners() {
