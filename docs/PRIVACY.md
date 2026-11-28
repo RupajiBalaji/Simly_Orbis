@@ -20,7 +20,7 @@
 ### What We Do NOT Store
 - **Student email addresses** or student passwords.
 - **Long-term IP addresses** (in-memory rate-limit counters expire automatically within minutes).
-- **Audio** (optional browser voice input uses client-side browser speech recognition if supported and never uploads or stores audio).
+- **Browser speech recognition (optional mic button):** When you use the microphone, your browser's speech recognition engine processes audio. In Chrome, this is handled by Google's servers — Orbis never receives or stores your audio. Typing is always available as an alternative.
 - **AI prompt content** (off by default; only enabled if the founder explicitly turns on debug content logging).
 
 ## 3. Retention Schedule (Configurable)

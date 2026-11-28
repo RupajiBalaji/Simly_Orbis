@@ -67,7 +67,7 @@ export class AskOrbisAgentPanel {
           maxlength="200"
           autocomplete="off"
         />
-        <button type="button" class="btn-ask-mic" id="btn-ask-mic" title="Voice Input (Speech-to-Text)">🎤</button>
+        <button type="button" class="btn-ask-mic" id="btn-ask-mic" title="Voice (audio processed by browser/vendor, not Orbis)">🎤</button>
         <button type="button" class="btn-ask-submit" id="btn-ask-submit" title="Show Action Plan">Show plan ➔</button>
       </div>
       <div class="ask-orbis-examples-row" id="ask-orbis-examples-row">
