@@ -23,6 +23,49 @@ export class DebugOverlay {
         else this.hide();
       }
     });
+
+    this._registerReadOnlyHook();
+  }
+
+  _isDebugActive() {
+    const hasQuery = typeof window !== 'undefined' && (
+      window.location.search.includes('debug=1') || window.location.hash.includes('debug=1')
+    );
+    return Boolean(hasQuery || state.debugOverlayOpen);
+  }
+
+  _registerReadOnlyHook() {
+    if (typeof window === 'undefined') return;
+    Object.defineProperty(window, '__debugTelemetry', {
+      configurable: true,
+      get: () => {
+        if (!this._isDebugActive()) return undefined;
+        const av = window.characterController?.rig?.root;
+        const cam = window.sceneManager?.camera;
+        const ctrl = window.sceneManager?.controls;
+        if (!av || !cam) return undefined;
+
+        const target = ctrl?.target || { x: 0, y: 0, z: 0 };
+        let fx = target.x - cam.position.x;
+        let fz = target.z - cam.position.z;
+        const len = Math.hypot(fx, fz) || 1.0;
+        fx /= len;
+        fz /= len;
+        // Three.js Y-up: right = forward x up = (-fz, fx)
+        const rx = -fz;
+        const rz = fx;
+        let yawDeg = Math.atan2(cam.position.x - av.position.x, cam.position.z - av.position.z) * (180 / Math.PI);
+        if (yawDeg < 0) yawDeg += 360;
+
+        return Object.freeze({
+          characterPosition: Object.freeze({ x: av.position.x, y: av.position.y, z: av.position.z }),
+          cameraPosition: Object.freeze({ x: cam.position.x, y: cam.position.y, z: cam.position.z }),
+          cameraYawDeg: Math.round(yawDeg * 1000) / 1000,
+          cameraFwdXZ: Object.freeze({ x: fx, z: fz }),
+          cameraRightXZ: Object.freeze({ x: rx, z: rz }),
+        });
+      },
+    });
   }
 
   toggle() {

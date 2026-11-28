@@ -94,6 +94,7 @@ class QAHarnessRunner:
         self.checkpoints: list[dict[str, Any]] = []
         self.fps_metrics: dict[str, Any] = {}
         self.cam_test_results: dict[str, Any] = {}
+        self.movement_metrics: dict[str, Any] = {}
         self.grades: dict[str, str] = {}
         self.tier_fps_results: dict[str, Any] = {}
         self.failure_reasons: list[str] = []
@@ -313,22 +314,65 @@ class QAHarnessRunner:
                 page.wait_for_timeout(1000)
                 self.capture_checkpoint(page, "pk_ward_first_view")
 
-                print("  [QA] Scripted WASD Route with Real Key Events...")
-                init_pos = page.evaluate("() => ({ x: window.characterController.rig.root.position.x, z: window.characterController.rig.root.position.z })")
-                # Send real key events and assert the avatar moved without leaving walkable space
+                print("  [QA] Scripted WASD Route with Real Key Events (using F3 debug hook)...")
+                page.keyboard.press("F3")
+                page.wait_for_timeout(150)
+                t_w0 = page.evaluate("() => window.__debugTelemetry")
                 page.keyboard.down("w")
                 page.wait_for_timeout(800)
                 self.capture_checkpoint(page, "cp3_walking_mid_frame")
-                page.wait_for_timeout(600)
+                page.wait_for_timeout(1200)
                 page.keyboard.up("w")
-                page.wait_for_timeout(400)
+                page.wait_for_timeout(200)
+                t_w1 = page.evaluate("() => window.__debugTelemetry")
 
-                final_pos = page.evaluate("() => ({ x: window.characterController.rig.root.position.x, z: window.characterController.rig.root.position.z })")
-                walk_dist = math.hypot(final_pos["x"] - init_pos["x"], final_pos["z"] - init_pos["z"])
+                w_dx = t_w1["characterPosition"]["x"] - t_w0["characterPosition"]["x"]
+                w_dz = t_w1["characterPosition"]["z"] - t_w0["characterPosition"]["z"]
+                w_fwd_m = w_dx * t_w0["cameraFwdXZ"]["x"] + w_dz * t_w0["cameraFwdXZ"]["z"]
+                walk_dist = math.hypot(w_dx, w_dz)
+
+                # Hold D -> displacement along camera-right
+                t_d0 = page.evaluate("() => window.__debugTelemetry")
+                page.keyboard.down("d")
+                page.wait_for_timeout(1200)
+                page.keyboard.up("d")
+                page.wait_for_timeout(200)
+                t_d1 = page.evaluate("() => window.__debugTelemetry")
+                d_dx = t_d1["characterPosition"]["x"] - t_d0["characterPosition"]["x"]
+                d_dz = t_d1["characterPosition"]["z"] - t_d0["characterPosition"]["z"]
+                d_right_m = d_dx * t_d0["cameraRightXZ"]["x"] + d_dz * t_d0["cameraRightXZ"]["z"]
+
+                # Walk a circle (W, D, S, A) -> camera yaw must stay steady (< 5 deg)
+                yaw_before = page.evaluate("() => window.__debugTelemetry.cameraYawDeg")
+                for k in ("w", "d", "s", "a"):
+                    page.keyboard.down(k)
+                    page.wait_for_timeout(400)
+                    page.keyboard.up(k)
+                page.wait_for_timeout(200)
+                yaw_after = page.evaluate("() => window.__debugTelemetry.cameraYawDeg")
+                circle_yaw_delta_deg = abs(((yaw_after - yaw_before + 180.0) % 360.0) - 180.0)
+
+                page.keyboard.press("F3")  # Close debug overlay
+                page.wait_for_timeout(150)
+
                 in_bounds = page.evaluate("() => window.characterController.canMoveTo(window.characterController.rig.root.position)")
-                print(f"    -> WASD Route Displacement: {walk_dist:.2f}m (Target: >=0.30m), Within Walkable Bounds: {in_bounds}")
-                if walk_dist < 0.25:
-                    self.failure_reasons.append(f"Scripted WASD route failed to displace avatar: moved only {walk_dist:.2f}m.")
+                print(
+                    f"    -> W(2s) cam-fwd: {w_fwd_m:.3f}m (>0.3m), D cam-right: {d_right_m:.3f}m (>0.3m), "
+                    f"Circle yaw delta: {circle_yaw_delta_deg:.2f} deg (<5 deg), InBounds: {in_bounds}"
+                )
+                self.movement_metrics.update({
+                    "w_fwd_m": round(w_fwd_m, 3),
+                    "w_total_m": round(walk_dist, 3),
+                    "d_right_m": round(d_right_m, 3),
+                    "circle_yaw_delta_deg": round(circle_yaw_delta_deg, 3),
+                    "in_bounds": bool(in_bounds),
+                })
+                if w_fwd_m <= 0.3:
+                    self.failure_reasons.append(f"W 2s forward displacement {w_fwd_m:.3f}m <= 0.3m.")
+                if d_right_m <= 0.3:
+                    self.failure_reasons.append(f"D camera-right displacement {d_right_m:.3f}m <= 0.3m.")
+                if circle_yaw_delta_deg >= 5.0:
+                    self.failure_reasons.append(f"Circle walk camera yaw drifted {circle_yaw_delta_deg:.2f} deg >= 5.0 deg.")
                 if not in_bounds:
                     self.failure_reasons.append("Scripted WASD route left walkable space.")
 
@@ -380,6 +424,7 @@ class QAHarnessRunner:
                 }""")
                 page.wait_for_timeout(400)
                 print(f"    -> FREE Mode Camera-to-Head Distance: {free_cam_dist:.3f}m (Target: < 1.0m)")
+                self.movement_metrics["free_cam_dist_m"] = round(free_cam_dist, 3)
                 if free_cam_dist >= 1.0:
                     self.failure_reasons.append(f"FREE camera close-up assertion failed: distance {free_cam_dist:.3f}m >= 1.0m")
 
@@ -1349,6 +1394,7 @@ class QAHarnessRunner:
             "fps_telemetry": self.fps_metrics,
             "tier_fps": self.tier_fps_results,
             "camera_acceptance": self.cam_test_results,
+            "movement_metrics": self.movement_metrics,
             "console_errors": self.console_errors,
             "failed_requests": self.failed_requests,
             "video_file": video_file_name,
@@ -1421,6 +1467,14 @@ class QAHarnessRunner:
             f"- **Average FPS:** {summary['fps_telemetry'].get('average', 60)}",
             f"- **Maximum FPS:** {summary['fps_telemetry'].get('max', 60)}",
             f"- **Samples Captured:** {summary['fps_telemetry'].get('samplesCount', 0)}",
+            f"",
+            f"## 3a. Movement & Camera Verification (T4, pk_ward)",
+            f"",
+            f"- **Hold W (2s) along camera-forward:** `{summary.get('movement_metrics', {}).get('w_fwd_m', 'N/A')} m` (Target: `> 0.3 m`)",
+            f"- **Hold D along camera-right:** `{summary.get('movement_metrics', {}).get('d_right_m', 'N/A')} m` (Target: `> 0.3 m`)",
+            f"- **Walk circle camera yaw delta:** `{summary.get('movement_metrics', {}).get('circle_yaw_delta_deg', 'N/A')} deg` (Target: `< 5.0 deg`)",
+            f"- **FREE camera-to-head distance:** `{summary.get('movement_metrics', {}).get('free_cam_dist_m', 'N/A')} m` (Target: `< 1.0 m`)",
+            f"- *Note: Headless software-render FPS is not representative of hardware GPU performance.*",
             f"",
             f"---",
             f"",
