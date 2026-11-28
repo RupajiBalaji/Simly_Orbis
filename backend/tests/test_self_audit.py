@@ -245,3 +245,8 @@ def test_build_audit_report():
     assert "# Simly Orbis Stage Gate Self-Audit Report" in report
     assert "| 1 | Test Gate | **PASS** | All good |" in report
     assert "Details here" in report
+    assert "Non-Negotiable Governance Rules Audit (G1–G12)" in report
+    for gid in ("**G1 ", "**G2 ", "**G4 ", "**G5 ", "**G6 ", "**G7 ", "**G9 "):
+        assert gid in report
+    for legacy_label in ("Rule R1/R7", "Rule R4/R6", "Rule R2/R3", "**R1 ", "**R7 "):
+        assert legacy_label not in report

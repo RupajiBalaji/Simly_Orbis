@@ -340,7 +340,7 @@ def check_validation_rows(repo_root: Path) -> GateResult:
         f"Evaluated {total_rows} rows across {len(csv_files)} files: "
         f"{unverified_count} unverified (with blank retrieved_on), {verified_count} verified. Violations: {len(violations)}"
     )
-    details = "\n".join(f"- {v}" for v in violations) if violations else "All rows strictly comply with Rule R2/R3."
+    details = "\n".join(f"- {v}" for v in violations) if violations else "All rows strictly comply with Governance G5/G6."
     return GateResult(
         gate_id=4,
         name="Validation Row Governance",
@@ -406,7 +406,7 @@ def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> Gate
     if missing_paths:
         return GateResult(
             gate_id=6,
-            name="Engine Immutability (Rule R1/R7)",
+            name="Engine Immutability (Governance G1/G7)",
             passed=False,
             evidence=f"FAILED: Protected file(s) missing on disk: {missing_paths}",
             details="\n".join(f"- Missing path: `{p}`" for p in missing_paths),
@@ -422,7 +422,7 @@ def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> Gate
         warning_msg = f"Base commit '{base_commit}' unavailable in shallow history; skipping diff check (PASS with warning)"
         return GateResult(
             gate_id=6,
-            name="Engine Immutability (Rule R1/R7)",
+            name="Engine Immutability (Governance G1/G7)",
             passed=True,
             evidence=warning_msg,
             details=f"WARNING: {warning_msg}\nSet fetch-depth: 0 in CI checkout for full historical diff verification.",
@@ -472,7 +472,7 @@ def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> Gate
     if not snapshots_path.exists():
         return GateResult(
             gate_id=6,
-            name="Engine Immutability (Rule R1/R7)",
+            name="Engine Immutability (Governance G1/G7)",
             passed=False,
             evidence="FAILED: rule_snapshots.json missing on disk",
             details="- Missing: tests/data/rule_snapshots.json",
@@ -492,7 +492,7 @@ def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> Gate
     except Exception as e:
         return GateResult(
             gate_id=6,
-            name="Engine Immutability (Rule R1/R7)",
+            name="Engine Immutability (Governance G1/G7)",
             passed=False,
             evidence=f"FAILED to import rules from app.lab.rules: {e}",
             details=f"- Import error: {e}",
@@ -532,7 +532,7 @@ def check_protected_files(repo_root: Path, base_commit: str = "cb9b66f") -> Gate
     details = "\n".join(f"- {d}" for d in diff_results)
     return GateResult(
         gate_id=6,
-        name="Engine Immutability (Rule R1/R7)",
+        name="Engine Immutability (Governance G1/G7)",
         passed=passed,
         evidence=evidence,
         details=details,
@@ -785,7 +785,7 @@ def check_risky_claims(repo_root: Path) -> GateResult:
     details = "\n".join(f"- {h}" for h in unhedged_hits) if unhedged_hits else "All mentions are strictly negative/disclaimer statements."
     return GateResult(
         gate_id=10,
-        name="Claims & Compliance Audit (Rule R4/R6)",
+        name="Claims & Compliance Audit (Governance G3/G9)",
         passed=passed,
         evidence=evidence,
         details=details,
@@ -887,15 +887,15 @@ def build_audit_report(results: list[GateResult], repo_root: Path) -> str:
 {"\n".join(details_sections)}
 ---
 
-## Non-Negotiable Rules Audit
+## Non-Negotiable Governance Rules Audit (G1–G12)
 
-1. **R1 (Single Source of Truth):** Frontend and 3D scenes act solely as visual rendering clients. Simulation results, differential equations, and safety assessments are evaluated strictly by backend engines.
-2. **R2 (AI Proposes, Engine Decides):** Dr. Orbis and Ask Orbis NLP proposals are strictly routed through engine state machines and validation boundaries.
-3. **R3 (Validation Integrity):** `verified_by` remains strictly `"unverified"` for all pending rows. Tolerances are guarded by immutable SHA-256 hashes.
-4. **R4 (Real Proof Only):** 100% of reported QA frames are verified non-empty, unique, and perceptually distinct (0 hash collisions, 0 near-duplicates).
-5. **R5 (No Fabricated Provenance):** Literature citations are accompanied by unverified flags and blank `retrieved_on` timestamps pending primary source human sign-off.
-6. **R6 (Adult-Only Boundaries):** Dose Response Lab enforces strict adult ranges (Age 18–90, Weight 40–150 kg, CrCl 15–150 mL/min). Pediatric inquiries are rejected.
-7. **R7 (Engine Immutability):** Baseline engines (`pharma.pk`, `pharma.trial`, `chem.titration`, `space.orbit`) and safety rules R1–R10 / S1–S8 maintain 0 diff vs baseline commits.
+1. **G1 (Single Source of Truth):** Frontend and 3D scenes act solely as visual rendering clients. Simulation results, differential equations, and safety assessments are evaluated strictly by backend engines.
+2. **G2 (AI Proposes, Engine Decides):** Dr. Orbis and Ask Orbis NLP proposals are strictly routed through engine state machines and validation boundaries.
+3. **G6 (Validation Integrity):** `verified_by` remains strictly `"unverified"` for all pending rows. Tolerances are guarded by immutable SHA-256 hashes.
+4. **G4 (Real Proof Only):** 100% of reported QA frames are verified non-empty, unique, and perceptually distinct (0 hash collisions, 0 near-duplicates).
+5. **G5 (No Fabricated Provenance):** Literature citations are accompanied by unverified flags and blank `retrieved_on` timestamps pending primary source human sign-off.
+6. **G9 (Adult-Only Boundaries):** Dose Response Lab enforces strict adult ranges (Age 18–90, Weight 40–150 kg, CrCl 15–150 mL/min). Pediatric inquiries are rejected.
+7. **G7 (Protected Code / Engine Immutability):** Baseline engines (`pharma.pk`, `pharma.trial`, `chem.titration`, `space.orbit`) and safety rules R1–R10 / S1–S8 maintain 0 diff vs baseline commits.
 """
     return report
 
