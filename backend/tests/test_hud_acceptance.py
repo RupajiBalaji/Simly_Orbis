@@ -442,6 +442,16 @@ def test_mobile_390x844_stacked_header_and_no_text_clipping():
             assert not boxes_overlap(bounds[keys[i]], bounds[keys[j]])
 
 
+def test_proximity_prompt_suppressed_for_non_step_stations():
+    """
+    Verify T2: floating proximity prompt only shows when closestStation matches the current step target
+    (e.g. suppressed during Step 1 PPE when mapStepToApparatus returns null).
+    """
+    hud_js = (REPO_ROOT / "frontend" / "lab" / "game" / "hud.js").read_text(encoding="utf-8")
+    assert "isRelevantToCurrentStep = Boolean(nextStep && stepTarget && stepTarget === closestStation.id)" in hud_js
+    assert "!stepTarget || stepTarget === closestStation.id" not in hud_js
+
+
 @pytest.mark.browser
 def test_browser_hud_clean_and_interactive():
     """Playwright E2E verification of clean HUD (skipped unless --browser or RUN_BROWSER_TESTS=1)."""
