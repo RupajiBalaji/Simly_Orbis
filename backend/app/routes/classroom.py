@@ -15,7 +15,14 @@ from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
 from app import db as db_mod
-from app.classroom.models import ClassRecord, MembershipRecord, StudentSessionRecord, utc_now_iso
+from app.classroom.models import (
+    AssignmentRecord,
+    ClassRecord,
+    MembershipRecord,
+    StudentSessionRecord,
+    SubmissionRecord,
+    utc_now_iso,
+)
 from app.classroom.security import (
     constant_time_equals,
     expiry_iso,
@@ -26,7 +33,7 @@ from app.classroom.security import (
     normalize_join_code,
     validate_nickname,
 )
-from app.classroom.teachers import redeem_teacher_invite, verify_teacher_session
+from app.classroom.teachers import redeem_teacher_invite, verify_student_session, verify_teacher_session
 from app.config import settings
 from app.security import rate_limiter, resolve_client_ip
 
@@ -400,3 +407,174 @@ async def delete_class_cascade(class_id: str, authorization: str | None = Header
             "lab_reports": deleted_lab_reports,
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# P6-T5: Assignments, Student Class View, and Opt-In Leaderboard
+# ---------------------------------------------------------------------------
+
+
+class CreateAssignmentRequest(BaseModel):
+    experiment_id: str = Field(..., min_length=2, max_length=64)
+    title: str = Field(..., min_length=2, max_length=120)
+    parameter_presets: dict = Field(default_factory=dict)
+    due_date: str | None = None
+    graded: bool = False
+
+
+class SubmitAssignmentRequest(BaseModel):
+    session_id: str = Field(..., min_length=2, max_length=80)
+    score: float = Field(..., ge=0.0, le=100.0)
+    grade: str = Field(..., min_length=1, max_length=12)
+    violations: list[str] = Field(default_factory=list)
+    time_seconds: float = Field(default=0.0, ge=0.0)
+
+
+class LeaderboardOptInRequest(BaseModel):
+    opt_in: bool
+
+
+async def require_student(authorization: str | None = Header(default=None)) -> dict:
+    token = _extract_bearer(authorization)
+    sess = await verify_student_session(db_mod.database, token)
+    if not sess:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Valid student session token required.",
+        )
+    return sess
+
+
+@router.post("/classes/{class_id}/assignments")
+async def create_assignment(
+    class_id: str,
+    payload: CreateAssignmentRequest,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    """Create an assignment for a class owned by the authenticated teacher."""
+    teacher = await require_teacher(authorization)
+    await _get_owned_class(class_id, teacher["teacher_id"])
+
+    rec = AssignmentRecord(
+        assignment_id=f"asg-{uuid.uuid4().hex[:10]}",
+        class_id=class_id,
+        experiment_id=payload.experiment_id.strip(),
+        title=payload.title.strip(),
+        parameter_presets=payload.parameter_presets,
+        due_date=payload.due_date,
+        graded=payload.graded,
+        created_at=utc_now_iso(),
+    )
+    await db_mod.database["assignments"].insert_one(rec.model_dump())
+    return rec.model_dump()
+
+
+@router.get("/classes/{class_id}/assignments")
+async def list_class_assignments_teacher(
+    class_id: str,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    """List assignments for a class owned by the authenticated teacher."""
+    teacher = await require_teacher(authorization)
+    await _get_owned_class(class_id, teacher["teacher_id"])
+    docs = await db_mod.database["assignments"].find({"class_id": class_id})
+    for d in docs:
+        d.pop("_id", None)
+    return {"class_id": class_id, "assignments": docs}
+
+
+@router.get("/student/assignments")
+async def list_student_assignments(authorization: str | None = Header(default=None)) -> dict:
+    """List assignments for the authenticated student's class."""
+    sess = await require_student(authorization)
+    docs = await db_mod.database["assignments"].find({"class_id": sess["class_id"]})
+    for d in docs:
+        d.pop("_id", None)
+    return {"class_id": sess["class_id"], "assignments": docs}
+
+
+@router.post("/student/assignments/{assignment_id}/submit")
+async def submit_student_assignment(
+    assignment_id: str,
+    payload: SubmitAssignmentRequest,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    """Submit a student's experiment result for an assignment in their own class."""
+    sess = await require_student(authorization)
+    asg = await db_mod.database["assignments"].find_one({"assignment_id": assignment_id})
+    if not asg:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Assignment not found.")
+    if asg.get("class_id") != sess["class_id"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Assignment belongs to another class.")
+
+    rec = SubmissionRecord(
+        submission_id=f"sub-{uuid.uuid4().hex[:10]}",
+        assignment_id=assignment_id,
+        class_id=sess["class_id"],
+        student_id=sess["student_id"],
+        nickname=sess["nickname"],
+        session_id=payload.session_id,
+        score=payload.score,
+        grade=payload.grade,
+        violations=payload.violations,
+        time_seconds=payload.time_seconds,
+        submitted_at=utc_now_iso(),
+    )
+    await db_mod.database["submissions"].insert_one(rec.model_dump())
+    return rec.model_dump()
+
+
+@router.get("/student/results")
+async def get_student_own_results(authorization: str | None = Header(default=None)) -> dict:
+    """Return only the authenticated student's own submissions."""
+    sess = await require_student(authorization)
+    docs = await db_mod.database["submissions"].find({
+        "class_id": sess["class_id"],
+        "student_id": sess["student_id"],
+    })
+    for d in docs:
+        d.pop("_id", None)
+    return {"student_id": sess["student_id"], "nickname": sess["nickname"], "results": docs}
+
+
+@router.post("/student/leaderboard-opt-in")
+async def update_leaderboard_opt_in(
+    payload: LeaderboardOptInRequest,
+    authorization: str | None = Header(default=None),
+) -> dict:
+    """Update the authenticated student's class leaderboard opt-in preference."""
+    sess = await require_student(authorization)
+    await db_mod.database["class_memberships"].update_one(
+        {"class_id": sess["class_id"], "student_id": sess["student_id"]},
+        {"$set": {"leaderboard_opt_in": payload.opt_in}},
+    )
+    return {"student_id": sess["student_id"], "leaderboard_opt_in": payload.opt_in}
+
+
+@router.get("/student/leaderboard")
+async def get_class_leaderboard(authorization: str | None = Header(default=None)) -> dict:
+    """Return opt-in class leaderboard (only students with leaderboard_opt_in=True)."""
+    sess = await require_student(authorization)
+    members = await db_mod.database["class_memberships"].find({
+        "class_id": sess["class_id"],
+        "leaderboard_opt_in": True,
+    })
+    opted_in_ids = {m["student_id"] for m in members}
+    subs = await db_mod.database["submissions"].find({"class_id": sess["class_id"]})
+
+    best_by_student: dict[str, dict] = {}
+    for s in subs:
+        sid = s["student_id"]
+        if sid not in opted_in_ids:
+            continue
+        prev = best_by_student.get(sid)
+        if prev is None or float(s.get("score", 0)) > float(prev.get("score", 0)):
+            best_by_student[sid] = {
+                "nickname": s["nickname"],
+                "score": s["score"],
+                "grade": s.get("grade", ""),
+                "assignment_id": s["assignment_id"],
+            }
+
+    entries = sorted(best_by_student.values(), key=lambda x: float(x["score"]), reverse=True)
+    return {"class_id": sess["class_id"], "leaderboard": entries}

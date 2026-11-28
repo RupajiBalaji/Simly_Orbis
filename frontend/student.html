@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simly Orbis — Student Class View</title>
+  <link rel="stylesheet" href="./styles/tokens.css">
+  <style>
+    body { font-family: var(--font-sans, 'Inter', sans-serif); background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { color: #38bdf8; margin: 0 0 8px 0; }
+    .panel { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+    input { width: 100%; box-sizing: border-box; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; }
+    button { background: #0284c7; color: #fff; border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #334155; }
+    .muted { color: #94a3b8; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Student Class View</h1>
+    <p class="muted">Join with your class code and a nickname (no email or password required).</p>
+
+    <section class="panel" id="join-panel">
+      <label for="join-code">Class Code</label>
+      <input id="join-code" placeholder="e.g. ORB123">
+      <label for="nickname">Nickname (no real name or email)</label>
+      <input id="nickname" placeholder="e.g. Curie_07">
+      <label><input id="opt-in" type="checkbox" style="width:auto;"> Opt in to class leaderboard</label>
+      <button id="join-btn" type="button">Join Class</button>
+      <div id="join-msg" class="muted" style="margin-top:8px;"></div>
+    </section>
+
+    <div id="student-body" style="display:none;">
+      <section class="panel">
+        <h3>Assignments</h3>
+        <div id="assignments-list" class="muted">No assignments yet.</div>
+      </section>
+      <section class="panel">
+        <h3>My Results</h3>
+        <table><thead><tr><th>Assignment</th><th>Grade</th><th>Score</th><th>Time (s)</th></tr></thead><tbody id="results-body"></tbody></table>
+      </section>
+      <section class="panel">
+        <h3>Class Leaderboard (Opt-In)</h3>
+        <table><thead><tr><th>Nickname</th><th>Score</th><th>Grade</th></tr></thead><tbody id="lb-body"></tbody></table>
+      </section>
+    </div>
+  </div>
+  <script>
+    let studentToken = sessionStorage.getItem('orbis_student_token') || '';
+    const hdrs = () => ({ 'Authorization': 'Bearer ' + studentToken, 'Content-Type': 'application/json' });
+
+    async function loadStudentData() {
+      const [aRes, rRes, lRes] = await Promise.all([
+        fetch('/api/classroom/student/assignments', { headers: hdrs() }),
+        fetch('/api/classroom/student/results', { headers: hdrs() }),
+        fetch('/api/classroom/student/leaderboard', { headers: hdrs() }),
+      ]);
+      if (aRes.ok) {
+        const a = await aRes.json();
+        const box = document.getElementById('assignments-list');
+        box.innerHTML = '';
+        if (!a.assignments.length) box.textContent = 'No assignments yet.';
+        for (const item of a.assignments) {
+          const div = document.createElement('div');
+          div.style.marginBottom = '8px';
+          div.textContent = item.title + ' [' + (item.graded ? 'Graded' : 'Practice') + '] — ' + item.experiment_id + (item.due_date ? ' (Due: ' + item.due_date + ')' : '');
+          box.appendChild(div);
+        }
+      }
+      if (rRes.ok) {
+        const r = await rRes.json();
+        const tb = document.getElementById('results-body');
+        tb.innerHTML = '';
+        for (const row of r.results) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td></td><td></td><td></td><td></td>';
+          tr.children[0].textContent = row.assignment_id;
+          tr.children[1].textContent = row.grade;
+          tr.children[2].textContent = row.score;
+          tr.children[3].textContent = row.time_seconds;
+          tb.appendChild(tr);
+        }
+      }
+      if (lRes.ok) {
+        const l = await lRes.json();
+        const tb = document.getElementById('lb-body');
+        tb.innerHTML = '';
+        for (const row of l.leaderboard) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = '<td></td><td></td><td></td>';
+          tr.children[0].textContent = row.nickname;
+          tr.children[1].textContent = row.score;
+          tr.children[2].textContent = row.grade;
+          tb.appendChild(tr);
+        }
+      }
+    }
+
+    document.getElementById('join-btn').onclick = async () => {
+      const r = await fetch('/api/classroom/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          join_code: document.getElementById('join-code').value.trim(),
+          nickname: document.getElementById('nickname').value.trim(),
+          leaderboard_opt_in: document.getElementById('opt-in').checked,
+        }),
+      });
+      if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        document.getElementById('join-msg').textContent = err.detail || 'Could not join class.';
+        return;
+      }
+      const d = await r.json();
+      studentToken = d.student_token;
+      sessionStorage.setItem('orbis_student_token', studentToken);
+      document.getElementById('join-msg').textContent = 'Joined ' + d.class_name + ' as ' + d.nickname;
+      document.getElementById('student-body').style.display = 'block';
+      await loadStudentData();
+    };
+  </script>
+</body>
+</html>
