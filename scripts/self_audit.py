@@ -572,7 +572,11 @@ def check_qa_artifacts(repo_root: Path, ci_mode: bool = False) -> GateResult:
             )
         return GateResult(gate_id=8, name="QA Playthrough Proof", passed=False, evidence="qa/out does not exist")
 
-    runs = sorted([d for d in qa_root.iterdir() if d.is_dir() and not d.name.startswith(".")], key=lambda d: d.name, reverse=True)
+    runs = sorted(
+        [d for d in qa_root.iterdir() if d.is_dir() and re.match(r"^\d{8}_\d{6}$", d.name)],
+        key=lambda d: d.name,
+        reverse=True,
+    )
     if not runs:
         if ci_mode:
             return GateResult(

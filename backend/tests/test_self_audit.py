@@ -196,6 +196,21 @@ def test_audit_check_qa_artifacts(qa_fixture_repo):
     assert "MD5 collisions: 0" in res.evidence
 
 
+def test_audit_check_qa_artifacts_ignores_ci_smoke_and_non_timestamp_dirs(qa_fixture_repo):
+    """Verify Gate 8 only considers ^\\d{8}_\\d{6}$ folders and ignores ci_smoke or misc dirs."""
+    ci_smoke = qa_fixture_repo / "qa" / "out" / "ci_smoke"
+    ci_smoke.mkdir(parents=True)
+    (ci_smoke / "smoke_pk_ward.png").write_bytes(b"smoke_png")
+    other_dir = qa_fixture_repo / "qa" / "out" / "z_misc_notes"
+    other_dir.mkdir(parents=True)
+
+    res = check_qa_artifacts(qa_fixture_repo)
+    assert res.gate_id == 8
+    assert res.passed is True
+    assert "20261120_120000" in res.evidence
+    assert "ci_smoke" not in res.evidence
+
+
 def test_audit_check_parser_pass_rate():
     res = check_parser_pass_rate(REPO_ROOT)
     assert res.gate_id == 9
